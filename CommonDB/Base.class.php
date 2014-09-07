@@ -2287,14 +2287,19 @@
 				{
 					return $res ;
 				}
+				elseif($res && $stmt)
+				{
+					return $stmt ;
+				}
 				else
 				{
 					if($stmt !== false)
 					{
 						oci_free_statement($stmt) ;
+						$stmt = false ;
 					}
 					$this->AutoFinalConnection() ;
-					return false ;
+					return $stmt ;
 				}
 			}
 			function SetConnectionExceptionFromOciError($errorData)

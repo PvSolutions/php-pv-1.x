@@ -16,7 +16,7 @@
 		}
 		define('PV_COMPOSANT_SIMPLE_IU_JQUERY', 1) ;
 		
-		class PvCfgBaseJQueryUi
+		class PvOptBaseJQueryUi
 		{
 			public function CommeJSON()
 			{
@@ -75,13 +75,91 @@
 			}
 		}
 		
-		class PvContenuWidgetJQueryUi extends PvComposantIUBase
+		class PvWidgetBaseJQueryUi extends PvComposantIUBase
+		{
+			public $Opt ;
+			public $Draggable = 0 ;
+			public $AttrsDraggable = array() ;
+			public $Droppable = 0 ;
+			public $Resizable = 0 ;
+			public $Selectable = 0 ;
+			public $Hide = 0 ;
+			public $DefinitionsJs = "" ;
+			public $ContenuHtml = "" ;
+			protected function CreeOpt()
+			{
+				return new PvOptBaseJQueryUi() ;
+			}
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->Opt = $this->CreeOpt() ;
+			}
+			protected function DefJsOpt()
+			{
+				return svc_json_encode($this->Opt) ;
+			}
+			public function ObtientNomVarJs()
+			{
+				return 'obj'.$this->IDInstanceCalc.'' ;
+			}
+			protected function RenduDefinitionsJs()
+			{
+				$ctn = '' ;
+				$ctn .= 'var obj'.$this->IDInstanceCalc.' = null ;
+jQuery(function() {
+	obj'.$this->IDInstanceCalc.' = jQuery("#'.$this->IDInstanceCalc.'") ;
+'.$this->DetermineDefinitionsJs().'}) ;' ;
+				return $ctn ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '<div id="'.$this->IDInstanceCalc.'">'.PHP_EOL ;
+				$ctn .= $this->RenduContenuHtml().PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= $this->ZoneParent->RenduContenuJsInclus($this->RenduDefinitionsJs());
+				return $ctn ;
+			}
+			protected function DetermineDefinitionsJs()
+			{
+				$ctn = '' ;
+				if($this->Draggable)
+					$ctn .= 'obj'.$this->IDInstanceCalc.'.draggable() ;'.PHP_EOL ;
+				if($this->Droppable)
+					$ctn .= 'obj'.$this->IDInstanceCalc.'.droppable() ;'.PHP_EOL ;
+				if($this->Selectable)
+					$ctn .= 'obj'.$this->IDInstanceCalc.'.selectable() ;'.PHP_EOL ;
+				if($this->Resizable)
+					$ctn .= 'obj'.$this->IDInstanceCalc.'.resizable() ;'.PHP_EOL ;
+				return $ctn ;
+			}
+			protected function DefinitionsJsNouvInst()
+			{
+				$ctn = 'var obj'.$this->IDInstanceCalc.' ;'.PHP_EOL ;
+				return $ctn ;
+			}
+			protected function RenduContenuHtml()
+			{
+				return $this->ContenuHtml ;
+			}
+		}
+		class PvConteneurJQueryUi extends PvWidgetBaseJQueryUi
 		{
 			public $ComposantsIUFils = array() ;
 			public $Visible = 1 ;
 			public function RenduPossible()
 			{
 				return ($this->Visible == 1) ? 1 : 0 ;
+			}
+			public function & InsereNouvComp($comp)
+			{
+				$this->InscritComposantIUFils("", $comp) ;
+				return $comp ;
+			}
+			public function & InsereComp(& $comp)
+			{
+				$this->InscritComposantIUFils("", $comp) ;
+				return $comp ;
 			}
 			public function InscritComposantIUFils($nom, & $comp)
 			{
@@ -106,69 +184,8 @@
 				return $ctn ;
 			}
 		}
-		class PvWidgetBaseJQueryUi extends PvComposantIUBase
-		{
-			public $Draggable = 0 ;
-			public $AttrsDraggable = array() ;
-			public $Droppable = 0 ;
-			public $Resizable = 0 ;
-			public $Selectable = 0 ;
-			public $Hide = 0 ;
-			public $DefinitionsJs = "" ;
-			public $ContenuHtml = "" ;
-			public function ObtientNomVarJs()
-			{
-				return 'obj'.$this->IDInstanceCalc.'' ;
-			}
-			protected function RenduDefinitionsJs()
-			{
-				$ctn = '' ;
-				$ctn .= '<script language="javascript">
-var obj'.$this->IDInstanceCalc.' = null ;
-jQuery(function() {
-	obj'.$this->IDInstanceCalc.' = jQuery("'.$this->IDInstanceCalc.'") ;
-'.$this->DetermineDefinitionsJs().'
-}) ;
-</script>' ;
-				return $ctn ;
-			}
-			protected function RenduDispositifBrut()
-			{
-				$ctn = '<div' ;
-				$ctn .= ' id="'.$this->IDInstanceCalc.'">' ;
-				$ctn .= $this->RenduContenuHtml() ;
-				$ctn .= '</div>' ;
-				$ctn .= '<script type="text/javascript">'.PHP_EOL ;
-				$ctn .= $this->RenduDefinitionsJs() ;
-				$ctn .= '</script>' ;
-				return $ctn ;
-			}
-			protected function DetermineDefinitionsJs()
-			{
-				$ctn = '' ;
-				$ctn .= $this->DefinitionsJsNouvInst() ;
-				if($this->Draggable)
-					$ctn .= 'obj'.$this->IDInstanceCalc.'.draggable() ;'.PHP_EOL ;
-				if($this->Droppable)
-					$ctn .= 'obj'.$this->IDInstanceCalc.'.droppable() ;'.PHP_EOL ;
-				if($this->Selectable)
-					$ctn .= 'obj'.$this->IDInstanceCalc.'.selectable() ;'.PHP_EOL ;
-				if($this->Resizable)
-					$ctn .= 'obj'.$this->IDInstanceCalc.'.resizable() ;'.PHP_EOL ;
-				return $ctn ;
-			}
-			protected function DefinitionsJsNouvInst()
-			{
-				$ctn = 'var obj'.$this->IDInstanceCalc.' ;'.PHP_EOL ;
-				return $ctn ;
-			}
-			protected function RenduContenuHtml()
-			{
-				return $this->ContenuHtml ;
-			}
-		}
 		
-		class PvOngletJQueryUi extends PvContenuWidgetJQueryUi
+		class PvOngletJQueryUi extends PvConteneurJQueryUi
 		{
 			public $Titre = "" ;
 			public $CheminIcone = "" ;
@@ -182,32 +199,58 @@ jQuery(function() {
 			}
 			public function ObtientTitreHtml()
 			{
-				return '<li href="#'.$this->IDInstanceCalc.'">'.htmlentities($this->Titre).'</li>' ;
+				return '<li><a href="#'.$this->IDInstanceCalc.'">'.htmlentities($this->Titre).'</a></li>' ;
 			}
+		}
+		class PvOptTabsJQueryUi
+		{
+			public $collapsible = false ;
+			public $active = 0 ;
+			public $disabled = array() ;
+			public $event = "click" ;
+			public $heightStyle = "auto" ;
 		}
 		class PvTabsJQueryUi extends PvWidgetBaseJQueryUi
 		{
 			public $Onglets = array() ;
-			public $Collapsible = 1 ;
-			public $HeightStyle = 1 ;
 			public $Active = 1 ;
+			protected function CreeOpt()
+			{
+				return new PvOptTabsJQueryUi() ;
+			}
 			public function CreeOnglet()
 			{
 				return new PvOngletJQueryUi() ;
+			}
+			public function & InsereNouvOnglet($titre='')
+			{
+				$onglet = $this->CreeOnglet() ;
+				$onglet->Titre = $titre ;
+				$this->InscritOnglet($onglet) ;
+				return $onglet ;
 			}
 			public function & InsereOngletComp($titre, & $comp)
 			{
 				$nouvOnglet = $this->CreeOnglet() ;
 				$nouvOnglet->Titre = $titre ;
 				$this->InscritOnglet($nouvOnglet) ;
-				$nouvOnglet->DeclareCompSupport($comp) ;
 				return $nouvOnglet ;
 			}
-			public function & InscritOnglet(& $onglet)
+			public function & InsereNouvOngletComp($titre, $comp)
+			{
+				return $this->InsereOngletComp($titre, $comp) ;
+			}
+			public function InscritOnglet(& $onglet)
 			{
 				$index = count($this->Onglets) ;
 				$this->Onglets[$index] = & $onglet ;
 				$onglet->AdopteTabs($index, $this) ;
+			}
+			protected function DetermineDefinitionsJs()
+			{
+				$ctn = parent::DetermineDefinitionsJs() ;
+				$ctn .= 'obj'.$this->IDInstanceCalc.'.tabs('.$this->DefJsOpt().') ;'.PHP_EOL ;
+				return $ctn ;
 			}
 			protected function RenduContenuHtml()
 			{
@@ -221,77 +264,129 @@ jQuery(function() {
 						continue ;
 					}
 					$ctnEntetes .= $onglet->ObtientTitreHtml() ;
-					$ctnContenus .= $onglet->ObtientInterieurHtml() ;
+					$ctnContenus .= '<div id="'.$onglet->IDInstanceCalc.'">'.$onglet->ObtientInterieurHtml().'</div>' ;
 				}
+				if($ctnEntetes != '')
+				{
+					$ctn = '<ul>'.PHP_EOL.$ctnEntetes.'</ul>'.PHP_EOL.$ctnContenus ;
+				}
+				return $ctn ;
 			}
 		}
 		
-		class PvCfgDialogJQueryUi extends PvCfgBaseJQueryUi
+		class PvOptDialogJQueryUi
 		{
+			public $appendTo = "body" ;
+			public $autoOpen = false ;
+			public $closeOnEscape = true ;
+			public $closeText = "close" ;
+			public $dialogClass ;
+			public $draggable = true ;
+			public $height = "auto" ;
+			public $maxHeight = false ;
+			public $maxWidth = false ;
+			public $minHeight = "150" ;
+			public $minWidth = "150" ;
+			public $modal = false ;
+			public $resizable = true ;
 			public $title ;
-			public $collapsible ;
+			public $width = 300 ;
 		}
 		
-		class PvDialogJQueryUi extends PvContenuWidgetJQueryUi
+		class PvDialogJQueryUi extends PvConteneurJQueryUi
 		{
-			public $Ouverture ;
+			public $Declencheur ;
 			public $CheminIcone ;
 			public $Titre ;
 			public $Boutons = array() ;
+			public $ApparaitAuto = 0 ;
+			protected function CreeOpt()
+			{
+				return new PvOptDialogJQueryUi() ;
+			}
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->Ouverture = new PvOuvrBaseDialogJQueryUi() ;
+				$this->Declencheur = new PvBtnDeclDialogJQueryUi() ;
 			}
-			protected function RenduFenetre()
+			protected function DetermineDefinitionsJs()
 			{
-				$ctn = '' ;
-				$ctn .= '<div id="Fenetre'.$this->IDInstanceCalc.'" class="ui-dialog">'.PHP_EOL ;
-				$ctn .= $this->ObtientInterieurHtml().PHP_EOL ;
-				$ctn .= '</div>' ;
-				return $ctn ;
-			}
-			protected function RenduBoutons()
-			{
-				$ctn = '' ;
-				foreach($this->Boutons as $i => $bouton)
+				$ctn = parent::DetermineDefinitionsJs().PHP_EOL ;
+				$ctn .= 'var opt = '.$this->DefJsOpt().' ;
+opt.buttons = {} ;'.PHP_EOL ;
+				foreach($this->Boutons as $nom => $bouton)
 				{
-					$ctn .= $bouton->RenduDefinition($this) ;
+					$ctn .= 'opt.'.$nom.' = '.$bouton->DefJsFonction($this).' ;'.PHP_EOL ;
 				}
+				$ctn .= 'obj'.$this->IDInstanceCalc.'.dialog(opt) ;' ;
 				return $ctn ;
 			}
-			public function RenduDispositifBrut()
+			protected function RenduContenuHtml()
 			{
 				$ctn = '' ;
-				$ctn .= $this->Ouverture->Rendu($this) ;
+				$ctn .= $this->ObtientInterieurHtml().PHP_EOL ;
+				return $ctn ;
+			}
+			protected function ObtientDeclencheur()
+			{
+				$declencheur = $this->Declencheur ;
+				if($this->ApparaitAuto)
+				{
+					$declencheur = new PvAutoDeclDialogJQueryUi() ;
+				}
+				return $declencheur ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = parent::RenduDispositifBrut() ;
+				$declencheur = $this->ObtientDeclencheur() ;
+				$ctn .= $declencheur->RenduContenuHtml($this) ;
 				return $ctn ;
 			}
 		}
 		
-		class PvOuvrBaseDialogJQueryUi
+		class PvCfgFormatColLienJQueryUi extends PvConfigFormatteurColonneLien
+		{
+			public $Opt ;
+			protected function __construct()
+			{
+				$this->Opt = new PvOptDialogJQueryUi() ;
+				// $this->FormatURL = $this->
+			}
+		}
+		
+		class PvDeclBaseDialogJQueryUi
 		{
 			public $Indefini = 0 ;
-			public function Rendu(& $dialog)
+			public function RenduContenuHtml(& $dialog)
 			{
-				$ctn = $this->RenduBrut($dialog) ;
+				$ctn = $this->RenduContenuHtmlBrut($dialog) ;
 				return $ctn ;
 			}
-			protected function RenduBrut(& $dialog)
-			{
-				$ctn = '' ;
-				return $ctn ;
-			}
-		}
-		class PvBtnOuvrDialogJQueryUi extends PvOuvrBaseDialogJQueryUi
-		{
-			protected function RenduBrut(& $dialog)
+			protected function RenduContenuHtmlBrut(& $dialog)
 			{
 				$ctn = '' ;
 				return $ctn ;
 			}
 		}
-		class PvAutoOuvrDialogJQueryUi extends PvOuvrBaseDialogJQueryUi
+		class PvBtnDeclDialogJQueryUi extends PvDeclBaseDialogJQueryUi
 		{
+			public $Libelle = "Ouvrir" ;
+			protected function RenduContenuHtmlBrut(& $dialog)
+			{
+				$ctn = '' ;
+				$ctn .= '<a href="javascript:;" onclick="'.htmlentities('jQuery("#'.$dialog->IDInstanceCalc.'").dialog("open") ;').'">'.$this->Libelle.'</a>' ;
+				return $ctn ;
+			}
+		}
+		class PvAutoDeclDialogJQueryUi extends PvDeclBaseDialogJQueryUi
+		{
+			protected function RenduContenuHtmlBrut(& $dialog)
+			{
+				$ctn = '' ;
+				$ctn .= $dialog->ZoneParent->RenduContenuJsInclus('jQuery(function() { jQuery("#'.$dialog->IDInstanceCalc.'").dialog("open") ; }) ;') ;
+				return $ctn ;
+			}
 		}
 		
 		class PvBtnBaseDialogJQueryUi

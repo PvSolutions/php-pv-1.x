@@ -120,6 +120,8 @@
 			public $SystTrad ;
 			public $BasesDonnees = array() ;
 			public $ProcessusPersistants = array() ;
+			public $ServicesPersists = array() ;
+			public $TachesProgs = array() ;
 			public $ServicesRequete = array() ;
 			public $Elements = array() ;
 			public $CheminFichierElementActif = "" ;
@@ -140,9 +142,9 @@
 			{
 				$this->ChargeBasesDonnees() ;
 				$this->ChargeSystTrad() ;
-				$this->ChargeModelesOperation() ;
 				$this->ChargeIHMs() ;
-				$this->ChargeProcessusPersistants() ;
+				$this->ChargeTachesProgs() ;
+				$this->ChargeServicesPersists() ;
 				$this->ChargeServicesRequete() ;
 				$this->ChargeElementHorsLigne() ;
 			}
@@ -166,13 +168,13 @@
 				$this->SystTrad = $this->CreeSystTrad() ;
 				$this->SystTrad->ChargeConfig() ;
 			}
-			protected function ChargeModelesOperation()
-			{
-			}
 			protected function ChargeIHMs()
 			{
 			}
-			protected function ChargeProcessusPersistants()
+			protected function ChargeTachesProgs()
+			{
+			}
+			protected function ChargeServicesPersists()
 			{
 			}
 			protected function ChargeServicesRequete()
@@ -205,6 +207,16 @@
 			{
 				$this->ProcessusPersistants[$nom] = & $processusPersistant ;
 				$this->InscritElement($nom, $processusPersistant) ;
+			}
+			public function InscritTacheProg($nom, & $tacheProg)
+			{
+				$this->TachesProgs[$nom] = & $tacheProg ;
+				$this->InscritElement($nom, $tacheProg) ;
+			}
+			public function InscritServicePersist($nom, & $srvPersist)
+			{
+				$this->ServicesPersists[$nom] = & $srvPersist ;
+				$this->InscritElement($nom, $srvPersist) ;
 			}
 			public function InscritServiceRequete($nom, & $serviceRequete)
 			{
@@ -478,6 +490,44 @@
 			public function MaxRepetitionsAtteint()
 			{
 				return ($this->MaxRepetitions <= 0 || $this->MaxRepetitions <= $this->TotalRepetitions) ? 1 : 0 ;
+			}
+		}
+		
+		class PvTacheProg extends PvElementApplication
+		{
+			public $Declenchs = array() ;
+			public function Execute()
+			{
+			}
+		}
+		class PvServicePersist extends PvElementApplication
+		{
+			public $Arreter = 0 ;
+			public function EstPret()
+			{
+				return 1 ;
+			}
+			public function FonctionneBien()
+			{
+				return 1 ;
+			}
+			protected function RepeteBoucle()
+			{
+				while(! $this->Arreter)
+				{
+					$this->ExecuteSession() ;
+				}
+			}
+			protected function ExecuteSession()
+			{
+			}
+			protected function PrepareEnvironnement()
+			{
+			}
+			public function Execute()
+			{
+				$this->PrepareEnvironnement() ;
+				$this->RepeteBoucle() ;
 			}
 		}
 		

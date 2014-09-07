@@ -71,12 +71,20 @@
 				}
 				return $this->RenduBrut($donnees) ;
 			}
+			protected function ObtientHrefFmt(& $donneesUrl)
+			{
+				return _parse_pattern($this->FormatURL, $donneesUrl) ;
+			}
+			protected function ObtientLibelleFmt(& $donnees)
+			{
+				return _parse_pattern($this->FormatLibelle, $donnees) ;
+			}
 			protected function RenduBrut($donnees)
 			{
 				$ctn = '' ;
 				$donneesUrl = array_map("urlencode", $donnees) ;
-				$href = _parse_pattern($this->FormatURL, $donneesUrl) ;
-				$libelle = _parse_pattern($this->FormatLibelle, $donnees) ;
+				$href = $this->ObtientHrefFmt($donneesUrl) ;
+				$libelle = $this->ObtientLibelleFmt($donnees) ;
 				$ctn .= '<a href="'.$href.'"' ;
 				if($this->ChaineAttributs != '')
 				{
