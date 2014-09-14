@@ -115,14 +115,13 @@
 		{
 			public $CheminIconeElem = "images/icone-elem-app.png" ;
 			public $CheminMiniatureElem = "images/miniature-elem-app.png" ;
+			public $ValeurUniteTache = 5 ;
 			public $ModelesOperation = array() ;
 			public $IHMs = array() ;
 			public $SystTrad ;
 			public $BasesDonnees = array() ;
-			public $ProcessusPersistants = array() ;
-			public $ServicesPersists = array() ;
+			public $ServsPersists = array() ;
 			public $TachesProgs = array() ;
-			public $ServicesRequete = array() ;
 			public $Elements = array() ;
 			public $CheminFichierElementActif = "" ;
 			public $CheminFichierAbsolu = "" ;
@@ -131,6 +130,8 @@
 			public $ElementActif = null ;
 			public $ElementHorsLigne = null ;
 			public $DebogageActive = 0 ;
+			public $CtrlTachesProgs ;
+			public $CtrlServsPersists ;
 			public function Debogue($niveau, $message)
 			{
 				if(! $this->DebogageActive)
@@ -142,11 +143,20 @@
 			{
 				$this->ChargeBasesDonnees() ;
 				$this->ChargeSystTrad() ;
-				$this->ChargeIHMs() ;
 				$this->ChargeTachesProgs() ;
-				$this->ChargeServicesPersists() ;
-				$this->ChargeServicesRequete() ;
+				$this->ChargeServsPersists() ;
+				$this->ChargeIHMs() ;
 				$this->ChargeElementHorsLigne() ;
+			}
+			public function InscritCtrlTachesProgs($nomElem='ctrlTachesProgs')
+			{
+				$this->CtrlTachesProgs = new PvCtrlTachesProgsApp() ;
+				$this->InscritTacheProg($nomElem, $this->CtrlTachesProgs) ;
+			}
+			public function InscritCtrlServsPersists($nomElem='ctrlTachesProgs')
+			{
+				$this->CtrlServsPersists = new PvCtrlServsPersistsApp() ;
+				$this->InscritTacheProg($nomElem, $this->CtrlServsPersists) ;
 			}
 			protected function ChargeBasesDonnees()
 			{
@@ -174,10 +184,7 @@
 			protected function ChargeTachesProgs()
 			{
 			}
-			protected function ChargeServicesPersists()
-			{
-			}
-			protected function ChargeServicesRequete()
+			protected function ChargeServsPersists()
 			{
 			}
 			protected function ChargeElementHorsLigne()
@@ -213,15 +220,10 @@
 				$this->TachesProgs[$nom] = & $tacheProg ;
 				$this->InscritElement($nom, $tacheProg) ;
 			}
-			public function InscritServicePersist($nom, & $srvPersist)
+			public function InscritServPersist($nom, & $srvPersist)
 			{
-				$this->ServicesPersists[$nom] = & $srvPersist ;
+				$this->ServsPersists[$nom] = & $srvPersist ;
 				$this->InscritElement($nom, $srvPersist) ;
-			}
-			public function InscritServiceRequete($nom, & $serviceRequete)
-			{
-				$this->ServicesRequete[$nom] = & $serviceRequete ;
-				$this->InscritElement($nom, $serviceRequete) ;
 			}
 			public function InscritBaseDonnees($nom, & $bd)
 			{
@@ -361,14 +363,6 @@
 			{
 				return $this->Description ;
 			}
-			public function ChargeConfig()
-			{
-				parent::ChargeConfig() ;
-				$this->ChargeConfigMailsPourAlertes() ;
-				$this->ChargeResponsables() ;
-				$this->ChargeSupports() ;
-				$this->ChargeDeveloppeurs() ;
-			}
 			public function Traduit($nomExpr, $params=array(), $valParDefaut='', $nomTrad='')
 			{
 				return $this->ApplicationParent->Traduit($nomExpr, $params, $valParDefaut, $nomTrad) ;
@@ -422,100 +416,320 @@
 		{
 			public $TypeIHM = "indefini" ;
 		}
-		class PvModeleOperation extends PvElementApplication
+		
+		class PvPlateformProc
 		{
-			public $Entree = null ;
-			public $Sortie = null ;
+			public function Http()
+			{
+				return new PvPlateformProcHttp() ;
+			}
+			public function Console()
+			{
+				return new PvPlateformProcHttp() ;
+			}
 		}
-		class PvProcessusPersistant extends PvElementApplication
+		class PvPlateformProcBase
 		{
-			public $PID = 0 ;
-			public $MaxRepetitions = 0 ;
-			public $TotalRepetitions = 0 ;
-			public $Arreter = 0 ;
-			public $MotifArret = null ;
-			public $DelaiAttenteEntreRepetitions = 60 ;
-			public $DelaiMaxTraitement = 0 ;
-			public $AccepterPlusieursInstances = 0 ;
-			public $TuerAncienneInstance = 0 ;
-			public function RepeteBoucle()
+			public function EstDisponible()
 			{
-				$this->TotalRepetitions = 0 ;
-				while(! $this->Arreter && $this->MaxRepetitionsAtteint())
+				return 0 ;
+			}
+			public function RecupArgs()
+			{
+				return array() ;
+			}
+			public function LanceProcessusProg(& $prog)
+			{
+			}
+		}
+		class PvPlateformProcIndef extends PvPlateformProcBase
+		{
+			public function EstDisponible()
+			{
+				return 0 ;
+			}
+			public function RecupArgs()
+			{
+				return array() ;
+			}
+			public function LanceProcessusProg(& $prog)
+			{
+			}
+		}
+		class PvPlateformProcConsole extends PvPlateformProcBase
+		{
+			public function EstDisponible()
+			{
+				return php_sapi_name() == 'cli' ? 1 : 0 ;
+			}
+			public function RecupArgs()
+			{
+				$args = array() ;
+				for($i=1; $i<count($_SERVER["argv"]); $i++)
 				{
-					$this->ExecuteTraitement() ;
-					if($this->DelaiAttenteEntreRepetitions > 0)
+					$partsArg = explode("=", $_SERVER["argv"][$i], 2) ;
+					$partsArg[0] = preg_replace('/^\-+/', '', $partsArg[0]) ;
+					if(! isset($partsArg[1]))
 					{
-						$this->PauseBoucle() ;
+						$partsArg[1] = null ;
 					}
-					$this->TotalRepetitions++ ;
 				}
+				return $args ;
 			}
-			protected function DefinitMotifArret($code, $libelle, $valeurs=array())
+			public function LanceProcessusProg(& $prog)
 			{
-				$this->MotifArret = new PvMotifArretProcessusPers() ;
-				$this->MotifArret->Code = $code ;
-				$this->MotifArret->Libelle = $libelle ;
-				$this->MotifArret->Valeurs = $valeurs ;
-			}
-			public function PauseBoucle()
-			{
-				sleep($this->DelaiAttenteEntreRepetitions) ;
-			}
-			public function Execute()
-			{
-				if($this->EnExecution())
+				$os = (PHP_OS == "WINNT" || PHP_OS == "WIN32") ? 'Windows' : 'Linux' ;
+				$phpbin = preg_replace("@/lib(64)?/.*$@", "/bin/php", ini_get("extension_dir"));
+				$execPath = dirname($phpbin)."/php" ;
+				if($os == 'Windows')
+					$execPath .= ".exe" ;
+				$cmd = realpath(dirname(__FILE__).'/../../'.$prog->CheminFichierRelatif) ;
+				if($cmd === false)
 				{
-					return ;
+					return 0 ;
 				}
-				$this->PrepareEnvironnement() ;
-				$this->RepeteBoucle() ;
+				foreach($prog->ArgsParDefaut as $nom => $val)
+				{
+					$cmd .= ' -'.$nom.'='.escapeshellarg($val) ;
+				}
+				if($os == 'Linux')
+				{
+					$cmd = $cmd.' >/dev/null 2>&1 &' ;
+					return pclose(popen($cmd, 'r')) ;
+				}
+				else
+				{
+					$cmd = 'start /b '.$cmd ;
+					$fluxProc = popen($cmd, 'r') ;
+					register_shutdown_function(array(& $this, 'AnnuleFluxProc'), array(& $fluxProc)) ;
+					return 1 ;
+				}
 			}
-			protected function PrepareEnvironnement()
+			public function AnnuleFluxProc(& $fluxProc)
 			{
-				$this->ConfirmeExecution() ;
+				if(is_resource($fluxProc))
+				{
+					pclose($fluxProc) ;
+				}
 			}
-			protected function EnExecution()
+		}
+		class PvPlateformProcHttp extends PvPlateformProcBase
+		{
+			public function EstDisponible()
 			{
-				$ok = 0 ;
-				return $ok ;
+				return php_sapi_name() != 'cli' ? 1 : 0 ;
 			}
-			protected function ConfirmeExecution()
+			public function RecupArgs()
 			{
-				$this->PID = getmypid() ;
+				$args = $_GET ;
+				return $args ;
 			}
-			public function ExecuteTraitement()
+			protected function ExtraitPort()
 			{
+				$port = (isset($_SERVER["SERVER_PORT"]) && $_SERVER["SERVER_PORT"] != 80) ? $_SERVER["SERVER_PORT"] : 80 ;
+				return $port ;
 			}
-			public function MaxRepetitionsAtteint()
+			protected function ExtraitUrlProg(& $prog)
 			{
-				return ($this->MaxRepetitions <= 0 || $this->MaxRepetitions <= $this->TotalRepetitions) ? 1 : 0 ;
+				$port = $this->ExtraitPort() ;
+				$url = (isset($_SERVER["HTTPS"])) ? 'https' : 'http'.'://'.$_SERVER["SERVER_NAME"].(($port != 80) ? ':'.$port : '').'/'.$prog->CheminFichierRelatif ;
+				return $url ;
+			}
+			public function LanceProcessusProg(& $prog)
+			{
+				$port = $this->ExtraitPort() ;
+				$entetesHttp = '' ;
+				$entetesHttp .= "GET /".$prog->CheminFichierRelatif."?".http_build_query_string($prog->ArgsParDefaut)." HTTP/1.0\r\n" ;
+				$entetesHttp .= "Host: ".$_SERVER["SERVER_NAME"]."\r\n";
+				$entetesHttp .= "Connection: close\r\n\r\n";
+				$flux = @fsockopen($_SERVER["SERVER_NAME"], $port) ;
+				if($flux == false)
+				{
+					return 0 ;
+				}
+				fputs($flux, $entetesHttp) ;
+				fclose($flux) ;
+				$flux = false ;
+				return 1 ;
 			}
 		}
 		
-		class PvTacheProg extends PvElementApplication
+		class PvProgramAppBase extends PvElementApplication
 		{
-			public $Declenchs = array() ;
-			public function Execute()
+			public $Plateforme = null ;
+			protected $NaturePlateforme = "" ;
+			public $ArgsParDefaut = array() ;
+			public $Args = array() ;
+			protected function CreePlateforme()
+			{
+				$platf = new PvPlateformProcIndef() ;
+				switch(strtoupper($this->NaturePlateforme))
+				{
+					case "WEB" :
+					case "NAVIGATEUR" :
+					case "BROWSER" :
+					case "HTTP" :
+						{ $platf = new PvPlateformProcHttp() ; }
+					break ;
+					case "CONSOLE" :
+					case "SHELL" :
+					case "DOS" :
+						{ $platf = new PvPlateformProcConsole() ; }
+					break ;
+				}
+				return $platf ;
+			}
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->Plateforme = $this->CreePlateforme() ;
+			}
+			protected function DemarreExecution()
+			{
+				parent::DemarreExecution() ;
+				$this->DetecteArgs() ;
+			}
+			protected function DetecteArgs()
+			{
+				$this->Args = $this->ArgsParDefaut ;
+				$args = $this->Plateforme->RecupArgs() ;
+				foreach($this->Args as $nom => $val)
+				{
+					if(isset($args[$nom]))
+						$this->Args[$nom] = $args[$nom] ;
+				}
+			}
+			public function LanceProcessus()
+			{
+				return $this->Plateforme->LanceProcessusProg($this) ;
+			}
+		}
+		
+		class PvDeclenchTacheBase
+		{
+			public function DelaiTacheAtteint(& $tacheProg)
 			{
 			}
 		}
-		class PvServicePersist extends PvElementApplication
+		class PvDeclenchTacheIndef extends PvDeclenchTacheBase
 		{
-			public $Arreter = 0 ;
-			public function EstPret()
+			public function DelaiTacheAtteint(& $tacheProg)
+			{
+				return 0 ;
+			}
+		}
+		class PvDeclenchTjrTache extends PvDeclenchTacheBase
+		{
+			public function DelaiTacheAtteint(& $tacheProg)
 			{
 				return 1 ;
 			}
-			public function FonctionneBien()
+		}
+		class PvDeclenchJourTache extends PvDeclenchTacheBase
+		{
+			public $Heure = 0 ;
+			public $Minute = 0 ;
+			public $Seconde = 0 ;
+			public function DelaiTacheAtteint(& $tacheProg)
+			{
+				$secondes = intval(date("s")) ;
+				return date("G") == $this->Heure && intval(date("m")) == $this->Minute && ($secondes >= $this->Seconde && $secondes <= $this->Seconde + $tacheProg->ApplicationParent->ValeurUniteTache) ;
+			}
+		}
+		class PvDeclenchSemaineTache extends PvDeclenchJourTache
+		{
+			public $Jour = 1 ;
+			public function DelaiTacheAtteint(& $tacheProg)
+			{
+				$secondes = intval(date("s")) ;
+				return date("w") == $this->Jour && parent::DelaiTacheAtteint($tacheProg) ;
+			}
+		}
+		class PvDeclenchMoisTache extends PvDeclenchJourTache
+		{
+			public $Jour = 1 ;
+			public function DelaiTacheAtteint(& $tacheProg)
+			{
+				if($this->Jour > date("t"))
+					$this->Jour = date("t") ;
+				$jourMois = intval(date("j")) ;
+				return $jourMois == $this->Jour && parent::DelaiTacheAtteint($tacheProg) ;
+			}
+		}
+		
+		class PvTacheProg extends PvProgramAppBase
+		{
+			public $Declenchs = array() ;
+			public $DeclenchParDefaut ;
+			protected function CreeDeclenchParDefaut()
+			{
+				return new PvDeclenchTacheIndef() ;
+			}
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DeclenchParDefaut = $this->CreeDeclenchParDefaut() ;
+			}
+			public function DelaiAtteint()
+			{
+				$ok = 0 ;
+				$declenchs = $this->Declenchs ;
+				array_splice($declenchs, 0, 0, array($this->DeclenchParDefaut)) ;
+				foreach($declenchs as $i => $declench)
+				{
+					if($declench->DelaiTacheAtteint($this))
+					{
+						$ok = 1 ;
+						break ;
+					}
+				}
+				return $ok ;
+			}
+			public function Execute()
+			{
+				if(! $this->Plateforme->EstDisponible() || ! $this->DelaiAtteint())
+				{
+					return ;
+				}
+				$this->DemarreExecution() ;
+				$this->ExecuteSession() ;
+				$this->TermineExecution() ;
+			}
+			protected function ExecuteSession()
+			{
+			}
+		}
+		
+		class PvServPersist extends PvProgramAppBase
+		{
+			public $Arreter = 0 ;
+			public $MaxSessions = 0 ;
+			public $TotalSessions = 0 ;
+			public $DelaiAttente = 5 ;
+			protected $NaturePlateforme = "console" ;
+			public function Verifie()
+			{
+				return 1 ;
+			}
+			public function EstDisponible()
 			{
 				return 1 ;
 			}
 			protected function RepeteBoucle()
 			{
+				$this->TotalSessions = 0 ;
 				while(! $this->Arreter)
 				{
 					$this->ExecuteSession() ;
+					$this->TotalSessions++ ;
+					if($this->MaxSessions > 0 && $this->TotalSessions >= $this->MaxSessions)
+					{
+						break ;
+					}
+					if($this->DelaiAttente > 0)
+					{
+						sleep($this->DelaiAttente) ;
+					}
 				}
 			}
 			protected function ExecuteSession()
@@ -526,18 +740,17 @@
 			}
 			public function Execute()
 			{
+				if(! $this->Plateforme->EstDisponible() || ! $this->EstDisponible())
+				{
+					return ;
+				}
+				$this->DemarreExecution() ;
 				$this->PrepareEnvironnement() ;
 				$this->RepeteBoucle() ;
+				$this->TermineExecution() ;
 			}
 		}
-		
-		class PvMotifArretProcessusPers
-		{
-			public $Code = '' ;
-			public $Libelle = '' ;
-			public $Valeurs = array() ;
-		}
-		class PvServiceRequete extends PvElementApplication
+		class PvServicePersist extends PvServPersist
 		{
 		}
 		

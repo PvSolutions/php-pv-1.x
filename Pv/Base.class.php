@@ -10,13 +10,13 @@
 		{
 			include dirname(__FILE__)."/IHM.class.php" ;
 		}
-		if(! defined('PV_PROCESSUS_PERSISTANT'))
+		if(! defined('PV_SERVICE_PERSISTANT'))
 		{
-			include dirname(__FILE__)."/ProcessusPersistant.class.php" ;
+			include dirname(__FILE__)."/ServicePersist.class.php" ;
 		}
-		if(! defined('PV_SERVICE_REQUETE'))
+		if(! defined('PV_TACHE_PROG'))
 		{
-			include dirname(__FILE__)."/ServiceRequete.class.php" ;
+			include dirname(__FILE__)."/TacheProg.class.php" ;
 		}
 	}
 	

@@ -86,6 +86,8 @@
 						$this->LastLimitFound = true ;
 						break ;
 					}
+					if($line == '')
+						break ;
 				}
 				return $res ;
 			}
@@ -142,8 +144,10 @@
 				proc_close($this->ProcessRes) ;
 			}
 		}
-		
 		class LinuxProcessPipe extends OsProcessPipe
+		{
+		}
+		class WinProcessPipe extends OsProcessPipe
 		{
 		}
 		
@@ -427,7 +431,6 @@
 				return $notSetEntry ;
 			}
 		}
-		
 		class LinuxProcessEntry extends OsProcessEntry
 		{
 			function ImportFromPsEfEntry($process_data)
@@ -533,6 +536,9 @@
 			{
 				return $this->KillProcessCommand($this->ExtractProcessListFromEntries($ProcessEntries)) ;
 			}
+		}
+		class WinProcessManager extends OsProcessManager
+		{
 		}
 		
 		class CurrentOsProcessManager

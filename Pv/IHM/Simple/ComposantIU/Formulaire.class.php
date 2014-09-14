@@ -334,15 +334,26 @@
 				$this->PrepareRenduPourCmds() ;
 				$this->PrepareLiaisonParametre() ;
 			}
+			public function ReinitParametres()
+			{
+				foreach($this->FiltresEdition as $i => & $filtre)
+				{
+					$filtre->DejaLie = 0 ;
+				}
+			}
+			public function AnnuleLiaisonParametres()
+			{
+				foreach($this->FiltresEdition as $i => & $filtre)
+				{
+					$filtre->DejaLie = 0 ;
+					$filtre->NePasLierParametre = 1 ;
+				}
+			}
 			protected function PrepareLiaisonParametre()
 			{
 				if($this->AnnulerLiaisonParametre)
 				{
-					foreach($this->FiltresEdition as $i => & $filtre)
-					{
-						$filtre->DejaLie = 0 ;
-						$filtre->NePasLierParametre = 1 ;
-					}
+					$this->AnnuleLiaisonParametres() ;
 				}
 			}
 			protected function PrepareRenduPourCmds()
@@ -410,7 +421,10 @@
 				{
 					$filtre = & $this->FiltresEdition[$nomFiltre] ;
 					if(isset($this->ElementEnCours[$filtre->NomParametreDonnees]))
+					{
+						$filtre->DejaLie = 0 ;
 						$filtre->ValeurParDefaut = $this->ElementEnCours[$filtre->NomParametreDonnees] ;
+					}
 				}
 			}
 			public function ChargeConfig()

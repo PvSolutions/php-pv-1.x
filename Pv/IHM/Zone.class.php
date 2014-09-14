@@ -869,6 +869,11 @@
 				return $result ;
 			}
 		}
+		class PvZoneRequetesBase extends PvZoneIHMDeBase
+		{
+			public $Methodes = array() ;
+			// public function 
+		}
 		
 		class PvRegleHtmlSurBase
 		{
