@@ -347,7 +347,9 @@ var optionsOuvreFenetreDefaut = {
 	FermerSurEchap : false,
 	NomClasseFenetre : "",
 	BoutonFermer : true,
+	LibelleFermer : "Fermer",
 	BoutonConfimer : null,
+	LibelleConfirmer : "OK",
 	ExecuteBoutonConfirmer : undefined
 } ;
 function ouvreFenetreCadre(idFenetre, icone, titre, urlCadre, options)
@@ -425,7 +427,7 @@ function extraitOptionsJQueryUiDialog(optionsSource)
 	if(optionsCompletes.BoutonFermer == true)
 	{
 		options.buttons.push({
-			text: "Annuler",
+			text: optionsCompletes.LibelleFermer,
 			click: function() {
 				jQuery( this ).dialog( "close" );
 			}
@@ -439,7 +441,7 @@ function extraitOptionsJQueryUiDialog(optionsSource)
 			funcExecuter = optionsCompletes.ExecuteBoutonConfirmer ;
 		}
 		options.buttons.push({
-			text: "OK",
+			text: optionsCompletes.LibelleConfirmer,
 			click: funcExecuter
 		}) ;
 	}

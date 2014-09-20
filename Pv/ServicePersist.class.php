@@ -109,7 +109,7 @@
 			{
 			}
 		}
-		class PvProcesseurDossier extends PvProcesseurQueueBase
+		class PvProcesseurDossierSE extends PvProcesseurQueueBase
 		{
 			public $CheminAbsoluDossier ;
 			protected $Flux ;
@@ -182,10 +182,10 @@
 			protected $FluxClient = false ;
 			protected $FluxEnvoi = false ;
 			public $Scheme = "tcp" ;
-			public $Hote = "localhost" ;
+			public $Hote = "127.0.0.1" ;
 			protected $Adresse = "" ;
-			public $Port = 6868 ;
-			public $DelaiOuvrFlux = 30 ;
+			public $Port = 4401 ;
+			public $DelaiOuvrFlux = 10 ;
 			public $DelaiLectFlux = 2 ;
 			public $DelaiInactivite = 30 ;
 			public $TaillePaquetFlux = 1024 ;
@@ -226,7 +226,7 @@
 			{
 				$this->ErreurOuvr = new PvErreurOuvrSocket() ;
 				$this->Adresse = $this->ExtraitAdresse() ;
-				$this->Flux = stream_socket_server($this->Adresse, $this->ErreurOuvr->No, $this->ErreurOuvr->Contenu, $this->DelaiOuvrFlux) ;
+				$this->Flux = stream_socket_server($this->Adresse, $this->ErreurOuvr->No, $this->ErreurOuvr->Contenu) ;
 				if($this->Flux === false && $this->ErreurOuvr->No == 0)
 				{
 					$this->ErreurOuvr->No = -1 ;
@@ -235,7 +235,7 @@
 			}
 			public function EnvoieDemande($contenu)
 			{
-				$this->FluxEnvoi = stream_socket_client($this->ExtraitAdresse, $this->Port, $codeErreur, $msgErreur) ;
+				$this->FluxEnvoi = stream_socket_client($this->ExtraitAdresse(), $this->Port, $codeErreur, $msgErreur) ;
 				$partieResult = '' ;
 				$resultat = '' ;
 				$longueurMax = 1024 ;
@@ -254,7 +254,8 @@
 			}
 			protected function RecoitDemandes()
 			{
-				while($this->FluxClient = stream_socket_accept($this->SocketHandle, $this->DelaiInactivite))
+				// print_r(get_resource_type($this->Flux)) ;
+				while($this->FluxClient = @stream_socket_accept($this->Flux, $this->DelaiInactivite))
 				{
 					$paquet = new PvPaquetSocket() ;
 					do
@@ -321,6 +322,16 @@
 			public $Resultat ;
 			public $CodeErreur = 0 ;
 			public $NomAppel = "" ;
+			protected function ConfirmeSucces($msg)
+			{
+				$this->CodeErreur = 0 ;
+				$this->Resultat = $msg ;
+			}
+			protected function SignaleErreur($code, $msg)
+			{
+				$this->CodeErreur = $code ;
+				$this->Resultat = $msg ;
+			}
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -443,7 +454,7 @@
 			{
 				return new PvMethodeSocketNonTrouve() ;
 			}
-			public function InsereMethode($nom, $methode)
+			public function & InsereMethode($nom, $methode)
 			{
 				$this->InscritMethode($nom, $methode) ;
 				return $methode ;

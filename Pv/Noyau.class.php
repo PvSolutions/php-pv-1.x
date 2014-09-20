@@ -706,6 +706,8 @@
 			public $MaxSessions = 0 ;
 			public $TotalSessions = 0 ;
 			public $DelaiAttente = 5 ;
+			public $DelaiBoucle = 30 ;
+			public $LimiterDelaiBoucle = 1 ;
 			protected $NaturePlateforme = "console" ;
 			public function Verifie()
 			{
@@ -720,7 +722,11 @@
 				$this->TotalSessions = 0 ;
 				while(! $this->Arreter)
 				{
+					if($this->LimiterDelaiBoucle)
+						$oldTimeLimit = @set_time_limit($this->DelaiBoucle) ;
 					$this->ExecuteSession() ;
+					if($this->LimiterDelaiBoucle)
+						@set_time_limit($oldTimeLimit) ;
 					$this->TotalSessions++ ;
 					if($this->MaxSessions > 0 && $this->TotalSessions >= $this->MaxSessions)
 					{

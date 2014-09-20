@@ -113,7 +113,7 @@
 				if($this->AccepterIcone == 1)
 				{
 					// CheminIcone
-					$this->FltFrmElemCheminIcone = $frm->InsereFltEditHttpUpload($this->NomParamCheminIcone, $this->CheminTelechargIcones, $this->NomColCheminIcone) ;
+					$this->FltFrmElemCheminIcone = $frm->InsereFltEditHttpUpload($this->NomParamCheminIcone, $this->ModuleParent->SystemeParent->CheminAdminVersPubl."/".$this->CheminTelechargIcones, $this->NomColCheminIcone) ;
 					$this->FltFrmElemCheminIcone->Libelle = $this->LibCheminIcone ;
 				}
 				// Titre
@@ -135,7 +135,7 @@
 				if($this->AccepterImage == 1)
 				{
 					// Image
-					$this->FltFrmElemCheminImage = $frm->InsereFltEditHttpUpload($this->NomParamCheminImage, $this->CheminTelechargImages, $this->NomColCheminImage) ;
+					$this->FltFrmElemCheminImage = $frm->InsereFltEditHttpUpload($this->NomParamCheminImage, $this->ModuleParent->SystemeParent->CheminAdminVersPubl."/".$this->CheminTelechargImages, $this->NomColCheminImage) ;
 					$this->FltFrmElemCheminImage->Libelle = $this->LibCheminImage ;
 				}
 				/*

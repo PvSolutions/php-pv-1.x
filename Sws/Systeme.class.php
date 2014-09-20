@@ -10,6 +10,10 @@
 		{
 			include dirname(__FILE__)."/Membership.class.php" ;
 		}
+		if(! defined('ZONE_SWS'))
+		{
+			include dirname(__FILE__)."/Zone.class.php" ;
+		}
 		if(! defined('MODULE_PAGE_SWS'))
 		{
 			include dirname(__FILE__)."/ModulePage.class.php" ;
@@ -24,11 +28,16 @@
 		class SystemeBaseSws extends PvObjet
 		{
 			public $BDSupport ;
-			public $InclureAdminPubl = 1 ;
+			public $InclureAdminPubl = 0 ;
 			public $CheminAdminVersPubl = ".." ;
+			public $CheminMembreVersPubl = ".." ;
 			public $NomScriptListeModulesPage = "liste_module_page" ;
 			public $ScriptListeModulesPage = "liste_module_page" ;
 			public $MaxColonnesBarreMenuModsPage = 10 ;
+			public function ObtientCheminPubl($chemin)
+			{
+				return substr($chemin, strlen($this->CheminAdminVersPubl."/"), strlen($chemin)) ;
+			}
 			public function CreeBarreMenuModulesPage()
 			{
 				$barreMenu = new PvTablMenuHoriz() ;
@@ -171,6 +180,19 @@
 				{
 					$module = & $this->ModulesPage[$nomModele] ;
 					$module->RemplitZoneAdmin($zone) ;
+				}
+			}
+			protected function RemplitZoneMembreSpec(& $zone)
+			{
+			}
+			public function RemplitZoneMembre(& $zone)
+			{
+				$this->RemplitZoneMembreSpec($zone) ;
+				$nomModeles = array_keys($this->ModulesPage) ;
+				foreach($nomModeles as $i => $nomModele)
+				{
+					$module = & $this->ModulesPage[$nomModele] ;
+					$module->RemplitZoneMembre($zone) ;
 				}
 			}
 			public function InscritNouvMdlPage($nom, $module)

@@ -22,7 +22,7 @@
 		{
 			include dirname(__FILE__).'/ModulePage/Slider.class.php' ;
 		}
-		if(! defined('MODULE_CONTACT_SWS'))
+		if(! defined('MODULE_LIVRE_D_OR_SWS'))
 		{
 			include dirname(__FILE__).'/ModulePage/LivreDOr.class.php' ;
 		}

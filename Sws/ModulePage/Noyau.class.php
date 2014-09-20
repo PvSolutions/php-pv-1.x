@@ -73,6 +73,7 @@
 			public $EstIndefini = 0 ;
 			public $NomRef = "" ;
 			public $Entites = array() ;
+			public $RemplZoneMembrePossible = 1 ;
 			public $RemplZonePublPossible = 1 ;
 			public $RemplZoneAdminPossible = 1 ;
 			public $PrivilegesConsult = array() ;
@@ -250,6 +251,21 @@
 				}
 				$this->RemplitZoneAdminValide($zone) ;
 			}
+			protected function RemplitZoneMembreValide(& $zone)
+			{
+			}
+			public function RemplitZoneMembre(& $zone)
+			{
+				if(! $this->RemplZoneMembrePossible)
+				{
+					return ;
+				}
+				foreach($this->Entites as $nom => & $entite)
+				{
+					$entite->RemplitZoneMembre($zone) ;
+				}
+				$this->RemplitZoneMembreValide($zone) ;
+			}
 			public function & InsereEntite($nom, $entite)
 			{
 				$this->InscritEntite($nom, $entite) ;
@@ -341,6 +357,7 @@
 			public $EstIndefinie = 1 ;
 			public $NomElementModule ;
 			public $PresentDansMenu = 1 ;
+			public $RemplZoneMembreAdmin = 1 ;
 			public $ModuleParent ;
 			public $BarreMenu ;
 			public $MenuRacine ;
@@ -423,6 +440,13 @@
 			}
 			public function RemplitZoneAdmin(& $zone)
 			{
+			}
+			public function RemplitZoneMembre(& $zone)
+			{
+				if($this->RemplZoneMembreAdmin)
+				{
+					$this->RemplitZoneAdmin($zone) ;
+				}
 			}
 			protected function InscritEntite($nom, & $entite)
 			{
@@ -595,7 +619,7 @@
 			public $InclureFltsTblList = 1 ;
 			public function ObtientCheminPubl($chemin)
 			{
-				return substr($chemin, strlen($this->ModuleParent->SystemeParent->CheminAdminVersPubl."/"), strlen($chemin)) ;
+				return $this->ModuleParent->SystemeParent->ObtientCheminPubl($chemin) ;
 			}
 			public function ObtientUrlPubl()
 			{

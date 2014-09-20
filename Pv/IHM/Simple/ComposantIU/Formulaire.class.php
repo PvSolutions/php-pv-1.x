@@ -464,6 +464,10 @@
 			}
 			protected function DetecteCommandeSelectionnee()
 			{
+				if($this->CacherBlocCommandes)
+				{
+					return ;
+				}
 				$nomParam = $this->IDInstanceCalc."_".$this->NomParamIdCommande ;
 				$this->ValeurParamIdCommande = (isset($_POST[$nomParam])) ? $_POST[$nomParam] : "" ;
 				if(! in_array($this->ValeurParamIdCommande, array_keys($this->Commandes)))

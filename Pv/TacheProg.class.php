@@ -53,7 +53,7 @@
 				echo $this->Message ;
 			}
 		}
-	
+		
 		class PvTacheDossierSE extends PvTacheProg
 		{
 			public $CheminAbsoluDossier ;
@@ -117,8 +117,6 @@
 				return 1 ;
 			}
 		}
-		
-		
 		
 	}
 	
