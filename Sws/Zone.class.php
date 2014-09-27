@@ -12,10 +12,12 @@
 		{
 			public $BarreLiensMembre ;
 			public $InclureScriptsMembership = 1 ;
-			public $CheminLogo = "images/logo.png" ;
+			public $CheminLogo = "../images/logo.png" ;
 			public $MsgCopyright = "SWS (C) Tous droits r&eacute;serv&eacute;s" ;
 			public $InclureJQuery = 1 ;
 			public $InclureJQueryUi = 1 ;
+			public $IncRenduBarreLiensMembre = 1 ;
+			public $IncRenduLogo = 1 ;
 			protected function ObtientDefCSS()
 			{
 				$ctn = '' ;
@@ -56,14 +58,20 @@
 			{
 				$ctn = '' ;
 				$ctn .= '<body>'.PHP_EOL ;
-				$ctn .= '<table align="center" width="100%" cellspacing="0" cellpadding="2">
-<tr>
+				$ctn .= '<table align="center" width="100%" cellspacing="0" cellpadding="2">' ;
+				if($this->IncRenduBarreLiensMembre)
+				{
+					$ctn .= '<tr>
 <td class="menu-haut">'.$this->BarreLiensMembre->RenduDispositif().'</td>
-</tr>
-<tr>
-<td><img src="../'.$this->CheminLogo.'" /></td>
-</tr>
-<tr>
+</tr>' ;
+				}
+				if($this->IncRenduLogo)
+				{
+					$ctn .= '<tr>
+<td><img src="'.$this->CheminLogo.'" /></td>
+</tr>'.PHP_EOL ;
+				}
+				$ctn .= '<tr>
 <td>'.PHP_EOL ;
 				return $ctn ;
 			}

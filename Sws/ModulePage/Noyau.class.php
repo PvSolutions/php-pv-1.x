@@ -1254,7 +1254,7 @@
 			{
 				$ctn = '' ;
 				// $ctn .= $this->RenduFilArianeScript($script) ;
-				$ctn .= '<h3 class="titre">'.htmlentities($script->Titre).'</h3>' ;
+				$ctn .= '<h3 class="titre">'.$script->Titre.'</h3>' ;
 				return $ctn ;
 			}
 			public function RenduFilArianeScript(& $script)

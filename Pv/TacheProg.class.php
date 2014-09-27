@@ -39,16 +39,15 @@
 		{
 			protected function ExecuteSession()
 			{
+				$processMgr = OsProcessManager::Current() ;
 				$nomServsPersists = array_keys($this->ApplicationParent->ServicesPersists) ;
 				foreach($nomServsPersists as $i => $nomServPersist)
 				{
 					$servPersist = & $this->ApplicationParent->ServicesPersists[$nomServPersist] ;
-					if($servPersist->NomElementApplication == $this->NomElementApplication)
-					{
-						continue ;
-					}
 					if(! $servPersist->Verifie())
-						$servPersist->LanceProcessus() ;
+					{
+						$servPersist->DemarreService() ;
+					}
 				}
 				echo $this->Message ;
 			}

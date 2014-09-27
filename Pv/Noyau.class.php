@@ -18,6 +18,10 @@
 		{
 			include dirname(__FILE__)."/../CommonDB/Base.class.php" ;
 		}
+		if(! defined('PROCESS_MANAGER_INCLUDED'))
+		{
+			include dirname(__FILE__)."/../Common/ProcessManager.class.php" ;
+		}
 		if(! defined('PV_JOURNAL_TRACES'))
 		{
 			include dirname(__FILE__)."/JournalTraces.class.php" ;
@@ -105,6 +109,18 @@
 					$resultat = str_replace("\\", DIRECTORY_SEPARATOR, $resultat) ;
 				return $resultat ;
 			}
+			public function ObtientDelaiMaxExecution()
+			{
+				return ini_get('max_execution_time');
+			}
+			public function ObtientDelaiMaxExec()
+			{
+				return $this->ObtientDelaiMaxExecution() ;
+			}
+			public function DelaiMaxExec()
+			{
+				return $this->ObtientDelaiMaxExecution() ;
+			}
 		}
 		class PvNul extends PvObjet
 		{
@@ -132,6 +148,11 @@
 			public $DebogageActive = 0 ;
 			public $CtrlTachesProgs ;
 			public $CtrlServsPersists ;
+			public $ChemRelRegServsPersists ;
+			public function ObtientChemRelRegServsPersists()
+			{
+				return dirname(__FILE__)."/".$this->CheminFichierRelatif."/".$this->ChemRelRegServsPersists ;
+			}
 			public function Debogue($niveau, $message)
 			{
 				if(! $this->DebogageActive)
@@ -441,6 +462,9 @@
 			public function LanceProcessusProg(& $prog)
 			{
 			}
+			public function TermineProcessusProg(& $prog)
+			{
+			}
 		}
 		class PvPlateformProcIndef extends PvPlateformProcBase
 		{
@@ -458,6 +482,10 @@
 		}
 		class PvPlateformProcConsole extends PvPlateformProcBase
 		{
+			public function ObtientNomOS()
+			{
+				return (PHP_OS == "WINNT" || PHP_OS == "WIN32") ? 'Windows' : 'Linux' ;
+			}
 			public function EstDisponible()
 			{
 				return php_sapi_name() == 'cli' ? 1 : 0 ;
@@ -505,7 +533,11 @@
 					return 1 ;
 				}
 			}
-			public function AnnuleFluxProc(& $fluxProc)
+			public function TermineProcessusProg(& $prog)
+			{
+				$os = $this->ObtientNomOS() ;
+			}
+			public function AnnuleFluxProc($fluxProc)
 			{
 				if(is_resource($fluxProc))
 				{
@@ -602,6 +634,10 @@
 			public function LanceProcessus()
 			{
 				return $this->Plateforme->LanceProcessusProg($this) ;
+			}
+			public function TermineProcessus()
+			{
+				return $this->Plateforme->TermineProcessusProg($this) ;
 			}
 		}
 		
@@ -700,6 +736,18 @@
 			}
 		}
 		
+		class PvEtatServPersist
+		{
+			const ETAT_NON_DEFINI = 0 ;
+			const ETAT_DEMARRE = 1 ;
+			const ETAT_STOPPE = 2 ;
+			public $PID = 0 ;
+			public $Statut = 0 ;
+			public $TimestmpCapt = 0 ;
+			public $TimestmpDebutSession = 0 ;
+			public $TimestmpFinSession = 0 ;
+			// public 
+		}
 		class PvServPersist extends PvProgramAppBase
 		{
 			public $Arreter = 0 ;
@@ -707,15 +755,94 @@
 			public $TotalSessions = 0 ;
 			public $DelaiAttente = 5 ;
 			public $DelaiBoucle = 30 ;
-			public $LimiterDelaiBoucle = 1 ;
+			public $LimiterDelaiBoucle = 0 ;
+			public $Etat ;
+			public $EnregEtat = 1 ;
 			protected $NaturePlateforme = "console" ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->Etat = new PvEtatServPersist() ;
+				register_shutdown_function(array(& $this, "ConfirmEtatArrete")) ;
+			}
+			protected function ObtientChemFicEtat()
+			{
+				return $this->ApplicationParent->ObtientChemRelRegServsPersists()."/".$this->NomElementApplication.".dat" ;
+			}
+			public function DemarreService()
+			{
+				if($this->Etat->PID != 0)
+				{
+					$processMgr = OsProcessManager::Current() ;
+					$processMgr->KillProcessList(array($this->Etat->ID)) ;
+				}
+				$this->LanceProcessus() ;
+			}
+			public function EstDemarre()
+			{
+				return $this->Etat->Statut == PvEtatServPersist::ETAT_DEMARRE ;
+			}
+			public function DetecteEtat()
+			{
+				$this->ChargeEtat() ;
+			}
+			public function ChargeEtat()
+			{
+				$chemFicEtat = $this->ObtientChemFicEtat() ;
+				$fh = fopen($cheminEtat, "r") ;
+				$ctn = "" ;
+				if($fh != false)
+				{
+					while(! feof($fh))
+					{
+						$ctn .= fgets($fh) ;
+					}
+					fclose($fh) ;
+				}
+				if($ctn != "")
+				{
+					$this->Etat = unserialize($ctn) ;
+					if($this->Etat == false)
+					{
+						$this->Etat = new PvEtatServPersist() ;
+					}
+				}
+			}
+			protected function SauveEtat()
+			{
+				$chemFicEtat = $this->ObtientChemFicEtat() ;
+				$fh = fopen($chemFicEtat, "w") ;
+				fputs($fh, serialize($this->Etat)) ;
+				fclose($fh) ;
+			}
+			protected function FixeTempsExec($nouvDelai)
+			{
+				$ancDelai = $this->DelaiMaxExec() ;
+				set_time_limit($nouvDelai) ;
+				return $ancDelai ;
+			}
 			public function Verifie()
 			{
+				if(! $this->EstDemarre())
+				{
+					return 0 ;
+				}
 				return 1 ;
 			}
 			public function EstDisponible()
 			{
 				return 1 ;
+			}
+			protected function ConfirmEtatDebutSession()
+			{
+				$this->Etat->TimestmpDebutSession = date("U") ;
+				$this->Etat->TimestmpFinSession = 0 ;
+				$this->SauveEtat() ;
+			}
+			protected function ConfirmEtatFinSession()
+			{
+				$this->Etat->TimestmpFinSession = date("U") ;
+				$this->SauveEtat() ;
 			}
 			protected function RepeteBoucle()
 			{
@@ -723,10 +850,10 @@
 				while(! $this->Arreter)
 				{
 					if($this->LimiterDelaiBoucle)
-						$oldTimeLimit = @set_time_limit($this->DelaiBoucle) ;
+						$oldTimeLimit = $this->FixeTempsExec($this->DelaiBoucle) ;
 					$this->ExecuteSession() ;
 					if($this->LimiterDelaiBoucle)
-						@set_time_limit($oldTimeLimit) ;
+						$this->FixeTempsExec($oldTimeLimit) ;
 					$this->TotalSessions++ ;
 					if($this->MaxSessions > 0 && $this->TotalSessions >= $this->MaxSessions)
 					{
@@ -743,6 +870,27 @@
 			}
 			protected function PrepareEnvironnement()
 			{
+			}
+			protected function ConfirmEtatDemarre()
+			{
+				$this->Etat->PID = getmypid() ;
+				$this->Etat->TimestmpCapt = date("U") ;
+				$this->Etat->Statut = PvEtatServPersist::ETAT_DEMARRE ;
+				$this->SauveEtat() ;
+			}
+			public function ConfirmEtatArrete()
+			{
+				if($this->Etat->PID != getmypid())
+					return ;
+				$this->Etat->PID = 0 ;
+				$this->Etat->TimestmpCapt = date("U") ;
+				$this->Etat->Statut = PvEtatServPersist::ETAT_STOPPE ;
+				$this->SauveEtat() ;
+			}
+			protected function DemarreExecution()
+			{
+				parent::DemarreExecution() ;
+				$this->ConfirmEtatDemarre() ;
 			}
 			public function Execute()
 			{

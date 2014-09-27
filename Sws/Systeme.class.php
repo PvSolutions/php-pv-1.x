@@ -195,17 +195,29 @@
 					$module->RemplitZoneMembre($zone) ;
 				}
 			}
-			public function InscritNouvMdlPage($nom, $module)
+			public function & InscritNouvMdlPage($nom, $module)
 			{
 				$this->InscritModulePage($nom, $module) ;
+				return $module ;
+			}
+			public function & InsereMdlPage($nom, $module)
+			{
+				$this->InscritModulePage($nom, $module) ;
+				return $module ;
 			}
 			public function InscritMdlPage($nom, & $module)
 			{
 				$this->InscritModulePage($nom, $module) ;
 			}
-			public function InscritNouvModulePage($nom, $module)
+			public function & InscritNouvModulePage($nom, $module)
 			{
 				$this->InscritModulePage($nom, $module) ;
+				return $module ;
+			}
+			public function & InsereModulePage($nom, $module)
+			{
+				$this->InscritModulePage($nom, $module) ;
+				return $module ;
 			}
 			public function InscritModulePage($nom, & $module)
 			{

@@ -40,7 +40,7 @@
 			}
 			protected function ChargeAttributs()
 			{
-				$this->Attributs= array() ;
+				$this->Attributs = array() ;
 				$this->Attributs[] = new AttributIdSessionEntreeTrace() ;
 				$this->Attributs[] = new AttributDateCreationEntreeTrace() ;
 				$this->Attributs[] = new AttributNomNavigateurEntreeTrace() ;

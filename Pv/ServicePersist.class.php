@@ -41,12 +41,20 @@
 			public function Decode($contenu)
 			{
 				$resultat = false ;
-				@eval('$resultat = '.$contenu.' ;') ;
+				if(empty($contenu))
+				{
+					return $resultat ;
+				}
+				$resultat = unserialize($contenu) ;
 				return $resultat ;
 			}
 			public function Encode($contenu)
 			{
-				return var_export($contenu) ;
+				if(empty($contenu))
+				{
+					return "" ;
+				}
+				return serialize($contenu) ;
 			}
 		}
 		class PvFormatPaquetJSON extends PvFormatPaquetBase
@@ -186,13 +194,18 @@
 			protected $Adresse = "" ;
 			public $Port = 4401 ;
 			public $DelaiOuvrFlux = 10 ;
+			public $LimiterDelaiBoucle = 0 ;
 			public $DelaiLectFlux = 2 ;
 			public $DelaiInactivite = 30 ;
+			public $EcartInactiviteBoucle = 5 ;
 			public $TaillePaquetFlux = 1024 ;
 			public $FormatPaquet ;
+			public $DelaiAttente = 1 ;
+			public $MaxSessions = 0 ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
+				$this->FormatPaquet = $this->CreeFormatPaquet() ;
 				register_shutdown_function(array(& $this, 'AnnuleFlux')) ;
 			}
 			protected function CreeFormatPaquet()
@@ -235,33 +248,40 @@
 			}
 			public function EnvoieDemande($contenu)
 			{
-				$this->FluxEnvoi = stream_socket_client($this->ExtraitAdresse(), $this->Port, $codeErreur, $msgErreur) ;
+				$msgErreur = "" ;
+				$this->FluxEnvoi = stream_socket_client($this->ExtraitAdresse(), $codeErreur, $msgErreur, 2, STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT) ;
 				$partieResult = '' ;
 				$resultat = '' ;
 				$longueurMax = 1024 ;
 				if($this->FluxEnvoi !== false)
 				{
-					fputs($this->FluxEnvoi, $this->FormatPaquet->Encode($contenu)) ;
-					do
+					$ctnEncode = $this->FormatPaquet->Encode($contenu) ;
+					$ok = fputs($this->FluxEnvoi, $ctnEncode) ;
+					if($ok)
 					{
-						$partieResult = fgets($this->FluxEnvoi, $longueurMax) ;
-						$resultat .= $partieResult ;
+						do
+						{
+							stream_set_timeout($this->FluxEnvoi, $this->DelaiLectFlux) ;
+							$partieResult = fread($this->FluxEnvoi, $longueurMax) ;
+							$resultat .= $partieResult ;
+						}
+						while(strlen($partieResult) == $longueurMax) ;
 					}
-					while(strlen($partieResult) == $longueurMax) ;
 					$this->FermeFluxEnvoi() ;
 				}
 				return $this->FormatPaquet->Decode($resultat) ;
 			}
 			protected function RecoitDemandes()
 			{
+				$delaiInactivite = ($this->LimiterDelaiBoucle) ? $this->DelaiBoucle - $this->EcartInactiviteBoucle : $this->DelaiInactivite ;
 				// print_r(get_resource_type($this->Flux)) ;
-				while($this->FluxClient = @stream_socket_accept($this->Flux, $this->DelaiInactivite))
+				while($this->FluxClient = @stream_socket_accept($this->Flux, $delaiInactivite))
 				{
 					$paquet = new PvPaquetSocket() ;
 					do
 					{
 						stream_set_timeout($this->FluxClient, $this->DelaiLectFlux) ;
-						$partiePaquet = fgets($this->FluxClient, $this->TaillePaquetFlux) ;
+						$partiePaquet = fread($this->FluxClient, $this->TaillePaquetFlux) ;
 						$paquet->Contenu .= $partiePaquet ;
 					}
 					while(strlen($partiePaquet) == $this->TaillePaquetFlux && ! feof($this->FluxClient)) ;
@@ -289,7 +309,8 @@
 			protected function TraitePaquet($paquet)
 			{
 				$contenuDecode = $this->FormatPaquet->Decode($paquet->Contenu) ;
-				$resultat = $this->RepondDemande($paquet, $contenu) ;
+				// print "Decode : ".$paquet->Contenu."\n\t".$contenuDecode."\n" ;
+				$resultat = $this->RepondDemande($contenuDecode) ;
 				return $this->FormatPaquet->Encode($resultat) ;
 			}
 			protected function RepondDemande($contenu)
@@ -430,7 +451,7 @@
 			public function AppelleMethode($nom, $args=array())
 			{
 				$envoi = $this->CreeEnvoi($nom, $args) ;
-				$retour = $this->EnvoieDemande($this->FormatPaquet->Encode($envoi)) ;
+				$retour = $this->EnvoieDemande($envoi) ;
 				return $retour ;
 			}
 			public function Test()
@@ -470,9 +491,9 @@
 				{
 					$methodes[$nom] = & $this->Methodes[$nom] ;
 				}
-				$methodes[$this->NomMethodeNonTrouve] = & $this->MethodeNonTrouve ;
-				$methodes[$this->NomMethodeTest] = & $this->MethodeTest ;
-				$methodes[$this->NomMethodeVerif] = & $this->MethodeVerif ;
+				$methodes[$this->NomMethodeNonTrouve] = $this->CreeMethodeNonTrouve() ;
+				$methodes[$this->NomMethodeTest] = $this->CreeMethodeTest() ;
+				$methodes[$this->NomMethodeVerif] = $this->CreeMethodeVerif() ;
 				return $methodes ;
 			}
 			protected function RepondDemande($contenu)
@@ -495,6 +516,7 @@
 						$nomMethode = $this->NomMethodeNonTrouve ;
 					}
 				}
+				// echo "Methode : ".$nomMethode."\n" ;
 				$methodes[$nomMethode]->Execute($this, $nomMethode, (isset($contenu->args)) ? $contenu->args : array()) ;
 				$retour->resultat = $methodes[$nomMethode]->Resultat ;
 				$retour->codeErreur = $methodes[$nomMethode]->CodeErreur ;
