@@ -113,6 +113,22 @@
 				parent::InitConfig() ;
 				$this->BarreMenuSuperfish = new PvBarreMenuAdminDirecte() ;
 			}
+			protected function AfficheRenduInacessible()
+			{
+				$url = $this->ScriptConnexion->ObtientUrl() ;
+				echo '<script type=text/javascript>
+	var urlConnexion = '.svc_json_encode($url).' ;
+	if(window.top != window)
+	{
+		window.top.location = urlConnexion ;
+	}
+	else
+	{
+		window.top.location = urlConnexion ;
+	}
+</script>' ;
+				exit ;
+			}
 			protected function ContenuJsOuvreOngletScript($nomScript)
 			{
 				if(! isset($this->Scripts[$nomScript]))

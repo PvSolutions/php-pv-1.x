@@ -462,13 +462,13 @@
 			}
 			protected function AfficheRenduInacessible()
 			{
-				Header("HTTP/1.0 401 Unauthorized") ;
+				header('HTTP/1.1 401 Unauthorized');
+				echo "Vous n'avez pas le droit d'acc&eacute;der &agrave; ce script !!!" ;
 				exit ;
 			}
 			protected function ExecuteScriptInaccessible(& $script)
 			{
 				$this->AfficheRenduInacessible() ;
-				// die("Vous n'avez pas le droit d'acc&eacute;der &agrave; ce script !!!") ;
 			}
 			protected function ExecuteScriptMalRefere(& $script)
 			{

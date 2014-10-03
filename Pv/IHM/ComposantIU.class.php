@@ -78,6 +78,11 @@
 				}
 				return $ctn ;
 			}
+			protected function DefinitRenduBloque($msg)
+			{
+				$this->Bloque = 1 ;
+				return $msg ;
+			}
 			protected function RenduException($exception)
 			{
 				return $this->ZoneParent->RenduException($exception) ;

@@ -166,6 +166,16 @@
 				return $ctn ;
 			}
 		}
+		class PvFormatteurColonneMonnaie extends PvFormatteurColonneDonnees
+		{
+			public $MaxDecimals = 0 ;
+			public $MinChiffres = 1 ;
+			public function Encode(& $script, $colonne, $ligne)
+			{
+				$valeurEntree = $ligne[$colonne->NomDonnees] ;
+				return format_money($valeurEntree, $this->MaxDecimals, $this->MinChiffres) ;
+			}
+		}
 		class PvFormatteurColonneModeleHtml extends PvFormatteurColonneDonnees
 		{
 			public $ModeleHtml = "" ;

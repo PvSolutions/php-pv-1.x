@@ -380,6 +380,17 @@
 					$defCol->ValeurNegative = $valNegative ;
 				return $defCol ;
 			}
+			public function & InsereDefColMonnaie($nomDonnees, $libelle="", $aliasDonnees="")
+			{
+				$defCol = $this->InsereDefColMoney($nomDonnees, $libelle, $aliasDonnees) ;
+				return $defCol ;
+			}
+			public function & InsereDefColMoney($nomDonnees, $libelle="", $aliasDonnees="")
+			{
+				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
+				$defCol->Formatteur = new PvFormatteurColonneMonnaie() ;
+				return $defCol ;
+			}
 			public function & InsereDefColSansTri($nomDonnees, $libelle="", $aliasDonnees="")
 			{
 				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
@@ -845,6 +856,11 @@
 				}
 				return $parametres ;
 			}
+			protected function ObtientNomClsCSSElem($index, & $elem)
+			{
+				$classePair = ($index % 2 == 0) ? "Pair" : "Impair" ;
+				return 'Contenu '.$classePair ;
+			}
 			protected function RenduRangeeDonnees()
 			{
 				$ctn = '' ;
@@ -937,9 +953,8 @@
 						$ctn .= '</tr>'.PHP_EOL ;
 						foreach($this->ElementsEnCours as $j => $ligne)
 						{
-							$classePair = ($j % 2 == 0) ? "Pair" : "Impair" ;
 							$ctn .= '<tr' ;
-							$ctn .= ' class="Contenu '.$classePair.'"' ;
+							$ctn .= ' class="'.htmlentities($this->ObtientNomClsCSSElem($j, $ligne)) .'"' ;
 							if($this->SurvolerLigneFocus)
 							{
 								$ctn .= ' onMouseOver="this.className = this.className + &quot; Survole&quot;;" onMouseOut="this.className = this.className.split(&quot; Survole&quot;).join(&quot; &quot;) ;"' ;

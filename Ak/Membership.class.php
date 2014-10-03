@@ -93,8 +93,11 @@
 			public $UseRootMember = 1 ;
 			public $SessionMemberId = false ;
 			public $SessionMemberKey = "login" ;
+			public $UpdateTimeKey = "update_time" ;
 			public $SessionSource = "SESSION" ;
 			public $SessionTimeout = 0 ;
+			public $LastUpdateTime = 0 ;
+			public $SessionInactiveFound = 0 ;
 			protected function InitConfig(& $parent)
 			{
 				$this->ParentArea = & $parent ;
@@ -145,6 +148,15 @@
 			}
 			public function LoadSession()
 			{
+				if($this->SessionTimeout > 0)
+				{
+					$this->LastUpdateTime = $this->GetSessionValue($this->UpdateTimeKey) ;
+					if($this->UpdateTimeKey !== false && date("U") - $this->LastUpdateTime > $this->SessionTimeout * 60)
+					{
+						$this->ClearSession() ;
+					}
+					$this->SetSessionValue($this->UpdateTimeKey, date("U")) ;
+				}
 				$this->SessionMemberId = $this->GetSessionValue($this->SessionMemberKey) ;
 				if($this->SessionMemberId === false && $this->UseGuestMember && $this->GuestMemberId != false)
 				{
@@ -159,10 +171,18 @@
 			public function SaveSession($memberId)
 			{
 				$this->SetSessionValue($this->SessionMemberKey, $memberId) ;
+				if($this->SessionTimeout > 0)
+				{
+					$this->SetSessionValue($this->UpdateTimeKey, date("U")) ;
+				}
 			}
 			public function ClearSession()
 			{
-				$this->SetSessionValue($this->SessionMemberKey, null) ;
+				$this->SetSessionValue($this->UpdateTimeKey, null) ;
+				if($this->SessionTimeout > 0)
+				{
+					$this->SetSessionValue($this->SessionMemberKey, null) ;
+				}
 			}
 			public function ValidateConnection($login, $password)
 			{
