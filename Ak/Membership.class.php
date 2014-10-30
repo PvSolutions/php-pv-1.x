@@ -178,10 +178,10 @@
 			}
 			public function ClearSession()
 			{
-				$this->SetSessionValue($this->UpdateTimeKey, null) ;
+				$this->SetSessionValue($this->SessionMemberKey, null) ;
 				if($this->SessionTimeout > 0)
 				{
-					$this->SetSessionValue($this->SessionMemberKey, null) ;
+					$this->SetSessionValue($this->UpdateTimeKey, null) ;
 				}
 			}
 			public function ValidateConnection($login, $password)

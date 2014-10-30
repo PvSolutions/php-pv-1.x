@@ -124,7 +124,7 @@
 	}
 	else
 	{
-		window.top.location = urlConnexion ;
+		window.location = urlConnexion ;
 	}
 </script>' ;
 				exit ;

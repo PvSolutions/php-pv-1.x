@@ -1180,7 +1180,11 @@
 			public $LibelleLienListeMembres = "Membres" ;
 			public $LibelleLienListeProfils = "Profils" ;
 			public $LibelleLienListeRoles = "R&ocirc;les" ;
+			public $LibelleLienAjoutMembre = "Inscription" ;
+			public $LibelleLienAjoutProfil = "Cr&eacute;er profil" ;
+			public $LibelleLienAjoutRole = "Cr&eacute;er r&ocirc;le" ;
 			public $InclureLiensEdition = 1 ;
+			public $InclureLiensAjout = 1 ;
 			protected function RenduAutreLiensConnecte()
 			{
 				$ctn = parent::RenduAutreLiensConnecte() ;
@@ -1195,14 +1199,29 @@
 						$ctn .= '<a href="'.$this->ZoneParent->ScriptListeMembres->ObtientUrl().'">'.$this->LibelleLienListeMembres.'</a>' ;
 						$ctn .= $this->SeparateurLiens ;
 					}
+					if($this->InclureLiensAjout && $this->ZoneParent->ScriptAccessible($this->ZoneParent->NomScriptAjoutMembre))
+					{
+						$ctn .= '<a href="'.$this->ZoneParent->ScriptAjoutMembre->ObtientUrl().'">'.$this->LibelleLienAjoutMembre.'</a>' ;
+						$ctn .= $this->SeparateurLiens ;
+					}
 					if($this->ZoneParent->ScriptAccessible($this->ZoneParent->NomScriptListeProfils))
 					{
 						$ctn .= '<a href="'.$this->ZoneParent->ScriptListeProfils->ObtientUrl().'">'.$this->LibelleLienListeProfils.'</a>' ;
 						$ctn .= $this->SeparateurLiens ;
 					}
+					if($this->InclureLiensAjout && $this->ZoneParent->ScriptAccessible($this->ZoneParent->NomScriptAjoutProfil))
+					{
+						$ctn .= '<a href="'.$this->ZoneParent->ScriptAjoutProfil->ObtientUrl().'">'.$this->LibelleLienAjoutProfil.'</a>' ;
+						$ctn .= $this->SeparateurLiens ;
+					}
 					if($this->ZoneParent->ScriptAccessible($this->ZoneParent->NomScriptListeRoles))
 					{
 						$ctn .= '<a href="'.$this->ZoneParent->ScriptListeRoles->ObtientUrl().'">'.$this->LibelleLienListeRoles.'</a>' ;
+						$ctn .= $this->SeparateurLiens ;
+					}
+					if($this->InclureLiensAjout && $this->ZoneParent->ScriptAccessible($this->ZoneParent->NomScriptAjoutRole))
+					{
+						$ctn .= '<a href="'.$this->ZoneParent->ScriptAjoutRole->ObtientUrl().'">'.$this->LibelleLienAjoutRole.'</a>' ;
 						$ctn .= $this->SeparateurLiens ;
 					}
 				}

@@ -43,6 +43,7 @@
 			public $AnnulerCommandeSelectionnee = 0 ;
 			public $Titre = "" ;
 			public $AlignTitre = "left" ;
+			public $NomClasseCSS = "" ;
 			public $NomClasseCSSTitre = "titre" ;
 			public $NomClasseCSSDescription = "description" ;
 			public $Description = "" ;
@@ -60,7 +61,7 @@
 			public $DessinateurBlocCommandes = null ;
 			public $CacherBlocCommandes = 0 ;
 			public $AnnulerLiaisonParametre = 0 ;
-			public $DispositionComposants = array(3, 1, 2) ;
+			public $DispositionComposants = array(4, 3, 1, 2) ;
 			public $MessageResultatCalculElements = "" ;
 			public $MessageAucunElement = "Aucun &eacute;l&eacute;ment trouv&eacute;" ;
 			public $CacherFormulaireFiltres = 0 ;
@@ -75,6 +76,7 @@
 			public $MsgExecEchecCommandeAnnuler = "" ;
 			public $ActCmdsCommandeAnnuler = array() ;
 			public $CriteresCommandeAnnuler = array() ;
+			public $PopupMessageExecution = 0 ;
 			public function & InsereFltEditRef($nom, & $filtreRef, $colLiee='', $nomComp='')
 			{
 				$flt = $this->CreeFiltreRef($nom, $filtreRef) ;
@@ -565,12 +567,48 @@
 				$this->LieFiltresSelection() ;
 				$this->LieFiltresEdition() ;
 			}
+			public function NeLiePasParamFiltresEdition()
+			{
+				$nomFiltres = array_keys($this->FiltresEdition) ;
+				foreach($nomFiltres as $i => $nom)
+				{
+					$this->FiltresEdition[$nom]->NePasLierParametre = 1 ;
+				}
+			}
+			public function NeLiePasParamFltsEdit()
+			{
+				$this->NeLiePasParamFiltresEdition() ;
+			}
+			public function FigeFltsEdit()
+			{
+				$this->FigeFiltresEdition() ;
+			}
+			public function FigeFiltresEdition()
+			{
+				$nomFiltres = array_keys($this->FiltresEdition) ;
+				foreach($nomFiltres as $i => $nom)
+				{
+					$this->FiltresEdition[$nom]->LectureSeule = 1 ;
+				}
+			}
+			public function CacheFltsEdit()
+			{
+				$this->CacheFiltresEdition() ;
+			}
+			public function CacheFiltresEdition()
+			{
+				$nomFiltres = array_keys($this->FiltresEdition) ;
+				foreach($nomFiltres as $i => $nom)
+				{
+					$this->FiltresEdition[$nom]->Visible = 1 ;
+				}
+			}
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
 				if(count($this->DispositionComposants))
 				{
-					$ctn .= '<form class="FormulaireDonnees" method="post" enctype="multipart/form-data" onsubmit="SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
 					foreach($this->DispositionComposants as $i => $id)
 					{
 						if($i > 0)
@@ -653,14 +691,6 @@
 						}
 						$ctn .= ' cellspacing="0"' ;
 						$ctn .= '>'.PHP_EOL ;
-						if($this->Titre != '')
-						{
-							$ctn .= '<tr>'.PHP_EOL ;
-							$ctn .= '<th align="'.$this->AlignTitre.'">'.PHP_EOL ;
-							$ctn .= $this->Titre ;
-							$ctn .= '</th>'.PHP_EOL ;
-							$ctn .= '</tr>'.PHP_EOL ;
-						}
 						$ctn .= '<tr>'.PHP_EOL ;
 						$ctn .= '<td>'.PHP_EOL ;
 						$ctn .= $this->DessinateurFiltresEdition->Execute($this->ScriptParent, $this, $this->FiltresEdition) ;
@@ -712,12 +742,37 @@
 				{
 					return $ctn ;
 				}
-				$ctn .= '<div' ;
-				$classeCSS = ($this->CommandeSelectionnee->StatutExecution == 1) ? "Succes" : "Erreur" ;
-				$ctn .= ' class="'.$classeCSS.'"' ;
-				$ctn .= '>' ;
-				$ctn .= $this->CommandeSelectionnee->MessageExecution ;
-				$ctn .= '</div>' ;
+				if($this->PopupMessageExecution)
+				{
+					if(! $this->ZoneParent->InclureJQueryUi)
+					{
+						$ctn .= '<script language="javascript">'.PHP_EOL ;
+						$ctn .= 'alert('.svc_json_encode(html_entity_decode($this->CommandeSelectionnee->MessageExecution)).') ;' ;
+						$ctn .= '</script>'.PHP_EOL ;
+					}
+					else
+					{
+						$ctn .= '<div id="DialogMsg'.$this->IDInstanceCalc.'" class="ui-dialog" align="center">'.$this->CommandeSelectionnee->MessageExecution.'</div>' ;
+						$ctn .= '<script language="javascript">'.PHP_EOL ;
+						$ctn .= 'jQuery(function() {
+	jQuery("#DialogMsg'.$this->IDInstanceCalc.'").dialog({
+		autoOpen : true,
+		resizable : false,
+		modal : true
+	}) ;
+})'.PHP_EOL ;
+						$ctn .= '</script>'.PHP_EOL ;
+					}
+				}
+				else
+				{
+					$ctn .= '<div' ;
+					$classeCSS = ($this->CommandeSelectionnee->StatutExecution == 1) ? "Succes" : "Erreur" ;
+					$ctn .= ' class="'.$classeCSS.'"' ;
+					$ctn .= '>' ;
+					$ctn .= $this->CommandeSelectionnee->MessageExecution ;
+					$ctn .= '</div>' ;
+				}
 				return $ctn ;
 			}
 			public function RemplaceCommandeAnnuler($nomClasse)

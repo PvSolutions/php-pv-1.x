@@ -80,7 +80,9 @@
 			{
 				if($objet == null)
 					return 1 ;
-				return (get_class($objet) == "PvNul") ? 1 : 0 ;
+				$nomClasse = get_class($objet) ;
+				$nomClasseObj = get_class($this) ;
+				return (in_array($nomClasse, array("PvNul", "stdClass"))) ? 1 : 0 ;
 				// return (get_class($objet) == "PvNul" or get_class($objet) == get_class($this)) ? 1 : 0 ;
 			}
 			public function EstNonNul($objet)

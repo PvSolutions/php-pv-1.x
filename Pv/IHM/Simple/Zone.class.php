@@ -182,10 +182,27 @@
 				$ctn .= $this->RenduDefinitionTypeDocument().PHP_EOL ;
 				$ctn .= '<html lang="'.$this->LangueDocument.'">'.PHP_EOL ;
 				$ctn .= $this->RenduEnteteDocument().PHP_EOL ;
-				$ctn .= $this->RenduCorpsDocument().PHP_EOL ;
+				if($this->ScriptPourRendu->UtiliserCorpsDocZone)
+				{
+					$ctn .= $this->RenduCorpsDocument().PHP_EOL ;
+				}
+				else
+				{
+					$ctn .= $this->RenduDebutCorpsDocument().PHP_EOL ;
+					$ctn .= $this->RenduContenuCorpsDocument().PHP_EOL ;
+					$ctn .= $this->RenduDebutCorpsDocument().PHP_EOL ;
+				}
 				$ctn .= $this->RenduPiedDocument().PHP_EOL ;
 				$ctn .= '</html>' ;
 				return $ctn ;
+			}
+			protected function RenduDebutCorpsDocument()
+			{
+				return '<body>' ;
+			}
+			protected function RenduFinCorpsDocument()
+			{
+				return '</body>' ;
 			}
 			protected function RenduDefinitionTypeDocument()
 			{

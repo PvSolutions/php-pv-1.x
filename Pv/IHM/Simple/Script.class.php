@@ -38,6 +38,7 @@
 			public $RefererUrlLocale = 0 ;
 			public $ScriptsReferantsSurs = array() ;
 			public $RefererScriptLocal = 0 ;
+			public $UtiliserCorpsDocZone = 1 ;
 			public function EstBienRefere()
 			{
 				return PvVerificateurReferantsSursWeb::Valide($this) ;

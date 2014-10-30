@@ -41,6 +41,7 @@
 			public $NomClasseSousMenuUrl = "PvMenuRedirectHttp" ;
 			public $NomClasseSousMenuScript = "PvMenuRedirectScript" ;
 			public $Privileges = array() ;
+			public $ValsConfigSpec = array() ;
 			public function EstAccessible()
 			{
 				if($this->EstNul($this->ZoneParent) || count($this->Privileges) == 0)
@@ -52,6 +53,10 @@
 			public function EstMenuRacine()
 			{
 				return $this->EstRacine ;
+			}
+			public function ObtientDefinitions()
+			{
+				return "" ;
 			}
 			public function ObtientTitre()
 			{
@@ -119,6 +124,11 @@
 				$menu = new $nomClasseSousMenu() ;
 				return $menu ;
 			}
+			protected function ObtientNomNouvSousMenu($nom)
+			{
+				$nom = ($nom == '') ? uniqid("SousMenu_") : $nom ;
+				return $nom ;
+			}
 			public function & InscritSousMenu($nomClasseSousMenu, $nom)
 			{
 				$menu = $this->CreeSousMenu($nomClasseSousMenu) ;
@@ -126,9 +136,14 @@
 				{
 					return $menu ;
 				}
+				$this->ValideInscriptionSousMenu($nom, $menu) ;
+				return $menu ;
+			}
+			protected function ValideInscriptionSousMenu($nom, & $menu)
+			{
+				$nom = $this->ObtientNomNouvSousMenu($nom) ;
 				$menu->AdopteMenu($nom, $this) ;
 				$this->SousMenus[$nom] = & $menu ;
-				return $menu ;
 			}
 			public function DeclareSousMenu($nomClasseSousMenu, $nom)
 			{
@@ -166,7 +181,7 @@
 			}
 			public function & InscritSousMenuFige($nom, $titre="")
 			{
-				$nom = ($nom == '') ? 'SousMenuUrl'.count($this->SousMenus) : $nom ;
+				$nom = $this->ObtientNomNouvSousMenu($nom) ;
 				$menu = $this->InscritSousMenu($this->NomClasseSousMenuFige, $nom) ;
 				$menu->Titre = $titre ;
 				return $menu ;
@@ -185,6 +200,30 @@
 				$menu = $this->InscritSousMenu($this->NomClasseSousMenuScript, $nom) ;
 				$menu->NomScript = $nomScript ;
 				return $menu ;
+			}
+			public function DefinitValeurConfigSpec($nom, $val)
+			{
+				$this->ValsConfigSpec[$nom] = $val ;
+			}
+			public function DefinitValConfigSpec($nom, $val)
+			{
+				$this->DefinitValeurConfigSpec($nom, $val) ;
+			}
+			public function DefinitValCfgSpec($nom, $val)
+			{
+				$this->DefinitValeurConfigSpec($nom, $val) ;
+			}
+			public function ObtientValeurConfigSpec($nom, $valParDefaut=false)
+			{
+				return (isset($this->ValsConfigSpec[$nom])) ? $this->ValsConfigSpec[$nom] : $valParDefaut ;
+			}
+			public function ObtientValConfigSpec($nom, $valParDefaut)
+			{
+				return $this->ObtientValeurConfigSpec($nom, $valParDefaut) ;
+			}
+			public function ObtientValCfgSpec($nom, $valParDefaut)
+			{
+				return $this->ObtientValeurConfigSpec($nom, $valParDefaut) ;
 			}
 		}
 		
@@ -367,9 +406,25 @@
 				{
 					$this->MenuRacine->DetecteStatutSelection() ;
 				}
-				$ctn = $this->RenduMenuRacine($this->MenuRacine).PHP_EOL ;
+				$ctn = '' ;
+				$ctn .= $this->RenduMenuRacine($this->MenuRacine).PHP_EOL ;
+				$ctn .= $this->RenduDefinitionsMenuRacine($this->MenuRacine) ;
 				$ctn .= $this->AppliqueHabillage() ;
 				return $ctn ;
+			}
+			protected function RenduDefinitionsMenu(& $menu)
+			{
+				$ctn = '' ;
+				$ctn .= $menu->ObtientDefinitions() ;
+				foreach($menu->SousMenus as $i => $sousMenu)
+				{
+					$ctn .= $this->RenduDefinitionsMenu($sousMenu) ;
+				}
+				return $ctn ;
+			}
+			protected function RenduDefinitionsMenuRacine()
+			{
+				return $this->RenduDefinitionsMenu($this->MenuRacine) ;
 			}
 			protected function ObtientUrlMenu(& $menu)
 			{

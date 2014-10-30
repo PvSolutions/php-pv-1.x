@@ -573,6 +573,8 @@
 						$this->ElementsEnCours = $this->ElementsEnCoursBruts ;
 					}
 					// echo "Sql : ".$this->FournisseurDonnees->BaseDonnees->LastSqlText ;
+					// print_r($this->FournisseurDonnees->BaseDonnees) ;
+					// print_r($this->ElementsEnCours) ;
 					$this->RangeeEnCours = $this->IndiceDebut / $this->MaxElements ;
 					$nbRangees = intval($this->TotalElements / $this->MaxElements) ;
 					$nbRangeesDec = $this->TotalElements / $this->MaxElements ;

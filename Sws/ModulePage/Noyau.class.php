@@ -492,6 +492,7 @@
 			public $LibEntite = "entite" ;
 			public $NomTable = "entite" ;
 			public $NomColId = "id" ;
+			public $AutoFixeAttrsMetaVide = 1 ;
 			public $TitreAjoutEntite = "Ajout entit&eacute;" ;
 			public $TitreModifEntite = "Modification entit&eacute;" ;
 			public $TitreSupprEntite = "Suppression entit&eacute;" ;
@@ -1438,13 +1439,13 @@
 				if($this->AccepterAttrsGraphique == 1)
 				{
 					// Icone
-					$this->FltFrmElemIcone = $frm->InsereFltEditHttpUpload($this->NomParamCheminIcone, $this->CheminTelechargIcones, $this->NomColCheminIcone) ;
+					$this->FltFrmElemIcone = $frm->InsereFltEditHttpUpload($this->NomParamCheminIcone, $this->ModuleParent->SystemeParent->CheminAdminVersPubl."/".$this->CheminTelechargIcones, $this->NomColCheminIcone) ;
 					$this->FltFrmElemIcone->Libelle = $this->LibCheminIcone ;
 					// Image
-					$this->FltFrmElemImage = $frm->InsereFltEditHttpUpload($this->NomParamCheminImage, $this->CheminTelechargImages, $this->NomColCheminImage) ;
+					$this->FltFrmElemImage = $frm->InsereFltEditHttpUpload($this->NomParamCheminImage, $this->ModuleParent->SystemeParent->CheminAdminVersPubl."/".$this->CheminTelechargImages, $this->NomColCheminImage) ;
 					$this->FltFrmElemImage->Libelle = $this->LibCheminImage ;
 					// Bannière
-					$this->FltFrmElemBanniere = $frm->InsereFltEditHttpUpload($this->NomParamCheminBanniere, $this->CheminTelechargBannieres, $this->NomColCheminBanniere) ;
+					$this->FltFrmElemBanniere = $frm->InsereFltEditHttpUpload($this->NomParamCheminBanniere, $this->ModuleParent->SystemeParent->CheminAdminVersPubl."/".$this->CheminTelechargBannieres, $this->NomColCheminBanniere) ;
 					$this->FltFrmElemBanniere->Libelle = $this->LibCheminBanniere ;
 				}
 				if($this->AccepterAttrsMeta == 1)
@@ -1462,6 +1463,65 @@
 					$comp->TotalColonnes = $this->TotalColonnesDescriptionMeta ;
 					$comp->TotalLignes = $this->TotalLignesDescriptionMeta ;
 				}
+			}
+			protected function ExtraitCtnPubl()
+			{
+				$ctn = '' ;
+				if($this->AccepterTexte == 1)
+				{
+					if($this->EstPasNul($this->FltFrmElemTitre))
+					{
+						$ctn .= $this->FltFrmElemTitre->Lie() ;
+					}
+					if($this->EstPasNul($this->FltFrmElemSommaire))
+					{
+						if($ctn != '')
+							$ctn .= ' ' ;
+						$ctn .= $this->FltFrmElemSommaire->Lie() ;
+					}
+					if($this->EstPasNul($this->FltFrmElemDescription))
+					{
+						if($ctn != '')
+							$ctn .= ' ' ;
+						$ctn .= $this->FltFrmElemDescription->Lie() ;
+					}
+				}
+				return $ctn ;
+			}
+			protected function ExtraitTextePubl()
+			{
+				$ctn = $this->ExtraitCtnPubl() ;
+				$result = "" ;
+				if($ctn != '')
+				{
+					$elemHtml = str_get_html($ctn) ;
+					$result = $elemHtml->plaintext ;
+				}
+				return $result ;
+			}
+			protected function FixeAttrsMeta()
+			{
+				if(! $this->AutoFixeAttrsMetaVide)
+					return ;
+				
+				if($this->FltFrmElemDescriptionMeta == '')
+				{
+					$this->FltFrmElemDescriptionMeta->ValeurParametre = substr($this->ExtraitTextePubl(), 0, 255) ;
+				}
+				if($this->FltFrmElemMotsClesMeta == '')
+				{
+					$this->FltFrmElemMotsClesMeta->ValeurParametre = $this->ExtraitTextePubl() ;
+				}
+			}
+			public function & ObtientEntitePage()
+			{
+				$entite = $this->ScriptParent->ObtientEntitePage() ;
+				return $entite ;
+			}
+			public function & ObtientModulePage()
+			{
+				$module = $this->ScriptParent->ObtientModulePage() ;
+				return $module ;
 			}
 			protected function ChargeTblList(& $tbl)
 			{
@@ -1532,6 +1592,7 @@
 		}
 		class ScriptListageEntiteTableSws extends ScriptEntiteTableBaseSws
 		{
+			public $NecessiteMembreConnecte = 1 ;
 			public function DetermineEnvironnement()
 			{
 				parent::DetermineEnvironnement() ;
@@ -1573,6 +1634,7 @@
 		
 		class ScriptEditEntiteTableSws extends ScriptEntiteTableBaseSws
 		{
+			public $NecessiteMembreConnecte = 1 ;
 			public $InitFrmElem ;
 			public function DetermineEnvironnement()
 			{
@@ -1616,6 +1678,18 @@
 		
 		class CmdEditEntiteBaseSws extends PvCommandeEditionElementBase
 		{
+			public function CreeFournDonnees()
+			{
+				return ReferentielSws::$SystemeEnCours->CreeFournDonnees() ;
+			}
+			public function ObtientBDSupport()
+			{
+				return ReferentielSws::$SystemeEnCours->BDSupport ;
+			}
+			public function ExecuteInstructions()
+			{
+				parent::ExecuteInstructions() ;
+			}
 		}
 		class CmdAjoutEntiteSws extends CmdEditEntiteBaseSws
 		{

@@ -14,6 +14,10 @@
 		{
 			include dirname(__FILE__)."/../Zone.class.php" ;
 		}
+		if(! defined('HDOM_TYPE_TEXT'))
+		{
+			include dirname(__FILE__)."/../../../misc/simple_html_dom.php" ;
+		}
 		if(! defined('HTML_TAG_INC'))
 		{
 			include dirname(__FILE__)."/../../../misc/HTMLTag.class.php" ;
@@ -168,7 +172,7 @@
 		}
 		class PvFormatteurColonneMonnaie extends PvFormatteurColonneDonnees
 		{
-			public $MaxDecimals = 0 ;
+			public $MaxDecimals = 3 ;
 			public $MinChiffres = 1 ;
 			public function Encode(& $script, $colonne, $ligne)
 			{
@@ -540,6 +544,10 @@
 			public function ObtientIDElementHtmlComposant()
 			{
 				if($this->EstNul($this->Composant))
+				{
+					$this->DeclareComposant($this->NomClasseComposant) ;
+				}
+				if($this->EstNul($this->Composant))
 					return "" ;
 				$iDInstanceCalc = $this->Composant->IDInstanceCalc ;
 				return $iDInstanceCalc ;
@@ -776,6 +784,7 @@
 			public $CheminDossier = "." ;
 			public $CheminFichierDest = "" ;
 			public $CheminFichierSrc = "" ;
+			public $DejaTelecharge = 0 ;
 			public $ExtensionsAcceptees = array() ;
 			public $CheminFichierClient = "" ;
 			public $CodeErreurTelechargement = "0" ;
@@ -792,9 +801,9 @@
 			public $LibelleErreurDeplFicTelecharg = 'Le deplacement du fichier sur le serveur a &eacute;chou&eacute;. V&eacute;rifiez que vous avez les droits en ecriture.' ;
 			public $CodeErreurFicSoumisInexist = '503' ;
 			public $LibelleErreurFicSoumisInexist = 'Le fichier soumis n\'existe pas.' ;
-			public function DeclareComposant($nomClasseComposant)
+			public function & DeclareComposant($nomClasseComposant)
 			{
-				parent::DeclareComposant($nomClasseComposant) ;
+				return parent::DeclareComposant($nomClasseComposant) ;
 				/*
 				if($this->EstPasNul($this->Composant))
 				{
@@ -804,6 +813,10 @@
 			}
 			public function ObtientValeurParametre()
 			{
+				if($this->DejaTelecharge == 1)
+				{
+					return ;
+				}
 				if(! isset($_FILES[$this->NomParametreLie]) && ! isset($_POST[$this->NomEltCoteSrv.$this->NomParametreLie]))
 				{
 					return $this->ValeurVide ;
@@ -841,6 +854,7 @@
 				}
 				if($this->SourceTelechargement == 'files')
 				{
+					// echo $this->CheminFichierSrc.' '.$this->CheminFichierDest.'<br>' ;
 					$ok = @move_uploaded_file($this->CheminFichierSrc, $this->CheminFichierDest) ;
 					if(! $ok)
 					{
@@ -858,6 +872,7 @@
 						return $this->ValeurVide ;
 					}
 				}
+				$this->DejaTelecharge = 1 ;
 				return $this->CheminFichierDest ;
 			}
 		}

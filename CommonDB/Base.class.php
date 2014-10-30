@@ -1600,7 +1600,7 @@
 			}
 			function SqlToDouble($expression)
 			{
-				return 'DECIMAL('.$expression.')' ;
+				return 'CONVERT('.$expression.', DECIMAL(18, 3))' ;
 			}
 			function SqlToString($expression)
 			{

@@ -12,9 +12,105 @@
 		}
 		define('PV_ZONE_IHM', 1) ;
 		
+		class PvEtatScriptExecZone
+		{
+			public $ID ;
+			public $IDScript ;
+			public $TimestmpDebut ;
+			public $TimestmpFin ;
+			public $TimestmpCapt ;
+		}
+		class PvGestScriptsExecZoneBase extends PvObjet
+		{
+			public $EtatActuel ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->EtatActuel = $this->CreeStatut() ;
+				$this->EtatActuel->ID = uniqid() ;
+			}
+			protected function CreeStatut()
+			{
+				return new PvEtatScriptExecZone() ;
+			}
+			public function Demarre(& $script)
+			{
+				$this->EtatActuel->IDScript = $script->IDInstanceCalc ;
+				$this->EtatActuel->TimestmpDebut = date("U") ;
+				$this->EtatActuel->TimestmpCapt = date("U") ;
+				$this->SauveEtatActuel() ;
+			}
+			public function Termine(& $script)
+			{
+				$this->EtatActuel->TimestmpFin = date("U") ;
+				$this->EtatActuel->TimestmpCapt = date("U") ;
+				$this->SauveEtatActuel() ;
+			}
+			protected function EffaceEtatActuel()
+			{
+				$this->EffaceEtat($this->EtatActuel) ;
+			}
+			protected function SauveEtatActuel()
+			{
+				$this->SauveEtat($this->EtatActuel) ;
+			}
+			protected function SauveEtat($etat)
+			{
+			}
+			protected function EffaceEtat($etat)
+			{
+			}
+		}
+		class PvGestScriptExecInactif extends PvGestScriptsExecZoneBase
+		{
+		}
+		class PvGestScriptExecNatif extends PvGestScriptsExecZoneBase
+		{
+			public $ChemRelDossierEtats = "" ;
+			protected function ObtientChemDossierEtats()
+			{
+				$chemin = (php_sapi_name() == 'cli') ? $_SERVER["argv"][0] : $_SERVER["SCRIPT_FILENAME"] ;
+				if($this->ChemRelDossierEtats != '')
+				{
+					$chemin .= PATH_SEPARATOR . $this->ChemRelDossierEtats ;
+				}
+				if(! is_dir($chemin))
+				{
+					mkdir($chemin) ;
+				}
+				if(is_dir($chemin))
+				{
+					return $chemin ;
+				}
+				return false ;
+			}
+			protected function SauveEtat($etat)
+			{
+				$chemin = $this->ObtientChemDossierEtats() ;
+				if($chemin == false)
+				{
+					return ;
+				}
+				$fh = fopen($chemin. PATH_SEPARATOR . $etat->ID .'.dat', 'w') ;
+				fputs($fh, serialize($etat)) ;
+				fclose($fh) ;
+				
+			}
+			protected function EffaceEtat($etat)
+			{
+				$chemin = $this->ObtientChemDossierEtats() ;
+				if($chemin == false)
+				{
+					return ;
+				}
+				unlink($chemin. PATH_SEPARATOR . $etat->ID .'.dat', 'w') ;
+			}
+		}
+		
 		class PvZoneIHMDeBase extends PvIHM
 		{
 			public $TypeIHM = "zone" ;
+			public $GestScriptsExec ;
 			public $Scripts = array() ;
 			public $NomParamScriptAppele = "appelleScript" ;
 			public $ValeurParamScriptAppele = "" ;
@@ -105,6 +201,15 @@
 			public $NomClasseRemplisseurConfigMembership = "PvRemplisseurConfigMembershipSimple" ;
 			public $RemplisseurConfigMembership = null ;
 			public $MessageScriptMalRefere = "<p>Ce script n'est pas bien refere. Il ne peut etre affiche.</p>" ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->GestScriptsExec = $this->CreeGestScriptsExec() ;
+			}
+			protected function CreeGestScriptsExec()
+			{
+				return new PvGestScriptExecInactif() ;
+			}
 			public function CaptureExceptionBaseDonnees(& $basedonnees)
 			{
 				if($basedonnees->ConnectionException == "")
@@ -442,8 +547,15 @@
 					}
 				}
 			}
+			protected function PrepareScript(& $script)
+			{
+			}
+			protected function TermineScript(& $script)
+			{
+			}
 			public function ExecuteScript(& $script)
 			{
+				$this->PrepareScript($script) ;
 				$this->VerifieValiditeMotPasse($script) ;
 				if($script->EstAccessible())
 				{
@@ -454,6 +566,7 @@
 				{
 					$this->ExecuteScriptInaccessible($script) ;
 				}
+				$this->TermineScript($script) ;
 			}
 			protected function AfficheRenduNonTrouve()
 			{
@@ -511,6 +624,10 @@
 				$this->DetecteScriptAppele() ;
 				$this->ExecuteScriptAppele() ;
 				$this->TermineExecution() ;
+			}
+			public function MembershipActive()
+			{
+				return class_exists($this->NomClasseMembership) ? 1 : 0;
 			}
 			protected function DetecteMembreConnecte()
 			{
@@ -623,7 +740,7 @@
 				}
 				return $ok ;
 			}
-			public function DoitChangerMotPasse($script)
+			public function DoitChangerMotPasse(& $script)
 			{
 				if($this->PossedeMembreConnecte() == 0 || ! $script->EstAccessible())
 				{
@@ -873,19 +990,6 @@
 		{
 			public $Methodes = array() ;
 			// public function 
-		}
-		
-		class PvRegleHtmlSurBase
-		{
-			public function Applique(& $parseurHtml, & $zone)
-			{
-			}
-		}
-		class PvRgHtmlSurLienLocal extends PvRegleHtmlSurBase
-		{
-			public function Applique(& $parseurHtml, & $zone)
-			{
-			}
 		}
 		
 		class PvZoneConsole extends PvZoneIHMDeBase

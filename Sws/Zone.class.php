@@ -91,6 +91,8 @@
 		class ZoneMembreSws extends PvZoneWebSimple
 		{
 			public $InclureScriptsMembership = 1 ;
+			public $AutoriserInscription = 1 ;
+			public $AutoriserModifPrefs = 1 ;
 			public $InclureJQuery = 1 ;
 			public $InclureJQueryUi = 1 ;
 			public function ChargeConfig()
