@@ -994,7 +994,10 @@
 			{
 				$ctn = '' ;
 				$parametresRendu = $this->ParametresRendu() ;
-				$ctn .= '<table class="NavigateurRangees" width="'.$this->Largeur.'"  cellspacing="0">'.PHP_EOL ;
+				$ctn .= '<table class="NavigateurRangees"' ;
+				if($this->Largeur != '')
+					$ctn .= ' width="'.$this->Largeur.'"' ;
+				$ctn .= ' cellspacing="0">'.PHP_EOL ;
 				$ctn .= '<tr>'.PHP_EOL ;
 				$ctn .= '<td align="left" width="50%" class="LiensRangee">'.PHP_EOL ;
 				$paramPremiereRangee = array_merge($parametresRendu, array($this->NomParamIndiceDebut() => 0)) ;

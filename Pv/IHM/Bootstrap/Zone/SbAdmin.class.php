@@ -22,7 +22,8 @@
 			public $CheminJsSbAdmin = "js/sb-admin-2.js" ;
 			public $CheminJsMetisMenu = "js/plugins/metisMenu/metisMenu.min.js" ;
 			public $CheminJsTimeline = "css/plugins/timeline.css" ;
-			public $InclureRenduTitreScript = 1 ;
+			public $InclureRenduPageHeader = 1 ;
+			public $InclureRenduTitre = 0 ;
 			public function ChargeConfig()
 			{
 				parent::ChargeConfig() ;
@@ -88,23 +89,23 @@
 			protected function RenduEnteteCorpsDocument()
 			{
 				$ctn = '' ;
-				$ctn .= '<body>' ;
-				$ctn .= '<div id="wrapper">' ;
-				$ctn .= '<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">' ;
-				$ctn .= $this->NavbarHeader->RenduDispositif() ;
-				$ctn .= $this->NavbarTopLinks->RenduDispositif() ;
-				$ctn .= '<div class="navbar-default sidebar" role="navigation">' ;
-				$ctn .= '<div class="sidebar-nav navbar-collapse">' ;
-				$ctn .= $this->SideMenu->RenduDispositif() ;
-				$ctn .= '</div>' ;
-				$ctn .= '</div>' ;
-				$ctn .= '</nav>' ;
-				$ctn .= '<div id="page-wrapper">' ;
-				if($this->InclureRenduTitreScript)
+				$ctn .= '<body>'.PHP_EOL ;
+				$ctn .= '<div id="wrapper">'.PHP_EOL ;
+				$ctn .= '<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">'.PHP_EOL ;
+				$ctn .= $this->NavbarHeader->RenduDispositif().PHP_EOL ;
+				$ctn .= $this->NavbarTopLinks->RenduDispositif().PHP_EOL ;
+				$ctn .= '<div class="navbar-default sidebar" role="navigation">'.PHP_EOL ;
+				$ctn .= '<div class="sidebar-nav navbar-collapse">'.PHP_EOL ;
+				$ctn .= $this->SideMenu->RenduDispositif().PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</nav>'.PHP_EOL ;
+				$ctn .= '<div id="page-wrapper">'.PHP_EOL ;
+				if($this->InclureRenduPageHeader)
 				{
-					$ctn .= '<div class="col-lg-12">
-<h1 class="page-header">'.$this->ScriptPourRendu->ObtientTitre().'</h1>
-</div>' ;
+					$ctn .= '<div class="row"><div class="col-lg-12">
+<h1 class="page-header">'.$this->ScriptPourRendu->Titre.'</h1>
+</div></div>' ;
 				}
 				return $ctn ;
 			}
@@ -256,7 +257,7 @@
 			protected function RenduMenuRacine(& $menu)
 			{
 				$ctn = '' ;
-				$ctn .= '<ul class="nav" id="'.$this->IDInstanceCalc.'">' ;
+				$ctn .= '<ul class="nav" id="'.$this->IDInstanceCalc.'">'.PHP_EOL ;
 				if($this->InclureRecherche)
 				{
 					$ctn .= $this->RenduMenuRecherche() ;
@@ -274,10 +275,11 @@
 			protected function RenduMenuNv1($menu, $pos=-1)
 			{
 				$ctn = '' ;
-				$ctn .= '<li><a href="'.$menu->ObtientUrl().'"><i class="fa '.$menu->ObtientValCfgSpec('glyphicon', 'fa-dashboard').' fa-fw"></i> '.$this->RenduTitreMenu($menu).'</a>' ;
+				$ctn .= '<li'.($menu->EstSelectionne ? ' class="active"' : '').'>'.PHP_EOL ;
+				$ctn .= '<a href="'.$menu->ObtientUrl().'"><i class="fa '.$menu->ObtientValCfgSpec('glyphicon', 'fa-dashboard').' fa-fw"></i> '.(($menu->EstSelectionne && count($menu->SousMenus) > 0) ? '<span class="sidebar-nav-item">' : '').$this->RenduTitreMenu($menu).(($menu->EstSelectionne && count($menu->SousMenus) > 0) ? '</span>' : '').((count($menu->SousMenus) > 0) ? '<span class="fa arrow"></span>' : '').'</a>'.PHP_EOL ;
 				if(count($menu->SousMenus) > 0)
 				{
-					$ctn .= '<ul id="'.$this->IDInstanceCalc.'"  class="nav nav-second-level">'.PHP_EOL ;
+					$ctn .= '<ul id="'.$menu->IDInstanceCalc.'"  class="nav nav-second-level">'.PHP_EOL ;
 					foreach($menu->SousMenus as $i => $sousMenu)
 					{
 						$ctn .= $this->RenduMenuNv2($sousMenu, $i).PHP_EOL ;
@@ -290,14 +292,15 @@
 			protected function RenduMenuNv2($menu, $pos=-1)
 			{
 				$ctn = '' ;
-				$ctn .= '<li><a href="'.$menu->ObtientUrl().'"' ;
+				$ctn .= '<li'.($menu->EstSelectionne ? ' class="active"' : '').'>'.PHP_EOL ;
+				$ctn .= '<a'.($menu->EstSelectionne ? ' class="active"' : '').' href="'.$menu->ObtientUrl().'"' ;
 				$ctn .= '>' ;
 				$ctn .= $this->RenduTitreMenu($menu) ;
 				if(count($menu->SousMenus) > 0)
 				{
 					$ctn .= ' <span class="fa arrow"></span>' ;
 				}
-				$ctn .= '</a>' ;
+				$ctn .= '</a>'.PHP_EOL ;
 				if(count($menu->SousMenus) > 0)
 				{
 					$ctn .= '<ul class="nav nav-third-level" id="SM_'.$menu->IDInstanceCalc.'">'.PHP_EOL ;
@@ -305,14 +308,15 @@
 					{
 						$ctn .= $this->RenduMenuNv3($sousMenu, $i).PHP_EOL ;
 					}
-					$ctn .= '</ul>' ;
+					$ctn .= '</ul>'.PHP_EOL ;
 				}
+				$ctn .= '</li>' ;
 				return $ctn ;
 			}
 			protected function RenduMenuNv3($menu, $pos=-1)
 			{
 				$ctn = '' ;
-				$ctn .= '<li><a href="'.$menu->ObtientUrl().'"'.(($menu->EstSelectionne) ? ' class="active"' : '').'>'.$this->RenduTitreMenu($menu).'</a></li>' ;
+				$ctn .= '<li><a'.($menu->EstSelectionne ? ' class="active"' : '').' href="'.$menu->ObtientUrl().'"'.(($menu->EstSelectionne) ? ' class="active"' : '').'>'.$this->RenduTitreMenu($menu).'</a></li>' ;
 				return $ctn ;
 			}
 		}

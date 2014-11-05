@@ -1678,6 +1678,14 @@
 		
 		class CmdEditEntiteBaseSws extends PvCommandeEditionElementBase
 		{
+			public function & ObtientEntitePage()
+			{
+				return $this->ScriptParent->ObtientEntitePage() ;
+			}
+			public function & ObtientModulePage()
+			{
+				return $this->ScriptParent->ObtientModulePage() ;
+			}
 			public function CreeFournDonnees()
 			{
 				return ReferentielSws::$SystemeEnCours->CreeFournDonnees() ;

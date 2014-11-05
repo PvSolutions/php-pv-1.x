@@ -8,8 +8,11 @@
 		{
 			public $TypeComposant = "TableauDonneesBootstrap" ;
 			public $NomRoleFiltres = "form" ;
+			public $NomClasseGrilleFiltres = "col-lg-6" ;
+			public $NomClasseGrilleRangee = "col-lg-12" ;
 			public $NomClasseFormFiltres = "panel-primary" ;
 			public $NomClasseTblRangees = "table-hover" ;
+			public $Largeur = "100%" ;
 			public $LargeurBordure = "0" ;
 			public $AppliquerHabillageSpec = 1 ;
 			public function & InsereCmdModal($nomCmd, $libelle, $url, $params=array())
@@ -25,7 +28,8 @@
 			}
 			public function RenduComposants()
 			{
-				$ctn = parent::RenduComposants() ;
+				$ctn = '' ;
+				$ctn .= parent::RenduComposants() ;
 				$ctn .= $this->RenduHabillageSpec() ;
 				return $ctn ;
 			}
@@ -69,6 +73,8 @@
 				{
 					return '' ;
 				}
+				$ctn .= '<div class="row">' ;
+				$ctn .= '<div class="'.$this->NomClasseGrilleFiltres.'">' ;
 				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="'.$this->NomRoleFiltres.'">'.PHP_EOL ;
 				$ctn .= '<div class="panel '.$this->NomClasseFormFiltres.'">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
@@ -85,7 +91,9 @@
 				$ctn .= '<button type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</form>' ;
+				$ctn .= '</form>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= $this->DeclarationSoumetFormulaireFiltres($this->FiltresSelection) ;
 				return $ctn ;
 			}
@@ -108,6 +116,8 @@
 					$parametresRendu = $this->ParametresCommandeSelectionnee() ;
 					if(count($this->ElementsEnCours) > 0)
 					{
+						$ctn .= '<div class="row">' ;
+						$ctn .= '<div class="'.$this->NomClasseGrilleRangee.'">' ;
 						$ctn .= '<table' ;
 						$ctn .= ' class="RangeeDonnees table '.$this->NomClasseTblRangees.'"' ;
 						if($this->EspacementCell != "")
@@ -195,7 +205,9 @@
 							$ctn .= '</tr>'.PHP_EOL ;
 						}
 						$ctn .= '</tbody>'.PHP_EOL ;
-						$ctn .= '</table>' ;
+						$ctn .= '</table>'.PHP_EOL ;
+						$ctn .= '</div>' ;
+						$ctn .= '</div>' ;
 					}
 					else
 					{
@@ -212,6 +224,16 @@
 			{
 				$ctn = '' ;
 				$ctn .= '<p class="text-info FiltresNonRenseignes">'.$this->MessageFiltresNonRenseignes.'</p>' ;
+				return $ctn ;
+			}
+			protected function RenduNavigateurRangees()
+			{
+				$ctn = '' ;
+				$ctn .= '<div class="row">' ;
+				$ctn .= '<div class="'.$this->NomClasseGrilleRangee.'">' ;
+				$ctn .= parent::RenduNavigateurRangees() ;
+				$ctn .= '</div>' ;
+				$ctn .= '</div>' ;
 				return $ctn ;
 			}
 			protected function InitDessinateurBlocCommandes()

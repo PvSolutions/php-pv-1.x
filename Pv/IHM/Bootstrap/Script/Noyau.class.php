@@ -4,7 +4,7 @@
 	{
 		define('PV_NOYAU_SCRIPT_BOOTSTRAP', 1) ;
 		
-		class PvScriptBaseBoostrap extends PvScriptWebSimple
+		class PvScriptBaseBootstrap extends PvScriptWebSimple
 		{
 		}
 		
