@@ -8,7 +8,14 @@
 		}
 		define('ZONE_SWS', 1) ;
 		
-		class ZoneAdminSws extends PvZoneWebSimple
+		class ZoneBaseSws extends PvZoneWebSimple
+		{
+			public function NiveauAdmin()
+			{
+				return "public" ;
+			}
+		}
+		class ZoneAdminSws extends ZoneBaseSws
 		{
 			public $BarreLiensMembre ;
 			public $InclureScriptsMembership = 1 ;
@@ -18,6 +25,10 @@
 			public $InclureJQueryUi = 1 ;
 			public $IncRenduBarreLiensMembre = 1 ;
 			public $IncRenduLogo = 1 ;
+			public function NiveauAdmin()
+			{
+				return "admin" ;
+			}
 			protected function ObtientDefCSS()
 			{
 				$ctn = '' ;
@@ -88,13 +99,17 @@
 				return $ctn ;
 			}
 		}
-		class ZoneMembreSws extends PvZoneWebSimple
+		class ZoneMembreSws extends ZoneBaseSws
 		{
 			public $InclureScriptsMembership = 1 ;
 			public $AutoriserInscription = 1 ;
 			public $AutoriserModifPrefs = 1 ;
 			public $InclureJQuery = 1 ;
 			public $InclureJQueryUi = 1 ;
+			public function NiveauAdmin()
+			{
+				return "membre" ;
+			}
 			public function ChargeConfig()
 			{
 				parent::ChargeConfig() ;

@@ -192,6 +192,8 @@
 			}
 			public function RemplitMenu(& $menu, $inclureEntites=0)
 			{
+				if($this->EstAccessible() == 0)
+					return ;
 				$this->MenuRacine = $menu->InscritSousMenuUrl($this->ObtientTitreMenu(), $this->ObtientUrlAdmin()) ;
 				$this->MenuRacine->CheminMiniature = $this->ObtientCheminIcone() ;
 				// echo "Chemin : ".$this->MenuRacine->CheminIcone."<br />" ;
@@ -214,7 +216,7 @@
 			}
 			public function RemplitZonePubl(& $zone)
 			{
-				if(! $this->RemplZonePublPossible)
+				if(! $this->RemplZonePublPossible || ! $this->EstAccessible())
 				{
 					return ;
 				}
@@ -241,7 +243,7 @@
 			}
 			public function RemplitZoneAdmin(& $zone)
 			{
-				if(! $this->RemplZoneAdminPossible)
+				if(! $this->RemplZoneAdminPossible || ! $this->EstAccessible())
 				{
 					return ;
 				}
@@ -256,7 +258,7 @@
 			}
 			public function RemplitZoneMembre(& $zone)
 			{
-				if(! $this->RemplZoneMembrePossible)
+				if(! $this->RemplZoneMembrePossible || ! $this->EstAccessible())
 				{
 					return ;
 				}
@@ -642,7 +644,7 @@
 				{
 					return $url ;
 				}
-				if($this->InclureScriptLst)
+				if($this->InclureScriptLst && $this->EstPasNul($this->ScriptListage))
 				{
 					$url = $this->ScriptListage->ObtientUrl() ;
 				}
@@ -1237,6 +1239,10 @@
 			protected function RenduAvantCtnSpec(& $script)
 			{
 				$ctn = '' ;
+				if(! method_exists($script->ZoneParent, 'NiveauAdmin') || $script->ZoneParent->NiveauAdmin() != 'admin')
+				{
+					return '' ;
+				}
 				$ctn .= '<table width="100%" cellspacing="0" cellpadding="0">
 <tr>
 <td valign="top">'.PHP_EOL ;
@@ -1246,6 +1252,10 @@
 			}
 			protected function RenduApresCtnSpec(& $script)
 			{
+				if(! method_exists($script->ZoneParent, 'NiveauAdmin') || $script->ZoneParent->NiveauAdmin() != 'admin')
+				{
+					return '' ;
+				}
 				$ctn = '</td>
 </tr>
 </table>'.PHP_EOL ;

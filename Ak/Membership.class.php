@@ -556,6 +556,12 @@
 			public $Database = null ;
 			public $IdMemberNotFoundValue = -1 ;
 			public $MemberTable = "membership_member" ;
+			public $EnableMemberColumn = "enabled" ;
+			public $LockedMemberTrueValue = "1" ;
+			public $LockedMemberColumn = "locked" ;
+			public $TotalRetryMemberColumn = "total_retry" ;
+			public $MaxConnectionRetry = 3 ;
+			public $LockMemberEnabled = 0 ;
 			public $IdMemberColumn = "id" ;
 			public $IdMemberIgnoreUpdate = 1 ;
 			public $IdMemberInsertExpr = "" ;
@@ -593,7 +599,6 @@
 			public $ADDomainMemberColumn = '' ;
 			public $ADDomainMemberAlias = '' ;
 			public $ADDomainMemberLabel = 'Domaine sur Active Directory' ;
-			public $EnableMemberColumn = "enabled" ;
 			public $EnableMemberAlias = "" ;
 			public $EnableMemberLabel = "Activer" ;
 			public $EnableMemberTrueValue = "1" ;
@@ -827,6 +832,22 @@
 				{
 					$sql .= ', \''.$this->ADDomainMemberDefaultValue.'\' MEMBER_AD_DOMAIN' ;
 				}
+				if($this->LockMemberEnabled && $this->LockedMemberColumn != '')
+				{
+					$sql .= ', '.$this->Database->EscapeFieldName("MEMBER_TABLE", $this->LockedMemberColumn).' MEMBER_LOCKED' ;
+				}
+				else
+				{
+					$sql .= ', \'\' MEMBER_LOCKED' ;
+				}
+				if($this->LockMemberEnabled && $this->TotalRetryMemberColumn != '')
+				{
+					$sql .= ', '.$this->Database->EscapeFieldName("MEMBER_TABLE", $this->TotalRetryMemberColumn).' MEMBER_TOTAL_RETRY' ;
+				}
+				else
+				{
+					$sql .= ', \'\' MEMBER_TOTAL_RETRY' ;
+				}
 				if($this->ProfileMemberColumn != '')
 				{
 					$sql .= ', '.$this->Database->EscapeFieldName("MEMBER_TABLE", $this->ProfileMemberColumn).' MEMBER_PROFILE' ;
@@ -968,7 +989,15 @@
 				{
 					$sql .=  ' AND MEMBER_ENABLE='.$this->Database->ParamPrefix.'CorrectEnabled' ;
 				}
+				if($this->LockMemberEnabled && $this->LockedMemberColumn != '')
+				{
+					$sql .=  ' AND MEMBER_LOCKED='.$this->Database->ParamPrefix.'UnlockedValue' ;
+				}
 				return $sql ;
+			}
+			public function LockedMemberFalseValue()
+			{
+				return ($this->LockedMemberTrueValue == 1) ? 0 : '1' ;
 			}
 			public function ValidateConnection($login, $password)
 			{
@@ -979,6 +1008,10 @@
 				{
 					$params["CorrectEnabled"] = $this->EnableMemberTrueValue ;
 				}
+				if($this->LockMemberEnabled && $this->LockedMemberColumn != "")
+				{
+					$params["UnlockedValue"] = $this->LockedMemberFalseValue() ;
+				}
 				$requestRow = $this->Database->FetchSqlRow(
 					$sql,
 					$params
@@ -988,7 +1021,7 @@
 				$ok = 0 ;
 				if(count($requestRow))
 				{
-					if($this->EnableMemberColumn == '' || $requestRow["MEMBER_ENABLE"] == $this->EnableMemberTrueValue)
+					if(($this->EnableMemberColumn == '' || $requestRow["MEMBER_ENABLE"] == $this->EnableMemberTrueValue) && (! $this->LockMemberEnabled || ($this->LockedMemberColumn != '' && $requestRow["MEMBER_LOCKED"] == $this->LockedMemberFalseValue())))
 					{
 						$adActivated = 0 ;
 						if($this->ADActivatedMemberColumn != "")
@@ -1003,10 +1036,18 @@
 							if($requestRow["REQUEST_PASSWORD"] == $requestRow["MEMBER_PASSWORD"])
 							{
 								$idMember = $requestRow["MEMBER_ID"] ;
+								if($this->LockMemberEnabled && $this->LockedMemberColumn != '')
+								{
+									$this->UnlockMember($requestRow["MEMBER_ID"]) ;
+								}
 							}
 							else
 							{
 								$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_PASSWORD_INCORRECT ;
+								if($this->LockMemberEnabled && $this->LockedMemberColumn != '')
+								{
+									$this->UpdateTotalRetry($requestRow["MEMBER_ID"]) ;
+								}
 							}
 						}
 						else
@@ -1023,6 +1064,39 @@
 					$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_MEMBER_NOT_FOUND ;
 				}
 				return $idMember ;
+			}
+			public function UpdateTotalRetry($memberId)
+			{
+				// Update total retry
+				$updateTotalRetrySql = 'update '.$this->Database->EscapeTableName($this->MemberTable).' set '.$this->Database->EscapeFieldName($this->MemberTable, $this->TotalRetryMemberColumn).' = '.$this->Database->EscapeFieldName($this->MemberTable, $this->TotalRetryMemberColumn).' + 1 where '.$this->Database->EscapeFieldName($this->MemberTable, $this->IdMemberColumn).' = '.$this->Database->ParamPrefix.'idMember' ;
+				$ok = $this->Database->RunSql($updateTotalRetrySql, array('idMember' => $memberId)) ;
+				return $this->LockMember($memberId) ;
+			}
+			public function LockMember($memberId)
+			{
+				// Lock member
+				$sqlLock = 'update '.$this->Database->EscapeTableName($this->MemberTable).' set '.$this->Database->EscapeFieldName($this->MemberTable, $this->LockedMemberColumn).' = '.$this->Database->ParamPrefix.'lockedValue where '.$this->Database->EscapeFieldName($this->MemberTable, $this->IdMemberColumn).' = '.$this->Database->ParamPrefix.'idMember and '.$this->Database->EscapeFieldName($this->MemberTable, $this->TotalRetryMemberColumn).'='.$this->Database->ParamPrefix.'maxRetry' ;
+				return $this->Database->RunSql(
+					$sqlLock,
+					array(
+						'idMember' => $memberId,
+						'lockedValue' => $this->LockedMemberTrueValue,
+						'maxRetry' => $this->MaxConnectionRetry,
+					)
+				) ;
+			}
+			public function UnlockMember($memberId)
+			{
+				// Unlock member
+				$sqlUnlock = 'update '.$this->Database->EscapeTableName($this->MemberTable).' set '.$this->Database->EscapeFieldName($this->MemberTable, $this->LockedMemberColumn).' = '.$this->Database->ParamPrefix.'unlockedValue, '.$this->Database->EscapeFieldName($this->MemberTable, $this->TotalRetryMemberColumn).'=0 where '.$this->Database->EscapeFieldName($this->MemberTable, $this->IdMemberColumn).' = '.$this->Database->ParamPrefix.'idMember' ;
+				$ok = $this->Database->RunSql(
+					$sqlUnlock,
+					array(
+						'idMember' => $memberId,
+						'lockedValue' => $this->LockedMemberFalseValue()
+					)
+				) ;
+				return $ok ;
 			}
 			protected function SqlFetchMemberRow($memberId)
 			{

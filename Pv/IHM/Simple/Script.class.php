@@ -39,6 +39,10 @@
 			public $ScriptsReferantsSurs = array() ;
 			public $RefererScriptLocal = 0 ;
 			public $UtiliserCorpsDocZone = 1 ;
+			public $InclureRenduTitre = 1 ;
+			public $InclureRenduDescription = 1 ;
+			public $InclureRenduIcone = 1 ;
+			public $InclureRenduChemin = 1 ;
 			public function EstBienRefere()
 			{
 				return PvVerificateurReferantsSursWeb::Valide($this) ;
@@ -116,13 +120,13 @@
 			}
 			public function RenduTitre()
 			{
-				if(! $this->ZoneParent->InclureRenduTitre)
+				if(! $this->ZoneParent->InclureRenduTitre || ! $this->InclureRenduTitre)
 				{
 					return '' ;
 				}
 				$ctn = '' ;
 				$ctn .= '<div class="titre">' ;
-				if($this->ZoneParent->InclureRenduIcone)
+				if($this->ZoneParent->InclureRenduIcone && $this->InclureRenduTitre)
 				{
 					$cheminIcone = ($this->CheminIcone != '' && file_exists($this->CheminIcone)) ? $this->CheminIcone : $this->ZoneParent->CheminIconeScript ;
 					if($cheminIcone != '')
@@ -140,14 +144,14 @@
 			}
 			public function RenduChemin()
 			{
-				if(! $this->ZoneParent->InclureRenduChemin)
+				if(! $this->ZoneParent->InclureRenduChemin || ! $this->InclureRenduChemin)
 				{
 					return '' ;
 				}
 			}
 			public function RenduDescription()
 			{
-				if(! $this->ZoneParent->InclureRenduDescription)
+				if(! $this->ZoneParent->InclureRenduDescription || ! $this->InclureRenduDescription)
 				{
 					return '' ;
 				}
@@ -350,6 +354,7 @@
 			public $IdMembre = -1 ;
 			public $NecessiteMembreConnecte = 0 ;
 			public $AfficherBoutonSoumettre = 1 ;
+			public $AlignBoutonSoumettre = "center" ;
 			public $AfficherMessageErreur = 1 ;
 			public $LibelleBoutonSoumettre = "Se connecter" ;
 			public $MessageConnexionEchouee = "" ;
@@ -497,7 +502,7 @@
 				$ctn .= $this->RenduTableauParametres().PHP_EOL ;
 				if($this->AfficherBoutonSoumettre)
 				{
-					$ctn .= '<p align="center"><input type="submit" value="'.$this->LibelleBoutonSoumettre.'" /></p>'.PHP_EOL ;
+					$ctn .= '<p align="'.$this->AlignBoutonSoumettre.'"><input type="submit" value="'.$this->LibelleBoutonSoumettre.'" /></p>'.PHP_EOL ;
 				}
 				$ctn .= '</div>' ;
 				$ctn .= '</form>' ;
@@ -506,7 +511,7 @@
 			public function RenduTableauParametres()
 			{
 				$ctn = '' ;
-				$ctn .= '<table align="center" cellspacing="0" cellpadding="4">
+				$ctn .= '<table align="center" cellspacing="0" cellpadding="4" class="user_login_form">
 			<tr>
 				<td width="50%" align="left">
 					<label for="'.$this->NomParamPseudo.'">'.$this->LibellePseudo.'</label>

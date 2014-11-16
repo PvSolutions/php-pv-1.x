@@ -801,6 +801,10 @@
 			public $LibelleErreurDeplFicTelecharg = 'Le deplacement du fichier sur le serveur a &eacute;chou&eacute;. V&eacute;rifiez que vous avez les droits en ecriture.' ;
 			public $CodeErreurFicSoumisInexist = '503' ;
 			public $LibelleErreurFicSoumisInexist = 'Le fichier soumis n\'existe pas.' ;
+			public function TelechargementSoumis()
+			{
+				return $this->SourceTelechargement == 'files' ? 1 : 0 ;
+			}
 			public function & DeclareComposant($nomClasseComposant)
 			{
 				return parent::DeclareComposant($nomClasseComposant) ;

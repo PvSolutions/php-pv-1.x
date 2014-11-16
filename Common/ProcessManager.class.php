@@ -377,10 +377,11 @@
 			}
 			function ExtractProcessListFromEntries($processEntries)
 			{
-				if(is_array($ProcessEntries))
+				$pid_list = array() ;
+				// print_r($processEntries) ;
+				if(is_array($processEntries))
 				{
-					$pid_list = array() ;
-					foreach($ProcessEntries as $i => $entry)
+					foreach($processEntries as $i => $entry)
 					{
 						$pid_list[] = $entry->PID ;
 					}
@@ -527,11 +528,15 @@
 			}
 			function KillProcessCommand($pids, $force=0)
 			{
+				if(is_array($pids))
+				{
+					$pids = join(" ", $pids) ;
+				}
 				if($pids == "")
 				{
 					return "" ;
 				}
-				return 'kill '.(($force) ? ' -9' : '').' '.$pids ;
+				return 'kill'.(($force) ? ' -9' : '').' '.$pids ;
 			}
 			function KillProcessList($pid_list=array())
 			{
