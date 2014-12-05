@@ -140,6 +140,10 @@
 			protected function RenduDispositifBrut()
 			{
 				$this->Config->SwfFile = $this->CheminDocSwf ;
+				if(! file_exists($this->CheminDocSwf) || is_dir($this->CheminDocSwf))
+				{
+					return '' ;
+				}
 				$this->CorrigeIDsElementHtml() ;
 				$ctn = '' ;
 				$ctn .= $this->InclutSource() ;

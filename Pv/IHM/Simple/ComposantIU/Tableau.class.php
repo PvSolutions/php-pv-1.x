@@ -391,6 +391,13 @@
 				$defCol->Formatteur = new PvFormatteurColonneMonnaie() ;
 				return $defCol ;
 			}
+			public function & InsereDefColHtml($modeleHtml="", $libelle="")
+			{
+				$defCol = $this->InsereDefCol("", $libelle, "") ;
+				$defCol->Formatteur = new PvFormatteurColonneModeleHtml() ;
+				$defCol->Formatteur->ModeleHtml = $modeleHtml ;
+				return $defCol ;
+			}
 			public function & InsereDefColSansTri($nomDonnees, $libelle="", $aliasDonnees="")
 			{
 				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;

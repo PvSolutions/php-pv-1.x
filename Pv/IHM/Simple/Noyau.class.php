@@ -108,6 +108,11 @@
 				$ctn .= '</a>' ;
 				return $ctn ;
 			}
+			public function DefinitValidite($nomDonnees, $valeurVrai=1)
+			{
+				$this->NomDonneesValid = $nomDonnees ;
+				$this->ValeurVraiValid = $valeurVrai ;
+			}
 		}
 		
 		class PvFormatteurColonneDonnees extends PvObjet

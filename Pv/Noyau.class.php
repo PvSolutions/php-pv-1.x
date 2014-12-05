@@ -10,6 +10,10 @@
 		{
 			include dirname(__FILE__)."/../misc/utils.php" ;
 		}
+		if(! defined('PERS_ZIP_SLICE'))
+		{
+			include dirname(__FILE__)."/../misc/PersZip.class.php" ;
+		}
 		if(! defined('SERVICES_JSON_SLICE'))
 		{
 			include dirname(__FILE__)."/../misc/Services_JSON.class.php" ;

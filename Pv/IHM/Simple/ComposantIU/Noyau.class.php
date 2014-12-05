@@ -25,7 +25,7 @@
 			public $ComposantIUParent = null ;
 			public $NomElementComposantIU = "" ;
 			public $Params = array() ;
-			public function ObtientUrl()
+			public function ObtientUrl($params=array())
 			{
 				if($this->EstPasNul($this->ScriptParent))
 				{
@@ -42,7 +42,7 @@
 				{
 					return false ;
 				}
-				$chaineParams = http_build_query_string($this->Params) ;
+				$chaineParams = http_build_query_string(array_merge($this->Params, $params)) ;
 				if($chaineParams != '')
 					$chaineParams = "&".$chaineParams ;
 				$url = $this->ZoneParent->ObtientUrl()."?".urlencode($this->ZoneParent->NomParamActionAppelee).'='.urlencode($this->NomElementZone).$chaineParams ;
@@ -278,10 +278,12 @@
 			public $UtiliserFichierSource = 1 ;
 			public $UtiliserFichierAttache = 1 ;
 			public $TypeMime = "" ;
+			public $DispositionFichierAttache = "inline" ;
 			public $NomFichierAttache = "" ;
 			public $ExtensionFichierAttache = "" ;
 			public $CheminFichierSource = "" ;
 			public $TailleContenu = 0 ;
+			public $AutresEntetes = array() ;
 			protected function CalculeTailleContenu()
 			{
 			}
@@ -308,11 +310,15 @@
 				}
 				if($this->UtiliserFichierAttache == 1 && $this->NomFichierAttache != "")
 				{
-					Header("Content-disposition:inline; filename=".$this->NomFichierAttache."\r\n") ;
+					Header("Content-disposition:".$this->DispositionFichierAttache."; filename=".$this->NomFichierAttache."\r\n") ;
 				}
 				if($this->TailleContenu > 0)
 				{
 					Header("Content-Length:".$this->TailleContenu."\r\n") ;
+				}
+				foreach($this->AutresEntetes as $i => $entete)
+				{
+					Header($entete."\r\n") ;
 				}
 			}
 			protected function AfficheContenu()
@@ -341,6 +347,12 @@
 					}
 				}
 			}
+		}
+		class PvActionTelechargFichier extends PvActionEnvoiFichierBaseZoneWeb
+		{
+			public $TypeMime = "application/octet-stream" ;
+			public $AutresEntetes = array("Pragma: public", "Expires: 0", "Cache-Control: must-revalidate, post-check=0, pre-check=0", "Content-Transfer-Encoding: binary") ;
+			public $DispositionFichierAttache = "attachment" ;
 		}
 		class PvActionEnvoiFichierJSZoneWeb extends PvActionEnvoiFichierBaseZoneWeb
 		{
