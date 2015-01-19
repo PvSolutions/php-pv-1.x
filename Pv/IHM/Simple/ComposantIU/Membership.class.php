@@ -761,8 +761,9 @@
 					return ;
 				}
 				$this->FormulaireDonneesParent->LieTousLesFiltres() ;
+				// echo "tt : ".$this->FormulaireDonneesParent->FiltreTitreRole->ValeurParametre ;
 				$this->StatutVerifFiltresRole = 1 ;
-				if(empty($this->FormulaireDonneesParent->FiltreTitreRole->ValeurParametre) || strlen($this->FormulaireDonneesParent->FiltreTitreRole->ValeurParametre) < 4 || strlen($this->FormulaireDonneesParent->FiltreTitreRole->ValeurParametre) > 30)
+				if(empty($this->FormulaireDonneesParent->FiltreTitreRole->ValeurParametre) || strlen($this->FormulaireDonneesParent->FiltreTitreRole->ValeurParametre) < 4 || strlen($this->FormulaireDonneesParent->FiltreTitreRole->ValeurParametre) > 50)
 				{
 					return $this->RenseigneErreurFiltresRole($this->FormulaireDonneesParent->ZoneParent->Membership->TitleRoleFormatErrorLabel) ;
 				}
@@ -1520,7 +1521,14 @@
 				$form->FournisseurDonnees->BaseDonnees = $membership->Database ;
 				$form->FournisseurDonnees->RequeteSelection = $membership->MemberTable ;
 				$form->FournisseurDonnees->TableEdition = $membership->MemberTable ;
-				$form->RedirigeAnnulerVersScript($form->ZoneParent->NomScriptListeMembres) ;
+				if($form->ZoneParent->EditMembershipPossible())
+				{
+					$form->RedirigeAnnulerVersScript($form->ZoneParent->NomScriptListeMembres) ;
+				}
+				else
+				{
+					$form->RedirigeAnnulerVersScript($form->ZoneParent->NomScriptParDefaut) ;
+				}
 			}
 			public function RemplitFiltresMPFormMembre(& $form)
 			{

@@ -695,6 +695,7 @@
 			public $ChangePasswordMemberSameLabel = "L'ancien mot de passe et le nouveau ne peuvent pas etre pareils" ;
 			public $ChangePasswordMemberSameAlias = "" ;
 			public $OldPasswordMemberMatchLabel = "L'ancien mot de passe n'est pas correct" ;
+			public $TitleRoleFormatErrorLabel = "Le titre du r&ocirc;le n'a pas le bon format" ;
 			public $OldPasswordMemberMatchAlias = "" ;
 			public $IdAlternateRoleAfterDelete = 0 ;
 			public $IdAlternatePrivilegeAfterDelete = 0 ;
@@ -944,7 +945,8 @@
 				$sql .= 'select ' ;
 				$sql .= $this->Database->EscapeFieldName('PROFILE_TABLE', $this->IdProfileColumn).' PROFILE_ID' ;
 				$sql .= ", ".$this->Database->EscapeFieldName('ROLE_TABLE', $this->IdRoleColumn).' ROLE_ID' ;
-				$sql .= ", ".(($this->NameRoleColumn != '') ? $this->Database->EscapeFieldName('ROLE_TABLE', $this->NameRoleColumn) : "''").' ROLE_TITLE' ;
+				$sql .= ", ".(($this->NameRoleColumn != '') ? $this->Database->EscapeFieldName('ROLE_TABLE', $this->NameRoleColumn) : "''").' ROLE_NAME' ;
+				$sql .= ", ".(($this->TitleRoleColumn != '') ? $this->Database->EscapeFieldName('ROLE_TABLE', $this->TitleRoleColumn) : "''").' ROLE_TITLE' ;
 				$sql .= ", ".(($this->DescriptionRoleColumn != '') ? $this->Database->EscapeFieldName('ROLE_TABLE', $this->DescriptionRoleColumn) : "''").' ROLE_DESCRIPTION' ;
 				$sql .= ", ".(($this->EnableRoleColumn != '') ? $this->Database->EscapeFieldName('ROLE_TABLE', $this->EnableRoleColumn) : "'0'").' ROLE_ENABLED' ;
 				$sql .= ", ".(($this->EnablePrivilegeColumn != '') ? $this->Database->EscapeFieldName('PRIVILEGE_TABLE', $this->EnablePrivilegeColumn) : "'0'").' PRIVILEGE_ENABLED' ;

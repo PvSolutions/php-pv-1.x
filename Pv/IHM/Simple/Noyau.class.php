@@ -22,6 +22,10 @@
 		{
 			include dirname(__FILE__)."/../../../misc/HTMLTag.class.php" ;
 		}
+		if(! class_exists('SafeHTML'))
+		{
+			include dirname(__FILE__)."/../../../misc/SafeHTML.php" ;
+		}
 		define('PV_NOYAU_SIMPLE_IHM', 1) ;
 		
 		class PvExceptionSimpleBase
@@ -42,6 +46,7 @@
 			public $FormatCheminIcone ;
 			public $ClasseCSS ;
 			public $ChaineAttributs ;
+			public $Cible ;
 			public $InclureIcone = 1 ;
 			public $HauteurIcone = "15" ;
 			public $NomDonneesValid = "" ;
@@ -50,7 +55,8 @@
 			public $Visible = 1 ;
 			public function Accepte($donnees)
 			{
-				return ($this->RenduPossible() && ($this->NomDonneesValid == "" || (isset($donnees[$this->NomDonneesValid]) && $donnees[$this->NomDonneesValid] == $this->ValeurVraiValid))) ? 1 : 0 ;
+				$ok = ($this->RenduPossible() && ($this->NomDonneesValid == "" || (isset($donnees[$this->NomDonneesValid]) && $donnees[$this->NomDonneesValid] == $this->ValeurVraiValid))) ? 1 : 0 ;
+				return $ok ;
 			}
 			protected function RenduIcone($donnees, $donneesUrl)
 			{
@@ -700,9 +706,13 @@
 			public $ValeurBruteNonCorrigee = false ;
 			protected function EnleveTagsHtml($valeur)
 			{
+				/*
 				$tag = new HtmlTag() ;
 				$tag->LoadFromText($valeur) ;
 				return $tag->Preview ;
+				*/
+				$result = str_get_html($valeur)->plaintext ;
+				return $result ;
 			}
 			protected function EnleveTagsSuspicieux($valeur)
 			{
@@ -710,6 +720,11 @@
 				$tag->SafeMode = 1 ;
 				$tag->LoadFromText($valeur) ;
 				return $tag->GetContent(true) ;
+				/*
+				$parser = new SafeHTML();
+				$result = $parser->parse($valeur);
+				return $result ;
+				*/
 			}
 			protected function CorrigeValeurBrute($valeur)
 			{

@@ -211,6 +211,19 @@
 			public $Attributes = array() ;
 			public $ChildNodes = array() ;
 			public $Content = "" ;
+			public function GetAttribute($name)
+			{
+				return (isset($this->Attributes[$name])) ? $this->Attributes[$name] : false ;
+			}
+			public function ChildNodeToHash()
+			{
+				$hash = array() ;
+				foreach($this->ChildNodes as $i => $childNode)
+				{
+					$hash[$childNode->Name] = $childNode->Content ;
+				}
+				return $hash ;
+			}
 			public function AddContent($content)
 			{
 				if($this->RegisterContents)

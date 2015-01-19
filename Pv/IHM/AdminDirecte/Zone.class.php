@@ -118,14 +118,9 @@
 				$url = $this->ScriptConnexion->ObtientUrl() ;
 				echo '<script type=text/javascript>
 	var urlConnexion = '.svc_json_encode($url).' ;
-	if(window.top != window)
-	{
-		window.top.location = urlConnexion ;
-	}
-	else
-	{
-		window.location = urlConnexion ;
-	}
+	// alert(window.top.document.body.id + " " + window.document.body.id) ;
+	// alert("mmm") ;
+	window.location = urlConnexion ;
 </script>' ;
 				exit ;
 			}
@@ -695,7 +690,15 @@ function ouvreOnglet(idOnglet, iconeOnglet, libelleOnglet, contenuOnglet)
 			protected function RenduCorpsDocumentNonConnecte()
 			{
 				$ctn = '' ;
-				$ctn .= '<body>' ;
+				$ctn .= '<script type="text/javascript">
+	jQuery(function() {
+		if(window.top != window)
+		{
+			window.top.location.href = window.location ;
+		}
+	}) ;
+</script>' ;
+				$ctn .= '<body id="corps_document">' ;
 				$ctn .= $this->RenduEnteteCorpsDocumentComm() ;
 				if($this->ScriptPourRendu->NomElementZone == $this->NomScriptDeconnexion)
 				{

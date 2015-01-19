@@ -1523,6 +1523,14 @@
 					$this->FltFrmElemMotsClesMeta->ValeurParametre = $this->ExtraitTextePubl() ;
 				}
 			}
+			public function PossedePrivileges($privs=array())
+			{
+				return $this->ZoneParent->PossedePrivileges($privs) ;
+			}
+			public function PossedePrivilege($priv)
+			{
+				return $this->ZoneParent->PossedePrivilege($priv) ;
+			}
 			public function & ObtientEntitePage()
 			{
 				$entite = $this->ScriptParent->ObtientEntitePage() ;

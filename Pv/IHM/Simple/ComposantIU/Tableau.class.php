@@ -32,6 +32,7 @@
 			public $MaxElementsPossibles = array(20) ;
 			public $ToujoursAfficher = 0 ;
 			public $CacherFormulaireFiltres = 0 ;
+			public $CacherBlocCommandes = 0 ;
 			public $SuffixeParamFiltresSoumis = "filtre" ;
 			public $SuffixeParamMaxElements = "max" ;
 			public $SuffixeParamIndiceDebut = "debut" ;
@@ -615,6 +616,7 @@
 				$ctn .= $this->RenduComposants().PHP_EOL ;
 				$ctn .= $this->ContenuApresRendu ;
 				$ctn .= '</div>' ;
+				// print_r($this->FournisseurDonnees->BaseDonnees) ;
 				return $ctn ;
 			}
 			public function AppelJsEnvoiFiltres($parametres)
@@ -804,7 +806,7 @@
 			protected function RenduBlocCommandes()
 			{
 				$ctn = '' ;
-				if(! $this->FiltresSoumis() && $this->PossedeFiltresRendus())
+				if($this->CacherBlocCommandes || (! $this->FiltresSoumis() && $this->PossedeFiltresRendus()))
 				{
 					return $ctn ;
 				}

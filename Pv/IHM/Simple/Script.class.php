@@ -672,7 +672,7 @@
 		{
 			public $Titre = "Modifier informations perso." ;
 			public $TitreDocument = "Modifier informations perso." ;
-			public $NomClasseFormulaireDonnees = "PvFormulaireModifMembreMS" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireModifInfosMS" ;
 		}
 		class PvScriptChangeMotPasseWeb extends PvFormulaireModifDonneesSimple
 		{

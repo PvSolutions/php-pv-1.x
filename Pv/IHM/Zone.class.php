@@ -681,6 +681,12 @@
 				}
 				return $this->EstSuperAdmin($this->Membership->MemberLogged) ;
 			}
+			public function EditMembershipPossible()
+			{
+				if(count($this->PrivilegesEditMembership) == 0)
+					return 1 ;
+				return $this->PossedePrivileges($this->PrivilegesEditMembership) ;
+			}
 			public function IdMembreConnecte()
 			{
 				if(! $this->PossedeMembreConnecte())

@@ -108,7 +108,7 @@
 			public $ZoomTime = 0.5 ;
 			public $ZoomInterval = 0.2 ;
 			public $FitPageOnLoad = false ;
-			public $FitWidthOnLoad = false ;
+			public $FitWidthOnLoad = true ;
 			public $PrintEnabled = true ;
 			public $FullScreenAsMaxWindow = false ;
 			public $ProgressiveLoading = false ;

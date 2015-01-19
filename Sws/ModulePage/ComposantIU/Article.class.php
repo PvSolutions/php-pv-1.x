@@ -288,6 +288,7 @@ else if(document.all) {
 			}
 			protected function RenduDispositifBrut()
 			{
+				$systemeSws = & ReferentielSws::$SystemeEnCours ;
 				$this->DonneesBrutes->Importe($this->DonneesSupport, $this) ;
 				$ctn = '' ;
 				$ctn .= '<div id="'.$this->IDInstanceCalc.'"' ;
@@ -320,7 +321,7 @@ else if(document.all) {
 						break ;
 					}
 					$ctn .= '">' ;
-					$ctn .= '<img src="'.htmlentities($this->DonneesBrutes->CheminImage).'"' ;
+					$ctn .= '<img src="'.htmlentities($systemeSws->ObtientCheminPubl($this->DonneesBrutes->CheminImage)).'"' ;
 					if($this->LargeurImage != "")
 						$ctn .= ' width="'.$this->LargeurImage.'"' ;
 					if($this->HauteurImage != "")

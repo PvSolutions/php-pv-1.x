@@ -56,6 +56,10 @@
 				$i = 0 ;
 				foreach($this->ModulesPage as $nomModule => & $module)
 				{
+					if($module->Active == 0)
+					{
+						continue ;
+					}
 					$modules[] = array(
 						"index" => $i,
 						"titre" => $module->ObtientTitreMenu(),

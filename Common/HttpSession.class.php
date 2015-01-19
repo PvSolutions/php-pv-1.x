@@ -415,7 +415,7 @@
 			}
 			function OpenRequest()
 			{
-				$this->RequestOutput = @fsockopen($this->RequestHost, $this->RequestUrlParts['port'], $errno, $errstr, $this->ConnectTimeout);
+				$this->RequestOutput = @fsockopen(($this->RequestUrlParts['scheme'] == 'https' ? 'ssl://' : '').$this->RequestHost, $this->RequestUrlParts['port'], $errno, $errstr, $this->ConnectTimeout);
 				if($this->RequestOutput == false)
 				{
 					$this->SetRequestException($errstr) ;
@@ -453,7 +453,7 @@
 				$this->RequestFileUploadActivated = ($this->RequestContentType == "multipart/form-data") ;// Calculate the content length
 				$this->CalculateRequestContentLength() ;
 				// Setting the host
-				$this->RequestHost = ($this->RequestUrlParts['scheme'] == 'https' ? 'ssl://' : '').$this->RequestUrlParts['host'];
+				$this->RequestHost = $this->RequestUrlParts['host'];
 				// Setting the cookies
 				if(! isset($this->RequestCookies[$this->CookieHost()]))
 				{
