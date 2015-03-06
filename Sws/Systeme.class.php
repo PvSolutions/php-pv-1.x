@@ -280,6 +280,7 @@
 		
 		class SystemeDefautSws extends SystemeBaseSws
 		{
+			public $ModuleCompteurHits ;
 			public $ModulePageRacine ;
 			public $ModuleArticle ;
 			public $ModuleMenu ;
@@ -312,12 +313,14 @@
 			{
 				return new ModuleLivreDOrSws() ;
 			}
+			protected function CreeModuleCompteurHits()
+			{
+				return new ModuleCompteurHitsSws() ;
+			}
 			protected function ChargeModulesPage()
 			{
 				$this->ModulePageRacine = $this->CreeModulePageRacine() ;
 				$this->InscritModulePage('', $this->ModulePageRacine) ;
-				$this->ModuleArticle = $this->CreeModuleArticle() ;
-				$this->InscritModulePage('', $this->ModuleArticle) ;
 				$this->ModuleMenu = $this->CreeModuleMenu() ;
 				$this->InscritModulePage('', $this->ModuleMenu) ;
 				$this->ModuleContact = $this->CreeModuleContact() ;
@@ -326,6 +329,10 @@
 				$this->InscritModulePage('', $this->ModuleSlider) ;
 				$this->ModuleLivreDOr = $this->CreeModuleLivreDOr() ;
 				$this->InscritModulePage('', $this->ModuleLivreDOr) ;
+				/*
+				$this->ModuleCompteurHits = $this->CreeModuleCompteurHits() ;
+				$this->InscritModulePage('', $this->ModuleCompteurHits) ;
+				*/
 			}
 		}
 		

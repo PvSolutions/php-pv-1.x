@@ -510,7 +510,7 @@
 					$headers .= 'Bcc: '.$bcc . "\r\n";			
 				}
 				// Envoi
-				mail($to, $subject, $text, $headers);
+				return mail($to, $subject, $text, $headers);
 			}
 			function send_plain_mail($to, $subject, $text, $from='', $cc='', $bcc='')
 			{
@@ -536,7 +536,7 @@
 					$headers .= 'Bcc: '.$bcc . "\r\n";			
 				}
 				// Envoi
-				mail($to, $subject, $text, $headers);
+				return mail($to, $subject, $text, $headers);
 			}
 			function send_mail_with_attachments($to, $subject, $text, $files=array(), $from='', $cc='', $bcc='')
 			{
@@ -598,7 +598,7 @@
 					"--{$mime_boundary}--\n";
 				}
 				// Envoi
-				mail($to, $subject, $message, $headers);
+				return mail($to, $subject, $message, $headers);
 			}
 			
 			function _content_of($text, $field_name='', $type='text')

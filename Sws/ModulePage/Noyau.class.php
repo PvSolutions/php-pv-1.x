@@ -28,6 +28,7 @@
 			public $AutoDetecterCheminIcone = 1 ;
 			public $NumeroVersion = "0.0.1" ;
 			public $StadeDev = "Beta" ;
+			public $AutoriserMailsEdition = 1 ;
 			public function ObtientVersion()
 			{
 				return $this->NumeroVersion.' '.$this->StadeDev ;
@@ -86,6 +87,10 @@
 			public function SqlSelectFluxRSS(& $bd)
 			{
 			}
+			public function ParamsSelectFluxRSS(& $bd)
+			{
+				return array() ;
+			}
 			protected function CreeActionFluxRSS()
 			{
 				return new ActionEnvoiFichierBaseZoneSws() ;
@@ -104,9 +109,12 @@
 			{
 				$bd = $this->ObtientBDSupport() ;
 				$sql = $this->SqlSelectFluxRSS($bd) ;
-				if($sql == "")
+				if($sql != "")
 				{
-					return ;
+					$lgns = $bd->FetchSqlRows($sql, $this->ParamsSelectFluxRSS($bd)) ;
+					foreach($lgns as $i => $lgn)
+					{
+					}
 				}
 				// foreach($this->)
 			}
@@ -658,7 +666,10 @@
 			}
 			protected function VerifPreReqsScriptConsult(& $script)
 			{
-				return $this->DetecteLgnEnCours() ;
+				$ok = $this->DetecteLgnEnCours() ;
+				if($ok && $this->LgnEnCours["statut_publication"] != 1)
+					$ok = 0 ;
+				return $ok ;
 			}
 			public function ObtientPrivilegesConsult()
 			{
@@ -1211,7 +1222,7 @@
 						$this->FltTblListDatePublMin = $tbl->InsereFltSelectHttpGet($this->NomParamTblListDatePublMin, $bd->SqlDatePart($bd->EscapeVariableName($this->NomColDatePubl)).' >= '.$bd->SqlStrToDate('<self>')) ;
 						$this->FltTblListDatePublMin->DeclareComposant("PvCalendarDateInput") ;
 						$this->FltTblListDatePublMin->Libelle = $this->LibTblListDatePublMin ;
-						$this->FltTblListDatePublMin->ValeurParDefaut = date("Y-m-d", date("U") - 90 * 86400) ;
+						$this->FltTblListDatePublMin->ValeurParDefaut = date("Y-m-d", date("U") - 12 * 30 * 86400) ;
 						$this->FltTblListDatePublMax = $tbl->InsereFltSelectHttpGet($this->NomParamTblListDatePublMax,$bd->SqlDatePart($bd->EscapeVariableName($this->NomColDatePubl)).' <= '.$bd->SqlStrToDate('<self>')) ;
 						$this->FltTblListDatePublMax->DeclareComposant("PvCalendarDateInput") ;
 						$this->FltTblListDatePublMax->Libelle = $this->LibTblListDatePublMax ;
@@ -1385,6 +1396,17 @@
 					$sql .= ', '.$bd->EscapeVariableName($this->NomColDescriptionMeta).' description_meta' ;
 				}
 				return $sql ;
+			}
+			protected function PrepareScriptConsult(& $script)
+			{
+				parent::PrepareScriptConsult($script) ;
+				if($this->AccepterAttrsMeta == 1)
+				{
+					if($this->LgnEnCours["mots_cles_meta"] != "")
+						$script->MotsCleMeta = $this->LgnEnCours["mots_cles_meta"] ;
+					if($this->LgnEnCours["description_meta"] != "")
+						$script->DescriptionMeta = $this->LgnEnCours["description_meta"] ;
+				}
 			}
 			protected function InitBlocConsult(& $bloc, & $script)
 			{
@@ -1743,21 +1765,53 @@
 		class ActionFluxRSSBaseSws extends ActionEnvoiFichierBaseZoneSws
 		{
 			public $TypeMime = "application/rss+xml" ;
+			public $Titre = "" ;
 			public $ExtensionFichierAttache = "rss" ;
 			public $VersionXML = "1.0" ;
 			public $VersionRSS = "2.0" ;
+			public $Encodage = "utf-8" ;
 			public $UtiliserFichierSource = 1 ;
+			public $ElemsLien = array() ;
 			protected function AfficheEntetes()
 			{
 				$modulePage = $this->ObtientModulePage() ;
 				$this->NomFichierAttache = $modulePage->ObtientNomActionFluxRSS() ;
 				parent::AfficheEntetes() ;
 			}
+			protected function AfficheContenu()
+			{
+				$this->PrepareDoc() ;
+				$this->AfficheDebutDoc() ;
+				$this->AfficheChaineZone() ;
+				$this->AfficheModulePage() ;
+				$this->AfficheCorpsDoc() ;
+				$this->AfficheFinDoc() ;
+			}
+			public function CreeElemLien()
+			{
+				return new ElemLienFluxRSSSws() ;
+			}
+			public function InscritElemLienLgn($lgn)
+			{
+				$elem = $this->CreeElemLien() ;
+				$elem->ImporteLgn($lgn) ;
+				$this->ElemsLien[] = $elem ;
+			}
+			protected function PrepareDoc()
+			{
+			}
 			protected function AfficheDebutDoc()
 			{
-				echo '<?xml version="1.0" ?>
-<rss version="2.0">
+				echo '<?xml version="'.$this->VersionXML.'" encoding="'.$this->Encodage.'"?>
+<rss version="'.$this->VersionRSS.'">
 <channel>'.PHP_EOL ;
+			}
+			protected function AfficheCorpsDoc()
+			{
+				foreach($this->ElemsLien as $i => $elem)
+				{
+					echo $elem->ContenuRSS().PHP_EOL ;
+				}
 			}
 			protected function AfficheFinDoc()
 			{
@@ -1766,30 +1820,95 @@
 			}
 			protected function AfficheChaineZone()
 			{
-				if($this->ZoneParent->Titre != "")
+				$titre = '' ;
+				if($this->ZoneParent->ScriptAppele->TitreDocument != '')
+					$titre = $this->ZoneParent->ScriptAppele->TitreDocument ;
+				if($titre == '' && $this->ZoneParent->Titre != '')
+					$titre = $this->ZoneParent->Titre ;
+				if($titre == '' && $this->Titre != '')
+					$titre = $this->Titre ;
+				if($titre != "")
 				{
-					echo '<title>'.htmlentities($this->ZoneParent->Titre).'</title>'.PHP_EOL ;
+					echo '<title><![CDATA['.strip_tags($titre).']]></title>'.PHP_EOL ;
 				}
-				if($this->ZoneParent->Description != "")
+				$description = '' ;
+				if($this->ZoneParent->ScriptAppele->MotsCleMeta != '')
 				{
-					echo '<description>'.htmlentities($this->ZoneParent->Description).'</description>'.PHP_EOL ;
+					$description .= $this->ZoneParent->ScriptAppele->MotsCleMeta ;
+				}
+				if($this->ZoneParent->ScriptAppele->DescriptionMeta != '')
+				{
+					if($description != '')
+						$description .= ' : ' ;
+					$description .= $this->ZoneParent->ScriptAppele->DescriptionMeta ;
+				}
+				if($description != "")
+				{
+					echo '<description><![CDATA['.$description.']]></description>'.PHP_EOL ;
 				}
 				echo '<link>'.htmlentities($this->ZoneParent->ObtientUrl()).'</link>'.PHP_EOL ;
 			}
 		}
 		class ActionFluxRSSModuleSws extends ActionFluxRSSBaseSws
 		{
-			protected function AfficheContenu()
-			{
-				$this->AfficheDebutDoc() ;
-				$this->AfficheChaineZone() ;
-				$this->AfficheModulePage() ;
-				$this->AfficheFinDoc() ;
-			}
 			protected function AfficheModulePage()
 			{
 				$modulePage = $this->ObtientModulePage() ;
 				$modulePage->EnvoieContenuFluxRSS($this) ;
+			}
+		}
+		
+		class ElemLienFluxRSSSws
+		{
+			public $Titre ;
+			public $Description ;
+			public $Url ;
+			public $DatePubl ;
+			public $Image ;
+			public function ImporteLgn($lgn)
+			{
+				if(isset($lgn["titre"]))
+					$this->Titre = $lgn["titre"] ;
+				if(isset($lgn["description"]))
+					$this->Description = $lgn["description"] ;
+				if(isset($lgn["url"]))
+					$this->Url = $lgn["url"] ;
+				if(isset($lgn["image"]))
+					$this->Image = $lgn["image"] ;
+				if(isset($lgn["date_publication"]))
+					$this->DatePubl = $lgn["date_publication"] ;
+			}
+			public function ContenuRSS()
+			{
+				$ctn = '' ;
+				$ctn .= '<item>'.PHP_EOL ;
+				$ctn .= '<title><![CDATA['.$this->ObtientTitreRSS().']]></title>'.PHP_EOL ;
+				$ctn .= '<description><![CDATA['.$this->ObtientDescriptionRSS().']]></description>'.PHP_EOL ;
+				$ctn .= '<link>'.htmlentities($this->Url).'</link>'.PHP_EOL ;
+				if($this->DatePubl != '')
+				{
+					$ctn .= '<pubDate>'.$this->DatePubl.'</pubDate>'.PHP_EOL ;
+				}
+				if($this->Image != '')
+				{
+					$ctn .= '<image>'.$this->Image.'</image>'.PHP_EOL ;
+				}
+				$ctn .= '</item>' ;
+				return $ctn ;
+			}
+			protected function ObtientTitreRSS()
+			{
+				$val = strip_tags($this->Titre) ;
+				if(strlen($val) > 255)
+					$val = substr($val, 0, 255)."..." ;
+				return utf8_encode($val) ;
+			}
+			protected function ObtientDescriptionRSS()
+			{
+				$description = strip_tags($this->Description) ;
+				if(strlen($description) > 255)
+					$description = substr($description, 0, 255)."..." ;
+				return utf8_encode($description) ;
 			}
 		}
 		

@@ -31,6 +31,7 @@
 		
 		class EntiteMsgContactSws extends EntiteTableSws
 		{
+			public $NomClasseCmdAjout = "CmdAjoutMsgContactSws" ;
 			public $TitreMenu = "Messages" ;
 			public $TitreAjoutEntite = "Ajout message" ;
 			public $TitreModifEntite = "Modification message" ;
@@ -39,6 +40,13 @@
 			public $TitreConsultEntite = "D&eacute;tails messages" ;
 			public $NomEntite = "msg_contact" ;
 			public $NomTable = "msg_contact" ;
+			public $NomTableMails = "mails_msg_contact" ;
+			public $NomColSujetMail = "sujet" ;
+			public $NomColIdMsgMail = "id_msg" ;
+			public $NomColFromMail = "from" ;
+			public $NomColToMail = "to" ;
+			public $NomColCorpsMail = "corps" ;
+			public $NomColSuccesMail = "succes" ;
 			public $AccepterSommaire = 0 ;
 			public $AccepterGraphique = 0 ;
 			public $SecuriserEdition = 1 ;
@@ -55,7 +63,6 @@
 			public $NomColContenu = "contenu" ;
 			public $FltFrmElemNom ;
 			public $FltFrmElemEmail ;
-			public $FltFrmElemContenu ;
 			public $LibNom = "Nom &amp; Pr&eacute;nom" ;
 			public $LibEmail = "Email" ;
 			public $LibContenu = "Message" ;
@@ -320,6 +327,12 @@
 			public $DefColTblListTitre ;
 			public $FltTblListTitre ;
 			public $NomParamTblListTitre = "pTitre" ;
+			public $FltFrmElemContenu ;
+			public $NomParamActiverEnvoiMail = "activer_envoi_mail" ;
+			public $NomColActiverEnvoiMail = "activer_envoi_mail" ;
+			public $FltFrmElemActiverEnvoiMail ;
+			public $FltFrmElemEmailsContact ;
+			public $LibActiverEnvoi = "Envoyer par mail" ;
 			public function SqlListeColsSelect(& $bd)
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;
@@ -344,6 +357,10 @@
 				// Adresse
 				$this->FltFrmElemAdresse = $frm->InsereFltEditHttpPost($this->NomParamAdresse, $this->NomColAdresse) ;
 				$this->FltFrmElemAdresse->Libelle = $this->LibAdresse ;
+				// Activer envoi mail
+				$this->FltFrmElemActiverEnvoiMail = $frm->InsereFltEditHttpPost($this->NomParamActiverEnvoiMail, $this->NomColActiverEnvoiMail) ;
+				$this->FltFrmElemActiverEnvoiMail->PvZoneSelectBoolHtml("PvZoneBoiteSelectHtml") ;
+				$this->FltFrmElemActiverEnvoiMail->ValeurParDefaut = 1 ;
 				// Email
 				$this->FltFrmElemEmail = $frm->InsereFltEditHttpPost($this->NomParamEmail, $this->NomColEmail) ;
 				$this->FltFrmElemEmail->Libelle = $this->LibEmail ;
@@ -355,6 +372,7 @@
 				$this->FltFrmElemFax->Libelle = $this->LibFax ;
 				// Chemin Logos
 				$this->FltFrmElemCheminLogo = $frm->InsereFltEditHttpUpload($this->NomParamCheminLogo, $this->ModuleParent->SystemeParent->CheminAdminVersPubl."/".$this->CheminTelechargLogos, $this->NomColCheminLogo) ;
+				$this->FltFrmElemCheminLogo->AccepteImgsSeulem() ;
 				$this->FltFrmElemCheminLogo->Libelle = $this->LibCheminLogo ;
 			}
 			protected function ChargeTblList(& $tbl)
@@ -371,6 +389,29 @@
 		class ScriptPosterContactSws extends ScriptAjoutEntiteTableSws
 		{
 			public $PourPublication = 1 ;
+			public $NecessiteMembreConnecte = 0 ;
+		}
+		
+		class CmdAjoutMsgContactSws extends CmdAjoutEntiteSws
+		{
+			public function ExecuteInstructions()
+			{
+				parent::ExecuteInstructions() ;
+				if($this->StatutExecution == 1)
+				{
+					$entitePage = $this->ObtientEntitePage() ;
+					$entiteLivreDOr = $entitePage->ModuleParent->EntiteLivreDOr ;
+					$idForm = $entitePage->FltFrmElemIdForm->Lie() ;
+					$idCtrl = $entitePage->FltFrmElemIdCtrl->Lie() ;
+					$bd = $this->ObtientBDSupport() ;
+					$sql = "select t1.*, t2.* from ".$bd->EscapeTableName($entitePage->NomTable)." t1 left join ".$bd->EscapeTableName($entiteLivreDOr->NomTable)." t2 on t1.".$bd->EscapeVariableName($entitePage->NomColIdForm)." = t2.".$bd->EscapeVariableName($entiteLivreDOr->NomColId)." where t2.".$bd->EscapeVariableName($entiteLivreDOr->NomColId)." = 1 and t1.".$bd->EscapeVariableName($entitePage->NomColIdCtrl)." = ".$bd->ParamPrefix."idCtrl" ;
+					$lgn = $bd->FetchSqlRow($sql, array("idCtrl" => $idCtrl)) ;
+					$activerEnvoiMail = $lgn[$entiteLivreDOr->NomColActiverEnvoiMail] ;
+					if(! $activerEnvoiMail)
+						return ;
+					$ok = send_html_mail($entitePage->FltFrmElemEmail->Lie(), "Contact de la part de ".$entitePage->FltFrmElemNom->Lie(), $entitePage->FltFrmElemContenu->Lie()) ;
+				}
+			}
 		}
 	}
 	

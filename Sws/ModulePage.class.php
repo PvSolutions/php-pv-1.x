@@ -10,6 +10,10 @@
 		{
 			include dirname(__FILE__).'/ModulePage/Racine.class.php' ;
 		}
+		if(! defined('MODULE_COMPTEUR_HITS_SWS'))
+		{
+			include dirname(__FILE__).'/ModulePage/CompteurHits.class.php' ;
+		}
 		if(! defined('MODULE_MENU_SWS'))
 		{
 			include dirname(__FILE__).'/ModulePage/Menu.class.php' ;

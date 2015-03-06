@@ -77,9 +77,185 @@
 			}
 		}
 		
+		class ScriptRecommandEntiteSCorriges extends ScriptConsultEntiteTableSws
+		{
+			public $UtiliserCorpsDocZone = 0 ;
+			public $FormPrinc ;
+			public $CmdEnvoyer ;
+			public $FltEmailExpedit ;
+			public $FltEmailRecept ;
+			public $FltMessage ;
+			public $FltCaptcha ;
+			public $CompMessage ;
+			public $CritrNonVide ;
+			public $CritrCodeSecur ;
+			public $CritrFormatEmail ;
+			public $EnregBDSupport = 1 ;
+			public $NomTableRecommand = "recommand_entite" ;
+			public $NomColUrlRecommand = "url" ;
+			public $NomColNomEntiteRecommand = "nom_entite" ;
+			public $NomColIdEntiteRecommand = "id_entite" ;
+			public $NomColNomScriptRecommand = "nom_script" ;
+			public $NomColEmailExpeditRecommand = "email_expediteur" ;
+			public $NomColEmailReceptRecommand = "email_recepteur" ;
+			public $NomColSujetRecommand = "sujet" ;
+			public $NomColCorpsRecommand = "corps" ;
+			public $NomColResultEnvoiRecommand = "result" ;
+			public $MessageSuccesEnvoiMail = "Votre message a &eacute;t&eacute; envoy&eacute; avec succ&egrave;s" ;
+			public $MessageErreurEnvoiMail = "Echec survenu lors de l'envoi du mail" ;
+			public $FormatSujetRecommand = 'Recommandation de ${email_expediteur}' ;
+			public $MsgRecommandDefaut = "" ;
+			public $MsgErrEmailExpeditInvalide = "L'adresse Email de l'expediteur a un mauvais format" ;
+			public $MsgErrEmailReceptInvalide = "L'adresse Email de votre ami a un mauvais format" ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$entite = $this->ObtientEntitePage() ;
+				$this->TitreDocument = $entite->LgnEnCours["titre"] ;
+				$this->DetermineFormPrinc() ;
+			}
+			public function UrlRecommandee()
+			{
+				$entitePage = $this->ObtientEntitePage() ;
+				return $entitePage->ScriptConsult->ObtientUrlParam(array($entitePage->NomParamId => $entitePage->LgnEnCours['id'])) ;
+			}
+			protected function CalculeMsgRecommandParDefaut()
+			{
+				$entitePage = $this->ObtientEntitePage() ;
+				if($this->MsgRecommandDefaut == '' && $entitePage->AccepterTitre)
+				{
+					$this->MsgRecommandDefaut = $entitePage->LgnEnCours["titre"] ;
+				}
+			}
+			public function DetermineFormPrinc()
+			{
+				$entitePage = $this->ObtientEntitePage() ;
+				$this->FormPrinc = $this->CreeFormPrinc() ;
+				$this->FormPrinc->InscrireCommandeAnnuler = 0 ;
+				$this->FormPrinc->InclureTotalElements = 0 ;
+				$this->FormPrinc->InclureElementEnCours = 0 ;
+				$this->FormPrinc->MaxFiltresEditionParLigne = 1 ;
+				$this->FormPrinc->NomClasseCommandeExecuter = "CmdEnvoiRecommandEntiteSws" ;
+				$this->FormPrinc->LibelleCommandeExecuter = "Envoyer" ;
+				$this->FormPrinc->AdopteScript('formPrinc', $this) ;
+				$this->FormPrinc->ChargeConfig() ;
+				// Expedition
+				$this->FltEmailExpedit = $this->FormPrinc->InsereFltEditHttpPost("email_expediteur") ;
+				$this->FltEmailExpedit->AccepteTagsHtml = 0 ;
+				$this->FltEmailExpedit->ObtientComposant()->Largeur = "300px" ;
+				$this->FltEmailExpedit->Libelle = "Votre email" ;
+				// Reception
+				$this->FltEmailRecept = $this->FormPrinc->InsereFltEditHttpPost("email_recepteur") ;
+				$this->FltEmailRecept->AccepteTagsHtml = 0 ;
+				$this->FltEmailRecept->ObtientComposant()->Largeur = "300px" ;
+				$this->FltEmailRecept->Libelle = "Email de votre ami" ;
+				// Message
+				$this->FltMessage = $this->FormPrinc->InsereFltEditHttpPost("message") ;
+				$this->FltMessage->Libelle = "Message" ;
+				$this->FltMessage->AccepteTagsHtml = 0 ;
+				$this->CompMessage = $this->FltMessage->DeclareComposant("PvZoneMultiligneHtml") ;
+				$this->CompMessage->TotalColonnes = "60" ;
+				$this->CompMessage->TotalLignes = "3" ;
+				$this->CalculeMsgRecommandParDefaut() ;
+				$this->FltMessage->ValeurParDefaut = _parse_pattern(
+					$this->MsgRecommandDefaut,
+					array_merge(
+						array('url_script' => $this->UrlRecommandee()),
+						$entitePage->LgnEnCours
+					)
+				) ;
+				// Captcha
+				$this->FltCaptcha = $this->FormPrinc->InsereFltEditHttpPost("code_securite") ;
+				$this->FltCaptcha->Libelle = "Code de s&eacute;curit&eacute;" ;
+				$comp = $this->FltCaptcha->DeclareComposant("PvZoneCommonCaptcha") ;
+				$comp->ActionAffichImg->Params = array($entitePage->NomParamId => $entitePage->LgnEnCours["id"]) ;
+				// Commandes
+				$this->CritrNonVide = $this->FormPrinc->CommandeExecuter->InsereCritereNonVide(array('email_expediteur', 'email_recepteur', 'message')) ;
+				$this->CritrFormatEmail = $this->FormPrinc->CommandeExecuter->InsereCritereFormatEmail(array('email_expediteur', 'email_recepteur')) ;
+				$this->CritrCodeSecur = $this->FormPrinc->CommandeExecuter->InsereNouvCritere(new CritrCodeSecurValideRecommandEntSws()) ;
+			}
+			public function CreeFormPrinc()
+			{
+				return new PvFormulaireDonneesHtml() ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$url = $this->UrlRecommandee() ;
+				$ctn = '' ;
+				$ctn .= '<div align="center" style="background:white;">' ;
+				$ctn .= '<p>URL : <b>'.$url.'</b></p>' ;
+				$ctn .= $this->FormPrinc->RenduDispositif() ;
+				$ctn .= '</div>' ;
+				return $ctn ;
+			}
+		}
+		class CmdEnvoiRecommandEntiteSws extends CmdEditEntiteBaseSws
+		{
+			public $ValEmailExpedit ;
+			public $ValEmailRecept ;
+			public $ValMessage ;
+			public $ValSujet ;
+			public $SuccesEnvoiMail ;
+			public $SuccesEnregBD = 0 ;
+			public function ExecuteInstructions()
+			{
+				$script = & $this->ScriptParent ;
+				$entitePage = $this->ObtientEntitePage() ;
+				$this->ValEmailExpedit = $script->FltEmailExpedit->Lie() ;
+				$this->ValEmailRecept = $script->FltEmailRecept->Lie() ;
+				$this->ValMessage = $script->FltMessage->Lie() ;
+				$this->ValSujet = _parse_pattern($this->ScriptParent->FormatSujetRecommand, array_merge(array("email_expediteur" => $this->ValEmailExpedit), $entitePage->LgnEnCours)) ;
+				$msg = trim($this->ValMessage) ;
+				if($msg != '')
+					$msg .= "\r\n\r\n" ;
+				$msg .= htmlentities($this->ScriptParent->UrlRecommandee())."\r\n" ;
+				$this->SuccesEnvoiMail = send_plain_mail($this->ValEmailRecept, $this->ValSujet, $msg, $this->ValEmailExpedit) ;
+				if($this->SuccesEnvoiMail)
+				{
+					$this->ConfirmeSucces($script->MessageSuccesEnvoiMail) ;
+					$this->FormulaireDonneesParent->CacherFormulaireFiltres = 1 ;
+				}
+				else
+				{
+					$this->RenseigneErreur($script->MessageErreurEnvoiMail) ;
+				}
+				if($script->EnregBDSupport == 1)
+				{
+					$lgn = array(
+						$script->NomColUrlRecommand => $entitePage->ScriptConsult->ObtientUrlParam(array($entitePage->NomParamId => $entitePage->LgnEnCours["id"])),
+						$script->NomColNomScriptRecommand => $script->NomElementZone,
+						$script->NomColIdEntiteRecommand => $entitePage->LgnEnCours["id"],
+						$script->NomColNomEntiteRecommand => $entitePage->NomEntite,
+						$script->NomColEmailExpeditRecommand => $this->ValEmailExpedit,
+						$script->NomColEmailReceptRecommand => $this->ValEmailRecept,
+						$script->NomColSujetRecommand => $this->ValSujet,
+						$script->NomColCorpsRecommand => $this->ValMessage,
+						$script->NomColResultEnvoiRecommand => $this->SuccesEnvoiMail ? 1 : 0,
+					) ;
+					$bd = $this->ObtientBDSupport() ;
+					$this->SuccesEnregBD = $bd->InsertRow($script->NomTableRecommand, $lgn) ;
+				}
+				else
+				{
+					$this->SuccesEnregBD = -1 ;
+				}
+			}
+		}
+
 		class ActionFluxRSSRacineSws extends ActionFluxRSSModuleSws
 		{
 		}
+		
+		class CritrCodeSecurValideRecommandEntSws extends PvCritereBase
+		{
+			public $MessageErreur = "Le code de s&eacute;curit&eacute; saisi est incorrect" ;
+			public function EstRespecte()
+			{
+				$ok = $this->ScriptParent->FltCaptcha->Composant->ActionAffichImg->VerifieValeurSoumise($this->ScriptParent->FltCaptcha->Lie()) ;
+				return $ok ;
+			}
+		}
+
 	}
 	
 ?>

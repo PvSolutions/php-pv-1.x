@@ -361,7 +361,8 @@ var optionsOuvreFenetreDefaut = {
 	LibelleFermer : "Fermer",
 	BoutonConfimer : null,
 	LibelleConfirmer : "OK",
-	ExecuteBoutonConfirmer : undefined
+	ExecuteBoutonConfirmer : undefined,
+	RafraichOnglActifSurFerm : 0
 } ;
 function ouvreFenetreCadre(idFenetre, icone, titre, urlCadre, options)
 {
@@ -456,6 +457,12 @@ function extraitOptionsJQueryUiDialog(optionsSource)
 			click: funcExecuter
 		}) ;
 	}
+	if(optionsCompletes.RafraichOnglActifSurFerm == 1)
+	{
+		options.close = function(event, ui) {
+			rafraichitUrlOngletActif() ;
+		}
+	}
 	return options ;
 }
 function fermeFenetreActive()
@@ -539,6 +546,41 @@ function ouvreOngletBienvenue()
 function ouvreOngletCadre(idOnglet, iconeOnglet, libelleOnglet, urlCadre)
 {
 	return ouvreOnglet(idOnglet, iconeOnglet, libelleOnglet, \'<iframe src="\' + urlCadre + \'" width="100%" height="'.$this->HauteurOnglet.'" style="padding:0px; margin:0px ;" frameborder="0" scrolling="yes">Vous devez mettre a jour votre navigateur.</iframe>\')
+}
+function obtientUrlScript(url)
+{
+	var pattern = /(&)?'.preg_quote(urlencode($this->NomParamScriptAppele)).'\=([^\&]+)/g ;
+	var partiesUrl = url.split("?", 2) ;
+	var result = partiesUrl[0] ;
+	if(partiesUrl.length == 2)
+	{
+		var match = pattern.exec(partiesUrl[1]) ;
+		// alert(match) ;
+		if(match != null)
+		{
+			result += "?'.urlencode($this->NomParamScriptAppele).'=" + encodeURIComponent(RegExp.$2) ;
+		}
+	}
+	return result ;
+}
+function rafraichitUrlOngletActif()
+{
+	var idOnglet = objGroupeOnglet.find( ".ui-tabs-active" ).attr("aria-controls") ;
+	var ongletActif = jQuery("#" + idOnglet) ;
+	var cadresActif = ongletActif.find("iframe") ;
+	if(cadresActif.length > 0)
+	{
+		for(var i=0; i<cadresActif.length; i++)
+		{
+			noeudCadre = cadresActif.get(i) ;
+			// alert(obtientUrlScript(noeudCadre.contentWindow.location.href)) ;
+			// noeudCadre.src = obtientUrlScript(noeudCadre.contentWindow.location.href) ;
+		}
+	}
+	else
+	{
+		rafraichitOnglet(idOnglet) ;
+	}
 }
 function rafraichitOngletActif()
 {

@@ -283,6 +283,7 @@
 			public $ExtensionFichierAttache = "" ;
 			public $CheminFichierSource = "" ;
 			public $TailleContenu = 0 ;
+			public $SupprimerCaractsSpec = 1 ;
 			public $AutresEntetes = array() ;
 			protected function CalculeTailleContenu()
 			{
@@ -302,15 +303,21 @@
 					$this->NomFichierAttache = $this->NomElementZone.".".$this->ExtensionFichierAttache ;
 				}
 			}
+			public function SupprimeCaractsSpec($valeur)
+			{
+				return preg_replace('/[^a-z0-9_\.]/i', '_', $valeur) ;
+			}
 			protected function AfficheEntetes()
 			{
+				// echo $this->SupprimeCaractsSpec($this->NomFichierAttache) ;
+				// exit ;
 				if($this->UtiliserFichierSource == 1 && $this->TypeMime != "")
 				{
 					Header("Content-type:".$this->TypeMime."\r\n") ;
 				}
 				if($this->UtiliserFichierAttache == 1 && $this->NomFichierAttache != "")
 				{
-					Header("Content-disposition:".$this->DispositionFichierAttache."; filename=".$this->NomFichierAttache."\r\n") ;
+					Header("Content-disposition:".$this->DispositionFichierAttache."; filename=".$this->SupprimeCaractsSpec($this->NomFichierAttache)."\r\n") ;
 				}
 				if($this->TailleContenu > 0)
 				{
@@ -425,7 +432,7 @@
 					}
 					if($filtre->LectureSeule)
 					{
-						$ctn .= '<input type="hidden" name="'.htmlentities($filtre->ObtientNomComposant()).'" value="'.htmlentities($filtre->Lie()).'" />'.PHP_EOL ;
+						$ctn .= '<input type="hidden" id="'.htmlentities($filtre->ObtientIDComposant()).'" name="'.htmlentities($filtre->ObtientNomComposant()).'" value="'.htmlentities($filtre->Lie()).'" />'.PHP_EOL ;
 						continue ;
 					}
 					if($filtreRendus % $this->MaxFiltresParLigne == 0)
@@ -1055,6 +1062,34 @@
 			{
 				$this->InscritCritere($critere) ;
 			}
+			public function & InsereCritereFormatUrl($nomFiltres = array())
+			{
+				$critere = new PvCritereFormatUrl() ;
+				$this->InscritCritere($critere) ;
+				call_user_func_array(array(& $critere, 'CibleFiltres'), $nomFiltres) ;
+				return $critere ;
+			}
+			public function & InsereCritereFormatMotPasse($nomFiltres = array())
+			{
+				$critere = new PvCritereFormatMotPasse() ;
+				$this->InscritCritere($critere) ;
+				call_user_func_array(array(& $critere, 'CibleFiltres'), $nomFiltres) ;
+				return $critere ;
+			}
+			public function & InsereCritereFormatLogin($nomFiltres = array())
+			{
+				$critere = new PvCritereFormatLogin() ;
+				$this->InscritCritere($critere) ;
+				call_user_func_array(array(& $critere, 'CibleFiltres'), $nomFiltres) ;
+				return $critere ;
+			}
+			public function & InsereCritereFormatEmail($nomFiltres = array())
+			{
+				$critere = new PvCritereFormatEmail() ;
+				$this->InscritCritere($critere) ;
+				call_user_func_array(array(& $critere, 'CibleFiltres'), $nomFiltres) ;
+				return $critere ;
+			}
 			public function & InsereCritereNonVide($nomFiltres = array())
 			{
 				$critere = new PvCritereNonVide() ;
@@ -1062,7 +1097,7 @@
 				call_user_func_array(array(& $critere, 'CibleFiltres'), $nomFiltres) ;
 				return $critere ;
 			}
-			public function InsereCritrNonVide($nomFiltres = array())
+			public function & InsereCritrNonVide($nomFiltres = array())
 			{
 				$critere = $this->InsereCritereNonVide($nomFiltres) ;
 				return $critere ;

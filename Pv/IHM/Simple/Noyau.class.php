@@ -563,6 +563,10 @@
 				$iDInstanceCalc = $this->Composant->IDInstanceCalc ;
 				return $iDInstanceCalc ;
 			}
+			public function ObtientIDComposant()
+			{
+				return $this->ObtientIDElementHtmlComposant() ;
+			}
 			public function Rendu()
 			{
 				if($this->EstEtiquette)
@@ -710,21 +714,22 @@
 				$tag = new HtmlTag() ;
 				$tag->LoadFromText($valeur) ;
 				return $tag->Preview ;
-				*/
 				$result = str_get_html($valeur)->plaintext ;
 				return $result ;
+				*/
+				return strip_tags($valeur) ;
 			}
 			protected function EnleveTagsSuspicieux($valeur)
 			{
+				/*
 				$tag = new HtmlTag() ;
 				$tag->SafeMode = 1 ;
 				$tag->LoadFromText($valeur) ;
 				return $tag->GetContent(true) ;
-				/*
+				*/
 				$parser = new SafeHTML();
 				$result = $parser->parse($valeur);
 				return $result ;
-				*/
 			}
 			protected function CorrigeValeurBrute($valeur)
 			{
@@ -806,6 +811,7 @@
 			public $CheminFichierSrc = "" ;
 			public $DejaTelecharge = 0 ;
 			public $ExtensionsAcceptees = array() ;
+			public $ExtensionsRejetees = array('pl', 'cgi', 'html', 'xhtml', 'html5', 'html4', 'xml', 'xss', 'rss', 'xlt', 'php', 'phtml', 'inc', 'js', 'vbs', 'py', 'bat', 'sh', 'cmd') ;
 			public $CheminFichierClient = "" ;
 			public $CodeErreurTelechargement = "0" ;
 			public $CheminFichierSoumis = "" ;
@@ -821,6 +827,18 @@
 			public $LibelleErreurDeplFicTelecharg = 'Le deplacement du fichier sur le serveur a &eacute;chou&eacute;. V&eacute;rifiez que vous avez les droits en ecriture.' ;
 			public $CodeErreurFicSoumisInexist = '503' ;
 			public $LibelleErreurFicSoumisInexist = 'Le fichier soumis n\'existe pas.' ;
+			public function AccepteImgsSeulem()
+			{
+				$this->ExtensionsAcceptees = array('jpg', 'jpeg', 'png', 'gif', 'svg') ;
+			}
+			public function AccepteDocsSeulem()
+			{
+				$this->ExtensionsAcceptees = array('doc', 'docx', 'xls', 'xlsx', 'pdf', 'odt') ;
+			}
+			public function AccepteTxtsSeulem()
+			{
+				$this->ExtensionsAcceptees = array('txt', 'log') ;
+			}
 			public function TelechargementSoumis()
 			{
 				return $this->SourceTelechargement == 'files' ? 1 : 0 ;
@@ -865,7 +883,7 @@
 					// print_r("Doss : ".$this->CheminDossier) ;
 					// print_r($infosFichier) ;
 				}
-				if(count($this->ExtensionsAcceptees) > 0 && ! in_array(strtolower($this->ExtFichierSelect), array_map("strtolower", $this->ExtensionsAcceptees)))
+				if((count($this->ExtensionsAcceptees) > 0 && ! in_array(strtolower($this->ExtFichierSelect), array_map("strtolower", $this->ExtensionsAcceptees))) || (count($this->ExtensionsRejetees) > 0 && in_array(strtolower($this->ExtFichierSelect), array_map("strtolower", $this->ExtensionsRejetees))))
 				{
 					$this->CodeErreurTelechargement = $this->CodeErreurMauvaiseExt ;
 					$this->LibelleErreurTelecharg = $this->LibelleErreurMauvaiseExt ;

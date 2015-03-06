@@ -338,6 +338,7 @@ ${VALEUR_COL_'.$this->ModuleParent->EntiteCmtLivreDOr->NomColAuteur.'}
 		
 		class ScriptPosterCmtLivreDOr extends ScriptAjoutEntiteTableSws
 		{
+			public $NecessiteMembreConnecte = 0 ;
 			public function DetermineEnvironnement()
 			{
 				parent::DetermineEnvironnement() ;
@@ -350,6 +351,7 @@ ${VALEUR_COL_'.$this->ModuleParent->EntiteCmtLivreDOr->NomColAuteur.'}
 		}
 		class ScriptListageCmtLivreDOr extends ScriptModifEntiteTableSws
 		{
+			public $NecessiteMembreConnecte = 0 ;
 			public function DetermineEnvironnement()
 			{
 				parent::DetermineEnvironnement() ;

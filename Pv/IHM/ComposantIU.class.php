@@ -354,18 +354,21 @@
 			{
 				$nomFiltres = array_keys($filtres) ;
 				$filtresGets = array() ;
+				$nomFiltresGets = array() ;
 				foreach($nomFiltres as $i => $nomFiltre)
 				{
 					if($filtres[$nomFiltre]->TypeLiaisonParametre == "get")
 					{
 						$filtresGets[] = $filtres[$nomFiltre]->ObtientIDElementHtmlComposant() ;
+						$nomFiltresGets[] = $filtres[$nomFiltre]->NomParametreLie ;
 					}
 				}
 				foreach($this->ParamsGetSoumetFormulaire as $n => $v)
 				{
 					$filtresGets[] = $v ;
 				}
-				$params = extract_array_without_keys($_GET, $filtresGets) ;
+				$params = extract_array_without_keys($_GET, $nomFiltresGets) ;
+				// print_r($nomFiltresGets) ;
 				$indexMinUrl = (count($params) > 0) ? 0 : 1 ;
 				$urlFormulaire = remove_url_params(get_current_url()) ;
 				$urlFormulaire .= '?'.http_build_query_string($params) ;

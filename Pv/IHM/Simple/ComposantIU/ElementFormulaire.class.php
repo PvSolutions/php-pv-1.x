@@ -189,6 +189,8 @@
 			public $TypeElementFormulaire = "file" ;
 			public $NomEltCoteSrv = "CoteSrv_" ;
 			public $LibelleCoteSrv = "Chemin sur le serveur" ;
+			public $InclureApercu = 1 ;
+			public $LibelleApercu = "Aper&ccedil;u" ;
 			protected function RenduDispositifBrut()
 			{
 				$this->CorrigeIDsElementHtml() ;
@@ -230,11 +232,17 @@
 				$nomEltCoteSrv = ($this->FiltreParent != '') ? $this->FiltreParent->NomEltCoteSrv : $this->NomEltCoteSrv ;
 				if($this->InclureCheminCoteServeur)
 				{
-					$ctn .= $this->LibelleCoteSrv.' <input type="text" class="EditeurCheminCoteServeur" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlentities($this->Valeur).'" size="20" />' ;
+					$ctn .= $this->LibelleCoteSrv.' <input type="text" class="EditeurCheminCoteServeur" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlentities(trim($this->Valeur)).'" size="20" />' ;
 				}
 				else
 				{
-					$ctn .= '<input type="hidden" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlentities($this->Valeur).'" />'.htmlentities($this->Valeur) ;
+					$ctn .= '<input type="hidden" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlentities(trim($this->Valeur)).'" />'.htmlentities($this->Valeur) ;
+				}
+				if($this->InclureApercu && trim($this->Valeur) != '')
+				{
+					if($this->InclureCheminCoteServeur)
+						$ctn .= '&nbsp;&nbsp;' ;
+					$ctn .= '<a href="'.htmlentities($this->Valeur).'" target="_blank">'.$this->LibelleApercu.'</a>' ;
 				}
 				return $ctn ;
 			}
@@ -894,15 +902,32 @@
 		window.close() ;
 	}
 	function valideSelect() {
-		var cibleFenetre = window.opener ;
+		var cibleFenetre = '.(($this->StyleIncorporation == "POPUP") ? 'window.opener' : 'window.parent').' ;
+		var valeurChoisie = "" ;
+		var libelleChoisi = "" ;
 		// alert(cibleFenetre.document.getElementById("'.$this->IDInstanceCalc.'")) ;
-		cibleFenetre.document.getElementById("'.$this->IDInstanceCalc.'").value = document.getElementById("'.$this->IDInstanceCalc.'").value ;
+		// alert(document.getElementById("'.$this->IDInstanceCalc.'")) ;
+		var lstElems = document.getElementsByName("'.htmlentities($this->NomElementHtml).'") ;
+		for(var i=0; i<lstElems.length; i++)
+		{
+			var elem = lstElems[i] ;
+			if(elem.checked){
+				valeurChoisie = elem.value ;
+				libelleChoisi = elem.title ;
+				break ;
+			}
+		}
+		cibleFenetre.document.getElementById("'.$this->IDInstanceCalc.'").value = valeurChoisie ;
+		cibleFenetre.document.getElementById("'.$this->IDInstanceCalc.'_Libelle").firstChild.data = libelleChoisi ;
 		window.close() ;
 	}
 </script>'.PHP_EOL ;
 				$ctn .= '<div class="Bloc_Commandes">';
-				$ctn .= '<input type="button" onclick="annuleSelect()" value="'.htmlentities($this->LibelleAnnuleSelection).'" />' ;
-				$ctn .= '&nbsp;&nbsp;&nbsp;&nbsp;' ;
+				if($this->StyleIncorporation == "POPUP")
+				{
+					$ctn .= '<input type="button" onclick="annuleSelect()" value="'.htmlentities($this->LibelleAnnuleSelection).'" />' ;
+					$ctn .= '&nbsp;&nbsp;&nbsp;&nbsp;' ;
+				}
 				$ctn .= '<input type="button" onclick="valideSelect()" value="'.htmlentities($this->LibelleValideSelection).'" />' ;
 				$ctn .= '</div>' ;
 				return $ctn ;
@@ -918,6 +943,7 @@
 				$nomElementHtml = $this->NomElementHtml ;
 				$ctn .= '<input type="radio" name="'.$nomElementHtml.'" id="'.$this->IDInstanceCalc.'_'.$position.'"' ;
 				$ctn .= ' value="'.htmlentities($valeur).'"' ;
+				$ctn .= ' title="'.htmlentities($libelle).'"' ;
 				if($this->EstValeurSelectionnee($valeur) || $forcerSelection)
 				{
 					$ctn .= ' checked' ;
@@ -940,24 +966,24 @@
 			}
 			protected function RenduDispositifBrut()
 			{
+				// echo $this->StyleIncorporation ;
 				$this->AfficheCadre() ;
 				$url = get_current_url() ;
 				$this->CorrigeIDsElementHtml() ;
 				$ctn = '' ;
-				$ctn .= '<div class="Conteneur'.$this->IDInstanceCalc.'"><input type="hidden" name="'.$this->NomElementHtml.'" id="'.$this->IDInstanceCalc.'" value="'.htmlentities($this->Valeur).'" />'.htmlentities($this->RenduValeurCadre()).'</div>' ;
+				$ctn .= '<div class="Conteneur'.$this->IDInstanceCalc.'"><input type="hidden" name="'.$this->NomElementHtml.'" id="'.$this->IDInstanceCalc.'" value="'.htmlentities($this->Valeur).'" /><span id="'.$this->IDInstanceCalc.'_Libelle">'.htmlentities($this->RenduValeurCadre()).'</span></div>' ;
 				$urlCadre = update_url_params($url, array($this->IDInstanceCalc.'_'.$this->NomParamCadre => 1)) ;
-				switch($this->StyleIncorporation)
+				switch(strtoupper($this->StyleIncorporation))
 				{
 					case "POPUP" :
 					{
-						$ctn .= $this->SepOuvreCadre ;
-						$ctn .= '<a href="'.$urlCadre.'" target="popup'.$this->IDInstanceCalc.'">'.$this->LibelleOuvreCadre.'</a>' ;
+						$ctn .= '<div><a href="'.$urlCadre.'" target="popup'.$this->IDInstanceCalc.'">'.$this->LibelleOuvreCadre.'</a></div>' ;
 					}
 					break ;
 					case "IFRAME" :
 					case "CADRE" :
 					{
-						$ctn .= '<iframe src="'.$urlCadre.'" width="'.$this->LargeurCadre.' height="'.$this->HauteurCadre.'"></iframe>' ;
+						$ctn .= '<iframe src="'.$urlCadre.'" width="'.$this->LargeurCadre.'" frameborder="0" height="'.$this->HauteurCadre.'"></iframe>' ;
 					}
 					break ;
 				}

@@ -48,6 +48,10 @@
  * @version    Release: @package_version@
  * @link       http://pear.php.net/package/SafeHTML
  */
+
+if(! class_exists("XML_HTMLSax3"))
+	include dirname(__FILE__)."/HTMLSax3.php" ;
+ 
 class SafeHTML 
 {
     /**
