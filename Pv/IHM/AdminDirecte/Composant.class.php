@@ -146,6 +146,8 @@
 				}
 				if(count($this->OptionsOnglet) > 0)
 				{
+					if($args != '')
+						$args .= ', ' ;
 					$args .= svc_json_encode($this->OptionsOnglet) ;
 				}
 				$ctn = '<script type="text/javascript">

@@ -95,7 +95,7 @@
 				$donneesUrl = array_map("urlencode", $donnees) ;
 				$href = $this->ObtientHrefFmt($donneesUrl) ;
 				$libelle = $this->ObtientLibelleFmt($donnees) ;
-				$ctn .= '<a href="'.$href.'"' ;
+				$ctn .= '<a href="'.htmlentities($href).'"' ;
 				if($this->ChaineAttributs != '')
 				{
 					$ctn .= ' '.$this->ChaineAttributs ;
