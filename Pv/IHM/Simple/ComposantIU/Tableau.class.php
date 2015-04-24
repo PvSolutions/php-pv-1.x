@@ -562,7 +562,7 @@
 			{
 				$defCols = $this->ObtientDefColsRendu() ;
 				$this->TotalElements = $this->FournisseurDonnees->CompteElements($defCols, $this->FiltresSelection) ;
-				// echo $this->FournisseurDonnees->BaseDonnees->LastSqlText ;
+				// print_r($this->FournisseurDonnees->BaseDonnees) ;
 				// Ajuster l'indice début
 				if($this->IndiceDebut < 0)
 					$this->IndiceDebut = 0 ;

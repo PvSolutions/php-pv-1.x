@@ -362,7 +362,8 @@ var optionsOuvreFenetreDefaut = {
 	BoutonConfimer : null,
 	LibelleConfirmer : "OK",
 	ExecuteBoutonConfirmer : undefined,
-	RafraichOnglActifSurFerm : 0
+	RafraichOnglActifSurFerm : 0,
+	UrlOnglActifSurFerm : "",
 } ;
 function ouvreFenetreCadre(idFenetre, icone, titre, urlCadre, options)
 {
@@ -457,10 +458,10 @@ function extraitOptionsJQueryUiDialog(optionsSource)
 			click: funcExecuter
 		}) ;
 	}
-	if(optionsCompletes.RafraichOnglActifSurFerm == 1)
+	if(optionsCompletes.UrlOnglActifSurFerm != "")
 	{
 		options.close = function(event, ui) {
-			rafraichitUrlOngletActif() ;
+			rafraichitUrlOngletActif(optionsCompletes.UrlOnglActifSurFerm) ;
 		}
 	}
 	return options ;
@@ -563,7 +564,7 @@ function obtientUrlScript(url)
 	}
 	return result ;
 }
-function rafraichitUrlOngletActif()
+function rafraichitUrlOngletActif(nouvUrl)
 {
 	var idOnglet = objGroupeOnglet.find( ".ui-tabs-active" ).attr("aria-controls") ;
 	var ongletActif = jQuery("#" + idOnglet) ;
@@ -574,7 +575,7 @@ function rafraichitUrlOngletActif()
 		{
 			noeudCadre = cadresActif.get(i) ;
 			// alert(obtientUrlScript(noeudCadre.contentWindow.location.href)) ;
-			// noeudCadre.src = obtientUrlScript(noeudCadre.contentWindow.location.href) ;
+			noeudCadre.src = nouvUrl ;
 		}
 	}
 	else

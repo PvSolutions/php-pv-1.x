@@ -499,7 +499,7 @@
 				$headers  = 'MIME-Version: 1.0' . "\r\n";
 				$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
 				// En-têtes additionnels
-				$headers .= 'To: '.$to. "\r\n";
+				// $headers .= 'To: '.$to. "\r\n";
 				$headers .= 'From: '.$from. "\r\n";
 				if($cc != '')
 				{
@@ -525,7 +525,7 @@
 				// Pour envoyer un mail , l'en-tête Content-type doit être défini
 				$headers = 'Content-type: text/plain; charset=iso-8859-1' . "\r\n";
 				// En-têtes additionnels
-				$headers .= 'To: '.$to. "\r\n";
+				// $headers .= 'To: '.$to. "\r\n";
 				$headers .= 'From: '.$from. "\r\n";
 				if($cc != '')
 				{

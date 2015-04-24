@@ -359,7 +359,8 @@
 				$this->FltFrmElemAdresse->Libelle = $this->LibAdresse ;
 				// Activer envoi mail
 				$this->FltFrmElemActiverEnvoiMail = $frm->InsereFltEditHttpPost($this->NomParamActiverEnvoiMail, $this->NomColActiverEnvoiMail) ;
-				$this->FltFrmElemActiverEnvoiMail->PvZoneSelectBoolHtml("PvZoneBoiteSelectHtml") ;
+				$this->FltFrmElemActiverEnvoiMail->DeclareComposant("PvZoneSelectBoolHtml") ;
+				$this->FltFrmElemActiverEnvoiMail->Libelle = $this->LibActiverEnvoi ;
 				$this->FltFrmElemActiverEnvoiMail->ValeurParDefaut = 1 ;
 				// Email
 				$this->FltFrmElemEmail = $frm->InsereFltEditHttpPost($this->NomParamEmail, $this->NomColEmail) ;
@@ -400,16 +401,16 @@
 				if($this->StatutExecution == 1)
 				{
 					$entitePage = $this->ObtientEntitePage() ;
-					$entiteLivreDOr = $entitePage->ModuleParent->EntiteLivreDOr ;
+					$entiteFormContact = $entitePage->ModuleParent->EntiteForm ;
 					$idForm = $entitePage->FltFrmElemIdForm->Lie() ;
 					$idCtrl = $entitePage->FltFrmElemIdCtrl->Lie() ;
 					$bd = $this->ObtientBDSupport() ;
-					$sql = "select t1.*, t2.* from ".$bd->EscapeTableName($entitePage->NomTable)." t1 left join ".$bd->EscapeTableName($entiteLivreDOr->NomTable)." t2 on t1.".$bd->EscapeVariableName($entitePage->NomColIdForm)." = t2.".$bd->EscapeVariableName($entiteLivreDOr->NomColId)." where t2.".$bd->EscapeVariableName($entiteLivreDOr->NomColId)." = 1 and t1.".$bd->EscapeVariableName($entitePage->NomColIdCtrl)." = ".$bd->ParamPrefix."idCtrl" ;
+					$sql = "select t1.*, t2.* from ".$bd->EscapeTableName($entitePage->NomTable)." t1 left join ".$bd->EscapeTableName($entiteFormContact->NomTable)." t2 on t1.".$bd->EscapeVariableName($entitePage->NomColIdForm)." = t2.".$bd->EscapeVariableName($entiteFormContact->NomColId)." where t2.".$bd->EscapeVariableName($entiteFormContact->NomColId)." = 1 and t1.".$bd->EscapeVariableName($entitePage->NomColIdCtrl)." = ".$bd->ParamPrefix."idCtrl" ;
 					$lgn = $bd->FetchSqlRow($sql, array("idCtrl" => $idCtrl)) ;
-					$activerEnvoiMail = $lgn[$entiteLivreDOr->NomColActiverEnvoiMail] ;
+					$activerEnvoiMail = $lgn[$entiteFormContact->NomColActiverEnvoiMail] ;
 					if(! $activerEnvoiMail)
 						return ;
-					$ok = send_html_mail($entitePage->FltFrmElemEmail->Lie(), "Contact de la part de ".$entitePage->FltFrmElemNom->Lie(), $entitePage->FltFrmElemContenu->Lie()) ;
+					$ok = send_html_mail($lgn[$entiteFormContact->NomColEmail], "Contact de la part de ".$entitePage->FltFrmElemNom->Lie(), $entitePage->FltFrmElemContenu->Lie(), $entitePage->FltFrmElemEmail->Lie()) ;
 				}
 			}
 		}

@@ -57,6 +57,7 @@
 			public $AnnulerRendu = 0 ;
 			public $RenduEnCours = 0 ;
 			public $Habillage = null ;
+			public $ActiverRafraichScript = 1 ;
 			public $InclureScriptsMembership = 1 ;
 			public $NomClasseHabillage = "PvHabillageSimpleBase" ;
 			public $NomClasseScriptRecouvreMP = "PvScriptRecouvreMPWeb" ;
@@ -193,6 +194,28 @@
 					$ctn .= $this->RenduDebutCorpsDocument().PHP_EOL ;
 				}
 				$ctn .= $this->RenduPiedDocument().PHP_EOL ;
+				if($this->ActiverRafraichScript && ($this->ScriptPourRendu->DoitAutoRafraich()))
+				{
+					$ctn .= '<script type="text/javascript">
+	var oldOnLoadFunc = window.onload ;
+	var annuleAutoRafraich = 0 ;
+	var idAutoRafraich = 0 ;
+	function programmeAutoRafraich() {
+		idAutoRafraich = setTimeout('.intval($this->ScriptPourRendu->DelaiAutoRafraich).', function() {
+			if(idAutoRafraich > 0)
+				window.location = '.json_encode($this->ScriptPourRendu->ObtientUrlParam($this->ScriptPourRendu->ParamsAutoRafraich)).' ;
+		}) ;
+	}
+	if(oldOnLoadFunc == null)
+	{
+		oldOnLoadFunc = function() {} ;
+	}
+	window.onload = function() {
+		oldOnLoadFunc() ;
+		programmeAutoRafraich() ;
+	}
+</script>'.PHP_EOL ;
+				}
 				$ctn .= '</html>' ;
 				return $ctn ;
 			}

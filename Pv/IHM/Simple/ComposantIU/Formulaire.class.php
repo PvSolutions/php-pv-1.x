@@ -747,7 +747,7 @@
 					if(! $this->ZoneParent->InclureJQueryUi)
 					{
 						$ctn .= '<script language="javascript">'.PHP_EOL ;
-						$ctn .= 'alert('.svc_json_encode(html_entity_decode($this->CommandeSelectionnee->MessageExecution)).') ;' ;
+						$ctn .= 'alert('.@svc_json_encode(html_entity_decode($this->CommandeSelectionnee->MessageExecution)).') ;' ;
 						$ctn .= '</script>'.PHP_EOL ;
 					}
 					else

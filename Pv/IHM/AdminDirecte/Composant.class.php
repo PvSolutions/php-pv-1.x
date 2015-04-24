@@ -49,7 +49,11 @@
 			public $NomCadreConteneur = "parent" ;
 			public $OptionsOnglet = array() ;
 			public $RafraichOnglActif = 0 ;
-			public $RafraichOnglActifSurFerm = 1 ;
+			public $UrlOnglActifSurFerm = "" ;
+			public function DefinitScriptOnglActifSurFerm(& $script, $params=array())
+			{
+				$this->UrlOnglActifSurFerm = $script->ObtientUrlParam($params) ;
+			}
 			protected function RenduBrut($donnees)
 			{
 				$donneesUrl = array_map("urlencode", $donnees) ;
@@ -58,9 +62,9 @@
 				$idOnglet = _parse_pattern($this->FormatIdOnglet, $donnees) ;
 				$titreOnglet = _parse_pattern($this->FormatTitreOnglet, $donnees) ;
 				$args = '' ;
-				if($this->RafraichOnglActifSurFerm)
+				if($this->UrlOnglActifSurFerm != "")
 				{
-					$this->OptionsOnglet["RafraichOnglActifSurFerm"] = 1 ;
+					$this->OptionsOnglet["UrlOnglActifSurFerm"] = $this->UrlOnglActifSurFerm ;
 				}
 				if(count($this->OptionsOnglet) > 0)
 				{
@@ -106,8 +110,12 @@
 			public $AccepteArgsFonc = 1 ;
 			public $UrlIndispensable = 1 ;
 			public $RafraichOnglActif = 0 ;
-			public $RafraichOnglActifSurFerm = 1 ;
+			public $UrlOnglActifSurFerm = "" ;
 			public $OptionsOnglet = array() ;
+			public function DefinitScriptOnglActifSurFerm(& $script, $params=array())
+			{
+				$this->UrlOnglActifSurFerm = $script->ObtientUrlParam($params) ;
+			}
 			protected function CalculeConfigOnglet()
 			{
 				if($this->IdOnglet == "")
@@ -140,9 +148,9 @@
 			'.svc_json_encode($this->CheminIcone).',
 			'.svc_json_encode($this->TitreOnglet).',
 			'.svc_json_encode($url) : '' ;
-				if($this->RafraichOnglActifSurFerm == 1)
+				if($this->UrlOnglActifSurFerm != "")
 				{
-					$this->OptionsOnglet["RafraichOnglActifSurFerm"] = 1 ;
+					$this->OptionsOnglet["UrlOnglActifSurFerm"] = $this->UrlOnglActifSurFerm ;
 				}
 				if(count($this->OptionsOnglet) > 0)
 				{
@@ -233,7 +241,7 @@
 			{
 				return new PvConfigFormatteurColonneOuvreFenetre() ;
 			}
-			public function & InsereLienOuvreFenetreAction(& $col, $formatUrl='', $formatLib='', $formatIdOnglet='', $formatTitreOnglet='', $optsOnglet=array(), $rafraichOnglActifSurFerm=1)
+			public function & InsereLienOuvreFenetreAction(& $col, $formatUrl='', $formatLib='', $formatIdOnglet='', $formatTitreOnglet='', $optsOnglet=array(), $urlOnglActifSurFerm="")
 			{
 				$lien = null ;
 				if($this->EstNul($col) || $col->Formatteur == null)
@@ -245,7 +253,7 @@
 				$lien->FormatLibelle = $formatLib ;
 				$lien->FormatIdOnglet = $formatIdOnglet ;
 				$lien->FormatTitreOnglet = $formatTitreOnglet ;
-				$lien->RafraichOnglActifSurFerm = $rafraichOnglActifSurFerm ;
+				$lien->UrlOnglActifSurFerm = $urlOnglActifSurFerm ;
 				$lien->OptionsOnglet = $optsOnglet ;
 				$col->Formatteur->Liens[] = & $lien ;
 				return $lien ;
@@ -269,7 +277,7 @@
 			{
 				return new PvCommandeOuvreFenetreAdminDirecte() ;
 			}
-			public function & InsereCmdOuvreFenetreScript($nomCmd, $url, $libelle, $idOnglet='', $titreOnglet='', $optsOnglet=array(), $rafraichOnglActifSurFerm=0)
+			public function & InsereCmdOuvreFenetreScript($nomCmd, $url, $libelle, $idOnglet='', $titreOnglet='', $optsOnglet=array(), $urlOnglActifSurFerm="")
 			{
 				$cmd = $this->CreeCmdOuvreFenetre() ;
 				$cmd->Url = $url ;
@@ -277,7 +285,7 @@
 				$cmd->IdOnglet = $idOnglet ;
 				$cmd->TitreOnglet = $titreOnglet ;
 				$cmd->OptionsOnglet = $optsOnglet ;
-				$cmd->RafraichOnglActifSurFerm = $rafraichOnglActifSurFerm ;
+				$cmd->UrlOnglActifSurFerm = $urlOnglActifSurFerm ;
 				$this->InscritCommande($nomCmd, $cmd) ;
 				return $cmd ;
 			}

@@ -298,10 +298,16 @@
 			}
 			protected function DetermineFichierAttache()
 			{
-				if($this->ExtensionFichierAttache != "")
+				/*
+				if($this->ExtensionFichierAttache == "")
 				{
 					$this->NomFichierAttache = $this->NomElementZone.".".$this->ExtensionFichierAttache ;
 				}
+				if($this->NomFichierAttache == "" && $this->CheminFichierSource != "")
+				{
+					$infosFich = pathinfo($this->CheminFichierSource) ;
+				}
+				*/
 			}
 			public function SupprimeCaractsSpec($valeur)
 			{

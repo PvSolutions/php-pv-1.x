@@ -1165,7 +1165,7 @@
 					$ctn .= $this->SeparateurLiens ;
 					$ctn .= '<a href="'.$this->ZoneParent->ScriptDeconnexion->ObtientUrl().'">'.$this->LibelleLienDeconnexion.'</a>' ;
 				}
-				elseif($this->CacherSiNonConnecte == 0)
+				elseif($this->CacherSiNonConnecte == 0 && $this->ZoneParent->ValeurParamScriptAppele != $this->ZoneParent->NomScriptDeconnexion)
 				{
 					$ctn .= $this->RenduAutreLiensNonConnecte() ;
 					$ctn .= '<a href="'.$this->ZoneParent->ScriptConnexion->ObtientUrl().'">'.$this->LibelleLienConnexion.'</a>' ;
@@ -1193,7 +1193,7 @@
 				{
 					return $ctn ;
 				}
-				if($this->InclureLiensEdition && $this->ZoneParent->PossedeMembreConnecte())
+				if($this->InclureLiensEdition && $this->ZoneParent->PossedeMembreConnecte() && $this->ZoneParent->ValeurParamScriptAppele != $this->ZoneParent->NomScriptDeconnexion)
 				{
 					if($this->ZoneParent->ScriptAccessible($this->ZoneParent->NomScriptListeMembres))
 					{

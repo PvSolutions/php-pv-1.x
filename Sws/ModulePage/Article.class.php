@@ -56,15 +56,15 @@
 			public $BlocTitre ;
 			public $BarreLiensSpec ;
 			public $BlocContenu ;
-			public $NomScriptRecommend = "recommend" ;
+			public $NomScriptRecommand = "recommand" ;
 			public $NomScriptVersionImpr = "version_impr" ;
-			public $ScriptRecommend ;
+			public $ScriptRecommand ;
 			public $ScriptVersionImpr ;
 			public $LibTitreParent = "Rubrique" ;
 			public $DefColTblListTitreParent ;
-			protected function CreeScriptRecommend()
+			protected function CreeScriptRecommand()
 			{
-				return new ScriptRecommendEntiteTableSws() ;
+				return new ScriptRecommandEntiteTableSws() ;
 			}
 			protected function CreeScriptVersionImpr()
 			{
@@ -75,7 +75,7 @@
 				parent::RemplitZonePubl($zone) ;
 				if($this->InclureScriptConsult)
 				{
-					$this->ScriptRecommend = $this->InsereScript($this->NomScriptRecommend.'_'.$this->NomEntite, $this->CreeScriptRecommend(), $zone, $this->ObtientPrivilegesConsult()) ;
+					$this->ScriptRecommand = $this->InsereScript($this->NomScriptRecommand.'_'.$this->NomEntite, $this->CreeScriptRecommand(), $zone, $this->ObtientPrivilegesConsult()) ;
 					$this->ScriptVersionImpr = $this->InsereScript($this->NomScriptVersionImpr.'_'.$this->NomEntite, $this->CreeScriptVersionImpr(), $zone, $this->ObtientPrivilegesConsult()) ;
 				}
 			}
@@ -93,7 +93,7 @@
 					$this->BarreLiensSpec->AdopteScript("barreLiensSpec", $script) ;
 					$this->BarreLiensSpec->ChargeConfig() ;
 					$this->BarreLiensSpec->LienAjoutFav->FormatTitreFav = $this->LgnEnCours["titre"] ;
-					$this->BarreLiensSpec->LienRecommender->FormatUrl = $this->ScriptRecommend->ObtientUrlParam(array($this->NomParamId => $this->LgnEnCours["id"])) ;
+					$this->BarreLiensSpec->LienRecommander->FormatUrl = $this->ScriptRecommand->ObtientUrlParam(array($this->NomParamId => $this->LgnEnCours["id"])) ;
 					$this->BarreLiensSpec->LienVersionImpr->FormatUrl = $this->ScriptVersionImpr->ObtientUrlParam(array($this->NomParamId => $this->LgnEnCours["id"])) ;
 					// Bloc de contenu
 					$this->BlocContenu = new BlocContenuArtSws() ;
@@ -171,6 +171,8 @@
 			{
 				$script->TitreDocument = $script->ApplicationParent->SystemeSws->ModulePageRacine->ScriptAccueil->Titre.' :: '.$this->LgnEnCours["titre"] ;
 				$script->Titre = $script->TitreDocument ;
+				$script->MotsClesMeta = $this->LgnEnCours["mots_cles_meta"] ;
+				$script->DescriptionMeta = $this->LgnEnCours["description_meta"] ;
 			}
 			public function RenduScriptConsult(& $script)
 			{
@@ -367,13 +369,6 @@
 		class CmdSupprRubriqueSws extends CmdEditRubriqueSws
 		{
 			public $Mode = 3 ;
-		}
-		
-		class ScriptVersionImprEntiteTableSws extends ScriptConsultEntiteTableSws
-		{
-		}
-		class ScriptRecommendEntiteTableSws extends ScriptConsultEntiteTableSws
-		{
 		}
 		
 		class EncGraphiquesPortionRenduFmt extends EncBasePortionRenduFmt

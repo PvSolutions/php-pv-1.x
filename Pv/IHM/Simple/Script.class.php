@@ -43,6 +43,13 @@
 			public $InclureRenduDescription = 1 ;
 			public $InclureRenduIcone = 1 ;
 			public $InclureRenduChemin = 1 ;
+			public $ActiverAutoRafraich = 0 ;
+			public $DelaiAutoRafraich = 0 ;
+			public $ParamsAutoRafraich = array() ;
+			public function DoitAutoRafraich()
+			{
+				return $this->ActiverAutoRafraich && $this->DelaiAutoRafraich > 0;
+			}
 			public function EstBienRefere()
 			{
 				return PvVerificateurReferantsSursWeb::Valide($this) ;
@@ -118,6 +125,19 @@
 			public function PrepareRendu()
 			{
 			}
+			public function RenduIcone()
+			{
+				$ctn = '' ;
+				if($this->ZoneParent->InclureRenduIcone && $this->InclureRenduTitre)
+				{
+					$cheminIcone = ($this->CheminIcone != '' && file_exists($this->CheminIcone)) ? $this->CheminIcone : $this->ZoneParent->CheminIconeScript ;
+					if($cheminIcone != '')
+					{
+						$ctn .= '<img src="'.$cheminIcone.'" height="22" />' ;
+					}
+				}
+				return $ctn ;
+			}
 			public function RenduTitre()
 			{
 				if(! $this->ZoneParent->InclureRenduTitre || ! $this->InclureRenduTitre)
@@ -126,13 +146,10 @@
 				}
 				$ctn = '' ;
 				$ctn .= '<div class="titre">' ;
-				if($this->ZoneParent->InclureRenduIcone && $this->InclureRenduTitre)
+				$ctnIcone = $this->RenduIcone() ;
+				if($ctnIcone != '')
 				{
-					$cheminIcone = ($this->CheminIcone != '' && file_exists($this->CheminIcone)) ? $this->CheminIcone : $this->ZoneParent->CheminIconeScript ;
-					if($cheminIcone != '')
-					{
-						$ctn .= '<img src="'.$cheminIcone.'" height="22" />&nbsp;&nbsp;' ;
-					}
+					$ctn .= $ctnIcone.'&nbsp;&nbsp;' ;
 				}
 				$ctn .= $this->Titre ;
 				$ctn .= '</div>' ;
@@ -493,7 +510,7 @@
 			public function RenduSpecifique()
 			{
 				$ctn = '' ;
-				$ctn .= '<form action="'.$this->ObtientUrl().'" method="post">'.PHP_EOL ;
+				$ctn .= '<form class="user_login_box" action="'.$this->ObtientUrl().'" method="post">'.PHP_EOL ;
 				$ctn .= '<div align="center">'.PHP_EOL ;
 				if($this->TentativeConnexionEnCours && $this->TentativeConnexionValidee == 0)
 				{

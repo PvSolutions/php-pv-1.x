@@ -27,7 +27,7 @@
 			public $TailleContenuGrdTitre = "16px" ;
 			public $CouleurArrPlanEntete1 = "#3963ff" ;
 			public $CouleurArrPlanEntete2 = "#b5dc10" ;
-			public $CouleurContenuEntete1 = "#FFFF00" ;
+			public $CouleurContenuEntete1 = "white" ;
 			public $CouleurContenuEntete2 = "white" ;
 			public $CouleurArrPlanDoc = "white" ;
 			public $CouleurLiens1 = "#3963ff" ;
@@ -36,19 +36,21 @@
 			public $CouleurContenuSucces = "#124d00" ;
 			public $CouleurArrPlanErreur = "#ffcbcb" ;
 			public $CouleurContenuErreur = "#720000" ;
+			public $CouleurBordureBarreTitre = "#AeAeAe" ;
 			public function ContenuDefCSS()
 			{
 				$ctn = '' ;
 				$ctn .= 'body { background:'.$this->CouleurArrPlanDoc.' ; font-family:'.$this->NomPolice.'; font-size:'.$this->TaillePolice.'; color:'.$this->CouleurPolice.'; }'.PHP_EOL ;
 				$ctn .= 'a:link, a:visited { color:'.$this->CouleurLiens1.'; }'.PHP_EOL ;
-				$ctn .= '.iu-frameser-entete-1 { background-color:'.$this->CouleurArrPlanEntete1.' ; color:'.$this->CouleurContenuEntete1.' ; }'.PHP_EOL ;
-				$ctn .= '.iu-frameser-entete-2 { background-color:'.$this->CouleurArrPlanEntete2.' ; color:'.$this->CouleurContenuEntete2.' ; }'.PHP_EOL ;
+				$ctn .= '.iu-frameser-entete-1 { background-color:'.$this->CouleurArrPlanEntete1.' ; color:'.$this->CouleurContenuEntete1.' ; font-size:14px; font-weight:bold }'.PHP_EOL ;
+				$ctn .= '.iu-frameser-entete-2 { background-color:'.$this->CouleurArrPlanEntete2.' ; color:'.$this->CouleurContenuEntete2.' ; font-size:14px; font-weight:bold }'.PHP_EOL ;
 				$ctn .= '.iu-frameser-corps-1 { background-color:'.$this->CouleurArrPlanCorps1.' ; color:'.$this->CouleurContenuCorps1.' ; }'.PHP_EOL ;
 				$ctn .= '.iu-frameser-corps-2 { background-color:'.$this->CouleurArrPlanCorps2.' ; color:'.$this->CouleurContenuCorps2.' ; }'.PHP_EOL ;
 				$ctn .= '.iu-frameser-espace-travail { }'.PHP_EOL ;
 				$ctn .= '.iu-frameser-espace-travail .titre { font-size:'.$this->TailleContenuGrdTitre.' ; color:'.$this->CouleurContenuGrdTitre.'; margin-top:12px; margin-bottom:12px ; font-weight:bold ; }'.PHP_EOL ;
 				$ctn .= '.iu-frameser-espace-travail .Succes { background-color:'.$this->CouleurArrPlanSucces.' ; color:'.$this->CouleurContenuSucces.'; }'.PHP_EOL ;
 				$ctn .= '.iu-frameser-espace-travail .Erreur { background-color:'.$this->CouleurArrPlanErreur.' ; color:'.$this->CouleurContenuErreur.'; }'.PHP_EOL ;
+				$ctn .= '.ui-frameser-barre-titre { border:1px solid '.$this->CouleurBordureBarreTitre.'; }'.PHP_EOL ;
 				$ctn .= '.BlocCommandes, .FormulaireFiltres, .RangeeDonnees { padding-top:4px; padding-bottom:4px; margin-top:4px; margin-bottom:4px; }'.PHP_EOL ;
 				$ctn .= '.FormulaireFiltres { background-color:'.$this->CouleurArrPlanCorps1.'; border:1px solid '.$this->CouleurBordureCorps1.' ; }'.PHP_EOL ;
 				$ctn .= '.BlocCommandes { background-color:'.$this->CouleurArrPlanCorps3.'; padding-top:8px ; padding-bottom:8px ; }'.PHP_EOL ;
@@ -234,8 +236,9 @@
 			protected function RenduEnteteCorpsDocument()
 			{
 				$ctn = '' ;
-				$ctn .= parent::RenduEnteteCorpsDocument() ;
-				$ctn .= $this->BarreMembreCadrePrinc->RenduDispositif() ;
+				$ctn .= parent::RenduEnteteCorpsDocument().PHP_EOL ;
+				$ctn .= $this->BarreMembreCadrePrinc->RenduDispositif().PHP_EOL ;
+				$ctn .= '<br />' ;
 				return $ctn ;
 			}
 			protected function RenduPiedCorpsDocument()
@@ -327,6 +330,77 @@
 			{
 				$ctn = '' ;
 				$ctn .= '<div id="'.$this->IDInstanceCalc.'" class="'.$this->NomClasseCSS.'">'.$this->ZoneParent->ScriptPourRendu->Titre.'</div>' ;
+				return $ctn ;
+			}
+		}
+		
+		class PvBarreLiensRelatifsFrameser extends PvTablMenuHoriz
+		{
+			public $InclureRenduMiniature = 0 ;
+			public $SeparateurMenu = " | " ;
+			public $InclureSeparateurMenu = 1 ;
+		}
+		
+		class PvScriptBaseFrameser extends PvScriptWebSimple
+		{
+			public $NomClasseCSSTitre = "header_bar" ;
+			public $NomClasseCSSBarreTitre = "icon" ;
+			public $BarreLiensRelatifs ;
+			public $NomElemBarreLiensRelatifs = "barreLiensRelatifs" ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$this->DetermineBarreLiensRelatifs() ;
+			}
+			protected function CreeBarreLiensRelatifs()
+			{
+				return new PvBarreLiensRelatifsFrameser() ;
+			}
+			protected function InitBarreLiensRelatifs()
+			{
+			}
+			protected function ChargeBarreLiensRelatifs()
+			{
+			}
+			protected function DetermineBarreLiensRelatifs()
+			{
+				$this->BarreLiensRelatifs = $this->CreeBarreLiensRelatifs() ;
+				$this->InitBarreLiensRelatifs() ;
+				$this->BarreLiensRelatifs->AdopteScript($this->NomElemBarreLiensRelatifs, $this) ;
+				$this->BarreLiensRelatifs->ChargeConfig() ;
+				$this->ChargeBarreLiensRelatifs() ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				$ctn .= $this->RenduBarreTitre().PHP_EOL ;
+				$ctn .= $this->RenduSpecifique() ;
+				return $ctn ;
+			}
+			protected function RenduBarreTitre()
+			{
+				$ctn = '' ;
+				$ctn .= '<table width="100%" cellpadding="4" cellspacing="2" class="ui-frameser-barre-titre '.$this->NomClasseCSSBarreTitre.'">'.PHP_EOL ;
+				if($this->InclureRenduTitre && $this->Titre != "")
+				{	
+					$ctn .= '<tr>'.PHP_EOL ;
+					$ctn .= '<td class="iu-frameser-entete-1 '.$this->NomClasseCSSTitre.'">'.PHP_EOL ;
+					$ctnIcone = $this->RenduIcone() ;
+					if($ctnIcone != '')
+					{
+						$ctn .= $ctnIcone."&nbsp;&nbsp;" ;
+					}
+					$ctn .= $this->Titre ;
+					$ctn .= '</td>'.PHP_EOL ;
+					$ctn .= '</tr>'.PHP_EOL ;
+				}
+				$ctn .= '<tr>'.PHP_EOL ;
+				$ctn .= '<td>'.PHP_EOL ;
+				$ctn .= $this->BarreLiensRelatifs->RenduDispositif().PHP_EOL ;
+				$ctn .= '</td>'.PHP_EOL ;
+				$ctn .= '</tr>'.PHP_EOL ;
+				$ctn .= '</table>'.PHP_EOL ;
+				$ctn .= '<br />'.PHP_EOL ;
 				return $ctn ;
 			}
 		}

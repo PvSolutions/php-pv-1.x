@@ -329,6 +329,8 @@
 				$this->InscritModulePage('', $this->ModuleSlider) ;
 				$this->ModuleLivreDOr = $this->CreeModuleLivreDOr() ;
 				$this->InscritModulePage('', $this->ModuleLivreDOr) ;
+				$this->ModuleArticle = $this->CreeModuleArticle() ;
+				$this->InscritModulePage('', $this->ModuleArticle) ;
 				/*
 				$this->ModuleCompteurHits = $this->CreeModuleCompteurHits() ;
 				$this->InscritModulePage('', $this->ModuleCompteurHits) ;

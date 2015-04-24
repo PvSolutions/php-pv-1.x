@@ -123,10 +123,10 @@ else if(document.all) {
 			{
 			}
 		}
-		class LienRecommenderArtSws extends LienSpecArtSws
+		class LienRecommanderArtSws extends LienSpecArtSws
 		{
-			public $FenetreCible = "_recommende" ;
-			public $FormatLibelle = "Recommender" ;
+			public $FenetreCible = "_recommande" ;
+			public $FormatLibelle = "Recommander" ;
 			public $CheminIcone = "images/recommend_icon.gif" ;
 			protected function Prepare(& $script, & $composant, $donnees)
 			{
@@ -141,10 +141,10 @@ else if(document.all) {
 			public $InclureLiensAuto = 1 ;
 			public $InclureLienAjoutFav = 1 ;
 			public $InclureLienVersionImpr = 1 ;
-			public $InclureLienRecommender = 1 ;
+			public $InclureLienRecommander = 1 ;
 			public $LienAjoutFav ;
 			public $LienVersionImpr ;
-			public $LienRecommender ;
+			public $LienRecommander ;
 			public $InclureRenduIcone = 1 ;
 			public $LargeurIcone = 16 ;
 			public $HauteurIcone = 16 ;
@@ -168,10 +168,10 @@ else if(document.all) {
 					$this->LienVersionImpr = new LienVersionImprArtSws() ;
 					$this->InscritLien($this->LienVersionImpr) ;
 				}
-				if($this->InclureLienRecommender)
+				if($this->InclureLienRecommander)
 				{
-					$this->LienRecommender = new LienRecommenderArtSws() ;
-					$this->InscritLien($this->LienRecommender) ;
+					$this->LienRecommander = new LienRecommanderArtSws() ;
+					$this->InscritLien($this->LienRecommander) ;
 				}
 			}
 			public function InscritLien(& $lien)

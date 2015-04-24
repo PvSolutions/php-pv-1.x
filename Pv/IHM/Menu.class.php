@@ -492,6 +492,10 @@
 				{
 					$ctn .= ' title="'.htmlentities($menu->Tips).'"' ;
 				}
+				if($menu->FenetreCible != '')
+				{
+					$ctn .= ' target="'.htmlentities($menu->FenetreCible).'"' ;
+				}
 				$ctn .= '>' ;
 				return $ctn ;
 			}
@@ -606,7 +610,7 @@
 			public $NomClasseCSSCellSelect = "" ;
 			public $InclureRenduMiniature = 1 ;
 			public $SeparateurMenu = "" ;
-			public $InclureSeparateurMenu = "" ;
+			public $InclureSeparateurMenu = 0 ;
 			public $CentrerSousMenu = 1 ;
 			public $LargeurSousMenu = "75" ;
 			public $CentrerMenu = 1 ;
