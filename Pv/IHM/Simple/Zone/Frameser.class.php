@@ -334,10 +334,11 @@
 			}
 		}
 		
-		class PvBarreLiensRelatifsFrameser extends PvTablMenuHoriz
+		class PvBarreLiensRelatifsFrameser extends PvListeMenuHoriz
 		{
 			public $InclureRenduMiniature = 0 ;
 			public $SeparateurMenu = " | " ;
+			public $CentrerMenu = 0 ;
 			public $InclureSeparateurMenu = 1 ;
 		}
 		

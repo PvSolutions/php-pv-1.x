@@ -520,7 +520,7 @@
 			public $MaxColonnesParLigne = 2 ;
 			public $AlignLibelle = "right" ;
 			public $LargeurOption = "" ;
-			protected $CocherAutoPremiereOption = 1 ;
+			public $CocherAutoPremiereOption = 1 ;
 			protected function RenduListeElements()
 			{
 				$this->CorrigeIDsElementHtml() ;
@@ -1003,6 +1003,25 @@
 				PvComposantIUBoolHtml::RemplitConfig($this) ;
 			}
 		}
+		class PvZoneCocherBoolHtml extends PvElementFormulaireHtml
+		{
+			public $ValeurVrai = "1" ;
+			public $ValeurFaux = "" ;
+			protected function RenduDispositifBrut()
+			{
+				$this->CorrigeIDsElementHtml() ;
+				$ctn = '' ;
+				$styleCSS = '' ;
+				$ctn .= '<input type="checkbox" value="'.htmlentities($this->ValeurVrai).'" onclick="document.getElementById(\''.$this->IDInstanceCalc.'\').value = (this.checked) ? '.htmlentities(svc_json_encode($this->ValeurVrai)).' : '.htmlentities(svc_json_encode($this->ValeurFaux)).';"'.(($this->Valeur == $this->ValeurVrai) ? ' checked' : '').' />' ;
+				$ctn .= '<input name="'.$this->NomElementHtml.'"' ;
+				$ctn .= ' id="'.$this->IDInstanceCalc.'"' ;
+				$ctn .= ' type="hidden"' ;
+				$ctn .= ' value="'.htmlentities($this->Valeur).'"' ;
+				$ctn .= ' />' ;
+				return $ctn ;
+			}
+		}
+		
 		class PvComposantIUBoolHtml
 		{
 			public static function RemplitConfig(& $comp)

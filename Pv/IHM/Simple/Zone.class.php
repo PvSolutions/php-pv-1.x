@@ -154,6 +154,16 @@
 				$action = new $nomClasseAction() ;
 				return $action ;
 			}
+			public function InsereActionAvantRendu($nomAction, $action)
+			{
+				$this->InscritActionAvantRendu($nomAction, $action) ;
+				return $action ;
+			}
+			public function InsereActionApresRendu($nomAction, $action)
+			{
+				$this->InscritActionApresRendu($nomAction, $action) ;
+				return $action ;
+			}
 			public function InscritActionAvantRendu($nomAction, & $action)
 			{
 				$this->ActionsAvantRendu[$nomAction] = & $action ;

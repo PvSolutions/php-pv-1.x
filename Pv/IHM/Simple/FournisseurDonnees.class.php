@@ -243,6 +243,7 @@
 				{
 					return $requete ;
 				}
+				// print_r($this->Valeurs) ;
 				$requete = new PvRequeteFournisseurDonnees() ;
 				$requete->RessourceSupport = $this->RequeteSelection ;
 				return $requete ;
@@ -406,7 +407,22 @@
 				$texteTri = "" ;
 				if($indiceColonneTri > -1 && count($colonnes) > 0 && isset($colonnes[$indiceColonneTri]) && $colonnes[$indiceColonneTri]->TriPrealable == 0)
 				{
-					$valeurTri = ($colonnes[$indiceColonneTri]->AliasDonnees != "") ? $colonnes[$indiceColonneTri]->AliasDonnees : $colonnes[$indiceColonneTri]->NomDonnees ;
+					if($colonnes[$indiceColonneTri]->AliasDonneesTri != '')
+					{
+						$valeurTri = $colonnes[$indiceColonneTri]->AliasDonneesTri ;
+					}
+					elseif($colonnes[$indiceColonneTri]->NomDonneesTri != '')
+					{
+						$valeurTri = $colonnes[$indiceColonneTri]->NomDonneesTri ;
+					}
+					else
+					{
+						$valeurTri = ($colonnes[$indiceColonneTri]->AliasDonnees != "") ? $colonnes[$indiceColonneTri]->AliasDonnees : $colonnes[$indiceColonneTri]->NomDonnees ;
+					}
+					if($valeurTri == '')
+					{
+						$valeurTri = "''" ;
+					}
 					$texteTri .= $valeurTri." ".$sensColonneTri ;
 				}
 				return $texteTri ;
@@ -623,6 +639,7 @@
 					$parametres = $this->ExtraitParametresFiltres($filtresEdition) ;
 					$expression = $this->ExtraitExpressionFiltres($filtresSelection) ;
 					$succes = $this->BaseDonnees->UpdateRow($this->TableEdition, $parametres, $expression->Texte, $expression->Parametres) ;
+					// print_r($parametres) ;
 					$this->SauveExceptionBaseDonnees() ;
 				}
 				return $succes ;

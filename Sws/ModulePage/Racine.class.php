@@ -418,6 +418,12 @@
 		class ScriptVersionImprEntiteTableSws extends ScriptConsultEntiteTableSws
 		{
 		}
+		class ScriptPosterCommentEntiteSws extends ScriptConsultEntiteTableSws
+		{
+		}
+		class ScriptListeCommentEntiteSws extends ScriptConsultEntiteTableSws
+		{
+		}
 		
 		class ActionFluxRSSRacineSws extends ActionFluxRSSModuleSws
 		{

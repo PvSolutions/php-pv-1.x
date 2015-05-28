@@ -1152,25 +1152,28 @@
 					return $ctn ;
 				}
 				$ctn .= '<div class="barreLiensMembre">'.PHP_EOL ;
-				if($this->ZoneParent->PossedeMembreConnecte())
+				if($this->ZoneParent->ValeurParamScriptAppele != $this->ZoneParent->NomScriptDeconnexion)
 				{
-					$ctn .= _parse_pattern($this->FormatInfosMembre, $this->ZoneParent->Membership->MemberLogged->RawData) ;
-					if($this->InclureLienAccueil)
+					if($this->ZoneParent->PossedeMembreConnecte())
 					{
-						$ctn .= '<a href="'.$this->ZoneParent->ObtientUrl().'">'.$this->LibelleLienAccueil.'</a>' ;
+						$ctn .= _parse_pattern($this->FormatInfosMembre, $this->ZoneParent->Membership->MemberLogged->RawData) ;
+						if($this->InclureLienAccueil)
+						{
+							$ctn .= '<a href="'.$this->ZoneParent->ObtientUrl().'">'.$this->LibelleLienAccueil.'</a>' ;
+							$ctn .= $this->SeparateurLiens ;
+						}
+						$ctn .= $this->RenduAutreLiensConnecte() ;
+						$ctn .= '<a href="'.$this->ZoneParent->ScriptChangeMotPasse->ObtientUrl().'">'.$this->LibelleModifMotPasse.'</a>' ;
 						$ctn .= $this->SeparateurLiens ;
+						$ctn .= '<a href="'.$this->ZoneParent->ScriptDeconnexion->ObtientUrl().'">'.$this->LibelleLienDeconnexion.'</a>' ;
 					}
-					$ctn .= $this->RenduAutreLiensConnecte() ;
-					$ctn .= '<a href="'.$this->ZoneParent->ScriptChangeMotPasse->ObtientUrl().'">'.$this->LibelleModifMotPasse.'</a>' ;
-					$ctn .= $this->SeparateurLiens ;
-					$ctn .= '<a href="'.$this->ZoneParent->ScriptDeconnexion->ObtientUrl().'">'.$this->LibelleLienDeconnexion.'</a>' ;
-				}
-				elseif($this->CacherSiNonConnecte == 0 && $this->ZoneParent->ValeurParamScriptAppele != $this->ZoneParent->NomScriptDeconnexion)
-				{
-					$ctn .= $this->RenduAutreLiensNonConnecte() ;
-					$ctn .= '<a href="'.$this->ZoneParent->ScriptConnexion->ObtientUrl().'">'.$this->LibelleLienConnexion.'</a>' ;
-					$ctn .= $this->SeparateurLiens ;
-					$ctn .= '<a href="'.$this->ZoneParent->ScriptRecouvreMP->ObtientUrl().'">'.$this->LibelleLienRecouvreMP.'</a>' ;
+					elseif($this->CacherSiNonConnecte == 0)
+					{
+						$ctn .= $this->RenduAutreLiensNonConnecte() ;
+						$ctn .= '<a href="'.$this->ZoneParent->ScriptConnexion->ObtientUrl().'">'.$this->LibelleLienConnexion.'</a>' ;
+						$ctn .= $this->SeparateurLiens ;
+						$ctn .= '<a href="'.$this->ZoneParent->ScriptRecouvreMP->ObtientUrl().'">'.$this->LibelleLienRecouvreMP.'</a>' ;
+					}
 				}
 				$ctn .= '</div>' ;
 				return $ctn ;

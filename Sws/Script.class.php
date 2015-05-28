@@ -14,6 +14,8 @@
 			public $ModulePage ;
 			public $NomEntitePage ;
 			public $EntitePage ;
+			public $NomImplemPage ;
+			public $ImplemPage ;
 			public function CreeFournDonnees()
 			{
 				return ReferentielSws::$SystemeEnCours->CreeFournDonnees() ;
@@ -21,6 +23,10 @@
 			public function ObtientBDSupport()
 			{
 				return ReferentielSws::$SystemeEnCours->BDSupport ;
+			}
+			public function & ObtientSystemeSws()
+			{
+				return ReferentielSws::$SystemeEnCours ;
 			}
 			public function & ObtientModulePage()
 			{
@@ -39,6 +45,15 @@
 					$entitePage = & $this->ModulePage->Entites[$this->NomEntitePage] ;
 				}
 				return $entitePage ;
+			}
+			public function & ObtientImplemPage()
+			{
+				$implPage = new ImplemPageIndefSws() ;
+				if($this->NomImplemPage != '')
+				{
+					$implPage = ReferentielSws::$SystemeEnCours->ObtientImplemPageParNom($this->NomImplemPage) ;
+				}
+				return $implPage ;
 			}
 			public function DetermineEnvironnement()
 			{

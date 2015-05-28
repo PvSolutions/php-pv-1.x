@@ -303,11 +303,12 @@
 				{
 					$this->NomFichierAttache = $this->NomElementZone.".".$this->ExtensionFichierAttache ;
 				}
-				if($this->NomFichierAttache == "" && $this->CheminFichierSource != "")
-				{
-					$infosFich = pathinfo($this->CheminFichierSource) ;
-				}
 				*/
+				$infosFich = @pathinfo($this->CheminFichierSource) ;
+				if($this->ExtensionFichierAttache == "" && $this->CheminFichierSource != "")
+				{
+					$this->ExtensionFichierAttache = $infosFich["extension"] ;
+				}
 			}
 			public function SupprimeCaractsSpec($valeur)
 			{
@@ -323,7 +324,7 @@
 				}
 				if($this->UtiliserFichierAttache == 1 && $this->NomFichierAttache != "")
 				{
-					Header("Content-disposition:".$this->DispositionFichierAttache."; filename=".$this->SupprimeCaractsSpec($this->NomFichierAttache)."\r\n") ;
+					Header("Content-disposition:".$this->DispositionFichierAttache."; filename=".$this->SupprimeCaractsSpec($this->NomFichierAttache).(($this->ExtensionFichierAttache != '') ? '.'.$this->ExtensionFichierAttache : '')."\r\n") ;
 				}
 				if($this->TailleContenu > 0)
 				{
@@ -1422,7 +1423,7 @@
 				foreach($nomFiltres as $i => $nomFiltre)
 				{
 					$filtre = & $this->FormulaireDonneesParent->FiltresEdition[$nomFiltre] ;
-					if(in_array($filtre->NomElementScript, $args) || in_array($nomFiltre, $args))
+					if(in_array($filtre->NomElementScript, $args) || in_array($nomFiltre, $args, true))
 					{
 						$this->FiltresCibles[] = & $filtre ;
 					}

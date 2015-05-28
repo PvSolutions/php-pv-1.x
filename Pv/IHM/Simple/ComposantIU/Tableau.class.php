@@ -209,7 +209,7 @@
 						{
 							for($i=$this->IndiceColonneTri+1; $i<count($this->DefinitionsColonnes); $i++)
 							{
-								if($this->DefinitionsColonnes[$i]->Visible == 1)
+								if($this->DefinitionsColonnes[$i]->Visible == 1 && $this->DefinitionsColonnes[$i]->NomDonnees != '')
 								{
 									$this->IndiceColonneTri = $i ;
 									break ;

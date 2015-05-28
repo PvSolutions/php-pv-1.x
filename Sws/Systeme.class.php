@@ -18,6 +18,10 @@
 		{
 			include dirname(__FILE__)."/ModulePage.class.php" ;
 		}
+		if(! defined('IMPLEM_PAGE_SWS'))
+		{
+			include dirname(__FILE__)."/ImplemPage.class.php" ;
+		}
 		define('SYSTEME_SWS', 1) ;
 		
 		class ReferentielSws
@@ -28,6 +32,8 @@
 		class SystemeBaseSws extends PvObjet
 		{
 			public $BDSupport ;
+			public $ModulesPage = array() ;
+			public $ImplemsPage = array() ;
 			public $InclureAdminPubl = 0 ;
 			public $CheminAdminVersPubl = ".." ;
 			public $CheminMembreVersPubl = ".." ;
@@ -113,17 +119,17 @@
 				ReferentielSws::$SystemeEnCours = & $this ;
 				$this->ChargeConfig() ;
 			}
-			public function & ObtientModulePageNomme($nomModele)
+			public function & ObtientModulePageNomme($nomModule)
 			{
-				$module = $this->ObtientModulePageParNom($nomModele) ;
+				$module = $this->ObtientModulePageParNom($nomModule) ;
 				return $module ;
 			}
-			public function & ObtientModulePageParNom($nomModele)
+			public function & ObtientModulePageParNom($nomModule)
 			{
 				$modulePage = new ModulePageIndefiniSws() ;
-				if(isset($this->ModulesPage[$nomModele]))
+				if(isset($this->ModulesPage[$nomModule]))
 				{
-					$modulePage = & $this->ModulesPage[$nomModele] ;
+					$modulePage = & $this->ModulesPage[$nomModule] ;
 				}
 				// print get_class($modulePage).'<br>' ;
 				return $modulePage;
@@ -150,6 +156,43 @@
 				}
 				return $modulesPage;
 			}
+			public function & ObtientImplemPageNomme($nomImplem)
+			{
+				$implem = $this->ObtientImplemPageParNom($nomImplem) ;
+				return $implem ;
+			}
+			public function & ObtientImplemPageParNom($nomImplem)
+			{
+				$implemPage = new ImplemPageIndefiniSws() ;
+				if(isset($this->ImplemsPage[$nomImplem]))
+				{
+					$implemPage = & $this->ImplemsPage[$nomImplem] ;
+				}
+				// print get_class($implemPage).'<br>' ;
+				return $implemPage;
+			}
+			public function & ObtientImplemPageRef($nomRef)
+			{
+				$implems = $this->ObtientImplemsPageRef($nomRef) ;
+				$implemPage = new ImplemPageIndefiniSws() ;
+				if(count($implems) == 0)
+				{
+					return $implemPage ;
+				}
+				return $implems[0] ;
+			}
+			public function & ObtientImplemsPageRef($nomRef)
+			{
+				$implemsPage = array() ;
+				foreach($implemsPage as $nom => & $implemPage)
+				{
+					if($implemPage->NomRef == $nomRef)
+					{
+						$implemsPage[] = & $implemPage ;
+					}
+				}
+				return $implemsPage;
+			}
 			public function & CreeFournDonnees()
 			{
 				$fourn = new PvFournisseurDonneesSql() ;
@@ -166,12 +209,13 @@
 			public function RemplitZonePubl(& $zone)
 			{
 				$this->RemplitZonePublSpec($zone) ;
-				$nomModeles = array_keys($this->ModulesPage) ;
-				foreach($nomModeles as $i => $nomModele)
+				$nomModules = array_keys($this->ModulesPage) ;
+				foreach($nomModules as $i => $nomModule)
 				{
-					$module = & $this->ModulesPage[$nomModele] ;
+					$module = & $this->ModulesPage[$nomModule] ;
 					$module->RemplitZonePubl($zone) ;
 				}
+				$this->AppliqueImplemsMembre($zone) ;
 			}
 			protected function RemplitZoneAdminSpec(& $zone)
 			{
@@ -179,12 +223,13 @@
 			public function RemplitZoneAdmin(& $zone)
 			{
 				$this->RemplitZoneAdminSpec($zone) ;
-				$nomModeles = array_keys($this->ModulesPage) ;
-				foreach($nomModeles as $i => $nomModele)
+				$nomModules = array_keys($this->ModulesPage) ;
+				foreach($nomModules as $i => $nomModule)
 				{
-					$module = & $this->ModulesPage[$nomModele] ;
+					$module = & $this->ModulesPage[$nomModule] ;
 					$module->RemplitZoneAdmin($zone) ;
 				}
+				$this->AppliqueImplemsAdmin($zone) ;
 			}
 			protected function RemplitZoneMembreSpec(& $zone)
 			{
@@ -192,12 +237,13 @@
 			public function RemplitZoneMembre(& $zone)
 			{
 				$this->RemplitZoneMembreSpec($zone) ;
-				$nomModeles = array_keys($this->ModulesPage) ;
-				foreach($nomModeles as $i => $nomModele)
+				$nomModules = array_keys($this->ModulesPage) ;
+				foreach($nomModules as $i => $nomModule)
 				{
-					$module = & $this->ModulesPage[$nomModele] ;
+					$module = & $this->ModulesPage[$nomModule] ;
 					$module->RemplitZoneMembre($zone) ;
 				}
+				$this->AppliqueImplemsMembre($zone) ;
 			}
 			public function & InscritNouvMdlPage($nom, $module)
 			{
@@ -238,6 +284,8 @@
 				$this->ChargeConfigBase() ;
 				$this->ChargeModulesPage() ;
 				$this->ChargeConfigModulesPage() ;
+				$this->ChargeImplemsPage() ;
+				$this->ChargeConfigImplemsPage() ;
 				$this->ChargeConfigSuppl() ;
 			}
 			protected function ChargeConfigModulesPage()
@@ -248,6 +296,16 @@
 				}
 			}
 			protected function ChargeModulesPage()
+			{
+			}
+			protected function ChargeConfigImplemsPage()
+			{
+				foreach($this->ImplemsPage as $nom => & $implem)
+				{
+					$implem->ChargeConfig() ;
+				}
+			}
+			protected function ChargeImplemsPage()
 			{
 			}
 			protected function ChargeConfigBase()
@@ -275,6 +333,100 @@
 					$url = $this->ModulesPage[$nomModule]->ObtientUrlPubl() ;
 				}
 				return $url ;
+			}
+			public function & InscritNouvImplemPage($nom, $implem)
+			{
+				$this->InscritImplemPage($nom, $implem) ;
+				return $implem ;
+			}
+			public function & InsereImplemPage($nom, $implem)
+			{
+				$this->InscritImplemPage($nom, $implem) ;
+				return $implem ;
+			}
+			public function InscritImplemPage($nom, & $implem)
+			{
+				if($nom == '')
+				{
+					$nom = $implem->NomRef ;
+				}
+				$this->ImplemsPage[$nom] = & $implem ;
+				$implem->DefinitSysteme($nom, $this) ;
+			}
+			protected function AppliqueImplemsZone(& $zone, $mode=0)
+			{
+				$nomImplems = array_keys($this->ImplemsPage) ;
+				foreach($nomImplems as $i => $nomImplem)
+				{
+					$implem = & $this->ImplemsPage[$nomImplem] ;
+					if(! $implem->EstAccessible() || (count($implem->EntitesAppls) == 0 && count($implem->ModulesAppls) == 0))
+					{
+						continue ;
+					}
+					$nomModules = array_keys($this->ModulesPage) ;
+					foreach($nomModules as $j => $nomModule)
+					{
+						$module = & $this->ModulesPage[$nomModule] ;
+						if(! $module->EstAccessible())
+						{
+							continue ;
+						}
+						$nomEntites = array_keys($module->Entites) ;
+						foreach($nomEntites as $k => $nomEntite)
+						{
+							$entite = & $module->Entites[$nomEntite] ;
+							if(! $entite->EstAccessible())
+							{
+								continue ;
+							}
+							if(in_array($entite->NomElementModule, $implem->EntitesAppls) || in_array($module->NomElementSyst, $implem->ModulesAppls))
+							{
+								switch($mode)
+								{
+									case 0 :
+									{
+										$implem->AppliqueEntitePubl($entite, $zone) ;
+									}
+									break ;
+									case 1 :
+									{
+										$implem->AppliqueEntiteMembre($entite, $zone) ;
+									}
+									break ;
+									case 3 :
+									{
+										$implem->AppliqueEntiteMembre($entite, $zone) ;
+									}
+									break ;
+								}
+							}
+						}
+					}
+				}
+			}
+			protected function AppliqueImplemsPubl(& $zone)
+			{
+				$this->AppliqueImplemsPublSpec($zone) ;
+				$this->AppliqueImplemsZone($zone, 0) ;
+			}
+			protected function AppliqueImplemsPublSpec(& $zone)
+			{
+			}
+			protected function AppliqueImplemsMembre(& $zone)
+			{
+				$this->AppliqueImplemsMembreSpec($zone) ;
+				$this->AppliqueImplemsZone($zone, 1) ;
+			}
+			protected function AppliqueImplemsMembreSpec(& $zone)
+			{
+			}
+			protected function AppliqueImplemsAdmin(& $zone)
+			{
+				$this->AppliqueImplemsAdminSpec($zone) ;
+				$this->AppliqueImplemsZone($zone, 2) ;
+			}
+			protected function AppliqueImplemsAdminSpec(& $zone)
+			{
 			}
 		}
 		
@@ -317,6 +469,10 @@
 			{
 				return new ModuleCompteurHitsSws() ;
 			}
+			protected function CreeImplemCommentaire()
+			{
+				return new ImplemCommentaireSws() ;
+			}
 			protected function ChargeModulesPage()
 			{
 				$this->ModulePageRacine = $this->CreeModulePageRacine() ;
@@ -335,6 +491,12 @@
 				$this->ModuleCompteurHits = $this->CreeModuleCompteurHits() ;
 				$this->InscritModulePage('', $this->ModuleCompteurHits) ;
 				*/
+			}
+			protected function ChargeImplemsPage()
+			{
+				$this->ImplemCommentaire = $this->CreeImplemCommentaire() ;
+				$this->InscritImplemPage('', $this->ImplemCommentaire) ;
+				$this->ImplemCommentaire->EntitesAppls[] = $this->ModuleArticle->EntiteArticle->NomEntite ;
 			}
 		}
 		

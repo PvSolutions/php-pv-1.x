@@ -381,8 +381,21 @@
 			{
 				$filtresSelection = $this->FiltresGlobauxSelection ;
 				array_splice($filtresSelection, count($filtresSelection), 0, $this->FiltresLigneSelection) ;
-				$this->ElementsEnCours = $this->FournisseurDonnees->SelectElements(array(), $filtresSelection) ;
+				$this->ElementsEnCours = $this->FournisseurDonnees->SelectElements($this->ExtraitColonnesDonnees($this->FiltresEdition), $filtresSelection) ;
+				// print_r($this->FournisseurDonnees->BaseDonnees) ;
+				// $this->ElementsEnCours = $this->FournisseurDonnees->SelectElements($this->ExtraitColonnesDonnees($filtresSelection), $filtresSelection) ;
 				$this->AfficheExceptionFournisseurDonnees() ;
+			}
+			protected function ExtraitColonnesDonnees(& $filtres)
+			{
+				$cols = array() ;
+				foreach($filtres as $i => & $filtre)
+				{
+					$cols[$i] = new PvDefinitionColonneDonnees() ;
+					$cols[$i]->NomDonnees = $filtre->NomParametreDonnees ;
+					$cols[$i]->AliasDonnees = $filtre->AliasParametreDonnees ;
+				}
+				return $cols ;
 			}
 			public function CalculeElementsRendu()
 			{

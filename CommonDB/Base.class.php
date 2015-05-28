@@ -248,6 +248,14 @@
 			
 			var $StoredProcUseCursor = 1 ;
 			
+			var $AutoSetCharacterEncoding = 0 ;
+			
+			var $MustSetCharacterEncoding = 0 ;
+			
+			var $CharacterEncodingFixed = 0 ;
+			
+			var $CharacterEncoding = "utf-8" ;
+			
 			public function __destruct()
 			{
 				if(! $this->AutoCloseConnection && $this->Connection != false)
@@ -679,40 +687,47 @@
 				foreach($this->FieldsCache[$tableName] as $fieldName => $fieldData)
 				{
 					$val = null ;
-					if(isset($rowData[$fieldName]))
+					$valDefined = 0 ;
+					if(array_key_exists($fieldName, $rowData))
 					{
 						$val = $rowData[$fieldName] ;
+						$valDefined = 1 ;
 					}
 					else
 					{
-						if(isset($rowData[strtoupper($fieldName)]))
+						if(array_key_exists(strtoupper($fieldName), $rowData))
 						{
 							$val = $rowData[strtoupper($fieldName)] ;
+							$valDefined = 1 ;
 						}
 						else
 						{
-							if(isset($rowData[strtolower($fieldName)]))
+							if(array_key_exists(strtolower($fieldName), $rowData))
 							{
 								$val = $rowData[strtolower($fieldName)] ;
+								$valDefined = 1 ;
 							}
 							elseif($includeExprs)
 							{
-								if(isset($row[$this->ExprKeyName][$fieldName]))
+								if(array_key_exists($fieldName, $row[$this->ExprKeyName]))
 								{
 									$val = $row[$this->ExprKeyName][$fieldName] ;
+									$valDefined = 1 ;
 								}
-								elseif(isset($row[$this->ExprKeyName][strtoupper($fieldName)]))
+								elseif(array_key_exists(strtoupper($fieldName), $row[$this->ExprKeyName]))
 								{
 									$val = $row[$this->ExprKeyName][strtoupper($fieldName)] ;
+									$valDefined = 1 ;
 								}
-								elseif(isset($row[$this->ExprKeyName][strtolower($fieldName)]))
+								elseif(array_key_exists(strtolower($fieldName), $row[$this->ExprKeyName]))
 								{
 									$val = $row[$this->ExprKeyName][strtolower($fieldName)] ;
+									$valDefined = 1 ;
 								}
 							}
 						}
 					}
-					if($val !== null)
+					if($valDefined)
 					{
 						$row[$fieldName] = $val ;
 					}
@@ -794,6 +809,7 @@
 			function RunSql($sql, $params=array())
 			{
 				$ok = false ;
+				$this->MustSetCharacterEncoding = 0 ;
 				$res = $this->OpenQuery($sql, $params) ;
 				if($res)
 				{
@@ -844,6 +860,7 @@
 			function FetchSqlRows($sql, $params=array(), $onlyFirst=false)
 			{
 				$rows = null ;
+				$this->MustSetCharacterEncoding = 0 ;
 				$res = $this->OpenQuery($sql, $params) ;
 				if($res !== false)
 				{
@@ -931,6 +948,7 @@
 			{
 				$ok = 0 ;
 				$this->StoredProcUseCursor = 0 ;
+				$this->MustSetCharacterEncoding = 1 ;
 				$res = $this->OpenStoredProc($procName, $params) ;
 				if($res !== false)
 				{
@@ -1071,6 +1089,7 @@
 					if($insertFieldList != '' && $insertValueList != '')
 					{
 						// print_r($newRowData) ;
+						$this->MustSetCharacterEncoding = 1 ;
 						$sql = 'insert into '.$this->EscapeTableName($tableName).' ('.$insertFieldList.') values ('.$insertValueList.')' ;
 						$res = $this->OpenQuery($sql, $this->RemoveExprKeyEntry($newRowData)) ;
 						if($res !== false)
@@ -1128,6 +1147,7 @@
 			{
 				$ok = 0 ;
 				$rowData = $this->ExtractRow($tableName, $rowData) ;
+				// print_r($rowData) ;
 				$newRowData = $this->ApplyNewValuePrefix($rowData) ;
 				if($rowData)
 				{
@@ -1135,6 +1155,7 @@
 					if($updateList != '')
 					{
 						$sql = 'update '.$this->EscapeTableName($tableName).' set '.$updateList.' where '.$where ;
+						$this->MustSetCharacterEncoding = 1 ;
 						$res = $this->OpenQuery($sql, $this->RemoveExprKeyEntry(array_merge($newRowData, $whereParams))) ;
 						if($res !== false)
 						{
@@ -1175,6 +1196,7 @@
 			function DeleteRow($tableName, $where, $whereParams=array())
 			{
 				$ok = 0 ;
+				$this->MustSetCharacterEncoding = 0 ;
 				$sql = 'delete from '.$this->EscapeTableName($tableName).' where '.$where ;
 				$res = $this->OpenQuery($sql, $whereParams) ;
 				if($res !== false)
@@ -1194,12 +1216,26 @@
 				{
 					return 1 ;
 				}
+				$this->CharacterEncodingFixed = 0 ;
 				return $this->OpenCnx() ;
 				// return ($this->Connection !== false) ;
 			}
 			function FinalConnection()
 			{
+				$this->CharacterEncodingFixed = 0 ;
 				return ($this->CloseCnx()) ;
+			}
+			function FixCharacterEncoding()
+			{
+				if($this->MustSetCharacterEncoding && $this->AutoSetCharacterEncoding && ! $this->CharacterEncodingFixed && $this->CharacterEncoding != "")
+				{
+					$this->ExecFixCharacterEncoding() ;
+					$this->CharacterEncodingFixed = 1 ;
+				}
+			}
+			function ExecFixCharacterEncoding()
+			{
+				
 			}
 			function SqlNow()
 			{
@@ -1451,6 +1487,10 @@
 			var $VendorMaxVersion = "6" ;
 			var $UseBuffer = 1 ;
 			var $StoredProcConnection = false ;
+			function ExecFixCharacterEncoding()
+			{
+				mysql_set_charset($this->CharacterEncoding, $this->Connection) ;
+			}
 			function SqlConcat($list)
 			{
 				if(count($list) == 0)
@@ -1775,6 +1815,7 @@
 				{
 					return $res ;
 				}
+				$this->FixCharacterEncoding() ;
 				$this->ClearConnectionException() ;
 				$this->CaptureQuery($sql, $params) ;
 				$sql = $this->PrepareSql($sql, $params) ;
@@ -1896,6 +1937,10 @@
 		* @var string $VendorMaxVersion
 		*/
 			var $VendorMaxVersion = "7" ;
+			function ExecFixCharacterEncoding()
+			{
+				mysqli_set_charset($this->CharacterEncoding, $this->Connection) ;
+			}
 			function EscapeTableName($tableName)
 			{
 				return "`".$tableName."`" ;		

@@ -41,6 +41,7 @@
 			public $NomClasseSousMenuScript = "PvMenuAdminDirecteScript" ;
 			public $NomClasseSousMenuFenetre = "PvMenuAdminDirecteFenetreScript" ;
 			public $NomClasseSousMenuFige = "PvMenuAdminDirecteFige" ;
+			public $TitreOnglet = "" ;
 			public function InscritSousMenuRedirScript($nomScript)
 			{
 				$nom = $nomScript ;
@@ -77,7 +78,7 @@
 					if($cheminIcone == '' && $this->ComposantSupport != null)
 						$cheminIcone = $this->ComposantSupport->CheminIconeParDefaut ;
 					$cheminIcone = svc_json_encode($cheminIcone) ;
-					$titre = svc_json_encode($this->ObtientTitre()) ;
+					$titre = svc_json_encode(($this->TitreOnglet != '') ? $this->TitreOnglet : $this->ObtientTitre()) ;
 					return $this->ObtientLienJs($nomScript, $cheminIcone, $titre, $url) ;
 				}
 				return "" ;

@@ -295,6 +295,7 @@
 				return $valeurs ;
 			}
 		}		
+		
 		class PvDefinitionColonneDonnees extends PvObjet
 		{
 			public $TriPrealable = 0 ;
@@ -398,6 +399,71 @@
 			public $CouleurPolice = "blue" ;
 		}
 		
+		class PvCorrecteurValeurFiltreBase
+		{
+			public function Applique($valeur, & $filtre)
+			{
+				return $valeur ;
+			}
+		}
+		class PvCorrecteurValeurEncodeeUtf8 extends PvCorrecteurValeurFiltreBase
+		{
+			public function Applique($valeur, & $filtre)
+			{
+				return utf8_encode($valeur) ;
+			}
+		}
+		class PvCorrecteurValeurSansAccent extends PvCorrecteurValeurFiltreBase
+		{
+			public function Applique($valeur, & $filtre)
+			{
+				$a = array('À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ð', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'ß', 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'Ð', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'L', 'l', 'L', 'l', 'l', 'l', 'L', 'l', 'N', 'n', 'N', 'n', 'N', 'n', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'Œ', 'œ', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'Š', 'š', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Ÿ', 'Z', 'z', 'Z', 'z', 'Ž', 'ž', 'z', 'ƒ');
+				$b = array('A', 'A', 'A', 'A', 'A', 'A', 'AE', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'D', 'N', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 's', 'a', 'a', 'a', 'a', 'a', 'a', 'ae', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'D', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'L', 'l', 'L', 'l', 'L', 'l', 'l', 'l', 'N', 'n', 'N', 'n', 'N', 'n', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'OE', 'oe', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'S', 's', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Y', 'Z', 'z', 'Z', 'z', 'Z', 'z', 's', 'f');
+				return str_replace($a, $b, $valeur);
+			}
+		}
+		class PvCorrecteurValeurEncodeeHtml extends PvCorrecteurValeurFiltreBase
+		{
+			public function Applique($valeur, & $filtre)
+			{
+				return htmlspecialchars($valeur) ;
+			}
+		}
+		class PvCorrecteurValeurDecodeeHtml extends PvCorrecteurValeurFiltreBase
+		{
+			public function Applique($valeur, & $filtre)
+			{
+				return htmlspecialchars_decode($valeur) ;
+			}
+		}
+		
+		class PvFormatteurEtiquetteFiltre
+		{
+			public function Applique($valeur, & $filtre)
+			{
+				return $valeur ;
+			}
+		}
+		class PvFmtEtiquetteFiltre extends PvFormatteurEtiquetteFiltre
+		{
+		}
+		class PvFmtMonnaieEtiquetteFiltre extends PvFmtEtiquetteFiltre
+		{
+			public $MaxDecimals = 3 ;
+			public $MinChiffres = 1 ;
+			public function Applique($valeur, & $filtre)
+			{
+				return format_money($valeur, $this->MaxDecimals, $this->MinChiffres) ;
+			}
+		}
+		class PvFmtDateFrEtiquetteFiltre extends PvFmtEtiquetteFiltre
+		{
+			public function Applique($valeur, & $filtre)
+			{
+				return date_fr($valeur) ;
+			}
+		}
+		
 		class PvFiltreDonneesBase extends PvObjet
 		{
 			public $PrefixesLibelle = array() ;
@@ -415,6 +481,7 @@
 			public $NomComposant = "" ;
 			public $NomParametreLie = "" ;
 			public $NomParametreDonnees = "" ;
+			public $AliasParametreDonnees = "" ;
 			public $NomClasseLiaison = null ;
 			public $ExpressionDonnees = "" ;
 			public $NomColonneLiee = "" ;
@@ -431,6 +498,9 @@
 			public $NePasLierColonne = 0 ;
 			public $NePasLierParametre = 0 ;
 			public $NePasIntegrerParametre = 0 ;
+			public $AppliquerCorrecteurValeur = 1 ;
+			public $CorrecteurValeur = null ;
+			public $FormatteurEtiquette = null ;
 			public function InserePrefxErr($contenu)
 			{
 				$this->InserePrefixeLib(new PvMarqErrFiltreDonnees($contenu)) ;
@@ -462,6 +532,12 @@
 			public function InsereSuffixeLib($val)
 			{
 				$this->SuffixesLibelle[] = $val ;
+			}
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->CorrecteurValeur = new PvCorrecteurValeurFiltreBase() ;
+				$this->FormatteurEtiquette = new PvFormatteurEtiquetteFiltre() ;
 			}
 			public function AdopteScript($nom, & $script)
 			{
@@ -534,6 +610,10 @@
 					return $this->ValeurParametre ;
 				}
 				$valeurParametre = $this->ObtientValeurParametre() ;
+				if($this->AppliquerCorrecteurValeur)
+				{
+					$valeurParametre = $this->CorrecteurValeur->Applique($valeurParametre, $this) ;
+				}
 				if($valeurParametre !== $this->ValeurVide || $this->ValeurVide !== null)
 				{
 					$this->ValeurParametre = $valeurParametre ;
@@ -597,7 +677,7 @@
 				{
 					return "(Composant nul)" ;
 				}
-				$this->Composant->Valeur = $this->Lie() ;
+				$this->Composant->Valeur = html_entity_decode($this->FormatteurEtiquette->Applique($this->Lie(), $this)) ;
 				$this->Composant->FiltreParent = $this ;
 				$ctn = $this->Composant->RenduEtiquette() ;
 				$this->Composant->FiltreParent = null ;
@@ -609,7 +689,7 @@
 			public function & ObtientComposant()
 			{
 				if($this->EstNul($this->Composant))
-					$this->DeclareComposant($this->NomClasseComposant) ;
+					return $this->DeclareComposant($this->NomClasseComposant) ;
 				return $this->Composant ;
 			}
 			public function & DeclareComposant($nomClasseComposant)
@@ -698,6 +778,7 @@
 				}
 				if(isset($this->ZoneParent->Membership->MemberLogged->RawData[$this->NomParametreLie]))
 				{
+					// print "ssds ".$this->ZoneParent->Membership->MemberLogged->RawData[$this->NomParametreLie] ;
 					return $this->ZoneParent->Membership->MemberLogged->RawData[$this->NomParametreLie] ;
 				}
 			}
@@ -777,7 +858,7 @@
 			}
 			protected function CalculeValeurBruteNonCorrigee()
 			{
-				$this->ValeurBruteNonCorrigee = (isset($_REQUEST[$this->NomParametreLie])) ? $_REQUEST[$this->NomParametreLie] : $this->ValeurVide ;
+				$this->ValeurBruteNonCorrigee = (array_key_exists($this->NomParametreLie, $_REQUEST)) ? $_REQUEST[$this->NomParametreLie] : $this->ValeurVide ;
 			}
 			public function ObtientValeurParametre()
 			{
@@ -791,7 +872,7 @@
 			public $TypeLiaisonParametre = "get" ;
 			protected function CalculeValeurBruteNonCorrigee()
 			{
-				$this->ValeurBruteNonCorrigee = (isset($_GET[$this->NomParametreLie])) ? $_GET[$this->NomParametreLie] : $this->ValeurVide ;
+				$this->ValeurBruteNonCorrigee = (array_key_exists($this->NomParametreLie, $_GET)) ? $_GET[$this->NomParametreLie] : $this->ValeurVide ;
 			}
 		}
 		class PvFiltreDonneesHttpPost extends PvFiltreDonneesHttpRequest
@@ -799,7 +880,7 @@
 			public $TypeLiaisonParametre = "post" ;
 			protected function CalculeValeurBruteNonCorrigee()
 			{
-				$this->ValeurBruteNonCorrigee = (isset($_POST[$this->NomParametreLie])) ? $_POST[$this->NomParametreLie] : $this->ValeurVide ;
+				$this->ValeurBruteNonCorrigee = (array_key_exists($this->NomParametreLie, $_POST)) ? $_POST[$this->NomParametreLie] : $this->ValeurVide ;
 			}
 		}
 		class PvFiltreDonneesHttpUpload extends PvFiltreDonneesBase

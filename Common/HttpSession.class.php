@@ -298,7 +298,7 @@
 						}
 						else
 						{
-							$this->RequestPostData[] = array($name, urlencode($value)) ;
+							$this->RequestPostData[] = array($name, $value) ;
 						}
 					}
 				}

@@ -21,6 +21,7 @@
 			public $PrefixeTitreMenu = "" ;
 			public $TitreMenu = "" ;
 			public $Titre = "" ;
+			public $Active = 1 ;
 			public $CheminDossierIcones = "images/sws" ;
 			public $CheminIcone = "" ;
 			public $PrefixeNomFichier = "icone-" ;
@@ -29,6 +30,7 @@
 			public $NumeroVersion = "0.0.1" ;
 			public $StadeDev = "Beta" ;
 			public $AutoriserMailsEdition = 1 ;
+			public $EstIndefini = 0 ;
 			public function ObtientVersion()
 			{
 				return $this->NumeroVersion.' '.$this->StadeDev ;
@@ -63,6 +65,10 @@
 			{
 				return ($this->TitreMenu == "") ? ($this->Titre == "") ? $this->PrefixeTitreMenu." ".$this->NomElementSyst : $this->Titre : $this->TitreMenu ;
 			}
+			public function EstAccessible()
+			{
+				return ($this->Active && $this->EstIndefini == 0) ;
+			}
 		}
 		
 		class ModulePageBaseSws extends ElementRenduBaseSws
@@ -70,8 +76,6 @@
 			public $PrefixeTitreMenu = "Module" ;
 			public $NomElementSyst ;
 			public $SystemeParent ;
-			public $Active = 1 ;
-			public $EstIndefini = 0 ;
 			public $NomRef = "" ;
 			public $Entites = array() ;
 			public $RemplZoneMembrePossible = 1 ;
@@ -185,10 +189,6 @@
 			public function EstDefini()
 			{
 				return $this->EstIndefini == 0 ;
-			}
-			public function EstAccessible()
-			{
-				return ($this->Active && $this->EstIndefini == 0) ;
 			}
 			public function ChargeConfig()
 			{
@@ -311,7 +311,7 @@
 				$action->NomModulePage = $this->NomElementSyst ;
 				$zone->InscritActionApresRendu($nomAction, $action) ;
 			}
-			public function InsereScript($nom, $script, & $zone, $privs=array())
+			public function & InsereScript($nom, $script, & $zone, $privs=array())
 			{
 				$this->InscritScript($nom, $script, $zone, $privs) ;
 				return $script;
@@ -387,7 +387,7 @@
 				$sql = 'select '.$this->DefFluxRSS->SqlListeCols($this, $bd) ;
 				$sql .= ' from '.$bd->EscapeVariableName($this->DefFluxRSS->NomTable) ;
 				return $sql ;
-			}
+			} 
 			public function CreeFournDonnees()
 			{
 				return $this->ModuleParent->CreeFournDonnees() ;
@@ -916,6 +916,14 @@
 			{
 				$this->FilArianeScript = $this->ModuleParent->SystemeParent->CreeFilAriane() ;
 			}
+			protected function InscritBarreMenuEntite(& $script)
+			{
+				$this->BarreMenuEntite = $this->ModuleParent->SystemeParent->CreeBarreMenuEntitesPage() ;
+				$this->BarreMenuEntite->AdopteScript("barreMenuEntite", $script) ;
+				$this->BarreMenuEntite->ChargeConfig() ;
+				// print get_class($this->BarreMenuEntite->MenuRacine) ;
+				$this->ModuleParent->RemplitSousMenus($this->BarreMenuEntite->MenuRacine) ;
+			}
 			protected function PrepareScriptEdit(& $script)
 			{
 				$this->InscritBarreMenu($script) ;
@@ -942,14 +950,6 @@
 					}
 					break ;
 				}
-			}
-			protected function InscritBarreMenuEntite(& $script)
-			{
-				$this->BarreMenuEntite = $this->ModuleParent->SystemeParent->CreeBarreMenuEntitesPage() ;
-				$this->BarreMenuEntite->AdopteScript("barreMenuEntite", $script) ;
-				$this->BarreMenuEntite->ChargeConfig() ;
-				// print get_class($this->BarreMenuEntite->MenuRacine) ;
-				$this->ModuleParent->RemplitSousMenus($this->BarreMenuEntite->MenuRacine) ;
 			}
 			protected function PrepareScriptEnum(& $script)
 			{
@@ -987,6 +987,7 @@
 				if($this->VerifPreReqsScriptConsult($script))
 				{
 					$this->PrepareScriptConsult($script) ;
+					$this->PrepareImplemsScriptConsult($script) ;
 					$this->BlocConsult = $this->InsereBlocConsult($script) ;
 				}
 				else
@@ -1000,6 +1001,7 @@
 				if($this->VerifPreReqsScriptEnum($script))
 				{
 					$this->PrepareScriptEnum($script) ;
+					$this->PrepareImplemsScriptEnum($script) ;
 				}
 				else
 				{
@@ -1017,6 +1019,30 @@
 				else
 				{
 					$this->NotifieScriptLstIndisp($script) ;
+				}
+			}
+			protected function PrepareImplemsScriptConsult(& $script)
+			{
+				$nomImplemsPage = array_keys($this->ModuleParent->SystemeParent->ImplemsPage) ;
+				foreach($nomImplemsPage as $i => $nom)
+				{
+					$implemPage = & $this->ModuleParent->SystemeParent->ImplemsPage[$nom] ;
+					if($implemPage->SupporteEntite($this))
+					{
+						$implemPage->PrepareScriptConsult($script, $this) ;
+					}
+				}
+			}
+			protected function PrepareImplemsScriptEnum(& $script)
+			{
+				$nomImplemsPage = array_keys($this->ModuleParent->SystemeParent->ImplemsPage) ;
+				foreach($nomImplemsPage as $i => $nom)
+				{
+					$implemPage = & $this->ModuleParent->SystemeParent->ImplemsPage[$nom] ;
+					if($implemPage->SupporteEntite($this))
+					{
+						$implemPage->PrepareScriptEnum($script, $this) ;
+					}
 				}
 			}
 			protected function NotifieScriptEditIndisp(& $script)

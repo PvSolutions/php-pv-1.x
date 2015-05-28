@@ -124,7 +124,7 @@
 </script>' ;
 				exit ;
 			}
-			protected function ContenuJsOuvreOngletScript($nomScript)
+			public function ContenuJsOuvreOngletScript($nomScript)
 			{
 				if(! isset($this->Scripts[$nomScript]))
 					return "" ;
