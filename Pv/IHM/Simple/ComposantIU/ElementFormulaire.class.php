@@ -110,6 +110,7 @@
 			{
 				$lignes = $this->FournisseurDonnees->RechExacteElements($this->FiltresSelection, $this->NomColonneValeur, $this->Valeur) ;
 				$etiquette = '' ;
+                // print_r($lignes) ;
 				if(count($lignes) > 0)
 				{
 					$this->Libelle = $lignes[0][$this->NomColonneLibelle] ;
@@ -451,7 +452,7 @@
 				}
 				else
 				{
-					die("Le composant ".$this->IDInstanceCalc." nécessite un fournisseur de données.") ;
+					die("Le composant ".$this->IDInstanceCalc." necessite un fournisseur de donnees.") ;
 				}
 				return $ctn ;
 			}
@@ -890,7 +891,7 @@
 				}
 				else
 				{
-					die("Le composant ".$this->IDInstanceCalc." nécessite un fournisseur de données.") ;
+					die("Le composant ".$this->IDInstanceCalc." nï¿½cessite un fournisseur de donnï¿½es.") ;
 				}				
 				return $ctn ;
 			}

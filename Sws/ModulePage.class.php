@@ -34,6 +34,10 @@
 		{
 			include dirname(__FILE__).'/ModulePage/Contact.class.php' ;
 		}
+		if(! defined('MODULE_NEWSLETTER_SWS'))
+		{
+			include dirname(__FILE__).'/ModulePage/Newsletter.class.php' ;
+		}
 		define('MODULE_PAGE_SWS', 1) ;
 	}
 	

@@ -924,10 +924,14 @@
 				// print get_class($this->BarreMenuEntite->MenuRacine) ;
 				$this->ModuleParent->RemplitSousMenus($this->BarreMenuEntite->MenuRacine) ;
 			}
-			protected function PrepareScriptEdit(& $script)
+			public function PrepareScriptAdmin(& $script)
 			{
 				$this->InscritBarreMenu($script) ;
 				$this->InscritBarreMenuEntite($script) ;
+			}
+			protected function PrepareScriptEdit(& $script)
+			{
+				$this->PrepareScriptAdmin($script) ;
 				// $this->InscritFilAriane($script) ;
 				switch($script->InitFrmElem->Role)
 				{
@@ -963,8 +967,7 @@
 			}
 			protected function PrepareScriptLst(& $script)
 			{
-				$this->InscritBarreMenu($script) ;
-				$this->InscritBarreMenuEntite($script) ;
+				$this->PrepareScriptAdmin($script) ;
 				$script->TitreDocument = $this->ObtientTitreDocListageEntite() ;
 				$script->Titre = $this->ObtientTitreListageEntite() ;
 			}
@@ -1273,7 +1276,7 @@
 					$tabl->InscritCommande("ajoutEntite", $this->CmdAjoutTblList) ;
 				}
 			}
-			protected function RenduAvantCtnSpec(& $script)
+			public function RenduAvantCtnSpec(& $script)
 			{
 				$ctn = '' ;
 				if(! method_exists($script->ZoneParent, 'NiveauAdmin') || $script->ZoneParent->NiveauAdmin() != 'admin')
@@ -1287,7 +1290,7 @@
 				$ctn .= $this->BarreMenuEntite->RenduDispositif().PHP_EOL ;
 				return $ctn ;
 			}
-			protected function RenduApresCtnSpec(& $script)
+			public function RenduApresCtnSpec(& $script)
 			{
 				if(! method_exists($script->ZoneParent, 'NiveauAdmin') || $script->ZoneParent->NiveauAdmin() != 'admin')
 				{

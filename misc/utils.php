@@ -465,7 +465,7 @@
 				//$result = ereg_replace("\s\s+", "", $result) ;
 				return $result ;
 			}
-				
+			
 			function date_fr($Date)
 			{
 				$DateAttr = explode("-", $Date) ;
@@ -474,6 +474,18 @@
 					return $Date ;
 				}
 				return $DateAttr[2]."/".$DateAttr[1].'/'.$DateAttr[0] ;
+			}
+			function date_time_fr($Date)
+			{
+				$dateParts = explode(" ", $Date) ;
+				if(count($dateParts) != 2)
+					return $Date ;
+				$DateAttr = explode("-", $dateParts[0]) ;
+				if(count($DateAttr) != 3)
+				{
+					return $Date ;
+				}
+				return $DateAttr[2]."/".$DateAttr[1].'/'.$DateAttr[0].' '.$dateParts[1] ;
 			}
 			function hour($Time)
 			{

@@ -612,6 +612,7 @@
 				preg_match_all('/'.preg_quote($this->ParamPrefix).'('.$this->ParamPatternName.'+)/i', $sql, $match, PREG_PATTERN_ORDER) ;
 				$paramKeys = (isset($match[1])) ? $match[1] : array() ;
 				$i = 0 ;
+				// print_r($params) ;
 				while($i < count($paramKeys))
 				{
 					$paramKey = $paramKeys[$i] ;
@@ -639,7 +640,7 @@
 				$result = $sql ;
 				foreach($realParamNames as $i => $paramKey)
 				{
-					$result = str_replace($this->ParamPrefix.$paramKey, '', $result) ;
+					$result = str_replace($this->ParamPrefix.$paramKey, $paramSymbol, $result) ;
 				}
 				return $result ;
 			}
@@ -648,7 +649,7 @@
 				$result = array() ;
 				foreach($realParamNames as $i => $paramKey)
 				{
-					$result[] = $param[$paramKey] ;
+					$result[] = $params[$paramKey] ;
 				}
 				return $result ;
 			}
@@ -1264,6 +1265,10 @@
 			function SqlSubstr($expr, $start, $length=0)
 			{
 				return "null" ;
+			}
+			function SqlLength($expr)
+			{
+				return "LENGTH($expr)" ;
 			}
 			function SqlIndexOf($expr, $search, $start=0)
 			{
@@ -2531,16 +2536,22 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 			{
 				
 			}
+			function SqlIndexOf($expr, $search, $start=0)
+			{
+				if($start == 0)
+					return "instr($expr, $search)" ;
+				return "instr($expr, $search, $start)" ;
+			}
 		}
 
 		/**
 		* Beta, not tested...
 		*/
-		class OdbcDB extends AbstractSqlDB
+		class OdbcBaseDB extends AbstractSqlDB
 		{
-			var $Driver = "" ;
-			var $DsnServerKey = "" ;
-			var $DsnSchemaKey = "" ;
+			var $DriverKey = "" ;
+			var $DsnServerKey = "Server" ;
+			var $DsnSchemaKey = "Database" ;
 			function EscapeTableName($tableName)
 			{
 				return "[".$tableName."]" ;		
@@ -2556,9 +2567,9 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 			function ExtractDsn($server, $schema)
 			{
 				$dsn = "" ;
-				if($this->Driver != "")
+				if($this->DriverKey != "")
 				{
-					$dsn .= 'Driver={'.$this->Driver.'}' ;
+					$dsn .= 'Driver={'.$this->DriverKey.'}' ;
 					if($server != '')
 					{
 						$dsn .= ';'.$this->DsnServerKey.'='.$server ;
@@ -2585,7 +2596,7 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 			}
 			function ConnectCnx()
 			{
-				$res = 0 ;
+				$res = false ;
 				try
 				{
 					$server = (isset($this->ConnectionParams["server"])) ? $this->ConnectionParams["server"] : "localhost" ;
@@ -2593,11 +2604,11 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 					$user = (isset($this->ConnectionParams["user"])) ? $this->ConnectionParams["user"] : "root" ;
 					$password = (isset($this->ConnectionParams["password"])) ? $this->ConnectionParams["password"] : "" ;
 					$dsn = $this->ExtractDsn($server, $schema) ;
-					$this->Connection = odbc_connect($dsn, $password, $tnsName) ;
+					$this->Connection = odbc_connect($dsn, $user, $password) ;
 					if(! $this->Connection)
 					{
 						$res = 0 ;
-						$this->SetConnectionExceptionFromOciError(odbc_errormsg()) ;
+						$this->SetConnectionException(odbc_errormsg()) ;
 					}
 					else
 					{
@@ -2623,7 +2634,8 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 				$stmt = false ;
 				try
 				{
-					$stmt = odbc_prepare($this->Connection, $this->ReplaceParamsToSql($sql, $realParamNames, "?")) ;
+					$stmtSql =  $this->ReplaceParamsToSql($sql, $realParamNames, "?") ;
+					$stmt = odbc_prepare($this->Connection, $stmtSql) ;
 				}
 				catch(Exception $ex)
 				{
@@ -2637,12 +2649,13 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 					return false ;
 				}
 				$this->ClearConnectionException() ;
-				$realParamNames = $this->ExtractParamsFromSql($sql) ;
+				$realParamNames = $this->ExtractParamsFromSql($sql, $params) ;
 				$stmt = $this->PrepareSql($sql, $params, $realParamNames) ;
 				$res = false ;
 				try
 				{
-					$res = odbc_execute($stmt, $this->ExtractParamValues($realParamNames, $params)) ;
+					$stmtParams = $this->ExtractParamValues($realParamNames, $params) ;
+					$res = odbc_execute($stmt, $stmtParams) ;
 					$exceptionMsg = "" ;
 					if(! $res)
 					{
@@ -2656,14 +2669,16 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 				{
 					$this->SetConnectionException($ex->getMessage()) ;
 				}
-				return $res ;
+				if(! $res)
+					return false ;
+				return $stmt ;
 			}
 			function ReadQuery(&$res)
 			{
 				$row = false;
 				try
 				{
-					$OK = odbc_fetch_into($res, $row, ODBC_NUM) ;
+					$row = odbc_fetch_array($res) ;
 				}
 				catch(Exception $ex)
 				{
@@ -2707,6 +2722,180 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 				{
 				}
 				return $res ;
+			}
+		}
+		class SqlServerOdbcDB extends OdbcBaseDB
+		{
+			var $LinuxDriverVersion = "11" ;
+			var $Win32DriverVersion = "10.0" ;
+			function SqlConcat($list)
+			{
+				if(count($list) == 0)
+					return ;
+				if(count($list) == 1)
+					return $list[0] ;
+				$sql = "" ;
+				for($i=0; $i<count($list) ; $i++)
+				{
+					if($i > 0)
+					{
+						$sql .= " + " ;
+					}
+					$sql .= $list[$i] ;
+				}
+				return $sql ;
+			}
+			function SqlToDateTime($expr)
+			{
+				return "convert(datetime, ".$expr.")" ;
+			}
+			function SqlToTimestamp($expr)
+			{
+				return "convert(datetime, ".$expr.")" ;
+			}
+			function SqlAddSeconds($expr, $val)
+			{
+				if($val == 0)
+				{
+					return $expr ;
+				}
+				return 'DATEADD(second, '.$val.', '.$expr.')' ;
+			}
+			function SqlAddMinutes($expr, $val)
+			{
+				if($val == 0)
+				{
+					return $expr ;
+				}
+				return 'DATEADD(minute, '.$val.', '.$expr.')' ;
+			}
+			function SqlAddHours($expr, $val)
+			{
+				if($val == 0)
+				{
+					return $expr ;
+				}
+				return 'DATEADD(hour, '.$val.', '.$expr.')' ;
+			}
+			function SqlAddDays($expr, $val)
+			{
+				if($val == 0)
+				{
+					return $expr ;
+				}
+				return 'DATEADD(day, '.$val.', '.$expr.')' ;
+			}
+			function SqlAddMonths($expr, $val)
+			{
+				if($val == 0)
+				{
+					return $expr ;
+				}
+				return 'DATEADD(month, '.$val.', '.$expr.')' ;
+			}
+			function SqlAddYears($expr, $val)
+			{
+				if($val == 0)
+				{
+					return $expr ;
+				}
+				return 'DATEADD(year, '.$val.', '.$expr.')' ;
+			}
+			function SqlDateDiff($expr1, $expr2)
+			{
+				return "datediff(".$expr1.", ".$expr2.", second)" ;
+			}
+			function SqlReplace($expr, $search, $replace, $start=0)
+			{
+				return "replace($expr, $search, $replace)" ;
+			}
+			function SqlLength($expr)
+			{
+				return "LENGTH($expr)" ;
+			}
+			function SqlSubstr($expr, $start, $length=0)
+			{
+				$str = "SUBSTR($expr, $start)" ;
+				if($length > 0)
+				{
+					$str = "SUBSTR($expr, $start, $length)" ;
+				}
+				return $str ;
+			}
+			function SqlIndexOf($expr, $search, $start=0)
+			{
+				$str = "CHARINDEX($expr, $search)" ;
+				if($start > 0)
+				{
+					$str = "CHARINDEX(substr($expr, $start), $search)" ;
+				}
+				return $str ;
+			}
+			function SqlNow()
+			{
+				return "getdate()" ;
+			}
+			function SqlIsNull($expr)
+			{
+				return "$expr IS NULL" ;
+			}
+			function SqlStrToDateTime($dateName)
+			{
+				return 'convert(datetime, '.$dateName.')' ;
+			}
+			function SqlStrToDate($dateName)
+			{
+				return 'convert(date, '.$dateName.')' ;
+			}
+			function SqlDatePart($dateName)
+			{
+				return 'DATEADD(dd, 0, DATEDIFF(dd, 0, '.$dateName.'))' ;
+			}
+			function SqlTimePart($dateName)
+			{
+				return 'convert(char(8), '.$dateName.', 108)' ;
+			}
+			function SqlDateToStr($dateName)
+			{
+				return 'convert(char(10), '.$dateName.')' ;
+			}
+			function SqlDateTimeToStr($dateName)
+			{
+				return 'convert(char(19), '.$dateName.')' ;
+			}
+			function SqlDateToStrFr($dateName, $includeHour=0)
+			{
+				$size = '10' ;
+				if($includeHour)
+					$size .= '19' ;
+				return 'convert(char('.$size.'), '.$dateName.', 131)' ;
+			}
+			function SqlToInt($expression)
+			{
+				return 'CONVERT (int, '.$expression.')' ;
+			}
+			function SqlToDouble($expression)
+			{
+				return 'CONVERT(double, '.$expression.')' ;
+			}
+			function SqlToString($expression)
+			{
+				return 'convert (nvarchar(MAX), '.$expression.')' ;
+			}
+			function ExtractDsn($server, $schema)
+			{
+				if($this->DriverKey == "")
+				{
+					if(stripos(PHP_OS, "WIN32") !== false || stripos(PHP_OS, "WINNT") !== false)
+					{
+						$this->DriverKey = "SQL Server Native Client ".$this->Win32DriverVersion ;
+					}
+					else
+					{
+						$this->DriverKey = "ODBC Driver ".$this->LinuxDriverVersion." for SQL Server" ;
+					}
+				}
+				return parent::ExtractDsn($server, $schema) ;
 			}
 		}
 		

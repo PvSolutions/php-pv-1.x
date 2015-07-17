@@ -6,6 +6,8 @@
 		{
 			include dirname(__FILE__)."/Core.class.php" ;
 		}
+		define('AK_MEMBERSHIP', 1) ;
+		
 		class AkMembershipLdapAuth
 		{
 			public $Host = "" ;

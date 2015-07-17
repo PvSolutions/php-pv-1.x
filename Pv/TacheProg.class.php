@@ -11,7 +11,7 @@
 		class PvTacheCtrlBase extends PvTacheProg
 		{
 			protected $NaturePlateforme = "console" ;
-			public $Message = "La tache est terminée" ;
+			public $Message = "La tache est terminee" ;
 			protected function CreeDeclenchParDefaut()
 			{
 				return new PvDeclenchTjrTache() ;
@@ -32,24 +32,25 @@
 					}
 					$tacheProg->LanceProcessus() ;
 				}
-				echo $this->Message ;
+				echo $this->Message."\n" ;
 			}
 		}
 		class PvCtrlServsPersistsApp extends PvTacheCtrlBase
 		{
 			protected function ExecuteSession()
 			{
-				$processMgr = OsProcessManager::Current() ;
-				$nomServsPersists = array_keys($this->ApplicationParent->ServicesPersists) ;
+				$nomServsPersists = array_keys($this->ApplicationParent->ServsPersists) ;
 				foreach($nomServsPersists as $i => $nomServPersist)
 				{
-					$servPersist = & $this->ApplicationParent->ServicesPersists[$nomServPersist] ;
+					$servPersist = & $this->ApplicationParent->ServsPersists[$nomServPersist] ;
+					// print get_class($servPersist)." :\n" ;
 					if(! $servPersist->Verifie())
 					{
+						// echo get_class($servPersist)." doit etre redemarre\n" ;
 						$servPersist->DemarreService() ;
 					}
 				}
-				echo $this->Message ;
+				echo $this->Message."\n" ;
 			}
 		}
 		

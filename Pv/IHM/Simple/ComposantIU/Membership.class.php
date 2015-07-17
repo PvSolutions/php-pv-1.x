@@ -1460,6 +1460,7 @@
 					$form->FiltresEdition[$i] = $form->ScriptParent->CreeFiltreHttpPost("filtreContactMembre") ;
 					$form->FiltresEdition[$i]->DeclareComposant("PvZoneTexteHtml") ;
 					$form->FiltresEdition[$i]->NomColonneLiee = $membership->ContactMemberColumn ;
+					$form->FiltresEdition[$i]->NomParametreDonnees = $membership->ContactMemberColumn ;
 					$form->FiltresEdition[$i]->Libelle = $membership->ContactMemberLabel ;
 					$form->FiltreContactMembre = & $form->FiltresEdition[$i] ;
 				}

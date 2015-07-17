@@ -38,7 +38,7 @@
 			var $RequestFilesData = array() ;
 			var $RequestQueryRawEncoding = "1" ;
 			var $RequestHeaders = array() ;
-			var $RequestHeaderData = array() ;
+			var $RequestHeaderData = "" ;
 			var $RequestContentType = "" ;
 			var $RequestCharset = "utf-8" ;
 			var $RequestBoundary = "" ;
@@ -313,7 +313,7 @@
 				// Creating the request
 				if(! $this->OpenRequest())
 				{
-					return null ;
+					return false ;
 				}
 				$this->WriteHeadersRequest($headers) ;
 				// Adding the post data

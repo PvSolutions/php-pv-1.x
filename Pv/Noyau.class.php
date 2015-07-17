@@ -232,16 +232,6 @@
 				$this->IHMs[$nom] = & $ihm ;
 				$this->InscritElement($nom, $ihm) ;
 			}
-			public function InscritModeleOperation($nom, & $modeleOperation)
-			{
-				$this->ModelesOperation[$nom] = & $modeleOperation ;
-				$this->InscritElement($nom, $modeleOperation) ;
-			}
-			public function InscritProcessusPersistant($nom, & $processusPersistant)
-			{
-				$this->ProcessusPersistants[$nom] = & $processusPersistant ;
-				$this->InscritElement($nom, $processusPersistant) ;
-			}
 			public function InscritTacheProg($nom, & $tacheProg)
 			{
 				$this->TachesProgs[$nom] = & $tacheProg ;
@@ -260,18 +250,6 @@
 			public function EnregIHM(& $ihm)
 			{
 				$this->InscritIHM($ihm->IDInstance, $ihm) ;
-			}
-			public function EnregModeleOperation(& $modeleOperation)
-			{
-				$this->InscritModeleOperation($modeleOperation->IDInstance, $modeleOperation) ;
-			}
-			public function EnregProcessusPersistant(& $processusPersistant)
-			{
-				$this->InscritProcessusPersistant($processusPersistant->IDInstance, $processusPersistant) ;
-			}
-			public function EnregServiceRequete(& $serviceRequete)
-			{
-				$this->InscritServiceRequete($serviceRequete->IDInstance, $serviceRequete) ;
 			}
 			public function DeclareIHM($nom='', $classeIHM='', $cheminFichier='')
 			{
@@ -411,6 +389,7 @@
 					return 1 ;
 				}
 				$cheminFichier = realpath($cheminFichierAbsolu.DIRECTORY_SEPARATOR.$this->CheminFichierRelatif) ;
+				// echo $cheminFichier."\n" ;
 				// echo get_class($this).' : '.$cheminFichierAbsolu.DIRECTORY_SEPARATOR.$this->CheminFichierRelatif.' hhh<br>' ;
 				$ok = ($this->CorrigeChemin($cheminFichier) == $this->CorrigeChemin($cheminFichierElementActif)) ? 1 : 0 ;
 				return $ok ;
@@ -507,12 +486,18 @@
 					{
 						$partsArg[1] = null ;
 					}
+					$args[$partsArg[0]] = $partsArg[1] ;
 				}
 				return $args ;
 			}
-			public function LanceProcessusProg(& $prog)
+			protected function ObtientOS()
 			{
 				$os = (PHP_OS == "WINNT" || PHP_OS == "WIN32") ? 'Windows' : 'Linux' ;
+				return $os ;
+			}
+			public function ObtientCmdExecProg(& $prog)
+			{
+				$os = $this->ObtientOS() ;
 				$phpbin = preg_replace("@/lib(64)?/.*$@", "/bin/php", ini_get("extension_dir"));
 				$execPath = dirname($phpbin)."/php" ;
 				if($os == 'Windows')
@@ -520,20 +505,34 @@
 				$cmd = realpath(dirname(__FILE__).'/../../'.$prog->CheminFichierRelatif) ;
 				if($cmd === false)
 				{
-					return 0 ;
+					return "" ;
 				}
 				foreach($prog->ArgsParDefaut as $nom => $val)
 				{
 					$cmd .= ' -'.$nom.'='.escapeshellarg($val) ;
 				}
+				$cmd = $execPath.' '.$cmd ;
 				if($os == 'Linux')
 				{
 					$cmd = $cmd.' >/dev/null 2>&1 &' ;
-					return pclose(popen($cmd, 'r')) ;
 				}
 				else
 				{
 					$cmd = 'start /b '.$cmd ;
+				}
+				return $cmd ;
+			}
+			public function LanceProcessusProg(& $prog)
+			{
+				$os = $this->ObtientOS() ;
+				$cmd = $this->ObtientCmdExecProg($prog) ;
+				// echo $cmd."\n" ;
+				if($os == 'Linux')
+				{
+					return pclose(popen($cmd, 'r')) ;
+				}
+				else
+				{
 					$fluxProc = popen($cmd, 'r') ;
 					register_shutdown_function(array(& $this, 'AnnuleFluxProc'), array(& $fluxProc)) ;
 					return 1 ;
@@ -622,11 +621,6 @@
 				parent::InitConfig() ;
 				$this->Plateforme = $this->CreePlateforme() ;
 			}
-			protected function DemarreExecution()
-			{
-				parent::DemarreExecution() ;
-				$this->DetecteArgs() ;
-			}
 			protected function DetecteArgs()
 			{
 				$this->Args = $this->ArgsParDefaut ;
@@ -636,6 +630,11 @@
 					if(isset($args[$nom]))
 						$this->Args[$nom] = $args[$nom] ;
 				}
+			}
+			public function EstActif($cheminFichierAbsolu, $cheminFichierElementActif)
+			{
+				$this->DetecteArgs() ;
+				return parent::EstActif($cheminFichierAbsolu, $cheminFichierElementActif) ;
 			}
 			public function LanceProcessus()
 			{
@@ -761,9 +760,11 @@
 			public $TotalSessions = 0 ;
 			public $DelaiAttente = 5 ;
 			public $DelaiBoucle = 30 ;
+			public $DelaiEtatInactif = 120 ;
 			public $LimiterDelaiBoucle = 0 ;
 			public $Etat ;
 			public $EnregEtat = 1 ;
+			public $VerifSurPresenceProc = 0 ;
 			protected $NaturePlateforme = "console" ;
 			protected function InitConfig()
 			{
@@ -773,20 +774,24 @@
 			}
 			protected function ObtientChemFicEtat()
 			{
+				// print $this->NomElementApplication.' : '.get_class($this)."\n" ;
 				return $this->ApplicationParent->ObtientChemRelRegServsPersists()."/".$this->NomElementApplication.".dat" ;
 			}
 			public function DemarreService()
 			{
+				$this->DetecteEtat() ;
+				// print_r($this->Etat) ;
 				if($this->Etat->PID != 0)
 				{
 					$processMgr = OsProcessManager::Current() ;
-					$processMgr->KillProcessList(array($this->Etat->ID)) ;
+					$processMgr->KillProcessIDs($processMgr->KillProcessList(array($this->Etat->PID))) ;
 				}
 				$this->LanceProcessus() ;
 			}
 			public function EstDemarre()
 			{
-				return $this->Etat->Statut == PvEtatServPersist::ETAT_DEMARRE ;
+				// echo get_class($this).' : '.(date("U") - $this->Etat->TimestmpCapt)."\n" ;
+				return $this->Etat->Statut == PvEtatServPersist::ETAT_DEMARRE && date("U") - $this->Etat->TimestmpCapt <= $this->DelaiEtatInactif + $this->DelaiAttente ;
 			}
 			public function DetecteEtat()
 			{
@@ -794,8 +799,16 @@
 			}
 			public function ChargeEtat()
 			{
+				if($this->EstNul($this->ApplicationParent))
+				{
+					return ;
+				}
 				$chemFicEtat = $this->ObtientChemFicEtat() ;
-				$fh = fopen($cheminEtat, "r") ;
+				if(! file_exists($chemFicEtat))
+				{
+					return ;
+				}
+				$fh = fopen($chemFicEtat, "r") ;
 				$ctn = "" ;
 				if($fh != false)
 				{
@@ -827,9 +840,17 @@
 				set_time_limit($nouvDelai) ;
 				return $ancDelai ;
 			}
+			protected function ProcPresent()
+			{
+				$cmd = $this->ObtientCmdExecProg() ;
+				$processMgr = OsProcessManager::Current() ;
+				$entries = $processMgr->LocateByName($cmd) ;
+				return (count($entries) == 1) ;
+			}
 			public function Verifie()
 			{
-				if(! $this->EstDemarre())
+				$this->DetecteEtat() ;
+				if(! $this->EstDemarre() || ($this->VerifSurPresenceProc == 1 && ! $this->ProcPresent()))
 				{
 					return 0 ;
 				}
@@ -869,6 +890,7 @@
 					{
 						sleep($this->DelaiAttente) ;
 					}
+					$this->SauveEtat() ;
 				}
 			}
 			protected function ExecuteSession()
@@ -886,6 +908,7 @@
 			}
 			public function ConfirmEtatArrete()
 			{
+				$this->DetecteEtat() ;
 				if($this->Etat->PID != getmypid())
 					return ;
 				$this->Etat->PID = 0 ;

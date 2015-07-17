@@ -4,6 +4,18 @@
 	{
 		define('COMMON_GD_CONTROLS_INCLUDED', 1) ;
 	
+        $GLOBALS['GDFormats'] = array(
+            'gif' => 'gif',
+            'jpg' => 'jpeg',
+            'jpeg' => 'jpeg',
+            'gd' => 'gd',
+            'gd2' => 'gd2',
+            'png' => 'png',
+            'xbm' => 'xbm',
+            'xpm' => 'xpm',
+            'wbmp' => 'wbmp'
+        ) ; 
+	
 		class CommonGDControl
 		{
 			public $Name ;

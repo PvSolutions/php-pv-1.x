@@ -249,14 +249,19 @@
 			public function EnvoieDemande($contenu)
 			{
 				$msgErreur = "" ;
-				$this->FluxEnvoi = stream_socket_client($this->ExtraitAdresse(), $codeErreur, $msgErreur, 2, STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT) ;
+				// echo $this->ExtraitAdresse() ;
+				$this->FluxEnvoi = stream_socket_client($this->ExtraitAdresse(), $codeErreur, $msgErreur, $this->DelaiOuvrFlux, STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT) ;
 				$partieResult = '' ;
 				$resultat = '' ;
 				$longueurMax = 1024 ;
 				if($this->FluxEnvoi !== false)
 				{
 					$ctnEncode = $this->FormatPaquet->Encode($contenu) ;
-					$ok = fputs($this->FluxEnvoi, $ctnEncode) ;
+					$ok = 1 ;
+					if($ctnEncode != '')
+					{
+						$ok = @fputs($this->FluxEnvoi, $ctnEncode) ;
+					}
 					if($ok)
 					{
 						do
@@ -340,41 +345,35 @@
 			public $ArgsBruts ;
 			protected $Serveur ;
 			protected $ServeurIndef ;
-			public $Resultat ;
-			public $CodeErreur = 0 ;
+			public $RetourAppel ;
 			public $NomAppel = "" ;
-			protected function ConfirmeSucces($msg)
+			public function __construct()
 			{
-				$this->CodeErreur = 0 ;
-				$this->Resultat = $msg ;
-			}
-			protected function SignaleErreur($code, $msg)
-			{
-				$this->CodeErreur = $code ;
-				$this->Resultat = $msg ;
+				$this->InitConfig() ;
 			}
 			protected function InitConfig()
 			{
-				parent::InitConfig() ;
 				$this->ServeurIndef = new PvServeurAppelsSocket() ;
+				$this->RetourAppel = $this->CreeRetourAppel() ;
 			}
-			protected function CreeResultat()
+			protected function CreeRetourAppel()
 			{
-				return null ;
+				return new PvRetourAppelSocket() ;
 			}
 			protected function PrepareExecution(& $serveur, $nom, $args=array())
 			{
-				$this->Resultat = $this->CreeResultat() ;
+				$this->RetourAppel = $this->CreeRetourAppel() ;
 				$this->NomAppel = $nom ;
-				$this->Args = $this->ArgsParDefaut ;
 				$this->ArgsBruts = $args ;
+				$this->Args = $this->ArgsParDefaut ;
 				foreach($this->Args as $nom => $arg)
 				{
 					if(isset($args[$nom]))
 					{
-						$this->Args[$nom] = $arg ;
+						$this->Args[$nom] = $args[$nom] ;
 					}
 				}
+				// print_r($args) ;
 				$this->Serveur = & $serveur ;
 			}
 			protected function ExecuteInstructions()
@@ -390,6 +389,18 @@
 				$this->ExecuteInstructions() ;
 				$this->TermineExecution() ;
 			}
+			protected function ConfirmeSucces($msg, $resultat=null)
+			{
+				$this->RetourAppel->codeErreur = 0 ;
+				$this->RetourAppel->message = $msg ;
+				$this->RetourAppel->resultat = $resultat ;
+			}
+			protected function SignaleErreur($code, $msg, $resultat=null)
+			{
+				$this->RetourAppel->codeErreur = $code ;
+				$this->RetourAppel->message = $msg ;
+				$this->RetourAppel->resultat = $resultat ;
+			}
 		}
 		class PvMethodeSocketTest extends PvMethodeSocketBase
 		{
@@ -401,29 +412,33 @@
 		}
 		class PvMethodeSocketVerif extends PvMethodeSocketBase
 		{
-			public $ValeurSucces = 1 ;
 			protected function ExecuteInstructions()
 			{
-				$this->Resultat = $this->ValeurSucces ;
+				$this->ConfirmeSucces('Tests effectues avec succes') ;
 			}
 		}
 		class PvMethodeSocketNonTrouve extends PvMethodeSocketBase
 		{
-			public $Message = "le nom de la methode a appeler est invalide" ;
+			public $MessageRetour = "le nom de la methode a appeler est invalide" ;
+			public $CodeRetour = -1 ;
 			protected function ExecuteInstructions()
 			{
-				$this->Resultat = $this->Message ;
-				$this->CodeErreur = -1 ;
+				$this->SignaleErreur($this->CodeRetour, $this->MessageRetour) ;
 			}
 		}
 		
 		class PvRetourAppelSocket
 		{
+			public $message = "resultat non defini" ;
 			public $resultat ;
-			public $codeErreur = 0 ;
+			public $codeErreur = -1 ;
+			public function succes()
+			{
+				return $this->codeErreur == 0 ;
+			}
 			public function erreurTrouvee()
 			{
-				return $codeErreur != 0 ;
+				return $this->codeErreur != 0 ;
 			}
 		}
 		class PvEnvoiAppelSocket
@@ -461,7 +476,11 @@
 			public function Verifie()
 			{
 				$retour = $this->AppelleMethode($this->NomMethodeVerif, array()) ;
-				return $retour->resultat == $this->MethodeVerif->ValeurSucces ;
+				// print 'Retour : '.print_r($retour, true)."\n" ;
+				$methodes = $this->ObtientMethodes() ;
+				if(! is_object($retour))
+					return false ;
+				return $retour->succes() ;
 			}
 			protected function CreeMethodeTest()
 			{
@@ -482,7 +501,7 @@
 			}
 			public function InscritMethode($nom, & $methode)
 			{
-				$this->Methode[$nom] = & $appel ;
+				$this->Methodes[$nom] = & $methode ;
 			}
 			protected function ObtientMethodes()
 			{
@@ -499,7 +518,6 @@
 			protected function RepondDemande($contenu)
 			{
 				$nomMethode = null ;
-				$retour = new PvRetourAppelSocket() ;
 				$methodes = $this->ObtientMethodes() ;
 				if(! is_object($contenu))
 				{
@@ -518,8 +536,7 @@
 				}
 				// echo "Methode : ".$nomMethode."\n" ;
 				$methodes[$nomMethode]->Execute($this, $nomMethode, (isset($contenu->args)) ? $contenu->args : array()) ;
-				$retour->resultat = $methodes[$nomMethode]->Resultat ;
-				$retour->codeErreur = $methodes[$nomMethode]->CodeErreur ;
+				$retour = $methodes[$nomMethode]->RetourAppel ;
 				return $retour ;
 			}
 		}

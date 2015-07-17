@@ -14,6 +14,12 @@
 		
 		class PvScriptIHMDeBase extends PvObjet
 		{
+            /*
+             * Zone qui contient le script. Doit etre toujours affectee avec la methode
+             * AdopteZone()
+             * 
+             * @var PvZoneIHMDeBase
+             */
 			public $ZoneParent = null ;
 			public $ApplicationParent = null ;
 			public $NomElementZone = "" ;

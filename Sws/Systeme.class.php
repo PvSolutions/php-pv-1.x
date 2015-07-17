@@ -439,6 +439,8 @@
 			public $ModuleSlider ;
 			public $ModuleContact ;
 			public $ModuleLivreDOr ;
+			public $ModuleNewsletter ;
+			public $ImplemCommentaire ;
 			public $PrivilegesConsult = array() ;
 			public $PrivilegesEdit = array() ;
 			protected function CreeModulePageRacine()
@@ -469,6 +471,10 @@
 			{
 				return new ModuleCompteurHitsSws() ;
 			}
+			protected function CreeModuleNewsletter()
+			{
+				return new ModuleNewsletterSws() ;
+			}
 			protected function CreeImplemCommentaire()
 			{
 				return new ImplemCommentaireSws() ;
@@ -487,6 +493,8 @@
 				$this->InscritModulePage('', $this->ModuleLivreDOr) ;
 				$this->ModuleArticle = $this->CreeModuleArticle() ;
 				$this->InscritModulePage('', $this->ModuleArticle) ;
+				$this->ModuleNewsletter = $this->CreeModuleNewsletter() ;
+				$this->InscritModulePage('', $this->ModuleNewsletter) ;
 				/*
 				$this->ModuleCompteurHits = $this->CreeModuleCompteurHits() ;
 				$this->InscritModulePage('', $this->ModuleCompteurHits) ;

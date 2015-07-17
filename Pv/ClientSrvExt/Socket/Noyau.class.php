@@ -22,16 +22,10 @@
 			protected function OuvreSupportClt()
 			{
 				$this->SupportClt = null ;
-				try
-				{
-					$this->SupportClt = stream_socket_client($this->ExtraitUrl(), $codeErr, $msgErr, $this->DelaiExpirOuvr) ;
-					if(! $this->SupportClt)
-					{
-					}
-				}
-				catch($ex)
-				{
-				}
+                                $this->SupportClt = stream_socket_client($this->ExtraitUrl(), $codeErr, $msgErr, $this->DelaiExpirOuvr) ;
+                                if(! $this->SupportClt)
+                                {
+                                }
 			}
 			protected function FermeSupportClt()
 			{

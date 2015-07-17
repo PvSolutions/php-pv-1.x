@@ -67,6 +67,7 @@
 		
 		class PvZoneFrameser extends PvZoneWebSimple
 		{
+            public $InclureJQuery = 1 ;
 			public $CheminLogo = "images/logo.png" ;
 			public $NiveauDev = "Beta" ;
 			public $NomPublicateur = "" ;
@@ -92,10 +93,18 @@
 			public $SousMenuAccueil ;
 			public $SousMenuConnexion ;
 			public $SousMenuDeconnexion ;
+			public $SousMenuListeMembres ;
+			public $SousMenuAjoutMembre ;
+			public $SousMenuListeProfils ;
+			public $SousMenuAjoutProfil ;
+			public $SousMenuListeRoles ;
+			public $SousMenuAjoutRole ;
 			public $SousMenuAPropos ;
 			public $SousMenuConfidentialite ;
 			public $SousMenuSupport ;
 			public $BarreMembreCadrePrinc ;
+			public $NomClasseScriptConnexion = "ScriptConnexionFrameser" ;
+			public $NomClasseScriptDeconnexion = "ScriptDeconnexionFrameser" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -179,6 +188,21 @@
 					}
 					else
 					{
+						if($this->EditMembershipPossible())
+						{
+							$this->SousMenuListeMembres = $this->BarreMenu1VoletNav->MenuRacine->InscritSousMenuScript($this->NomScriptListeMembres) ;
+							$this->SousMenuListeMembres->FenetreCible = $this->NomCadrePrinc ;
+							$this->SousMenuAjoutMembre = $this->BarreMenu1VoletNav->MenuRacine->InscritSousMenuScript($this->NomScriptAjoutMembre) ;
+							$this->SousMenuAjoutMembre->FenetreCible = $this->NomCadrePrinc ;
+							$this->SousMenuListeProfils = $this->BarreMenu1VoletNav->MenuRacine->InscritSousMenuScript($this->NomScriptListeProfils) ;
+							$this->SousMenuListeProfils->FenetreCible = $this->NomCadrePrinc ;
+							$this->SousMenuAjoutProfil = $this->BarreMenu1VoletNav->MenuRacine->InscritSousMenuScript($this->NomScriptAjoutProfil) ;
+							$this->SousMenuAjoutProfil->FenetreCible = $this->NomCadrePrinc ;
+							$this->SousMenuListeRoles = $this->BarreMenu1VoletNav->MenuRacine->InscritSousMenuScript($this->NomScriptListeRoles) ;
+							$this->SousMenuListeRoles->FenetreCible = $this->NomCadrePrinc ;
+							$this->SousMenuAjoutRole = $this->BarreMenu1VoletNav->MenuRacine->InscritSousMenuScript($this->NomScriptAjoutRole) ;
+							$this->SousMenuAjoutRole->FenetreCible = $this->NomCadrePrinc ;
+						}
 						$this->SousMenuDeconnexion = $this->BarreMenu1VoletNav->MenuRacine->InscritSousMenuScript($this->NomScriptDeconnexion) ;
 						$this->SousMenuDeconnexion->FenetreCible = $this->NomCadrePrinc ;
 					}
@@ -249,6 +273,8 @@
 			}
 			protected function RenduDocumentGlobal()
 			{
+				$this->ScriptPourRendu->Titre = "" ;
+				$this->ScriptPourRendu->TitreDocument = "" ;
 				$ctn = "" ;
 				$ctn .= '<!doctype html>'.PHP_EOL ;
 				$ctn .= '<html>'.PHP_EOL ;
@@ -403,6 +429,37 @@
 				$ctn .= '</table>'.PHP_EOL ;
 				$ctn .= '<br />'.PHP_EOL ;
 				return $ctn ;
+			}
+		}
+		class ScriptConnexionFrameser extends PvScriptConnexionWeb
+		{
+			public $NomScriptConnexionReussie = "" ;
+			public $UrlConnexionReussie = "" ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				if($this->TentativeConnexionValidee)
+				{
+					echo '<script language="javascript">
+		var location = window.top.location ;
+		window.top.location = "?" ;
+</script>' ;
+					exit ;
+				}
+			}
+		}
+		class ScriptDeconnexionFrameser extends PvScriptDeconnexionWeb
+		{
+			public $NomScriptDeconnexionReussie = "" ;
+			public $UrlDeconnexionReussie = "" ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				echo '<script language="javascript">
+		var location = window.top.location ;
+		window.top.location = "?" ;
+</script>' ;
+				exit ;
 			}
 		}
 	}

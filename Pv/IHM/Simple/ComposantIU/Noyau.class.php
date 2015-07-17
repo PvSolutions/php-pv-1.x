@@ -20,6 +20,11 @@
 		{
 			public $ZoneParent = null ;
 			public $NomElementZone = "" ;
+            /*
+             * Script parent
+             * 
+             * @var PvScriptWebSimple
+             */
 			public $ScriptParent = null ;
 			public $NomElementScript = "" ;
 			public $ComposantIUParent = null ;
@@ -264,7 +269,7 @@
 				{
 					Header('Content-Type:application/json'."\r\n") ;
 				}
-				echo svc_json_encode($this->Resultat) ;
+                echo @svc_json_encode($this->Resultat) ;
 				$this->ZoneParent->AnnulerRendu = 1 ;
 				exit ;
 			}

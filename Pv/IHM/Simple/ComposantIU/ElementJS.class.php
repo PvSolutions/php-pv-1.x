@@ -49,6 +49,45 @@
 			}
 		}
 		
+		class PvEditeurChoixBase extends PvZoneBoiteChoixBaseHtml
+		{
+			protected static $SourceIncluse = 0 ;
+			protected function RenduSourceIncluse()
+			{
+				if($this->ObtientValStatique("SourceIncluse") == 1)
+					return "" ;
+				$ctn = $this->RenduSourceBrut() ;
+				$this->AffecteValStatique("SourceIncluse", 1) ;
+				return $ctn ;
+			}
+			protected function RenduSourceBrut()
+			{
+				return "" ;
+			}
+			protected function RenduEditeurBrut()
+			{
+				return "" ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				$this->CorrigeIDsElementHtml() ;
+				$this->InitFournisseurDonnees() ;
+				if(! $this->EstNul($this->FournisseurDonnees))
+				{
+					$this->ChargeConfigFournisseurDonnees() ;
+					$this->CalculeElementsRendu() ;
+                    $ctn .= $this->RenduSourceIncluse() ;
+                    $ctn .= $this->RenduEditeurBrut() ;
+				}
+				else
+				{
+					die("Le composant ".$this->IDInstanceCalc." necessite un fournisseur de donnees.") ;
+				}
+				return $ctn ;
+			}
+		}
+        
 		class PvActionImgCommonCaptcha extends PvActionEnvoiFichierBaseZoneWeb
 		{
 			protected $Support ;
@@ -249,6 +288,29 @@
 				echo $this->ComposantIUParent->RecupContenu() ;
 			}
 		}
+        
+        class PvDatePick extends PvEditeurHtmlBase
+        {
+            public $CheminFichierJs = "js/ts_picker.js" ;
+            public $CheminRepImgs = "images" ;
+            public $DescriptifPopup = 'Afficher le calendrier' ;
+            public $LibellesMois = array() ;
+            public $LibellesJour = array() ;
+            protected function RenduSourceIncluse() {
+                $ctn = '' ;
+				$ctn .= $this->ZoneParent->RenduLienJsInclus($this->CheminFichierJs) ;
+                $ctn .= $this->ZoneParent->RenduContenuJsInclus('ts_picker_arr_months = '.  svc_json_encode($this->LibellesMois).' ;
+ts_picker_week_days = '.  svc_json_encode($this->LibellesMois)) ;
+                return $ctn ;
+            }
+            protected function RenduEditeurBrut() {
+                $ctn = '' ;
+                $ctn .= '<input type="text" id="'.$this->IDInstanceCalc.'" name="'.htmlentities($this->NomElementHtml).'" value="'.htmlentities($this->Valeur).'" />';
+                $ctn .= '
+<a href="javascript:show_calendar(\''.$this->IDInstanceCalc.'\', document.getElementById(&quot;'.$this->IDInstanceCalc.'&quot;).value, '.  svc_json_encode_attr($this->CheminRepImgs).') ;"><img src="'.$this->CheminRepImgs.'/cal.gif" width="16" height="16" border="0" alt="'.htmlentities($this->DescriptifPopup).'"></a>' ;
+                return $ctn ;
+            }
+        }
 		
 	}
 	

@@ -683,7 +683,7 @@
 			}
 			public function EditMembershipPossible()
 			{
-				if(count($this->PrivilegesEditMembership) == 0)
+				if($this->PossedeMembreConnecte() && count($this->PrivilegesEditMembership) == 0)
 					return 1 ;
 				return $this->PossedePrivileges($this->PrivilegesEditMembership) ;
 			}

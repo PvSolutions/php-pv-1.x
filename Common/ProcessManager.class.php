@@ -550,6 +550,10 @@
 			{
 				$this->CaptureCommand($this->KillProcessEntriesCommand($ProcessEntries)) ;
 			}
+			function KillProcessIDs($pids=array())
+			{
+				$this->CaptureCommand($this->KillProcessCommand($pids)) ;
+			}
 			function KillProcessEntriesCommand($ProcessEntries)
 			{
 				return $this->KillProcessCommand($this->ExtractProcessListFromEntries($ProcessEntries)) ;

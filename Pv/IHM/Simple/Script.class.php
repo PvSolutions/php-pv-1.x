@@ -560,24 +560,24 @@
 		{
 			public $Titre = "D&eacute;connexion" ;
 			public $TitreDocument = "D&eacute;connexion" ;
-			public $UrlConnexionReussie = "" ;
-			public $NomScriptConnexionReussie = "" ;
+			public $UrlDeconnexionReussie = "" ;
+			public $NomScriptDeconnexionReussie = "" ;
 			public $MessageDeconnexionReussie = "Vous avez &eacute;t&eacute; d&eacute;connect&eacute; avec succ&egrave;s." ;
 			public $MessageRetourAccueil = "Retour &agrave; la page d'accueil" ;
-			public function PrepareRendu()
+			public function DetermineEnvironnement()
 			{
 				if(! $this->ZoneParent->EstNul($this->ZoneParent->Membership) && $this->ZoneParent->PossedeMembreConnecte())
 				{
 					$this->ZoneParent->Membership->LogoutMember($this->ZoneParent->Membership->MemberLogged->Id) ;
 				}
 				$url = '' ;
-				if($this->NomScriptConnexionReussie != '' && isset($this->ZoneParent->Scripts[$this->NomScriptConnexionReussie]))
+				if($this->NomScriptDeconnexionReussie != '' && isset($this->ZoneParent->Scripts[$this->NomScriptDeconnexionReussie]))
 				{
-					$url = $this->ZoneParent->Scripts[$this->NomScriptConnexionReussie] ;
+					$url = $this->ZoneParent->Scripts[$this->NomScriptDeconnexionReussie] ;
 				}
-				elseif($this->UrlConnexionReussie != '')
+				elseif($this->UrlDeconnexionReussie != '')
 				{
-					$url = $this->UrlConnexionReussie ;
+					$url = $this->UrlDeconnexionReussie ;
 				}
 				if($url != '')
 				{
