@@ -22,6 +22,8 @@
 			public $TitreMenu = "" ;
 			public $Titre = "" ;
 			public $Active = 1 ;
+			public $PrivilegesConsult = array() ;
+			public $PrivilegesEdit = array() ;
 			public $CheminDossierIcones = "images/sws" ;
 			public $CheminIcone = "" ;
 			public $PrefixeNomFichier = "icone-" ;
@@ -65,6 +67,9 @@
 			{
 				return ($this->TitreMenu == "") ? ($this->Titre == "") ? $this->PrefixeTitreMenu." ".$this->NomElementSyst : $this->Titre : $this->TitreMenu ;
 			}
+			public function RemplitTableauBordAdmin(& $comp, & $script)
+			{
+			}
 			public function EstAccessible()
 			{
 				return ($this->Active && $this->EstIndefini == 0) ;
@@ -81,8 +86,6 @@
 			public $RemplZoneMembrePossible = 1 ;
 			public $RemplZonePublPossible = 1 ;
 			public $RemplZoneAdminPossible = 1 ;
-			public $PrivilegesConsult = array() ;
-			public $PrivilegesEdit = array() ;
 			public $MenuRacine ;
 			public $NomActionFluxRSS = "rss" ;
 			public $ActionFluxRSS ;
@@ -319,8 +322,9 @@
 			public function InscritNouvScript($nom, $script, & $zone, $privs=array())
 			{
 				$this->InscritScript($nom, $script, $zone, $privs) ;
+				return $script ;
 			}
-			public function InscritScript($nom, & $script, & $zone, $privs=array())
+			public function & InscritScript($nom, & $script, & $zone, $privs=array())
 			{
 				$script->NomModulePage = $this->NomElementSyst;
 				if(count($privs) > 0)
@@ -329,6 +333,7 @@
 					$script->Privileges = $privs ;
 				}
 				$zone->InscritScript($nom, $script);
+				return $script ;
 			}
 		}
 		class ModulePageIndefiniSws extends ModulePageBaseSws
@@ -370,12 +375,19 @@
 			public $RemplZoneMembreAdmin = 1 ;
 			public $ModuleParent ;
 			public $BarreMenu ;
+			public $BarreElemsRendu ;
 			public $MenuRacine ;
 			public $DefFluxRSS ;
+			public $AdaptFltsEdition ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
 				$this->DefFluxRSS = new DefFluxRSSEntiteSws() ;
+				$this->InitAdaptFltsEdition() ;
+			}
+			protected function InitAdaptFltsEdition()
+			{
+				$this->AdaptFltsEdition = new AdaptFltsInactifEntiteSws() ;
 			}
 			public function ObtientTitreMenu()
 			{
@@ -423,6 +435,29 @@
 			protected function InscritBarreMenu(& $script)
 			{
 				$this->BarreMenu = $this->InsereBarreMenu($script) ;
+			}
+			protected function CreeBarreElemsRendu()
+			{
+				return ReferentielSws::$SystemeEnCours->CreeBarreElemsRendu() ;
+			}
+			protected function & InsereBarreElemsRendu(& $script)
+			{
+				$barreMenu = $this->CreeBarreElemsRendu($script) ;
+				$barreMenu->AdopteScript("barreElemsRendu", $script) ;
+				$barreMenu->ChargeConfig() ;
+				$this->ChargeBarreElemsRendu($barreMenu) ;
+				return $barreMenu ;
+			}
+			protected function ChargeBarreElemsRendu(& $barreMenu)
+			{
+				$barreMenu->InclureRenduIcone = 0 ;
+				$barreMenu->MenuRacine->InscritSousMenuUrl("Espace publique", $this->ModuleParent->SystemeParent->ObtientUrlZonePubl($barreMenu->ZoneParent)) ;
+				$barreMenu->MenuRacine->InscritSousMenuUrl("Modules", $this->ModuleParent->SystemeParent->ObtientUrlAdminPremModule()) ;
+				$barreMenu->MenuRacine->InscritSousMenuUrl("Impl&eacute;mentations", $this->ModuleParent->SystemeParent->ObtientUrlAdminPremImplem()) ;
+			}
+			protected function InscritBarreElemsRendu(& $script)
+			{
+				$this->BarreElemsRendu = $this->InsereBarreElemsRendu($script) ;
 			}
 			public function RemplitMenu(& $menu)
 			{
@@ -487,6 +522,36 @@
 				$bd = $this->ModuleParent->ObtientBDSupport() ;
 				return $bd ;
 			}
+			public function & ObtientImplemsPage()
+			{
+				$nomImplemsPage = array_keys($this->ModuleParent->SystemeParent->ImplemsPage) ;
+				$implemsPage = array() ;
+				foreach($nomImplemsPage as $i => $nom)
+				{
+					$implemPage = & $this->ModuleParent->SystemeParent->ImplemsPage[$nom] ;
+					if($implemPage->SupporteEntite($this))
+					{
+						$implemsPage[$nomImplemsPage] = & $implemPage ;
+					}
+				}
+				return $implemsPage ;
+			}
+			public function AppliqueImplemsAvantCmd($nomAction, & $cmd)
+			{
+				$implems = $this->ObtientImplemsPage() ;
+				foreach($implems as $i => $implem)
+				{
+					$implems[$i]->AppliqueAvantCmdEntite($nomAction, $cmd, $this) ;
+				}
+			}
+			public function AppliqueImplemsApresCmd($nomAction, & $cmd)
+			{
+				$implems = $this->ObtientImplemsPage() ;
+				foreach($implems as $i => $implem)
+				{
+					$implems[$i]->AppliqueApresCmdEntite($nomAction, $cmd, $this) ;
+				}
+			}
 		}
 		class EntitePageIndefinieSws extends EntitePageBaseSws
 		{
@@ -522,6 +587,7 @@
 			public $LibAjoutTblList = "Ajouter" ;
 			public $LibModifTblList = "Modifier" ;
 			public $LibSupprTblList = "Supprimer" ;
+			public $LibConsultTblList = "Consulter" ;
 			public $LibId = "ID" ;
 			public $LibDateModif = "Date modif." ;
 			public $LibDatePubl = "Date publication" ;
@@ -617,6 +683,7 @@
 			public $CmdAjoutTblList ;
 			public $LienModifTblList ;
 			public $LienSupprTblList ;
+			public $LienConsultTblList ;
 			public $BlocConsult ;
 			public $SousMenuListage ;
 			public $SousMenuAjout ;
@@ -628,6 +695,9 @@
 			public $BarreMenuEntite ;
 			public $LgnEnCours = array() ;
 			public $InclureFltsTblList = 1 ;
+			public $LargeurFenEditEntite = 750 ;
+			public $HauteurFenEditEntite = 525 ;
+			public $ActiverFenEditEntite = 0 ;
 			public function ObtientCheminPubl($chemin)
 			{
 				return $this->ModuleParent->SystemeParent->ObtientCheminPubl($chemin) ;
@@ -926,7 +996,12 @@
 			}
 			public function PrepareScriptAdmin(& $script)
 			{
+				if(! $script->UtiliserCorpsDocZone)
+				{
+					return ;
+				}
 				$this->InscritBarreMenu($script) ;
+				$this->InscritBarreElemsRendu($script) ;
 				$this->InscritBarreMenuEntite($script) ;
 			}
 			protected function PrepareScriptEdit(& $script)
@@ -976,6 +1051,10 @@
 				$this->ValidScriptEdit = 1 ;
 				if($this->VerifPreReqsScriptEdit($script))
 				{
+					if($this->ActiverFenEditEntite)
+					{
+						$script->UtiliserCorpsDocZone = 0 ;
+					}
 					$this->PrepareScriptEdit($script) ;
 					$this->FrmElem = $this->InsereFrmElem($script) ;
 				}
@@ -1117,6 +1196,8 @@
 				$frm->FournisseurDonnees->RequeteSelection = $this->NomTable ;
 				// Filtres de base
 				$this->FltFrmElemId = $frm->InsereFltLgSelectHttpGet($this->NomParamId, $bd->EscapeVariableName($this->NomColId).' = <self>') ;
+				$this->FltFrmElemId->Obligatoire = 1 ;
+				// echo $this->FltFrmElemId->NomParametreDonnees.' hhed<br />' ;
 				$this->FltFrmElemIdCtrl = $frm->InsereFltEditFixe('idCtrl', uniqid(), $this->NomColIdCtrl) ;
 				if($this->AccepterAttrsPubl)
 				{
@@ -1215,6 +1296,27 @@
 			}
 			protected function InitTblList(& $tbl, & $script)
 			{
+				$tbl->ToujoursAfficher = 1 ;
+				if($this->ActiverFenEditEntite)
+				{
+					$tbl->ContenuAvantRendu .= '<div id="'.$this->IDInstanceCalc.'_FenEdit" class="ui-dialog"><iframe id="'.$this->IDInstanceCalc.'_CadreEdit" src="about:blank" style="width:100%; height:'.($this->HauteurFenEditEntite - 45).'px" frameborder="0"></iframe></div>
+<script type="text/javascript">
+	function '.$tbl->IDInstanceCalc.'_AffichFenEdit(titre, url) {
+		jQuery("#'.$this->IDInstanceCalc.'_CadreEdit").attr("src", url) ;
+		jQuery("#'.$this->IDInstanceCalc.'_FenEdit").dialog({
+			width:'.intval($this->LargeurFenEditEntite).',
+			height:'.intval($this->HauteurFenEditEntite).',
+			resizable:false,
+			modal:true,
+			title:titre,
+			autoOpen:true
+		}) ;
+	}
+	function '.$tbl->IDInstanceCalc.'_CacheFenEdit() {
+		jQuery("#'.$this->IDInstanceCalc.'_FenEdit").dialog("close") ;
+	}
+</script>' ;
+				}
 			}
 			protected function ChargeTblList(& $tbl)
 			{
@@ -1270,10 +1372,22 @@
 				{
 					$this->LienModifTblList = $tabl->InsereLienAction($this->DefColTblListActs, $this->ScriptModif->ObtientUrlFmt(array($this->NomParamId => '${'.$this->NomColId.'}')), $this->LibModifTblList) ;
 					$this->LienSupprTblList = $tabl->InsereLienAction($this->DefColTblListActs, $this->ScriptSuppr->ObtientUrlFmt(array($this->NomParamId => '${'.$this->NomColId.'}')), $this->LibSupprTblList) ;
+					if($this->InclureScriptConsult && $this->ModuleParent->SystemeParent->ObtientUrlZonePubl($tabl->ZoneParent) != '')
+					{
+						$this->LienConsultTblList = $tabl->InsereLienAction($this->DefColTblListActs, $this->ModuleParent->SystemeParent->ObtientUrlZonePubl($tabl->ZoneParent).'?'.urlencode($tabl->ZoneParent->NomParamScriptAppele).'='.urlencode($this->NomScriptConsult).'_'.urlencode($this->NomEntite).'&'.urlencode($this->NomParamId).'=${'.$this->NomColId.'}', $this->LibConsultTblList) ;
+						$this->LienConsultTblList->FenetreCible = "_blank" ;
+					}
 					$this->CmdAjoutTblList = new PvCommandeRedirectionHttp() ;
 					$this->CmdAjoutTblList->NomScript = $this->ScriptAjout->NomElementZone ;
 					$this->CmdAjoutTblList->Libelle = $this->LibAjoutTblList ;
 					$tabl->InscritCommande("ajoutEntite", $this->CmdAjoutTblList) ;
+					if($this->ActiverFenEditEntite)
+					{
+						$this->LienModifTblList->FormatURL = 'javascript:'.$tabl->IDInstanceCalc.'_AffichFenEdit('.svc_json_encode($this->TitreModifEntite).', '.svc_json_encode($this->ScriptModif->ObtientUrlFmt(array($this->NomParamId => '${'.$this->NomColId.'}'))).')' ;
+						/*
+						$this->LienSupprTblList->FormatURL = 'javascript:'.$tabl->IDInstanceCalc.'_AffichFenEdit('.svc_json_encode($this->TitreSupprEntite).', '.svc_json_encode($this->ScriptSuppr->ObtientUrlFmt(array($this->NomParamId => '${'.$this->NomColId.'}'))).')' ;
+						*/
+					}
 				}
 			}
 			public function RenduAvantCtnSpec(& $script)
@@ -1286,6 +1400,11 @@
 				$ctn .= '<table width="100%" cellspacing="0" cellpadding="0">
 <tr>
 <td valign="top">'.PHP_EOL ;
+				if(! $script->UtiliserCorpsDocZone)
+				{
+					return $ctn ;
+				}
+				$ctn .= $this->BarreElemsRendu->RenduDispositif().PHP_EOL ;
 				$ctn .= $this->BarreMenu->RenduDispositif().PHP_EOL ;
 				$ctn .= $this->BarreMenuEntite->RenduDispositif().PHP_EOL ;
 				return $ctn ;
@@ -1340,6 +1459,10 @@
 				$ctn .= $this->RenduApresCtnSpec($script) ;
 				return $ctn ;
 			}
+			public function NomParamsTexte()
+			{
+				return array($this->NomColTitre) ;
+			}
 		}
 		class EntitePageWebSws extends EntiteTableSws
 		{
@@ -1358,6 +1481,7 @@
 			public $AccepterSommaire = 1 ;
 			public $AccepterAttrsTexte = 1 ;
 			public $AccepterAttrsGraphique = 1 ;
+			public $AccepterAttrsMeta = 1 ;
 			public $AccepterUrl = 0 ;
 			public $LibTitre = "Titre" ;
 			public $LibUrl = "Url" ;
@@ -1386,7 +1510,6 @@
 			public $FltFrmElemDescription ;
 			public $FltFrmElemMotsClesMeta ;
 			public $FltFrmElemDescriptionMeta ;
-			public $AccepterAttrsMeta = 1 ;
 			public $LargeurTitre = "300px" ;
 			public $LargeurUrl = "320px" ;
 			public $TotalColonnesSommaire = 60 ;
@@ -1401,6 +1524,10 @@
 			public $NomParamTblListContenu = "pContenu" ;
 			public $LibTblListContenu = "Contenu" ;
 			public $DefColTblListTitre ;
+			protected function InitAdaptFltsEdition()
+			{
+				$this->AdaptFltsEdition = new AdaptFltsEntitePageWebSws() ;
+			}
 			public function SqlListeColsSelect(& $bd)
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;
@@ -1592,6 +1719,17 @@
 				$module = $this->ScriptParent->ObtientModulePage() ;
 				return $module ;
 			}
+			public function NomParamsTexte()
+			{
+				$params = parent::NomParamsTexte() ;
+				if($this->AccepterAttrsTexte)
+				{
+					if($this->AccepterSommaire)
+						$params[] = $this->NomParamSommaire ;
+					$params[] = $this->NomParamDescription ;
+				}
+				return $params ;
+			}
 			protected function ChargeTblList(& $tbl)
 			{
 				parent::ChargeTblList($tbl) ;
@@ -1745,6 +1883,77 @@
 			}
 		}
 		
+		class ValeurMetaCalculeeSws
+		{
+			public $MotsCle ;
+			public $Description ;
+		}
+		
+		class AdaptFltsEntiteBaseSws
+		{
+			public function AppliqueAvantExecution(& $cmd, & $form, & $entite)
+			{
+			}
+			public function AppliqueApresExecution(& $cmd, & $form, & $entite)
+			{
+			}
+		}
+		class AdaptFltsInactifEntiteSws extends AdaptFltsEntiteBaseSws
+		{
+			public function AppliqueAvantExecution(& $cmd, & $form, & $entite)
+			{
+			}
+			public function AppliqueApresExecution(& $cmd, & $form, & $entite)
+			{
+			}
+		}
+		class AdaptFltsEntitePageWebSws extends AdaptFltsEntiteBaseSws
+		{
+			protected function CalculeMetas(& $form, & $entite)
+			{
+				$val = new ValeurMetaCalculeeSws() ;
+				$nomParamsFlts = $entite->NomParamsTexte() ;
+				$texte = '' ;
+				foreach($form->FiltresEdition as $nom => & $flt)
+				{
+					if(in_array($flt->NomParametreLie, $nomParamsFlts))
+					{
+						if($texte != '')
+							$texte .= ' ' ;
+						$valTemp = $flt->FormatTexte() ;
+						$texte .= $valTemp ;
+					}
+				}
+				$val->MotsCle = popularKeywords($texte) ;
+				$val->Description = trim(intro($texte, 250)) ;
+				return $val ;
+			}
+			public function AppliqueAvantExecution(& $cmd, & $form, & $entite)
+			{
+				if($form->Editable == 1 && $entite->AccepterAttrsMeta)
+				{
+					$val = $this->CalculeMetas($form, $entite) ;
+					if($entite->FltFrmElemMotsClesMeta->Lie() == '')
+					{
+						$entite->FltFrmElemMotsClesMeta->ValeurParDefaut = join(", ", $val->MotsCle) ;
+						$entite->FltFrmElemMotsClesMeta->DejaLie = 0 ;
+						$entite->FltFrmElemMotsClesMeta->NePasLierParametre = 1 ;
+					}
+					if($entite->FltFrmElemDescriptionMeta->Lie() == '')
+					{
+						$entite->FltFrmElemDescriptionMeta->ValeurParDefaut = $val->Description ;
+						$entite->FltFrmElemDescriptionMeta->DejaLie = 0 ;
+						$entite->FltFrmElemDescriptionMeta->NePasLierParametre = 1 ;
+						
+					}
+					// echo "Mots cles - ".$entite->FltFrmElemDescriptionMeta->IDInstanceCalc." : ".$entite->FltFrmElemDescriptionMeta->Lie()."<br>" ;
+				}
+			}
+			public function AppliqueApresExecution(& $cmd, & $form, & $entite)
+			{
+			}
+		}
+		
 		class CmdEditEntiteBaseSws extends PvCommandeEditionElementBase
 		{
 			public function & ObtientEntitePage()
@@ -1759,13 +1968,18 @@
 			{
 				return ReferentielSws::$SystemeEnCours->CreeFournDonnees() ;
 			}
-			public function ObtientBDSupport()
+			public function & ObtientBDSupport()
 			{
 				return ReferentielSws::$SystemeEnCours->BDSupport ;
 			}
 			public function ExecuteInstructions()
 			{
+				$entite = $this->ObtientEntitePage() ;
+				$entite->AdaptFltsEdition->AppliqueAvantExecution($this, $this->FormulaireDonneesParent, $entite) ;
+				$entite->AppliqueImplemsAvantCmd("edit_entite_".$this->Mode, $this) ;
 				parent::ExecuteInstructions() ;
+				$entite->AppliqueImplemsApresCmd("edit_entite_".$this->Mode, $this) ;
+				$entite->AdaptFltsEdition->AppliqueApresExecution($this, $this->FormulaireDonneesParent, $entite) ;
 			}
 		}
 		class CmdAjoutEntiteSws extends CmdEditEntiteBaseSws

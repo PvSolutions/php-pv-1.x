@@ -79,6 +79,7 @@
 			public $dockedItems = array() ;
 			public $requires = array() ;
 		}
+		
 		class PvConfigInstWidgetExtJS extends PvConfigInstItemExtJS
 		{
 			public $height = null ;
@@ -100,6 +101,7 @@
 			public $NomClasseExtJS = "" ;
 			public $ElementsExtJS = array() ;
 			public $CreaAuto = 1 ;
+			public $DefAuto = 1 ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -155,7 +157,10 @@
 			}
 			public function PrepareRenduJS()
 			{
-				
+				if(! $this->DefAuto)
+				{
+					$this->CfgCreaExtJS->xtype = $this->NomClasseExtendExtJS ;
+				}
 			}
 			public function CtnJSCreation()
 			{
@@ -187,6 +192,7 @@
 			public $CtnFoncInitExtJS = '' ;
 			public $CtnFoncInitComponentExtJS = '' ;
 			public $ListenersExtJS = array() ;
+			protected $DefItemsDansInitComponent = 0 ;
 			public function & InsereListenerExtJS($listener)
 			{
 				return $this->InscritListenerExtJS($listener) ;
@@ -224,6 +230,15 @@
 				$this->NomElementComposantExtJS = $nom ;
 				$this->AdopteZone($composantParent->IDInstanceCalc.'_'.$nom, $composantParent->ZoneParent) ;
 			}
+			public function ObtientCfgDefItems()
+			{
+				$items = array() ;
+				foreach($this->ElementsExtJS as $nom => & $elem)
+				{
+					$items[] = & $elem->CfgCreaExtJS ;
+				}
+				return $items ;
+			}
 			public function PrepareRenduJS()
 			{
 				parent::PrepareRenduJS() ;
@@ -236,6 +251,10 @@
 			public function CtnJSDefinition()
 			{
 				$ctn = '' ;
+				if(! $this->DefAuto)
+				{
+					return $ctn ;
+				}
 				$ctn .= 'StructDef_'.$this->IDInstanceCalc.' = '.svc_json_encode($this->CfgDefExtJS).' ;'.PHP_EOL ;
 				if($this->CtnFoncInitExtJS != '')
 				{
@@ -243,10 +262,21 @@
 '.$this->CtnFoncInitExtJS.'
 }'.PHP_EOL ;
 				}
-				if($this->CtnFoncInitComponentExtJS != '')
+				$items = $this->ObtientCfgDefItems() ;
+				if($this->CtnFoncInitComponentExtJS != '' || ($this->DefItemsDansInitComponent && count($items) > 0))
 				{
+					$ctnInit = $this->CtnFoncInitComponentExtJS ;
+					if($this->DefItemsDansInitComponent)
+					{
+						if($ctnInit != '')
+						{
+							$ctnInit .= PHP_EOL ;
+						}
+						$ctnInit .= 'this.items = '.svc_json_encode($items).' ;'.PHP_EOL ;
+						$ctnInit .= 'this.callParent(arguments) ;' ;
+					}
 					$ctn .= 'StructDef_'.$this->IDInstanceCalc.'.initComponent = function() {
-'.$this->CtnFoncInitComponentExtJS.'
+'.$ctnInit.'
 }'.PHP_EOL ;
 				}
 				if(count($this->ListenersExtJS))
@@ -260,6 +290,18 @@
 				$ctn .= 'Ext.define('.svc_json_encode($this->ObtientNomClasseExtJS()).', StructDef_'.$this->IDInstanceCalc.') ;' ;
 				return $ctn ;
 			}
+			protected function InstrJSSupplInitComponents()
+			{
+				return "" ;
+			}
+			public function ObtientNomClasseExtJS()
+			{
+				if(! $this->DefAuto)
+				{
+					return $this->NomClasseExtendExtJS ;
+				}
+				return parent::ObtientNomClasseExtJS() ;
+			}
 			public function InstrJSCrea()
 			{
 				return 'Ext.create('.svc_json_encode($this->ObtientNomClasseExtJS()).', '.svc_json_encode($this->CfgCreaExtJS).')' ;
@@ -271,6 +313,8 @@
 			public $EspaceNommageExtJS = "application" ;
 			public $NomClasseExtJS = "" ;
 			public $Controllers = array() ;
+			public $Stores = array() ;
+			public $Models = array() ;
 			public $ControllerParDefaut ;
 			public $Viewport ;
 			public function InsereController($nom, $controller)
@@ -282,6 +326,26 @@
 				$this->Controllers[$nom] = & $controller ;
 				$this->InscritElementExtJS($nom, $controller) ;
 				return $controller ;
+			}
+			public function InsereStore($nom, $store)
+			{
+				return $this->InscritStore($nom, $store) ;
+			}
+			public function InscritStore($nom, & $store)
+			{
+				$this->Stores[$nom] = & $store ;
+				$this->InscritElementExtJS($nom, $store) ;
+				return $store ;
+			}
+			public function InsereModel($nom, $model)
+			{
+				return $this->InscritModel($nom, $model) ;
+			}
+			public function InscritModel($nom, & $model)
+			{
+				$this->Models[$nom] = & $model ;
+				$this->InscritElementExtJS($nom, $model) ;
+				return $model ;
 			}
 			public function ChargeConfig()
 			{
@@ -337,9 +401,9 @@
 				parent::PrepareRenduJS() ;
 				$this->CfgDefExtJS->layout = "border" ;
 				$this->CfgDefExtJS->items = array() ;
-				foreach($this->ElementsExtJS as $nom => & $elem)
+				if(! $this->DefItemsDansInitComponent)
 				{
-					$this->CfgDefExtJS->items[] = & $elem->CfgCreaExtJS ;
+					$this->CfgDefExtJS->items = $this->ObtientCfgDefItems() ;
 				}
 			}
 		}
@@ -351,6 +415,76 @@
 			protected function CreeCfgDefExtJS()
 			{
 				return new PvConfigControllerExtJS() ;
+			}
+		}
+		
+		class PvFiltreDonneesExtJS extends PvFiltreDonneesBase
+		{
+			public $TypeLiaisonParametre = "extjs" ;
+			public $NomClasseComposant = "PvTextFieldExtJS" ;
+		}
+		
+		class PvConfigStoreExtJS extends PvConfigElemExtJS
+		{
+			public $extend ;
+			public $model ;
+			public $autoload = true ;
+			public $proxy ;
+			public function __construct()
+			{
+				$this->proxy = new PvConfigProxyStoreExtJS() ;
+			}
+		}
+		class PvConfigModelExtJS extends PvConfigElemExtJS
+		{
+			public $extend ;
+			public $requires = array() ;
+			public $fields = array() ;
+		}
+		
+		class PvConfigProxyStoreExtJS
+		{
+			public $type = 'ajax' ;
+			public $api ;
+			public $reader ;
+			public function __construct()
+			{
+				$this->api = new PvConfigApiProxyStoreExtJS() ;
+				$this->reader = new PvConfigReaderProxyStoreExtJS() ;
+			}
+		}
+		class PvConfigApiProxyStoreExtJS
+		{
+			public $read ;
+			public $create ;
+			public $update ;
+			public $destroy ;
+		}
+		class PvConfigReaderProxyStoreExtJS
+		{
+			public $type = 'json' ;
+			public $root ;
+			public $successProperty ;
+		}
+		
+		class PvStoreExtJS extends PvElemComposantExtJS
+		{
+			public $EspaceNommageExtJS = "store" ;
+			public $NomClasseExtendExtJS = "Ext.data.Store" ;
+			public $CreaAuto = 0 ;
+			protected function CreeCfgDefExtJS()
+			{
+				return new PvConfigStoreExtJS() ;
+			}
+		}
+		class PvModelExtJS extends PvElemComposantExtJS
+		{
+			public $EspaceNommageExtJS = "model" ;
+			public $NomClasseExtendExtJS = "Ext.data.Model" ;
+			public $CreaAuto = 0 ;
+			protected function CreeCfgDefExtJS()
+			{
+				return new PvConfigModelExtJS() ;
 			}
 		}
 		
@@ -376,18 +510,24 @@
 			{
 				return new PvConfigInstWidgetExtJS() ;
 			}
+			public function ObtientCfgDefDockedItems()
+			{
+				$items = array() ;
+				foreach($this->ElemsDockExtJS as $nom => & $elem)
+				{
+					$items[] = & $elem->CfgCreaExtJS ;
+				}
+				return $items ;
+			}
 			public function PrepareRenduJS()
 			{
 				parent::PrepareRenduJS() ;
 				$this->CfgDefExtJS->items = array() ;
-				foreach($this->ElementsExtJS as $nom => & $elem)
-				{
-					$this->CfgDefExtJS->items[] = & $elem->CfgCreaExtJS ;
-				}
 				$this->CfgDefExtJS->dockedItems = array() ;
-				foreach($this->ElemsDockExtJS as $nom => & $elem)
+				if(! $this->DefItemsDansInitComponent)
 				{
-					$this->CfgDefExtJS->dockedItems[] = & $elem->CfgCreaExtJS ;
+					$this->CfgDefExtJS->items = $this->ObtientCfgDefItems() ;
+					$this->CfgDefExtJS->dockedItems = $this->ObtientCfgDefDockedItems() ;
 				}
 			}
 		}

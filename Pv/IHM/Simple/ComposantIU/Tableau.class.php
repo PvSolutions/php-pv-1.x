@@ -381,6 +381,13 @@
 					$defCol->ValeurNegative = $valNegative ;
 				return $defCol ;
 			}
+			public function & InsereDefColChoix($nomDonnees, $libelle="", $aliasDonnees="", $valsChoix=array())
+			{
+				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
+				$defCol->Formatteur = new PvFormatteurColonneChoix() ;
+				$defCol->Formatteur->ValeursChoix = $valsChoix ;
+				return $defCol ;
+			}
 			public function & InsereDefColMonnaie($nomDonnees, $libelle="", $aliasDonnees="")
 			{
 				$defCol = $this->InsereDefColMoney($nomDonnees, $libelle, $aliasDonnees) ;
@@ -558,48 +565,72 @@
 				$defCols = $this->DefinitionsColonnes ;
 				return $defCols ;
 			}
+			protected function AlerteExceptionFournisseur()
+			{
+				$this->MessageAucunElement = "Exception survenue : ".$this->FournisseurDonnees->DerniereException->Message ;
+			}
 			public function CalculeElementsRendu()
 			{
 				$defCols = $this->ObtientDefColsRendu() ;
 				$this->TotalElements = $this->FournisseurDonnees->CompteElements($defCols, $this->FiltresSelection) ;
 				// print_r($this->FournisseurDonnees->BaseDonnees) ;
-				// Ajuster l'indice début
-				if($this->IndiceDebut < 0)
-					$this->IndiceDebut = 0 ;
-				if($this->IndiceDebut >= $this->TotalElements)
-					$this->IndiceDebut = $this->TotalElements ;
-				if($this->TotalElements > 0)
+				// print_r($this->FournisseurDonnees) ;
+				if($this->FournisseurDonnees->ExceptionTrouvee())
 				{
-					$this->IndiceDebut = intval($this->IndiceDebut / $this->MaxElements) * $this->MaxElements ;
-					$this->ElementsEnCoursBruts = $this->FournisseurDonnees->RangeeElements($defCols, $this->FiltresSelection, $this->IndiceDebut, $this->MaxElements, $this->IndiceColonneTri, $this->SensColonneTri) ;
-					if($this->ExtraireValeursElements)
-					{
-						$this->ElementsEnCours = $this->ObtientValeursExtraites($this->ElementsEnCoursBruts) ;
-					}
-					else
-					{
-						$this->ElementsEnCours = $this->ElementsEnCoursBruts ;
-					}
-					// echo "Sql : ".$this->FournisseurDonnees->BaseDonnees->LastSqlText ;
-					// print_r($this->FournisseurDonnees->BaseDonnees) ;
-					// print_r($this->ElementsEnCours) ;
-					$this->RangeeEnCours = $this->IndiceDebut / $this->MaxElements ;
-					$nbRangees = intval($this->TotalElements / $this->MaxElements) ;
-					$nbRangeesDec = $this->TotalElements / $this->MaxElements ;
-					$this->TotalRangees = ($nbRangees == $nbRangeesDec) ? $nbRangeesDec : $nbRangees + 1 ;
-					$this->IndiceFin = $this->IndiceDebut + count($this->ElementsEnCours) ;
-					if($this->IndiceFin >= $this->TotalElements)
-					{
-						$this->IndiceFin = $this->TotalElements ;
-					}
+					$this->AlerteExceptionFournisseur() ;
 				}
 				else
 				{
-					$this->IndiceDebut = 0 ;
-					$this->TotalRangees = 0 ;
-					$this->IndiceFin = 0 ;
-					$this->RangeeEnCours = -1 ;
-					$this->ElementsEnCours = array() ;
+					// Ajuster l'indice début
+					if($this->IndiceDebut < 0)
+						$this->IndiceDebut = 0 ;
+					if($this->IndiceDebut >= $this->TotalElements)
+						$this->IndiceDebut = $this->TotalElements ;
+					if($this->TotalElements > 0)
+					{
+						$this->IndiceDebut = intval($this->IndiceDebut / $this->MaxElements) * $this->MaxElements ;
+						$this->ElementsEnCoursBruts = $this->FournisseurDonnees->RangeeElements($defCols, $this->FiltresSelection, $this->IndiceDebut, $this->MaxElements, $this->IndiceColonneTri, $this->SensColonneTri) ;
+						if($this->FournisseurDonnees->ExceptionTrouvee())
+						{
+							$this->TotalElements = 0 ;
+							$this->IndiceDebut = 0 ;
+							$this->TotalRangees = 0 ;
+							$this->IndiceFin = 0 ;
+							$this->RangeeEnCours = -1 ;
+							$this->ElementsEnCours = array() ;
+							$this->AlerteExceptionFournisseur() ;
+						}
+						else
+						{
+							if($this->ExtraireValeursElements)
+							{
+								$this->ElementsEnCours = $this->ObtientValeursExtraites($this->ElementsEnCoursBruts) ;
+							}
+							else
+							{
+								$this->ElementsEnCours = $this->ElementsEnCoursBruts ;
+							}
+							// echo "Sql : ".$this->FournisseurDonnees->BaseDonnees->LastSqlText ;
+							// print_r($this->ElementsEnCours) ;
+							$this->RangeeEnCours = $this->IndiceDebut / $this->MaxElements ;
+							$nbRangees = intval($this->TotalElements / $this->MaxElements) ;
+							$nbRangeesDec = $this->TotalElements / $this->MaxElements ;
+							$this->TotalRangees = ($nbRangees == $nbRangeesDec) ? $nbRangeesDec : $nbRangees + 1 ;
+							$this->IndiceFin = $this->IndiceDebut + count($this->ElementsEnCours) ;
+							if($this->IndiceFin >= $this->TotalElements)
+							{
+								$this->IndiceFin = $this->TotalElements ;
+							}
+						}
+					}
+					else
+					{
+						$this->IndiceDebut = 0 ;
+						$this->TotalRangees = 0 ;
+						$this->IndiceFin = 0 ;
+						$this->RangeeEnCours = -1 ;
+						$this->ElementsEnCours = array() ;
+					}
 				}
 			}
 			protected function RenduDispositifBrut()
@@ -973,6 +1004,7 @@
 							$ctn .= '>'.PHP_EOL ;
 							foreach($this->DefinitionsColonnes as $i => $colonne)
 							{
+								// print_r($ligne) ;
 								if($colonne->Visible == 0)
 									continue ;
 								$ctn .= '<td' ;
@@ -1084,6 +1116,7 @@
 			public $ContenuLigneModeleUse = '' ;
 			public $EmpilerValeursSiModLigVide = 1 ;
 			public $OrientationValeursEmpilees = "vertical" ;
+			public $AlignVCellule = "middle" ;
 			public $AccepterTriColonneInvisible = 1 ;
 			public $MaxColonnes = 1 ;
 			public $LargeurBordure = 0 ;
@@ -1185,6 +1218,7 @@
 								$ctn .= ' width="'.$pourcentCol.'%"' ;
 							}
 							$ctn .= ' class="Contenu '.$classePair.'"' ;
+							$ctn .= ' valign="'.$this->AlignVCellule.'"' ;
 							if($this->SurvolerLigneFocus)
 							{
 								$ctn .= ' onMouseOver="this.className = this.className + &quot; Survole&quot;;" onMouseOut="this.className = this.className.split(&quot; Survole&quot;).join(&quot; &quot;) ;"' ;

@@ -15,6 +15,7 @@
 		class PvMenuIHMBase extends PvObjet
 		{
 			protected $EstRacine = 0 ;
+			public $BarreMenu ;
 			public $InclureRenduTitre = 1 ;
 			public $InclureRenduIcone = 1 ;
 			public $InclureRenduMiniature = 1 ;
@@ -256,6 +257,7 @@
 		{
 			public $NomScript = "" ;
 			public $ParamsScript = array() ;
+			public $NomScriptsSelect = array() ;
 			public function EstAccessible()
 			{
 				$ok = parent::EstAccessible() ;
@@ -336,7 +338,7 @@
 				$script = $this->ObtientScript() ;
 				if($script == null)
 					return 0 ;
-				return ($this->ZoneParent->ScriptAppele->NomElementZone == $this->NomScript) ? 1 : 0 ;
+				return ($this->ZoneParent->ScriptAppele->NomElementZone == $this->NomScript || (count($this->NomScriptsSelect) > 0 && in_array($this->ZoneParent->ScriptAppele->NomElementZone, $this->NomScriptsSelect))) ? 1 : 0 ;
 			}
 		}
 		
@@ -382,6 +384,7 @@
 				if(class_exists($nomClasseMenuRacine))
 				{
 					$this->MenuRacine = new $nomClasseMenuRacine() ;
+					$this->MenuRacine->BarreMenu = & $this ;
 				}
 			}
 			protected function ChargeMenuRacine()
@@ -712,6 +715,32 @@
 				$ctn .= $this->RenduTagOuvrLien($sousMenu) ;
 				$ctn .= '<div>'.$this->RenduTitreMenu($sousMenu).'</div>' ;
 				$ctn .= $this->RenduTagFermLien($sousMenu) ;
+				return $ctn ;
+			}
+		}
+		class PvBarreBtnsHoriz extends PvListeMenuHoriz
+		{
+			public $LargeurSousMenu = "" ;
+			protected function RenduSousMenu(& $sousMenu)
+			{
+				$ctn = '' ;
+				$ctn .= $this->RenduTagOuvrLien($sousMenu) ;
+				$ctn .= '<button type="button" onclick="javascript:window.location = '.htmlentities(svc_json_encode($sousMenu->ObtientUrl())).'"
+				>'.$this->RenduTitreMenu($sousMenu).'</button>' ;
+				$ctn .= $this->RenduTagFermLien($sousMenu) ;
+				return $ctn ;
+			}
+			protected function AppliqueHabillage()
+			{
+				$ctn = parent::AppliqueHabillage() ;
+				if($this->ZoneParent->InclureJQueryUi)
+				{
+				$ctn .= '<script type="text/javascript">
+	jQuery(function() {
+		jQuery("#'.$this->IDInstanceCalc.'").find("button").button() ;
+	}) ;
+</script>' ;
+				}
 				return $ctn ;
 			}
 		}

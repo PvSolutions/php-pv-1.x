@@ -64,10 +64,10 @@
 			public function AjoutElement($filtresEdition)
 			{
 			}
-			public function ModifElement($filtresGlobaux, $filtresLigne, $filtresEdition)
+			public function ModifElement($filtresSelection, $filtresEdition)
 			{
 			}
-			public function SupprElement($filtresGlobaux, $filtresLigne)
+			public function SupprElement($filtresSelection)
 			{
 			}
 			public function OuvreRequeteSelectElements($filtres)
@@ -230,10 +230,10 @@
 			public function AjoutElement($filtresEdition)
 			{
 			}
-			public function ModifElement($filtresGlobaux, $filtresLigne, $filtresEdition)
+			public function ModifElement($filtresSelection, $filtresEdition)
 			{
 			}
-			public function SupprElement($filtresGlobaux, $filtresLigne)
+			public function SupprElement($filtresSelection)
 			{
 			}
 			public function OuvreRequeteSelectElements($filtres)
@@ -335,7 +335,6 @@
 			protected function SauveExceptionBaseDonnees()
 			{
 				$this->DerniereException = null ;
-				$this->BaseDonnees->ConnectionException ;
 				if($this->BaseDonnees == null or $this->BaseDonnees->ConnectionException == '')
 				{
 					return ;
@@ -373,7 +372,7 @@
 						{
 							$texte .= $colonne->AliasDonnees." " ;
 						}
-						$texte .= $colonne->NomDonnees ;
+						$texte .= $this->BaseDonnees->EscapeVariableName($colonne->NomDonnees) ;
 					}
 				}
 				if(count($colonnes) == 0)
@@ -396,7 +395,7 @@
 							$ctn .= ', ' ;
 						}
 						$orientation = (strtolower($colonne->OrientationTri) == "asc") ? "asc" : "desc" ;
-						$valeurTri = ($aliasDonnees != "") ? $aliasDonnees : $nomDonnees ;
+						$valeurTri = ($aliasDonnees != "") ? $aliasDonnees : $this->BaseDonnees->EscapeVariableName($nomDonnees) ;
 						$ctn .= $valeurTri." ".$orientation ;
 					}
 				}
@@ -413,11 +412,15 @@
 					}
 					elseif($colonnes[$indiceColonneTri]->NomDonneesTri != '')
 					{
-						$valeurTri = $colonnes[$indiceColonneTri]->NomDonneesTri ;
+						$valeurTri = $this->BaseDonnees->EscapeVariableName($colonnes[$indiceColonneTri]->NomDonneesTri) ;
 					}
-					else
+					elseif($colonnes[$indiceColonneTri]->AliasDonnees != "")
 					{
-						$valeurTri = ($colonnes[$indiceColonneTri]->AliasDonnees != "") ? $colonnes[$indiceColonneTri]->AliasDonnees : $colonnes[$indiceColonneTri]->NomDonnees ;
+						$valeurTri = $colonnes[$indiceColonneTri]->AliasDonnees ;
+					}
+					elseif($colonnes[$indiceColonneTri]->NomDonnees != "")
+					{
+						$valeurTri = $this->BaseDonnees->EscapeVariableName($colonnes[$indiceColonneTri]->NomDonnees) ;
 					}
 					if($valeurTri == '')
 					{
@@ -432,7 +435,7 @@
 				$expression = new PvExpressionFiltre() ;
 				foreach($filtres as $i => $filtre)
 				{
-					if($filtre->NePasIntegrerParametre)
+					if($filtre->NePasIntegrerParametre || $filtre->NomParametreDonnees == "")
 					{
 						continue ;
 					}
@@ -459,7 +462,7 @@
 				$parametres = array() ;
 				foreach($filtres as $i => $filtre)
 				{
-					if($filtre->NePasLierColonne)
+					if($filtre->NePasLierColonne || $filtre->NomColonneLiee == "")
 					{
 						continue ;
 					}
@@ -514,7 +517,7 @@
 							$requeteSql .= " order by ".$texteTriCplt ;
 						}
 					}
-					// echo $requeteSql ;
+					// echo $requeteSql.'<br>' ;
 					$lignes = $this->BaseDonnees->FetchSqlRows($requeteSql, array_merge($expression->Parametres, $this->ParamsSelection)) ;
 					$this->SauveExceptionBaseDonnees() ;
 				}
@@ -555,6 +558,7 @@
 						}
 						$requeteSql .= " order by ".$texteTriCplt ;
 					}
+					// print $requeteSql ;
 					$lignes = $this->BaseDonnees->LimitSqlRows($requeteSql, array_merge($expression->Parametres, $this->ParamsSelection), $indiceDebut, $maxElements) ;
 					$this->SauveExceptionBaseDonnees() ;
 				}
@@ -580,6 +584,7 @@
 					{
 						$requeteSql .= " where ".$expression->Texte ;
 					}
+					// print $requeteSql ;
 					$total = $this->BaseDonnees->FetchSqlValue($requeteSql, array_merge($expression->Parametres, $this->ParamsSelection), "TOTAL") ;
 					$this->SauveExceptionBaseDonnees() ;
 				}

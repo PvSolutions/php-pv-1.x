@@ -48,6 +48,18 @@
 }
 .menu-haut * {
 	color:white ;
+}
+.sws-ui-padding-2 {
+	padding:2px ;
+}
+.sws-ui-padding-4 {
+	padding:4px ;
+}
+.sws-ui-padding-8 {
+	padding:8px ;
+}
+.sws-ui-padding-12 {
+	padding:12px ;
 }' ;
 				return $ctn ;
 			}
@@ -92,7 +104,7 @@
 				$ctn .= '</td>
 </tr>
 <tr>
-<td class="copyrights" align="center">'.$this->MsgCopyright.'</td>
+<td class="copyrights" align="center"><p class="ui-widget ui-widget-content">'.$this->MsgCopyright.'</p></td>
 </tr>
 </table>' ;
 				$ctn .= '</body>' ;

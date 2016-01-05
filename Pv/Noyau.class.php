@@ -394,6 +394,10 @@
 				$ok = ($this->CorrigeChemin($cheminFichier) == $this->CorrigeChemin($cheminFichierElementActif)) ? 1 : 0 ;
 				return $ok ;
 			}
+			public function ObtientCheminFichierRelatif()
+			{
+				return realpath(dirname(__FILE__).DIRECTORY_SEPARATOR."..".DIRECTORY_SEPARATOR."..".DIRECTORY_SEPARATOR.$this->CheminFichierRelatif) ;
+			}
 			protected function DemarreExecution()
 			{
 				if($this->DelaiExecution > 0)
@@ -751,7 +755,10 @@
 			public $TimestmpCapt = 0 ;
 			public $TimestmpDebutSession = 0 ;
 			public $TimestmpFinSession = 0 ;
-			// public 
+			public function EstDefini()
+			{
+				return $this->Statut != PvEtatServPersist::ETAT_NON_DEFINI ;
+			}
 		}
 		class PvServPersist extends PvProgramAppBase
 		{

@@ -105,6 +105,7 @@
 			public $NomColonneValeur ;
 			public $NomColonneLibelle ;
 			public $FournisseurDonnees ;
+			public $LibelleNonTrouve = "" ;
 			public $FiltresSelection = array() ;
 			protected function CalculeLibelle()
 			{
@@ -117,6 +118,7 @@
 				}
 				else
 				{
+					$this->Libelle = $this->LibelleNonTrouve ;
 				}
 				return $etiquette ;
 			}
@@ -522,6 +524,7 @@
 			public $AlignLibelle = "right" ;
 			public $LargeurOption = "" ;
 			public $CocherAutoPremiereOption = 1 ;
+			public $SeparateurLibelleOption = "&nbsp;&nbsp;" ;
 			protected function RenduListeElements()
 			{
 				$this->CorrigeIDsElementHtml() ;
@@ -576,13 +579,13 @@
 					case "right" :
 					case "droite" :
 					{
-						$ctn = $this->RenduOptionElement($valeur, $libelle, $ligne, $position)."".$this->RenduLibelleElement($valeur, $libelle, $ligne, $position) ;
+						$ctn = $this->RenduOptionElement($valeur, $libelle, $ligne, $position).$this->SeparateurLibelleOption.$this->RenduLibelleElement($valeur, $libelle, $ligne, $position) ;
 					}
 					break ;
 					case "left" :
 					case "gauche" :
 					{
-						$ctn = $this->RenduLibelleElement($valeur, $libelle, $ligne, $position)."".$this->RenduOptionElement($valeur, $libelle, $ligne, $position) ;
+						$ctn = $this->RenduLibelleElement($valeur, $libelle, $ligne, $position).$this->SeparateurLibelleOption.$this->RenduOptionElement($valeur, $libelle, $ligne, $position) ;
 					}
 					break ;
 					case "hidden" :
@@ -992,6 +995,9 @@
 			}
 		}
 		
+		class PvZoneSelectHtml extends PvZoneBoiteSelectHtml
+		{
+		}
 		class PvZoneSelectBoolHtml extends PvZoneBoiteSelectHtml
 		{
 			public $LibelleVrai = "" ;

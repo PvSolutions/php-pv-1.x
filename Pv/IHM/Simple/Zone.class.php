@@ -16,9 +16,222 @@
 		}
 		define('PV_ZONE_SIMPLE_IHM', 1) ;
 		
+		class PvDocumentWebBase
+		{
+			public function RenduEntete(& $zone)
+			{
+			}
+			public function RenduPied(& $zone)
+			{
+			}
+		}
+		class PvDocBoiteDialogueWeb extends PvDocumentWebBase
+		{
+			public function RenduEntete(& $zone)
+			{
+			}
+			public function RenduPied(& $zone)
+			{
+			}
+		}
+		
+		class PvGestTachesWebSimple extends PvObjet
+		{
+			public $NomDossierTaches = "taches" ;
+			protected $Taches = array() ;
+			public $ZoneParent = null ;
+			public $NomElementZone = "" ;
+			public function AdopteZone($nom, & $zone)
+			{
+				$this->ZoneParent = & $zone ;
+				$this->NomElementZone = $nom ;
+			}
+			public function ObtientCheminDossierTaches()
+			{
+				return dirname($this->ZoneParent->ObtientCheminFichierRelatif()).DIRECTORY_SEPARATOR.$this->NomDossierTaches ;
+			}
+			public function & ObtientTaches()
+			{
+				return $this->Taches ;
+			}
+			public function InsereTache($nom, $tache)
+			{
+				$this->InscritTache($nom, $tache) ;
+				return $tache ;
+			}
+			public function InscritTache($nom, & $tache)
+			{
+				$this->Taches[$nom] = & $tache ;
+				$tache->AdopteGest($nom, $this) ;
+			}
+			public function Execute()
+			{
+				$taches = $this->ObtientTaches() ;
+				foreach($taches as $i => & $tache)
+				{
+					if($tache->EstPret())
+					{
+						$this->LanceTache($tache->NomElementGest) ;
+					}
+				}
+			}
+			public function LanceTache(& $nomTache, $params=array())
+			{
+				if(! isset($this->Taches[$nomTache]))
+				{
+					return false ;
+				}
+				$tache = & $this->Taches[$nomTache] ;
+				$urlZone = $this->ZoneParent->ObtientUrl() ;
+				$parts = parse_url($urlZone) ;
+				$port = $parts["port"] != '' ? $parts["port"] : 80 ;
+				$chaineParams = http_build_query($params) ;
+				if($chaineParams != "")
+				{
+					$chaineParams = "&".$chaineParams ;
+				}
+				$fh = fsockopen($parts["host"], $port, $errno, $errstr, 30);
+				if ($fh)
+				{
+					$ctn = "GET ".$parts["path"]."?".urlencode($this->ZoneParent->NomParamTacheAppelee)."=".urlencode($tache->NomElementGest).$chaineParams." HTTP/1.0\r\n";
+					$ctn .= "Host: ".$parts["host"].":".$port."\r\n" ;
+					$ctn .= "Content-Type: text/html\r\n" ;
+					$ctn .= "Connection: Close\r\n\r\n" ;
+					fputs($fh, $ctn) ;
+					fclose($fh) ;
+				}
+			}
+		}
+		class PvTacheWebBaseSimple extends PvObjet
+		{
+			public $NomElementGest ;
+			public $GestParent ;
+			protected $Etat ;
+			public $DelaiExecution = 86400 ;
+			protected $TerminerExecution = 0 ;
+			public function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->Etat = new PvEtatServPersist() ;
+			}
+			public function ObtientEtat()
+			{
+				return $this->Etat ;
+			}
+			public function ObtientCheminFichier()
+			{
+				return $this->GestParent->ObtientCheminDossierTaches()."/".$this->IDInstanceCalc.".dat" ;
+			}
+			protected function ObtientCtnBrutEtat()
+			{
+				$cheminFichier = $this->ObtientCheminFichier() ;
+				if(! file_exists($cheminFichier))
+					return "" ;
+				$fh = fopen($cheminFichier, "r") ;
+				$ctn = '' ;
+				if($fh !== false)
+				{
+					while(! feof($fh))
+					{
+						$ctn .= fgets($fh, 256) ;
+					}
+					fclose($fh) ;
+				}
+				else
+				{
+					return false ;
+				}
+				return $ctn ;
+			}
+			protected function SauveEtat()
+			{
+				$fh = fopen($this->ObtientCheminFichier(), "w") ;
+				if($fh != false)
+				{
+					fputs($fh, serialize($this->Etat)) ;
+					fclose($fh) ;
+				}
+				else
+				{
+					return 0 ;
+				}
+				return 1 ;
+			}
+			protected function ChargeEtat()
+			{
+				$ctn = $this->ObtientCtnBrutEtat() ;
+				if($ctn === false)
+				{
+					return 0 ;
+				}
+				if($ctn != '')
+				{
+					$this->Etat = unserialize($ctn) ;
+				}
+				return 1 ;
+			}
+			public function AdopteGest($nom, & $gest)
+			{
+				$this->NomElementGest = $nom ;
+				$this->GestParent = & $gest ;
+			}
+			public function EstPret()
+			{
+				if(! $this->Etat->EstDefini())
+				{
+					$this->ChargeEtat() ;
+				}
+				if($this->Etat->Statut == PvEtatServPersist::ETAT_DEMARRE)
+				{
+					return 0 ;
+				}
+				$timestampAtteint = $this->Etat->TimestmpFinSession + ($this->DelaiExecution * 3600) ;
+				$ok = 0 ;
+				if(date("U") >= $timestampAtteint)
+				{
+					$ok = 1 ;
+				}
+				return $ok ;
+			}
+			public function Demarre()
+			{
+				if(! $this->EstPret())
+				{
+					return ;
+				}
+				$this->Etat->TimestmpDebutSession = date("U") ;
+				$this->Etat->Statut = PvEtatServPersist::ETAT_DEMARRE ;
+				$ok = $this->SauveEtat() ;
+				if(! $ok)
+				{
+					return ;
+				}
+				$this->TerminerExecution = 1 ;
+				$this->ExecuteInstructions() ;
+				if($this->TerminerExecution)
+				{
+					$this->Etat->Statut = PvEtatServPersist::ETAT_STOPPE ;
+					$this->Etat->TimestmpFinSession = date("U") ;
+					$this->SauveEtat() ;
+				}
+				exit ;
+			}
+			public function Appelle($params=array())
+			{
+				return $this->GestParent->LanceTache($this->NomElementGest, $params) ;
+			}
+			protected function ExecuteInstructions()
+			{
+			}
+		}
+		
 		class PvZoneWebSimple extends PvZoneWeb
 		{
 			public $TypeDocument ;
+			public $DocumentsWeb = array() ;
+			public $GestTachesWeb ;
+			public $UtiliserDocumentWeb = 0 ;
+			public $DocumentWebSelect = null ;
 			public $DefinitionTypeDocument ;
 			public $LangueDocument = "fr" ;
 			public $EncodageDocument = "iso-8859-1" ;
@@ -52,7 +265,9 @@
 			public $ActionsAvantRendu = array() ;
 			public $ActionsApresRendu = array() ;
 			public $NomParamActionAppelee = "appelleAction" ;
+			public $NomParamTacheAppelee = "appelleTache" ;
 			public $ValeurParamActionAppelee = false ;
+			public $ValeurParamTacheAppelee = false ;
 			public $ActionsAppelees = array() ;
 			public $AnnulerRendu = 0 ;
 			public $RenduEnCours = 0 ;
@@ -80,6 +295,60 @@
 			public $NomClasseScriptModifRole = "PvScriptModifRoleMSWeb" ;
 			public $NomClasseScriptSupprRole = "PvScriptSupprRoleMSWeb" ;
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesMSWeb" ;
+			protected $TacheAppelee ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->GestTachesWeb = new PvGestTachesWebSimple() ;
+				$this->GestTachesWeb->AdopteZone("gestTaches", $this) ;
+			}
+			protected function ExecuteGestTachesWeb()
+			{
+				$this->DetecteTacheAppelee() ;
+				if($this->EstNul($this->TacheAppelee))
+				{
+					$this->GestTachesWeb->Execute() ;
+				}
+				else
+				{
+					$this->TacheAppelee->Demarre() ;
+				}
+			}
+			protected function DetecteTacheAppelee()
+			{
+				$this->TacheAppelee = null ;
+				if(isset($_GET[$this->NomParamTacheAppelee]))
+				{
+					$this->ValeurParamTacheAppelee = $_GET[$this->NomParamTacheAppelee] ;
+				}
+				$taches = $this->GestTachesWeb->ObtientTaches() ;
+				if(isset($taches[$this->ValeurParamTacheAppelee]))
+				{
+					$this->TacheAppelee = & $taches[$this->ValeurParamTacheAppelee] ;
+				}
+				else
+				{
+					$this->ValeurParamTacheAppelee = "" ;
+				}
+			}
+			public function & InsereTacheWeb($nom, $tache)
+			{
+				$this->GestTachesWeb->InsereTache($nom, $tache) ;
+				return $tache ;
+			}
+			public function InscritTacheWeb($nom, & $tache)
+			{
+				$this->GestTachesWeb->InscritTache($nom, $tache) ;
+			}
+			public function ObtientUrlTache($nomTache)
+			{
+				$taches = $this->GestTachesWeb->ObtientTaches() ;
+				if(! isset($taches[$nomTache]))
+				{
+					return ;
+				}
+				return $this->ObtientUrl()."?".urlencode($this->NomParamTacheAppelee)."=".urlencode($nomTache) ;
+			}
 			public function ObtientUrlAction($nomAction)
 			{
 				return $this->ObtientUrlActionAvantRendu($nomAction) ;
@@ -107,14 +376,22 @@
 				$this->ChargeActionsApresRendu() ;
 				parent::ChargeScripts() ;
 			}
+			protected function ChargeDocumentsWeb()
+			{
+			}
 			public function ChargeConfig()
 			{
 				parent::ChargeConfig() ;
+				$this->ChargeGestTachesWeb() ;
+				$this->ChargeDocumentsWeb() ;
 				if(class_exists($this->NomClasseHabillage))
 				{
 					$nomClasse = $this->NomClasseHabillage ;
 					$this->Habillage = new $nomClasse() ;
 				}
+			}
+			protected function ChargeGestTachesWeb()
+			{
 			}
 			protected function ChargeActionsAvantRendu()
 			{
@@ -187,46 +464,70 @@
 				$script->TitreDocument = $titre ;
 				return $script ;
 			}
+			protected function DetecteDocumentWebSelect()
+			{
+				$nomDocWeb = $this->ScriptPourRendu->NomDocumentWeb ;
+				if($nomDocWeb == '' || ! isset($this->DocumentsWeb[$nomDocWeb]))
+				{
+					$nomDocsWeb = array_keys($this->DocumentsWeb) ;
+					$nomDocWeb = $nomDocsWeb[0] ;
+				}
+				$this->DocumentWebSelect = $this->DocumentsWeb[$nomDocWeb] ;
+			}
+			public function RenduDocumentWebActive()
+			{
+				return ($this->UtiliserDocumentWeb && count($this->DocumentsWeb) > 0) ;
+			}
 			public function RenduDocument()
 			{
 				$ctn = '' ;
-				$ctn .= $this->RenduDefinitionTypeDocument().PHP_EOL ;
-				$ctn .= '<html lang="'.$this->LangueDocument.'">'.PHP_EOL ;
-				$ctn .= $this->RenduEnteteDocument().PHP_EOL ;
-				if($this->ScriptPourRendu->UtiliserCorpsDocZone)
+				if($this->RenduDocumentWebActive())
 				{
-					$ctn .= $this->RenduCorpsDocument().PHP_EOL ;
+					$this->DetecteDocumentWebSelect() ;
+					$ctn .= $this->DocumentWebSelect->RenduEntete($zone) ;
+					$ctn .= $this->RenduContenuCorpsDocument() ;
+					$ctn .= $this->DocumentWebSelect->RenduPied($zone) ;
 				}
 				else
 				{
-					$ctn .= $this->RenduDebutCorpsDocument().PHP_EOL ;
-					$ctn .= $this->RenduContenuCorpsDocument().PHP_EOL ;
-					$ctn .= $this->RenduDebutCorpsDocument().PHP_EOL ;
+					$ctn .= $this->RenduDefinitionTypeDocument().PHP_EOL ;
+					$ctn .= '<html lang="'.$this->LangueDocument.'">'.PHP_EOL ;
+					$ctn .= $this->RenduEnteteDocument().PHP_EOL ;
+					if($this->ScriptPourRendu->UtiliserCorpsDocZone)
+					{
+						$ctn .= $this->RenduCorpsDocument().PHP_EOL ;
+					}
+					else
+					{
+						$ctn .= $this->RenduDebutCorpsDocument().PHP_EOL ;
+						$ctn .= $this->RenduContenuCorpsDocument().PHP_EOL ;
+						$ctn .= $this->RenduDebutCorpsDocument().PHP_EOL ;
+					}
+					$ctn .= $this->RenduPiedDocument().PHP_EOL ;
+					if($this->ActiverRafraichScript && ($this->ScriptPourRendu->DoitAutoRafraich()))
+					{
+						$ctn .= '<script type="text/javascript">
+		var oldOnLoadFunc = window.onload ;
+		var annuleAutoRafraich = 0 ;
+		var idAutoRafraich = 0 ;
+		function programmeAutoRafraich() {
+			idAutoRafraich = setTimeout('.intval($this->ScriptPourRendu->DelaiAutoRafraich).', function() {
+				if(idAutoRafraich > 0)
+					window.location = '.json_encode($this->ScriptPourRendu->ObtientUrlParam($this->ScriptPourRendu->ParamsAutoRafraich)).' ;
+			}) ;
+		}
+		if(oldOnLoadFunc == null)
+		{
+			oldOnLoadFunc = function() {} ;
+		}
+		window.onload = function() {
+			oldOnLoadFunc() ;
+			programmeAutoRafraich() ;
+		}
+	</script>'.PHP_EOL ;
+					}
+					$ctn .= '</html>' ;
 				}
-				$ctn .= $this->RenduPiedDocument().PHP_EOL ;
-				if($this->ActiverRafraichScript && ($this->ScriptPourRendu->DoitAutoRafraich()))
-				{
-					$ctn .= '<script type="text/javascript">
-	var oldOnLoadFunc = window.onload ;
-	var annuleAutoRafraich = 0 ;
-	var idAutoRafraich = 0 ;
-	function programmeAutoRafraich() {
-		idAutoRafraich = setTimeout('.intval($this->ScriptPourRendu->DelaiAutoRafraich).', function() {
-			if(idAutoRafraich > 0)
-				window.location = '.json_encode($this->ScriptPourRendu->ObtientUrlParam($this->ScriptPourRendu->ParamsAutoRafraich)).' ;
-		}) ;
-	}
-	if(oldOnLoadFunc == null)
-	{
-		oldOnLoadFunc = function() {} ;
-	}
-	window.onload = function() {
-		oldOnLoadFunc() ;
-		programmeAutoRafraich() ;
-	}
-</script>'.PHP_EOL ;
-				}
-				$ctn .= '</html>' ;
 				return $ctn ;
 			}
 			protected function RenduDebutCorpsDocument()
@@ -343,6 +644,7 @@
 			public function ExecuteScript(& $script)
 			{
 				$this->RapporteRequeteEnvoyee() ;
+				$this->ExecuteGestTachesWeb() ;
 				if($script->EstBienRefere() == 0)
 				{
 					$this->ExecuteScriptMalRefere($script) ;

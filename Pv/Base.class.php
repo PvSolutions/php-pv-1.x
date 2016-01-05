@@ -1,5 +1,13 @@
 <?php
 	
+	if(! defined('PV_IGNORE_ERR_PHP'))
+	{
+		if(defined('E_DEPRECATED'))
+			error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED) ;
+		else
+			error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT) ;
+	}
+	
 	if(! defined('PV_BASE'))
 	{
 		if(! defined('PV_NOYAU'))

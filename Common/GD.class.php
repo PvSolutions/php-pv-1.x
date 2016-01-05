@@ -562,7 +562,7 @@
 		
 		class CommonGDLayer extends CommonGDImage
 		{
-			public static function & Create(& $Parent)
+			public static function & CreateLayer(& $Parent)
 			{
 				$layer = new CommonGDLayer(uniqid()) ;
 				$layer->_Parent = & $Parent ;

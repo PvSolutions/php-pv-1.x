@@ -181,6 +181,24 @@
 				return $ctn ;
 			}
 		}
+		class PvFormatteurColonneChoix extends PvFormatteurColonneDonnees
+		{
+			public $ValeursChoix = array() ;
+			public $ValeurNonTrouvee = "&nbsp;" ;
+			public function Encode(& $script, $colonne, $ligne)
+			{
+				$valeurEntree = $ligne[$colonne->NomDonnees] ;
+				if(isset($this->ValeursChoix[$valeurEntree]))
+				{
+					$valeur = $this->ValeursChoix[$valeurEntree] ;
+				}
+				else
+				{
+					$valeur = $this->ValeurNonTrouvee ;
+				}
+				return $valeur ;
+			}
+		}
 		class PvFormatteurColonneMonnaie extends PvFormatteurColonneDonnees
 		{
 			public $MaxDecimals = 3 ;
@@ -417,8 +435,9 @@
 		{
 			public function Applique($valeur, & $filtre)
 			{
-				$a = array('À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ð', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'ß', 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'Ð', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'L', 'l', 'L', 'l', 'l', 'l', 'L', 'l', 'N', 'n', 'N', 'n', 'N', 'n', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'Œ', 'œ', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'Š', 'š', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Ÿ', 'Z', 'z', 'Z', 'z', 'Ž', 'ž', 'z', 'ƒ');
-				$b = array('A', 'A', 'A', 'A', 'A', 'A', 'AE', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'D', 'N', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 's', 'a', 'a', 'a', 'a', 'a', 'a', 'ae', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'D', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'L', 'l', 'L', 'l', 'L', 'l', 'l', 'l', 'N', 'n', 'N', 'n', 'N', 'n', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'OE', 'oe', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'S', 's', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Y', 'Z', 'z', 'Z', 'z', 'Z', 'z', 's', 'f');
+				// return slugify($valeur) ;
+				$a = array('À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ð', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'ß', 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'Ð', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'N', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'Œ', 'œ', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'Š', 'š', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Ÿ', 'Z', 'z', 'Z', 'z', 'Ž', 'ž', 'z', 'ƒ');
+				$b = array('A', 'A', 'A', 'A', 'A', 'A', 'AE', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'D', 'N', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 's', 'a', 'a', 'a', 'a', 'a', 'a', 'ae', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'D', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'N', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'OE', 'oe', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'S', 's', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Y', 'Z', 'z', 'Z', 'z', 'Z', 'z', 's', 'f');
 				return str_replace($a, $b, $valeur);
 			}
 		}
@@ -473,6 +492,7 @@
 			public $ZoneParent = null ;
 			public $ApplicationParent = null ;
 			public $NomElementScript = "" ;
+			public $NomElementZone = "" ;
 			public $TypeLiaisonParametre = "" ;
 			public $Liaison = null ;
 			public $Composant = null ;
@@ -538,6 +558,12 @@
 				parent::InitConfig() ;
 				$this->CorrecteurValeur = new PvCorrecteurValeurFiltreBase() ;
 				$this->FormatteurEtiquette = new PvFormatteurEtiquetteFiltre() ;
+			}
+			public function AdopteZone($nom, & $script)
+			{
+				$this->ZoneParent = & $script->ZoneParent ;
+				$this->ApplicationParent = & $script->ApplicationParent ;
+				$this->NomElementZone = $nom ;
 			}
 			public function AdopteScript($nom, & $script)
 			{
@@ -712,6 +738,11 @@
 				$this->InitComposant() ;
 				$this->Composant->ChargeConfig() ;
 			}
+			public function FormatTexte()
+			{
+				$valTemp = $this->Lie() ;
+				return $valTemp ;
+			}
 		}
 		class PvFiltreDonneesFixe extends PvFiltreDonneesBase
 		{
@@ -866,6 +897,16 @@
 				$this->ValeurBrute = $this->CorrigeValeurBrute($this->ValeurBruteNonCorrigee) ;
 				return $this->ExtraitValeurFormattee($this->ValeurBrute) ;
 			}
+			public function FormatTexte()
+			{
+				$valTemp = $this->Lie() ;
+				if($this->AccepteTagsHtml)
+				{
+					$valTemp = strip_tags($valTemp) ;
+					$valTemp = slugify($valTemp, false) ;
+				}
+				return $valTemp ;
+			}
 		}
 		class PvFiltreDonneesHttpGet extends PvFiltreDonneesHttpRequest
 		{
@@ -957,10 +998,16 @@
 				else
 				{
 					$this->SourceTelechargement = 'post' ;
-					$this->CheminFichierSoumis = $_POST[$this->NomEltCoteSrv.$this->NomParametreLie] ;
-					$infosFichier = pathinfo($this->CheminFichierSoumis) ;
-					$this->NomFichierSelect = $infosFichier["basename"] ;
-					$this->ExtFichierSelect = (isset($infosFichier["extension"])) ? $infosFichier["extension"] : "" ;
+					if(isset($_POST[$this->NomEltCoteSrv.$this->NomParametreLie]))
+					{
+						$this->CheminFichierSoumis = $_POST[$this->NomEltCoteSrv.$this->NomParametreLie] ;
+					}
+					if($this->CheminFichierSoumis != '')
+					{
+						$infosFichier = pathinfo($this->CheminFichierSoumis) ;
+						$this->NomFichierSelect = $infosFichier["basename"] ;
+						$this->ExtFichierSelect = (isset($infosFichier["extension"])) ? $infosFichier["extension"] : "" ;
+					}
 					// print_r("Doss : ".$this->CheminDossier) ;
 					// print_r($infosFichier) ;
 				}

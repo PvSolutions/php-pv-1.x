@@ -19,6 +19,7 @@
 		class PvScriptWebSimple extends PvScriptIHMDeBase
 		{
 			public $Titre ;
+			public $NomDocumentWeb ;
 			public $TitreDocument ;
 			public $MotsCleMeta ;
 			public $DescriptionMeta ;
@@ -69,6 +70,7 @@
 				$filtre = new PvFiltreDonneesRef() ;
 				$filtre->Source = & $filtreRef ;
 				$filtre->AdopteScript($nom, $this) ;
+				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
 			}
 			public function & CreeFiltreFixe($nom, $valeur)
@@ -76,24 +78,28 @@
 				$filtre = new PvFiltreDonneesFixe() ;
 				$filtre->ValeurParDefaut = $valeur ;
 				$filtre->AdopteScript($nom, $this) ;
+				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
 			}
 			public function & CreeFiltreCookie($nom)
 			{
 				$filtre = new PvFiltreDonneesCookie() ;
 				$filtre->AdopteScript($nom, $this) ;
+				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
 			}
 			public function & CreeFiltreSession($nom)
 			{
 				$filtre = new PvFiltreDonneesSession() ;
 				$filtre->AdopteScript($nom, $this) ;
+				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
 			}
 			public function & CreeFiltreMembreConnecte($nom, $nomParamLie='')
 			{
 				$filtre = new PvFiltreDonneesMembreConnecte() ;
 				$filtre->AdopteScript($nom, $this) ;
+				$filtre->NomParametreDonnees = $nom ;
 				$filtre->NomParametreLie = $nomParamLie ;
 				return $filtre ;
 			}
@@ -101,6 +107,7 @@
 			{
 				$filtre = new PvFiltreDonneesHttpUpload() ;
 				$filtre->AdopteScript($nom, $this) ;
+				$filtre->NomParametreDonnees = $nom ;
 				$filtre->CheminDossier = $cheminDossierDest ;
 				return $filtre ;
 			}
@@ -108,18 +115,24 @@
 			{
 				$filtre = new PvFiltreDonneesHttpGet() ;
 				$filtre->AdopteScript($nom, $this) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
 			}
 			public function & CreeFiltreHttpPost($nom)
 			{
 				$filtre = new PvFiltreDonneesHttpPost() ;
 				$filtre->AdopteScript($nom, $this) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
 			}
 			public function & CreeFiltreHttpRequest($nom)
 			{
 				$filtre = new PvFiltreDonneesHttpRequest() ;
 				$filtre->AdopteScript($nom, $this) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
 			}
 			public function PrepareRendu()
@@ -274,14 +287,17 @@
 						$this->ChargeConfigComposantFormulaireDonnees() ;
 					}
 				}
+				$ctn = '' ;
 				if(! $this->EstNul($this->ComposantFormulaireDonnees))
 				{
-					return $this->ComposantFormulaireDonnees->RenduDispositif() ;
+					$ctn .= $this->ComposantFormulaireDonnees->RenduDispositif() ;
 				}
 				else
 				{
-					return '-- composant non initialise --' ;
+					$ctn .= '-- composant non initialise --' ;
 				}
+				// print_r($this->ComposantFormulaireDonnees->FournisseurDonnees) ;
+				return $ctn ;
 			}
 		}
 		class PvFormulaireAjoutDonneesSimple extends PvFormulaireWebDonneesSimple

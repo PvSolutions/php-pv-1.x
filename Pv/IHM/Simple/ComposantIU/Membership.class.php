@@ -1498,7 +1498,7 @@
 				$form->FiltresEdition[$i]->Libelle = $membership->ProfileMemberLabel ;
 				$form->FiltresEdition[$i]->Composant->FournisseurDonnees = new PvFournisseurDonneesSql() ;
 				$form->FiltresEdition[$i]->Composant->FournisseurDonnees->BaseDonnees = & $membership->Database ;
-				$form->FiltresEdition[$i]->Composant->FournisseurDonnees->RequeteSelection = $membership->ProfileTable ;
+				$form->FiltresEdition[$i]->Composant->FournisseurDonnees->RequeteSelection = $membership->Database->EscapeTableName($membership->ProfileTable) ;
 				$form->FiltresEdition[$i]->Composant->NomColonneValeur = $membership->ProfileMemberForeignKey ;
 				$form->FiltresEdition[$i]->Composant->NomColonneLibelle = $membership->TitleProfileColumn ;
 				$form->FiltreProfilMembre = & $form->FiltresEdition[$i] ;
@@ -1506,24 +1506,27 @@
 			public function InitFormulaireRole(& $form)
 			{
 				$membership = $form->ZoneParent->Membership ;
+				$bd = & $membership->Database ;
 				$form->FournisseurDonnees->BaseDonnees = $membership->Database ;
-				$form->FournisseurDonnees->RequeteSelection = $membership->RoleTable ;
+				$form->FournisseurDonnees->RequeteSelection = $bd->EscapeTableName($membership->RoleTable) ;
 				$form->FournisseurDonnees->TableEdition = $membership->RoleTable ;
 				$form->RedirigeAnnulerVersScript($form->ZoneParent->NomScriptListeRoles) ;
 			}
 			public function InitFormulaireProfil(& $form)
 			{
 				$membership = $form->ZoneParent->Membership ;
+				$bd = & $membership->Database ;
 				$form->FournisseurDonnees->BaseDonnees = $membership->Database ;
-				$form->FournisseurDonnees->RequeteSelection = $membership->ProfileTable ;
+				$form->FournisseurDonnees->RequeteSelection = $bd->EscapeTableName($membership->ProfileTable) ;
 				$form->FournisseurDonnees->TableEdition = $membership->ProfileTable ;
 				$form->RedirigeAnnulerVersScript($form->ZoneParent->NomScriptListeProfils) ;
 			}
 			public function InitFormulaireMembre(& $form)
 			{
 				$membership = $form->ZoneParent->Membership ;
+				$bd = & $membership->Database ;
 				$form->FournisseurDonnees->BaseDonnees = $membership->Database ;
-				$form->FournisseurDonnees->RequeteSelection = $membership->MemberTable ;
+				$form->FournisseurDonnees->RequeteSelection = $bd->EscapeTableName($membership->MemberTable) ;
 				$form->FournisseurDonnees->TableEdition = $membership->MemberTable ;
 				if($form->ZoneParent->EditMembershipPossible())
 				{
@@ -1668,7 +1671,7 @@
 				$table->FiltresSelection[$i]->Libelle = $membership->ProfileMemberLabel ;
 				$table->FiltresSelection[$i]->Composant->FournisseurDonnees = new PvFournisseurDonneesSql() ;
 				$table->FiltresSelection[$i]->Composant->FournisseurDonnees->BaseDonnees = & $membership->Database ;
-				$table->FiltresSelection[$i]->Composant->FournisseurDonnees->RequeteSelection = $membership->ProfileTable ;
+				$table->FiltresSelection[$i]->Composant->FournisseurDonnees->RequeteSelection = $membership->Database->EscapeTableName($membership->ProfileTable) ;
 				$table->FiltresSelection[$i]->Composant->NomColonneValeur = $membership->ProfileMemberForeignKey ;
 				$table->FiltresSelection[$i]->Composant->NomColonneLibelle = $membership->TitleProfileColumn ;
 				$table->FiltresSelection[$i]->ExpressionDonnees = "MEMBER_PROFILE = <SELF>" ;
@@ -1709,7 +1712,8 @@
 				$table->DefinitionsColonnes[$i] = new PvDefinitionColonneDonnees() ;
 				$table->DefinitionsColonnes[$i]->NomDonnees = 'MEMBER_EMAIL' ;
 				$table->DefinitionsColonnes[$i]->Libelle = $membership->EmailMemberLabel ;
-				$table->DefinitionColonnePrenom = & $table->DefinitionsColonnes[$i] ;
+				$table->DefinitionColonneEmail = & $table->DefinitionsColonnes[$i] ;
+				
 				$table->DefinitionColonneProfil = $table->InsereDefCol("PROFILE_TITLE", $membership->ProfileMemberLabel) ;
 			}
 			public function RemplitDefinitionColActionsTableauMembre(& $table)

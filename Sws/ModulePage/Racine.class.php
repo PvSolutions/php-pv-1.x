@@ -50,27 +50,58 @@
 		class ScriptAccueilAdminBaseSws extends ScriptBaseSws
 		{
 			public $AliasMsgBienvenue = "" ;
+			public $BlocModules ;
+			public $BlocImplems ;
 			public $GrilleModules ;
+			public $GrilleImplems ;
+			public $TableauBord ;
 			public $CtnMsgBienvenue = "Bienvenue sur l'espace d'administration" ;
+			protected function DetermineTableauBord()
+			{
+				$this->TableauBord = new TableauBordSws() ;
+				$this->TableauBord->AdopteScript("tableauBord", $this) ;
+				$this->TableauBord->ChargeConfig() ;
+				$this->ChargeTableauBord() ;
+				$this->ChargeElemsRenduTableauBord() ;
+			}
+			protected function ChargeTableauBord()
+			{
+				$systemeSws = $this->ObtientSystemeSws() ;
+				foreach($systemeSws->ImplemsPage as $i => & $implem)
+				{
+					$implem->RemplitTableauBordAdmin($this->TableauBord, $this) ;
+				}
+				foreach($systemeSws->ModulesPage as $i => & $module)
+				{
+					$module->RemplitTableauBordAdmin($this->TableauBord, $this) ;
+				}
+			}
+			protected function ChargeElemsRenduTableauBord()
+			{
+				$this->BlocModules = $this->TableauBord->InsereBlocVide() ;
+				$this->BlocModules->Titre = "Modules" ;
+				$this->GrilleModules = $this->BlocModules->DefinitCompPrinc(new GrilleModulesSws()) ;
+				$this->BlocImplems = $this->TableauBord->InsereBlocVide() ;
+				$this->BlocImplems->Titre = "Impl&eacute;mentations" ;
+				$this->GrilleImplems = $this->BlocImplems->DefinitCompPrinc(new GrilleImplemsSws()) ;
+			}
 			public function DetermineEnvironnement()
 			{
 				parent::DetermineEnvironnement() ;
-				$this->GrilleModules = new GrilleModulesSws() ;
-				$this->GrilleModules->AdopteScript("grilleModules", $this) ;
-				$this->GrilleModules->ChargeConfig() ;
+				$this->DetermineTableauBord() ;
 			}
 			protected function RenduDispositifBrut()
 			{
 				$ctn = '' ;
-				$ctn .= '<div align="center">' ;
+				$ctn .= '<div align="center" class="ui-widget ui-widget-content">' ;
 				$ctn .= '<p align="center">'.$this->CtnMsgBienvenue.'</p>' ;
 				if($this->ZoneParent->PossedeMembreConnecte())
 				{
-					$ctn .= $this->GrilleModules->RenduDispositif() ;
+					$ctn .= $this->TableauBord->RenduDispositif() ;
 				}
 				else
 				{
-					$ctn .= '<p><a href="'.$this->ZoneParent->ScriptConnexion->ObtientUrl().'">CONNEXION</a></p>' ;
+					$ctn .= '<p><a href="'.$this->ZoneParent->ScriptConnexion->ObtientUrl().'">CONNEXION</a></p>'.PHP_EOL ;
 				}
 				$ctn .= '</div>' ;
 				return $ctn ;

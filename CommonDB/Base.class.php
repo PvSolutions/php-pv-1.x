@@ -1495,6 +1495,13 @@
 			function ExecFixCharacterEncoding()
 			{
 				mysql_set_charset($this->CharacterEncoding, $this->Connection) ;
+				/*
+				$ok = mysql_query('SET NAMES '.$this->CharacterEncoding, $this->Connection) ;
+				if(is_resource($ok))
+				{
+					mysql_free_result($ok) ;
+				}
+				*/
 			}
 			function SqlConcat($list)
 			{
@@ -1741,7 +1748,9 @@
 			}
 			function EscapeRowValue($rowValue)
 			{
-				return "'".mysql_real_escape_string($rowValue)."'" ;
+				// echo $rowValue."<br>" ;
+ 				return "'".mysql_real_escape_string($rowValue)."'" ;
+ 				// return "convert(cast(convert('".mysql_real_escape_string($rowValue)."' using  latin1) as binary) using utf8)" ;
 			}
 			function OpenCnx()
 			{
@@ -1956,7 +1965,7 @@
 			}
 			function EscapeRowValue($rowValue)
 			{
-				return "'".mysqli_escape_string($rowValue)."'" ;
+				return "'".mysqli_escape_string($this->Connection, $rowValue)."'" ;
 			}
 			function OpenCnx()
 			{
@@ -1980,7 +1989,7 @@
 					if(! $this->Connection)
 					{
 						$res = 0 ;
-						$this->SetConnectionException(mysqli_error()) ;
+						$this->SetConnectionException(mysqli_error($this->Connection)) ;
 					}
 					else
 					{
@@ -2035,6 +2044,7 @@
 					return false ;
 				}
 				$this->ClearConnectionException() ;
+				$this->CaptureQuery($sql, $params) ;
 				$sql = $this->PrepareSql($sql, $params) ;
 				$res = false ;
 				try
@@ -2472,7 +2482,7 @@
 			{
 				return new OciColumnDefinition() ;
 			}
-			public function SqlColumnDefinitions()
+			public function SqlColumnDefinitions($tableName, $schema='')
 			{
 				return 'select t1.*, case when t2.COLUMN_NAME IS NULL THEN 0 ELSE 1 END IS_KEY from (
     select * from cols WHERE UPPER(cols.table_name) =UPPER(:table_name)

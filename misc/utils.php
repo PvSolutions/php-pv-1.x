@@ -3396,6 +3396,36 @@
 		}
 		if(! function_exists('intro'))
 		{
+			/*
+			* @author danp
+			* @url http://stackoverflow.com/questions/10152894/php-replacing-special-characters-like-%C3%A0-a-%C3%A8-e
+			*/
+			function slugify($text,$strict = false, $sep=' ') {
+				$text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
+				// replace non letter or digits by -
+				$text = preg_replace('~[^\\pL\d.]+~u', '-', $text);
+
+				// trim
+				$text = trim($text, '-');
+				setlocale(LC_CTYPE, 'en_GB.utf8');
+				// transliterate
+				if (function_exists('iconv')) {
+				   $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+				}
+
+				// lowercase
+				$text = strtolower($text);
+				// remove unwanted characters
+				$text = preg_replace('~[^-\w.]+~', '', $text);
+				if (empty($text)) {
+				   return '';
+				}
+				if ($strict) {
+					$text = str_replace(".", "_", $text);
+				}
+				$text = str_replace("-", $sep, $text) ;
+				return $text;
+			}
 			function intro($Text, $NbWords = 255, $More = "...")
 			{
 				$Text = strip_tags($Text) ;
@@ -3413,6 +3443,42 @@
 				}
 				$RetIntro .= $More ;
 				return $RetIntro ;
+			}
+		}
+		if(! function_exists('popularKeywords'))
+		{
+			function popularKeywords($text, $maxKeywords=8, $minKeywordLength=4) {
+				// Replace all non-word chars with comma
+				$pattern = '/[0-9\W]/';
+				$text = preg_replace($pattern, ',', $text);
+
+				// Create an array from $text
+				$text_array = explode(",",$text);
+				$keywords = array();
+				$keyCounts = array();
+
+				// remove whitespace and lowercase words in $text
+				$text_array = array_map("popularKeywords_clearWord", $text_array);
+
+				foreach ($text_array as $term) {
+					if(strlen($term) < $minKeywordLength)
+						continue ;
+					if(! isset($keyCounts[$term]))
+						$keyCounts[$term] = 0 ;
+					$keyCounts[$term]++ ;
+				};
+				if(count($keyCounts) <= $maxKeywords)
+				{
+					return array_keys($keyCounts) ;
+				}
+				arsort($keyCounts) ;
+				
+				$keywords = array_slice(array_keys($keyCounts), 0, $maxKeywords) ;
+				return $keywords ;
+			}
+			function popularKeywords_clearWord($x)
+			{
+				return trim(strtolower($x));
 			}
 		}
 	}

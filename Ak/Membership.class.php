@@ -879,7 +879,7 @@
 			{
 				$sql = '' ;
 				$sql .= 'select ' ;
-				$sql .= $this->IdRoleColumn.' ROLE_ID' ;
+				$sql .= $this->Database->EscapeFieldName($this->RoleTable, $this->IdRoleColumn).' ROLE_ID' ;
 				$sql .= ", ".(($this->NameRoleColumn != '') ? $this->Database->EscapeFieldName($this->RoleTable, $this->NameRoleColumn) : "''").' ROLE_NAME' ;
 				$sql .= ", ".(($this->TitleRoleColumn != '') ? $this->Database->EscapeFieldName($this->RoleTable, $this->TitleRoleColumn) : "''").' ROLE_TITLE' ;
 				$sql .= ", ".(($this->DescriptionRoleColumn != '') ? $this->Database->EscapeFieldName($this->RoleTable, $this->DescriptionRoleColumn) : "''").' ROLE_DESCRIPTION' ;
@@ -1020,7 +1020,6 @@
 					$sql,
 					$params
 				) ;
-				// print_r($this->Database) ;
 				$idMember = $this->IdMemberNotFoundValue ;
 				$ok = 0 ;
 				if(count($requestRow))

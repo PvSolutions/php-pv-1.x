@@ -26,6 +26,12 @@
 			public $text = "" ;
 		}
 		
+		class PvConfigInstElemFormExtJS extends PvConfigInstItemExtJS
+		{
+			public $name ;
+			public $fieldLabel ;
+		}
+		
 		class PvPanelExtJS extends PvWidgetExtJS
 		{
 			public $NomClasseExtendExtJS = "Ext.panel.Panel" ;
@@ -102,9 +108,18 @@
 			}
 		}
 		
-		class PvTextFieldExtJS extends PvWidgetExtJS
+		class PvEditeurBaseExtJS extends PvWidgetExtJS
 		{
-			public $NomClasseExtendExtJS = "Ext.form.field.Field" ;
+			public $DefAuto = 1 ;
+			public $AutoCrea = 0 ;
+			protected function CreeCfgCreaExtJS()
+			{
+				return new PvConfigInstElemFormExtJS() ;
+			}
+		}
+		class PvTextFieldExtJS extends PvEditeurBaseExtJS
+		{
+			public $NomClasseExtendExtJS = "Ext.form.field.Text" ;
 		}
 	}
 	

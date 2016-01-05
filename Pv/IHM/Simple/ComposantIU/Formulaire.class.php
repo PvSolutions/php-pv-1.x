@@ -375,16 +375,24 @@
 			protected function CalculeTotalElements()
 			{
 				$this->TotalElements = $this->FournisseurDonnees->CompteElements(array(), $this->FiltresGlobauxSelection) ;
-				$this->AfficheExceptionFournisseurDonnees() ;
+				if($this->FournisseurDonnees->ExceptionTrouvee())
+				{
+					$this->MessageExecution = $this->FournisseurDonnees->DerniereException->Message ;
+				}
+				// $this->AfficheExceptionFournisseurDonnees() ;
 			}
 			protected function CalculeElementsEnCours()
 			{
 				$filtresSelection = $this->FiltresGlobauxSelection ;
 				array_splice($filtresSelection, count($filtresSelection), 0, $this->FiltresLigneSelection) ;
 				$this->ElementsEnCours = $this->FournisseurDonnees->SelectElements($this->ExtraitColonnesDonnees($this->FiltresEdition), $filtresSelection) ;
+				if($this->FournisseurDonnees->ExceptionTrouvee())
+				{
+					$this->MessageExecution = $this->FournisseurDonnees->DerniereException->Message ;
+				}
 				// print_r($this->FournisseurDonnees->BaseDonnees) ;
 				// $this->ElementsEnCours = $this->FournisseurDonnees->SelectElements($this->ExtraitColonnesDonnees($filtresSelection), $filtresSelection) ;
-				$this->AfficheExceptionFournisseurDonnees() ;
+				// $this->AfficheExceptionFournisseurDonnees() ;
 			}
 			protected function ExtraitColonnesDonnees(& $filtres)
 			{
@@ -392,7 +400,7 @@
 				foreach($filtres as $i => & $filtre)
 				{
 					$cols[$i] = new PvDefinitionColonneDonnees() ;
-					$cols[$i]->NomDonnees = $filtre->NomParametreDonnees ;
+					$cols[$i]->NomDonnees = $filtre->NomColonneLiee ;
 					$cols[$i]->AliasDonnees = $filtre->AliasParametreDonnees ;
 				}
 				return $cols ;
@@ -412,16 +420,13 @@
 					$this->CalculeElementsEnCours() ;
 					// print_r($this->ElementsEnCours) ;
 					// echo "Err : ".$this->FournisseurDonnees->BaseDonnees->ConnectionException ;
-					// echo "Sql : ".$this->FournisseurDonnees->BaseDonnees->LastSqlText ;
+					// print_r($this->FournisseurDonnees->BaseDonnees) ;
 					// print_r($this->ElementsEnCours) ;
 					if(count($this->ElementsEnCours) > 0)
 					{
 						$this->ElementEnCours = $this->ElementsEnCours[0] ;
 						$this->AssigneValeursFiltresEdition() ;
 						$this->ElementEnCoursTrouve = 1 ;
-					}
-					else
-					{
 					}
 				}
 				else
@@ -987,6 +992,13 @@
 					return ;
 				}
 				$succes = 0 ;
+				/*
+				 * Debogages
+				foreach($this->FormulaireDonneesParent->FiltresEdition as $i => & $fltEdit)
+				{
+					echo $fltEdit->IDInstanceCalc."@".$fltEdit->NomParametreLie." : ".intro($fltEdit->Lie())."<br>" ;
+				}
+				* */
 				switch($this->Mode)
 				{
 					case PvModeEditionElement::Ajout :
@@ -996,6 +1008,7 @@
 					break ;
 					case PvModeEditionElement::Modif :
 					{
+						// print_r($this->FormulaireDonneesParent->FiltresLigneSelection[0]->NomParametreDonnees) ;
 						$succes = $this->FormulaireDonneesParent->FournisseurDonnees->ModifElement($this->FormulaireDonneesParent->FiltresLigneSelection, $this->FormulaireDonneesParent->FiltresEdition) ;
 					}
 					break ;
@@ -1010,6 +1023,7 @@
 					}
 					break ;
 				}
+				// print_r($this->FormulaireDonneesParent->FournisseurDonnees->BaseDonnees) ;
 				if(count($this->FormulaireDonneesParent->FiltresEdition) == 0)
 				{
 					$this->RenseigneErreur("Aucun filtre d'edition n'a &eacute;t&eacute; d&eacute;fini") ;

@@ -774,11 +774,13 @@
 				$filtre = new PvFiltreDonneesRef() ;
 				$filtre->Source = & $filtreRef ;
 				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
 			}
 			public function & CreeFiltreFixe($nom, $valeur)
 			{
 				$filtre = new PvFiltreDonneesFixe() ;
+				$filtre->NomParametreDonnees = $nom ;
 				$filtre->ValeurParDefaut = $valeur ;
 				$filtre->AdopteScript($nom, $this->ScriptParent) ;
 				return $filtre ;
@@ -786,12 +788,14 @@
 			public function & CreeFiltreCookie($nom)
 			{
 				$filtre = new PvFiltreDonneesCookie() ;
+				$filtre->NomParametreDonnees = $nom ;
 				$filtre->AdopteScript($nom, $this->ScriptParent) ;
 				return $filtre ;
 			}
 			public function & CreeFiltreSession($nom)
 			{
 				$filtre = new PvFiltreDonneesSession() ;
+				$filtre->NomParametreDonnees = $nom ;
 				$filtre->AdopteScript($nom, $this->ScriptParent) ;
 				return $filtre ;
 			}
@@ -799,6 +803,7 @@
 			{
 				$filtre = new PvFiltreDonneesMembreConnecte() ;
 				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreDonnees = $nom ;
 				$filtre->NomParametreLie = $nomParamLie ;
 				return $filtre ;
 			}
@@ -806,6 +811,7 @@
 			{
 				$filtre = new PvFiltreDonneesHttpUpload() ;
 				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreDonnees = $nom ;
 				$filtre->CheminDossier = $cheminDossierDest ;
 				return $filtre ;
 			}
@@ -813,18 +819,24 @@
 			{
 				$filtre = new PvFiltreDonneesHttpGet() ;
 				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
 			}
 			public function & CreeFiltreHttpPost($nom)
 			{
 				$filtre = new PvFiltreDonneesHttpPost() ;
 				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
 			}
 			public function & CreeFiltreHttpRequest($nom)
 			{
 				$filtre = new PvFiltreDonneesHttpRequest() ;
 				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
 			}
 			public function CreeFltRef($nom, & $filtreRef)
@@ -1002,10 +1014,12 @@
 					$ctn .= $this->RenduErreurTrouvee() ;
 					return $ctn ;
 				}
+				$ctn .= $this->ContenuAvantRendu ;
 				foreach($this->Elements as $i => $elem)
 				{
 					$ctn .= _parse_pattern($this->ContenuModele, $elem) ;				
 				}
+				$ctn .= $this->ContenuApresRendu ;
 				return $ctn ;
 			}
 			protected function RenduErreurTrouvee()

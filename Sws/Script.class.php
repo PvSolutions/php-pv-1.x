@@ -58,12 +58,15 @@
 			public function DetermineEnvironnement()
 			{
 				parent::DetermineEnvironnement() ;
-				$this->ModulePage = $this->ObtientModulePage() ;
-				if(! $this->ModulePage->EstDefini())
+				if($this->NomModulePage != '')
 				{
-					$this->LanceExceptionCritique('Le modele "'.htmlentities($this->NomModulePage).'" de la page n\'est pas supporté par ce système !!!') ;
+					$this->ModulePage = $this->ObtientModulePage() ;
+					if(! $this->ModulePage->EstDefini())
+					{
+						$this->LanceExceptionCritique('Le modele "'.htmlentities($this->NomModulePage).'" de la page n\'est pas supporté par ce système !!!') ;
+					}
+					$this->EntitePage = $this->ObtientEntitePage() ;
 				}
-				$this->EntitePage = $this->ObtientEntitePage() ;
 			}
 			protected function & InsereDateModifForm(& $form, $nomColLiee='')
 			{
@@ -76,6 +79,13 @@
 				echo '<p>'.$msg.'</p>' ;
 				exit ;
 			}
+		}
+		class ScriptAdminBaseSws extends ScriptBaseSws
+		{
+			public $NecessiteMembreConnecte = 1 ;
+		}
+		class ScriptPublBaseSws extends ScriptBaseSws
+		{
 		}
 	}
 	

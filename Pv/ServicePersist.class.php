@@ -194,8 +194,8 @@
 			protected $Adresse = "" ;
 			public $Port = 4401 ;
 			public $DelaiOuvrFlux = 10 ;
-			public $LimiterDelaiBoucle = 0 ;
 			public $DelaiLectFlux = 2 ;
+			public $LimiterDelaiBoucle = 0 ;
 			public $DelaiInactivite = 30 ;
 			public $EcartInactiviteBoucle = 5 ;
 			public $TaillePaquetFlux = 1024 ;

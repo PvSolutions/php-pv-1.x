@@ -44,6 +44,11 @@
 			{
 				return substr($chemin, strlen($this->CheminAdminVersPubl."/"), strlen($chemin)) ;
 			}
+			public function CreeBarreElemsRendu()
+			{
+				$barreMenu = new PvBarreBtnsHoriz() ;
+				return $barreMenu ;
+			}
 			public function CreeBarreMenuModulesPage()
 			{
 				$barreMenu = new PvTablMenuHoriz() ;
@@ -79,6 +84,34 @@
 					$i++ ;
 				}
 				$fourn->Valeurs = array("modules" => $modules) ;
+				return $fourn ;
+			}
+			public function CreeFournImplems()
+			{
+				$fourn = new PvFournisseurDonneesDirect() ;
+				$fourn->ChargeConfig() ;
+				$implems = array() ;
+				$i = 0 ;
+				// print count($this->ImplemsPage)." kkk" ;
+				foreach($this->ImplemsPage as $nomImplem => & $implem)
+				{
+					if($implem->Active == 0)
+					{
+						continue ;
+					}
+					$implems[] = array(
+						"index" => $i,
+						"titre" => $implem->ObtientTitreMenu(),
+						"url" => $implem->ObtientUrlAdmin(),
+						"chemin_icone" => $implem->ObtientCheminIcone(),
+						"version" => $implem->ObtientVersion(),
+						"id" => $implem->IDInstanceCalc,
+						"nom_element" => $implem->NomElementSyst,
+						"ref_module" => $implem->NomRef,
+					) ;
+					$i++ ;
+				}
+				$fourn->Valeurs = array("implems" => $implems) ;
 				return $fourn ;
 			}
 			public function CreeFournEntites($inclureVide = 1)
@@ -215,7 +248,13 @@
 					$module = & $this->ModulesPage[$nomModule] ;
 					$module->RemplitZonePubl($zone) ;
 				}
-				$this->AppliqueImplemsMembre($zone) ;
+				$nomImplems = array_keys($this->ImplemsPage) ;
+				foreach($nomImplems as $i => $nomImplem)
+				{
+					$implem = & $this->ImplemsPage[$nomImplem] ;
+					$implem->RemplitZonePubl($zone) ;
+				}
+				$this->AppliqueImplemsPubl($zone) ;
 			}
 			protected function RemplitZoneAdminSpec(& $zone)
 			{
@@ -228,6 +267,12 @@
 				{
 					$module = & $this->ModulesPage[$nomModule] ;
 					$module->RemplitZoneAdmin($zone) ;
+				}
+				$nomImplems = array_keys($this->ImplemsPage) ;
+				foreach($nomImplems as $i => $nomImplem)
+				{
+					$implem = & $this->ImplemsPage[$nomImplem] ;
+					$implem->RemplitZoneAdmin($zone) ;
 				}
 				$this->AppliqueImplemsAdmin($zone) ;
 			}
@@ -242,6 +287,12 @@
 				{
 					$module = & $this->ModulesPage[$nomModule] ;
 					$module->RemplitZoneMembre($zone) ;
+				}
+				$nomImplems = array_keys($this->ImplemsPage) ;
+				foreach($nomImplems as $i => $nomImplem)
+				{
+					$implem = & $this->ImplemsPage[$nomImplem] ;
+					$implem->RemplitZoneMembre($zone) ;
 				}
 				$this->AppliqueImplemsMembre($zone) ;
 			}
@@ -314,6 +365,18 @@
 			protected function ChargeConfigSuppl()
 			{
 			}
+			public function ObtientUrlZoneAdmin(& $zone)
+			{
+				return "" ;
+			}
+			public function ObtientUrlZonePubl(& $zone)
+			{
+				return "" ;
+			}
+			public function ObtientUrlZoneMembre(& $zone)
+			{
+				return "" ;
+			}
 			public function ObtientUrlAdminPremModule()
 			{
 				$url = 'javascript:;' ;
@@ -321,6 +384,16 @@
 				if(count($nomModules) > 0)
 				{
 					$url = $this->ModulesPage[$nomModules[0]]->ObtientUrlAdmin() ;
+				}
+				return $url ;
+			}
+			public function ObtientUrlAdminPremImplem()
+			{
+				$url = 'javascript:;' ;
+				$nomImplems = array_keys($this->ImplemsPage) ;
+				if(count($nomImplems) > 0)
+				{
+					$url = $this->ImplemsPage[$nomImplems[0]]->ObtientUrlAdmin() ;
 				}
 				return $url ;
 			}
