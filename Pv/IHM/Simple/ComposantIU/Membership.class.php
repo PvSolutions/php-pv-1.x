@@ -22,6 +22,7 @@
 			protected $InclureColonnesMembre = 1 ;
 			public $RemplisseurConfigMembership = null ;
 			public $DefinitionColonneProfil ;
+			public $DefinitionColonneEnable ;
 			public function ChargeConfig()
 			{
 				parent::ChargeConfig() ;
@@ -611,6 +612,10 @@
 		{
 			public $Mode = 1 ;
 			public $MessageSuccesExecution = "Le membre a &eacute;t&eacute; ajout&eacute; avec succ&egrave;s" ;
+		}
+		class PvCommandeInscriptionMS extends PvCommandeAjoutMembreMS
+		{
+			public $MessageSuccesExecution = "Votre inscription a &eacute;t&eacute; prise en compte" ;
 		}
 		class PvCommandeModifMembreMS extends PvCommandeEditionMembreMSBase
 		{
@@ -1679,6 +1684,15 @@
 				$table->FiltresSelection[$i]->Composant->ValeurElementHorsLigne = "" ;
 				$table->FiltresSelection[$i]->Composant->LibelleElementHorsLigne = "-- Tous --" ;
 				$table->FiltreProfilMembre = & $table->FiltresSelection[$i] ;
+				$i++ ;
+				$table->FiltresSelection[$i] = $table->ScriptParent->CreeFiltreHttpGet("activeMembre") ;
+				$table->FiltresSelection[$i]->DeclareComposant("PvZoneSelectBoolHtml") ;
+				$table->FiltresSelection[$i]->ExpressionDonnees = "MEMBER_ENABLE = <SELF>" ;
+				$table->FiltresSelection[$i]->Libelle = $membership->EnableMemberLabel ;
+				$table->FiltresSelection[$i]->Composant->InclureElementHorsLigne = 1 ;
+				$table->FiltresSelection[$i]->Composant->ValeurElementHorsLigne = "" ;
+				$table->FiltresSelection[$i]->Composant->LibelleElementHorsLigne = "-- Tous --" ;
+				$table->FiltreActiveMembre = & $table->FiltresSelection[$i] ;
 			}
 			public function RemplitDefinitionsColonneTableauMembre(& $table)
 			{
@@ -1715,6 +1729,7 @@
 				$table->DefinitionColonneEmail = & $table->DefinitionsColonnes[$i] ;
 				
 				$table->DefinitionColonneProfil = $table->InsereDefCol("PROFILE_TITLE", $membership->ProfileMemberLabel) ;
+				$table->DefinitionColonneEnable = $table->InsereDefColBool("MEMBER_ENABLE", $membership->EnableMemberLabel) ;
 			}
 			public function RemplitDefinitionColActionsTableauMembre(& $table)
 			{

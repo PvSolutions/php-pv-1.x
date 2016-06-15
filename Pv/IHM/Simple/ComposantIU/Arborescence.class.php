@@ -72,7 +72,7 @@
 		{
 			public $RenduDebutRangee = '<ul class="RangeeDonnees">' ;
 			public $RenduFinRangee = '</ul>' ;
-			protected function ObtientDefColsRendu()
+			public function ObtientDefColsRendu()
 			{
 				$defCols = parent::ObtientDefColsRendu() ;
 				foreach($this->DefinitionsColonnes as $i => $defCol)

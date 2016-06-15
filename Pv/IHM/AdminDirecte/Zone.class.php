@@ -40,6 +40,8 @@
 			protected $TypeRendu = 0 ;
 			public $NomClasseRemplisseurConfigMembership = "PvRemplisseurConfigMembershipAdminDirecte" ;
 			public $NomScriptBienvenue = "bienvenue" ;
+			protected $LargeurFenInscription = 525 ;
+			protected $HauteurFenInscription = 450 ;
 			public $InclureScriptsMembership = 1 ;
 			public $ImageArrierePlanDocument = "images/bg-document.png" ;
 			public $EtirerImageArrierePlanDocument = 1 ;
@@ -78,6 +80,7 @@
 			public $InclureRenduEntete = 1 ;
 			public $ContenuRenduEntete = '<p>&nbsp;</p>' ;
 			public $InclureRenduDescription = 0 ;
+			public $CacherIconeOnglet = 0 ;
 			public $InscrireMenuMembership = 1 ;
 			public $PrivilegesMenuMembership = array() ;
 			public $LibelleMenuMembership = "Authentification" ;
@@ -108,6 +111,8 @@
 			public $MenuAuthentification = null ;
 			public $CompAvantEspaceTravail = null ;
 			public $CompApresEspaceTravail = null ;
+			public $FenetresRedimensionnable = "true" ;
+			public $FenetresDraggable = "true" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -131,7 +136,7 @@
 				$cheminIcone = $this->Scripts[$nomScript]->CheminIcone ;
 				if($cheminIcone == '')
 					$cheminIcone = $this->BarreMenuSuperfish->CheminIconeParDefaut ;
-				return 'ouvreOngletCadre("'.$nomScript.'", '.svc_json_encode($cheminIcone).', '.svc_json_encode($this->Scripts[$nomScript]->Titre).', "'.$this->ObtientUrlScript($nomScript).'")' ;
+				return 'ouvreOngletCadre("'.$nomScript.'", '.svc_json_encode($cheminIcone).', '.svc_json_encode($this->Scripts[$nomScript]->ObtientTitreDocument()).', "'.$this->ObtientUrlScript($nomScript).'")' ;
 			}
 			public function InclutLibrairiesExternes()
 			{
@@ -260,13 +265,13 @@
 #groupeOnglets .iconeOnglet
 {
 	float:left;
-	display:block;
+	display:'.(($this->CacherIconeOnglet) ? 'none' : 'block').';
 	padding-top:4px ;
 	padding-left:4px ;
 }
 #groupeOnglets .ui-tabs-nav .ui-icon
 { 
-	display: inline-block; 
+	display:inline-block;
 }
 #groupeOnglets li .ui-icon-close
 {
@@ -329,6 +334,28 @@ function ouvreFenetreConnexion()
 		}
 	}) ;
 }' ;
+				if($this->AutoriserInscription == 1)
+				{
+					$ctn .= '
+function ouvreFenetreInscription()
+{
+	jQuery(\'#fenetreInscription\').dialog("open");
+}
+function fermeFenetreInscription()
+{
+	jQuery(\'#fenetreInscription\').dialog("close");
+}
+jQuery(function() {
+	jQuery(\'#fenetreInscription\').dialog({
+		modal : true,
+		width : '.$this->LargeurFenInscription.',
+		height : "'.$this->HauteurFenInscription.'",
+		resizable : false,
+		draggable : false,
+		autoOpen : false
+	}) ;
+}) ;' ;
+				}
 				return $ctn ;
 			}
 			protected function ObtientContenuJsAdminDirecte()
@@ -352,8 +379,8 @@ var optionsOuvreFenetreDefaut = {
 	LargeurMax : "",
 	HauteurMax : "",
 	Modal : false,
-	Redimensionnable : false,
-	Draggable : true,
+	Redimensionnable : '.$this->FenetresRedimensionnable.',
+	Draggable : '.$this->FenetresDraggable.',
 	OuvrirEnMemeTemps : true,
 	FermerSurEchap : false,
 	NomClasseFenetre : "",
@@ -420,7 +447,11 @@ function extraitOptionsJQueryUiDialog(optionsSource)
 		width: optionsCompletes.Largeur,
 		closeOnEscape: optionsCompletes.FermerSurEchap,
 		modal: optionsCompletes.Modal,
-		draggable: optionsCompletes.Draggable
+		draggable: optionsCompletes.Draggable,
+		resizable: optionsCompletes.Redimensionnable,
+		beforeClose : function(event, ui) {
+			jQuery(this).empty() ;
+		}
 	} ;
 	if(optionsCompletes.LargeurMin != "")
 		options.minWidth = optionsCompletes.LargeurMin ;
@@ -641,7 +672,11 @@ function ouvreOnglet(idOnglet, iconeOnglet, libelleOnglet, contenuOnglet)
 				{
 					if($this->EstNul($this->Membership->MemberLogged))
 					{
-						if($this->ScriptPourRendu->EstAccessible())
+						if($this->AutoriserInscription == 1 && $this->ValeurParamScriptAppele == $this->NomScriptInscription)
+						{
+							$this->TypeRendu = PvZoneWebAdminDirecteTypeRendu::Script ;
+						}
+						elseif($this->ScriptPourRendu->EstAccessible())
 						{
 							$this->TypeRendu = PvZoneWebAdminDirecteTypeRendu::NonConnecte ;
 						}
@@ -773,8 +808,18 @@ function ouvreOnglet(idOnglet, iconeOnglet, libelleOnglet, contenuOnglet)
 		</form>
 	</div>'.PHP_EOL ;
 				}
+				$ctn .= $this->RenduFenetreInscription() ;
 				$ctn .= '<div id="pied">'.$this->ContenuPiedDocument.'</div>'.PHP_EOL ;
 				$ctn .= '</body>' ;
+				return $ctn ;
+			}
+			protected function RenduFenetreInscription()
+			{
+				$ctn = '' ;
+				if($this->AutoriserInscription == 1)
+				{
+					$ctn .= '<div id="fenetreInscription" style="display:none" title="Inscription"><iframe src="?'.urlencode($this->NomParamScriptAppele)."=".urlencode($this->NomScriptInscription).'" frameborder="0" style="width:100%; height:'.($this->HauteurFenInscription - 10).'px"></iframe></div>'.PHP_EOL ;
+				}
 				return $ctn ;
 			}
 			protected function RenduEnteteCorpsDocumentScript()

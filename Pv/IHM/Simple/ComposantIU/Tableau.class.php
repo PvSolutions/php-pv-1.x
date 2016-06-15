@@ -516,7 +516,10 @@
 				if(! in_array($this->NomParamFiltresSoumis(), $this->ParamsGetSoumetFormulaire))
 				{
 					$this->ParamsGetSoumetFormulaire[] = $this->NomParamFiltresSoumis() ;
-					$this->ParamsGetSoumetFormulaire[] = $this->NomParamCommandeSelectionnee() ;
+					if($this->EstPasNul($this->CommandeSelectionnee) && $this->CommandeSelectionnee->InclureEnvoiFiltres())
+					{
+						$this->ParamsGetSoumetFormulaire[] = $this->NomParamCommandeSelectionnee() ;
+					}
 				}
 				if(! $this->FiltresSoumis() && $this->PossedeFiltresRendus())
 				{
@@ -525,7 +528,7 @@
 				$this->DetecteParametresLocalisation() ;
 				$this->CalculeElementsRendu() ;
 			}
-			protected function ObtientValeursExtraites($lignes)
+			public function ObtientValeursExtraites($lignes)
 			{
 				$extracteurs = array() ;
 				foreach($this->DefinitionsColonnes as $i => $col)
@@ -560,7 +563,7 @@
 				}
 				return $lignesResultat ;
 			}
-			protected function ObtientDefColsRendu()
+			public function ObtientDefColsRendu()
 			{
 				$defCols = $this->DefinitionsColonnes ;
 				return $defCols ;
@@ -952,7 +955,7 @@
 						$ctn .= '<tr class="Entete">'.PHP_EOL ;
 						foreach($this->DefinitionsColonnes as $i => $colonne)
 						{
-							if($colonne->Visible == 0)
+							if(! $colonne->EstVisible($this->ZoneParent))
 								continue ;
 							$triPossible = ($this->TriPossible && $colonne->TriPossible) ;
 							$ctn .= ($triPossible) ? '<td' : '<th' ;
@@ -1005,7 +1008,7 @@
 							foreach($this->DefinitionsColonnes as $i => $colonne)
 							{
 								// print_r($ligne) ;
-								if($colonne->Visible == 0)
+								if(! $colonne->EstVisible($this->ZoneParent))
 									continue ;
 								$ctn .= '<td' ;
 								if($colonne->AlignElement != "")

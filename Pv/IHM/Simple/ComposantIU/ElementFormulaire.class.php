@@ -16,15 +16,57 @@
 		}
 		define('PV_COMPOSANT_SIMPLE_IU_ELEM_FORM', 1) ;
 		
+		class PvFmtLblBase
+		{
+			public function Rendu($valeur, & $composant)
+			{
+				return $valeur ;
+			}
+		}
+		class PvFmtLblWeb extends PvFmtLblBase
+		{
+			public function Rendu($valeur, & $composant)
+			{
+				return ($composant->EncodeHtmlEtiquette) ? htmlentities($valeur) : $valeur ;
+			}
+		}
+		class PvFmtLblDateFr extends PvFmtLblBase
+		{
+			public function Rendu($valeur, & $composant)
+			{
+				return date_fr($valeur) ;
+			}			
+		}
+		class PvFmtMonnaie extends PvFmtLblBase
+		{
+			public $MaxDecimals = 3 ;
+			public $MinChiffres = 1 ;
+			public function Rendu($valeur, & $composant)
+			{
+				return format_money($valeur, $this->MaxDecimals, $this->MinChiffres) ;
+			}
+		}
+		
 		class PvElementFormulaireHtml extends PvBaliseHtmlBase
 		{
 			public $Largeur = "" ;
 			public $Hauteur = "" ;
 			public $Valeur = "" ;
+			public $FmtLbl ;
 			public $EncodeHtmlEtiquette = 1 ;
+			public $AttrsSupplHtml = array() ;
+			protected function CreeFmtLbl()
+			{
+				return new PvFmtLblWeb() ;
+			}
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->FmtLbl = $this->CreeFmtLbl() ;
+			}
 			public function EncodeEtiquette($valeur)
 			{
-				return ($this->EncodeHtmlEtiquette) ? htmlentities($valeur) : $valeur ;
+				return $this->FmtLbl->Rendu($valeur, $composant) ;
 			}
 			public function RenduEtiquette()
 			{
@@ -50,6 +92,23 @@
 				{
 					$ctn .= ' style="'.$styleCSS.'"' ;
 				}
+				// echo $this->NomElementHtml." : ".count($this->ClassesCSS)."<br />" ;
+				if(count($this->ClassesCSS) > 0)
+				{
+					$ctn .= ' class="'.join(" ", $this->ClassesCSS).'"' ;
+				}
+				return $ctn ;
+			}
+			protected function RenduAttrsSupplHtml()
+			{
+				$ctn = '' ;
+				if(count($this->AttrsSupplHtml) > 0)
+				{
+					foreach($this->AttrsSupplHtml as $attr => $val)
+					{
+						$ctn .= ' '.htmlentities($attr).'="'.htmlentities($val).'"' ;
+					}
+				}
 				return $ctn ;
 			}
 		}
@@ -69,22 +128,8 @@
 				$ctn .= ' value="'.htmlentities($this->Valeur).'"' ;
 				$ctn .= ' />' ;
 				$ctn .= '<span' ;
-				if($this->Largeur != '')
-				{
-					$styleCSS .= 'width:'.$this->Largeur.';' ;
-				}
-				if($this->Hauteur != '')
-				{
-					$styleCSS .= 'height:'.$this->Hauteur.';' ;
-				}
-				if($this->StyleCSS != '')
-				{
-					$styleCSS .= $this->StyleCSS ;
-				}
-				if($styleCSS != '')
-				{
-					$ctn .= ' style="'.$styleCSS.'"' ;
-				}
+				$ctn .= $this->RenduAttrStyleCSS() ;
+				$ctn .= $this->RenduAttrsSupplHtml() ;
 				$ctn .= '>' ;
 				$ctn .= htmlentities($this->ObtientLibelle()) ;
 				$ctn .= '</span>' ;
@@ -141,6 +186,7 @@
 				$ctn .= ' id="'.$this->IDInstanceCalc.'"' ;
 				$ctn .= ' type="'.$this->TypeElementFormulaire.'"' ;
 				$ctn .= $this->RenduAttrStyleCSS() ;
+				$ctn .= $this->RenduAttrsSupplHtml() ;
 				$ctn .= ' value="'.htmlentities($this->Valeur).'"' ;
 				$ctn .= ' />' ;
 				return $ctn ;
@@ -166,6 +212,8 @@
 					$ctn .= ' cols="'.$this->TotalColonnes.'"' ;
 				if($this->TotalLignes > 0)
 					$ctn .= ' rows="'.$this->TotalLignes.'"' ;
+				$ctn .= $this->RenduAttrStyleCSS() ;
+				$ctn .= $this->RenduAttrsSupplHtml() ;
 				$ctn .= '>' ;
 				$ctn .= htmlentities($this->Valeur) ;
 				$ctn .= '</textarea>' ;
@@ -298,6 +346,8 @@
 			public $LibelleLienSelectAucun = "Decocher Tout" ;
 			public $InclureLiens = 1 ;
 			public $InclureFoncJs = 1 ;
+			public $SelectionStricte = false ;
+			public $SeparateurLibelleEtiqVide = ", " ;
 			protected function RenduFoncJs()
 			{
 				if(! $this->InclureFoncJs || $this->ChoixMultiple == 0)
@@ -354,11 +404,48 @@
 			}
 			public function RenduEtiquette()
 			{
-				$lignes = $this->FournisseurDonnees->RechExacteElements($this->FiltresSelection, $this->NomColonneValeur, $this->Valeur) ;
+				$this->InitFournisseurDonnees() ;
+				$this->CalculeValeursSelectionnees() ;
+				$lignes = array() ;
+				if($this->ChoixMultiple == 0)
+				{
+					$lignes = $this->FournisseurDonnees->RechExacteElements($this->FiltresSelection, $this->NomColonneValeur, $this->Valeur) ;
+				}
+				else
+				{
+					$lignes = $this->FournisseurDonnees->SelectElements(array(), $this->FiltresSelection) ;
+				}
+				// print_r($this->FournisseurDonnees) ;
 				$etiquette = '' ;
 				if(count($lignes) > 0)
 				{
-					$etiquette = $lignes[0][$this->NomColonneLibelle] ;
+					foreach($lignes as $i => $ligne)
+					{
+						$estSelectionnee = 0 ;
+						if($this->ChoixMultiple == 0)
+						{
+							$estSelectionnee = 1 ;
+						}
+						else
+						{
+							if($this->NomColonneValeurParDefaut != "" && $ligne[$this->NomColonneValeurParDefaut] == 1)
+							{
+								$estSelectionnee = 1 ;
+							}
+							elseif($this->EstValeurSelectionnee($ligne[$this->NomColonneValeur]))
+							{
+								$estSelectionnee = 1 ;
+							}
+						}
+						if($estSelectionnee)
+						{
+							if($etiquette != "")
+							{
+								$etiquette .= $this->SeparateurLibelleEtiqVide ;
+							}
+							$etiquette .= $ligne[$this->NomColonneLibelle] ;
+						}
+					}
 				}
 				else
 				{
@@ -383,7 +470,7 @@
 			protected function EstValeurSelectionnee($valeur)
 			{
 				// print $this->IDInstanceCalc ;
-				return (in_array($valeur, $this->ValeursSelectionnees)) ? 1 : 0 ;
+				return (in_array($valeur, $this->ValeursSelectionnees, $this->SelectionStricte)) ? 1 : 0 ;
 			}
 			protected function ChargeConfigFournisseurDonnees()
 			{
@@ -482,6 +569,7 @@
 				$ctn .= ' name="'.$this->NomElementHtml.'"' ;
 				$ctn .= ' id="'.$this->IDInstanceCalc.'"' ;
 				$ctn .= $this->RenduAttrStyleCSS() ;
+				$ctn .= $this->RenduAttrsSupplHtml() ;
 				$ctn .= '>'.PHP_EOL ;
 				if($this->InclureElementHorsLigne)
 				{
@@ -535,6 +623,7 @@
 				$ctn .= ' name="Conteneur_'.$this->NomElementHtml.'"' ;
 				$ctn .= ' id="Conteneur_'.$this->IDInstanceCalc.'"' ;
 				$ctn .= $this->RenduAttrStyleCSS() ;
+				$ctn .= $this->RenduAttrsSupplHtml() ;
 				$ctn .= '>'.PHP_EOL ;
 				$totalLignes = 0 ;
 				$indexLigne = 0 ;
@@ -1000,6 +1089,7 @@
 		}
 		class PvZoneSelectBoolHtml extends PvZoneBoiteSelectHtml
 		{
+			public $SelectionStricte = true ;
 			public $LibelleVrai = "" ;
 			public $LibelleFaux = "" ;
 			public $ValeurVrai = "" ;

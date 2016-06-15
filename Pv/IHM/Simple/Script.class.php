@@ -47,6 +47,25 @@
 			public $ActiverAutoRafraich = 0 ;
 			public $DelaiAutoRafraich = 0 ;
 			public $ParamsAutoRafraich = array() ;
+			public $Imprimable = 0 ;
+			public $NomActionImprime = "imprimeScript" ;
+			public $ActionImprime ;
+			public function ChargeConfig()
+			{
+				parent::ChargeConfig() ;
+				$this->ChargeActionsAuto() ;
+			}
+			protected function CreeActionImprime()
+			{
+				return new PvActionImprimeScript() ;
+			}
+			protected function ChargeActionsAuto()
+			{
+				if($this->Imprimable)
+				{
+					$this->ActionImprime = $this->InsereActionAvantRendu($this->NomActionImprime, $this->CreeActionImprime()) ;
+				}
+			}
 			public function DoitAutoRafraich()
 			{
 				return $this->ActiverAutoRafraich && $this->DelaiAutoRafraich > 0;
@@ -54,6 +73,16 @@
 			public function EstBienRefere()
 			{
 				return PvVerificateurReferantsSursWeb::Valide($this) ;
+			}
+			public function & InsereActionAvantRendu($nomAction, $action)
+			{
+				$this->InscritActionAvantRendu($nomAction, $action) ;
+				return $action ;
+			}
+			public function & InsereActionApresRendu($nomAction, $action)
+			{
+				$this->InscritActionApresRendu($nomAction, $action) ;
+				return $action ;
 			}
 			public function InscritActionAvantRendu($nomAction, & $action)
 			{
@@ -111,28 +140,31 @@
 				$filtre->CheminDossier = $cheminDossierDest ;
 				return $filtre ;
 			}
-			public function & CreeFiltreHttpGet($nom)
+			public function & CreeFiltreHttpGet($nom, $exprDonnees="")
 			{
 				$filtre = new PvFiltreDonneesHttpGet() ;
 				$filtre->AdopteScript($nom, $this) ;
 				$filtre->NomParametreLie = $nom ;
 				$filtre->NomParametreDonnees = $nom ;
+				$filtre->ExpressionDonnees = $exprDonnees ;
 				return $filtre ;
 			}
-			public function & CreeFiltreHttpPost($nom)
+			public function & CreeFiltreHttpPost($nom, $exprDonnees="")
 			{
 				$filtre = new PvFiltreDonneesHttpPost() ;
 				$filtre->AdopteScript($nom, $this) ;
 				$filtre->NomParametreLie = $nom ;
 				$filtre->NomParametreDonnees = $nom ;
+				$filtre->ExpressionDonnees = $exprDonnees ;
 				return $filtre ;
 			}
-			public function & CreeFiltreHttpRequest($nom)
+			public function & CreeFiltreHttpRequest($nom, $exprDonnees="")
 			{
 				$filtre = new PvFiltreDonneesHttpRequest() ;
 				$filtre->AdopteScript($nom, $this) ;
 				$filtre->NomParametreLie = $nom ;
 				$filtre->NomParametreDonnees = $nom ;
+				$filtre->ExpressionDonnees = $exprDonnees ;
 				return $filtre ;
 			}
 			public function PrepareRendu()
@@ -239,6 +271,10 @@
 						$this->CheminIcone = $cheminIcone ;
 					}
 				}
+			}
+			public function ImpressionEnCours()
+			{
+				return $this->EstPasNul($this->ZoneParent) && $this->ZoneParent->ImpressionEnCours() ;
 			}
 		}
 		
@@ -621,7 +657,7 @@
 		{
 			public $Titre = "Inscription" ;
 			public $TitreDocument = "Inscription" ;
-			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutMembreMS" ;
+			public $NomClasseFormulaireDonnees = "PvCommandeInscriptionMS" ;
 			public $Securiser = 0 ;
 			public $FltCaptcha ;
 			public $CompCaptcha ;
@@ -629,6 +665,7 @@
 			public $IdProfilsAcceptes = array() ;
 			public $LibelleCmdExecuter = "S'inscrire" ;
 			public $IdProfilParDefaut = 1 ;
+			public $ValeurActiveParDefaut = 0 ;
 			public $InclureMsgConnexion = 1 ;
 			public $AlignMsgConnexion = "center" ;
 			public $FormatMsgConnexion = 'D&eacute;j&agrave; inscrit ? <a href="${url}">Connectez-vous !</a>' ;
@@ -642,13 +679,13 @@
 					$this->CompCaptcha = $this->FltCaptcha->DeclareComposant("PvZoneCommonCaptcha") ;
 				}
 				$fltActiver = & $form->FiltreActiverMembre ;
-				$fltActiver->ValeurParDefaut = 0 ;
+				$fltActiver->ValeurParDefaut = $this->ValeurActiveParDefaut ;
 				$fltActiver->Invisible = 1 ;
 				$fltProfil = & $form->FiltreProfilMembre ;
 				if(count($this->IdProfilsAcceptes) > 0)
 				{
 					$fourn = & $fltProfil->Composant->FournisseurDonnees ;
-					$params = array_apply_prefix("idProfil", $this->IdProfilsAcceptes) ;
+					$params = array_apply_prefix($this->IdProfilsAcceptes, "idProfil") ;
 					$fourn->ParamsSelection = array() ;
 					$fourn->RequeteSelection = "(select * from ".$fourn->BaseDonnees->EscapeTableName($this->ZoneParent->Membership->ProfileTable).' where '.$fourn->BaseDonnees->EscapeFieldName($this->ZoneParent->Membership->ProfileTable, $this->ZoneParent->Membership->IdProfileColumn)." in (" ;
 					foreach($this->IdProfilsAcceptes as $i => $idProfil)

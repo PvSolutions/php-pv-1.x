@@ -40,9 +40,10 @@
 			public function & ObtientEntitePage()
 			{
 				$entitePage = new EntitePageIndefSws() ;
-				if($this->EstPasNul($this->ModulePage) && $this->NomEntitePage != '' && isset($this->ModulePage->Entites[$this->NomEntitePage]))
+				$modulePage = $this->ObtientModulePage() ;
+				if($this->EstPasNul($modulePage) && $this->NomEntitePage != '' && isset($modulePage->Entites[$this->NomEntitePage]))
 				{
-					$entitePage = & $this->ModulePage->Entites[$this->NomEntitePage] ;
+					$entitePage = & $modulePage->Entites[$this->NomEntitePage] ;
 				}
 				return $entitePage ;
 			}

@@ -389,6 +389,36 @@ opt.buttons = {} ;'.PHP_EOL ;
 			}
 		}
 		
+		class PvCmdFermeDialogJQueryUi extends PvCommandeRedirectionHttp
+		{
+			public $FenetreCible = "window" ;
+			protected function ExecuteInstructions()
+			{
+				$ctn = '<script type="text/javascript">
+	jQuery(function() {
+		jQuery('.$this->FenetreCible.'.document).find(".ui-dialog-content").each(function() {
+			// alert(jQuery(this).attr("id"));
+			var currentDialog = jQuery(this) ;
+			if(currentDialog.closest(".ui-dialog").css("display") == "none")
+			{
+				return ;
+			}
+			currentDialog.closest(".ui-dialog").css("display", "none") ;
+			// currentDialog.dialog("close") ;
+		})
+	}) ;'.PHP_EOL ;
+				$ctn .= '</script>' ;
+				if($this->EstPasNul($this->TableauDonneesParent))
+				{
+					$this->TableauDonneesParent->ContenuAvantRendu .= $ctn ;
+				}
+				elseif($this->EstPasNul($this->FormulaireDonneesParent))
+				{
+					$this->FormulaireDonneesParent->ContenuAvantRendu .= $ctn ;
+				}
+			}
+		}
+		
 		class PvBtnBaseDialogJQueryUi
 		{
 			public function RenduDefinition(& $dialog)

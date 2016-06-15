@@ -128,6 +128,10 @@
 			protected function ObtientNomNouvSousMenu($nom)
 			{
 				$nom = ($nom == '') ? uniqid("SousMenu_") : $nom ;
+				if(isset($this->SousMenus[$nom]))
+				{
+					$nom = "SousMenu_".count($this->SousMenus) ;
+				}
 				return $nom ;
 			}
 			public function & InscritSousMenu($nomClasseSousMenu, $nom)
@@ -185,6 +189,20 @@
 				$nom = $this->ObtientNomNouvSousMenu($nom) ;
 				$menu = $this->InscritSousMenu($this->NomClasseSousMenuFige, $nom) ;
 				$menu->Titre = $titre ;
+				return $menu ;
+			}
+			public function & InscritSousMenuAppelJs($titre="", $fonct="", $args=array())
+			{
+				$nom = $this->ObtientNomNouvSousMenu("") ;
+				$menu = $this->InscritSousMenu("PvMenuAppelJs", $nom) ;
+				$menu->Titre = $titre ;
+				$menu->NomFonct = $fonct ;
+				$menu->Args = $args ;
+				return $menu ;
+			}
+			public function & InscritSousMenuFonctJs($titre="", $fonct="", $args=array())
+			{
+				$menu = $this->InscritSousMenuAppelJs($titre, $fonct, $args) ;
 				return $menu ;
 			}
 			public function & InscritSousMenuUrl($titre, $url)
@@ -340,6 +358,29 @@
 					return 0 ;
 				return ($this->ZoneParent->ScriptAppele->NomElementZone == $this->NomScript || (count($this->NomScriptsSelect) > 0 && in_array($this->ZoneParent->ScriptAppele->NomElementZone, $this->NomScriptsSelect))) ? 1 : 0 ;
 			}
+		}
+		class PvMenuAppelJs extends PvMenuIHMBase
+		{
+			public $NomFonct ;
+			public $Args = array() ;
+			protected function ChaineArgs()
+			{
+				$ctn = '' ;
+				foreach($this->Args as $i => $arg)
+				{
+					if($i > 0)
+						$ctn .= ', ' ;
+					$ctn .= svc_json_encode($arg) ;
+				}
+				return $ctn ;
+			}
+			public function ObtientUrl()
+			{
+				return "javascript:".htmlentities($this->NomFonct."(".$this->ChaineArgs().");") ;
+			}
+		}
+		class PvMenuFonctJs extends PvMenuAppelJs
+		{
 		}
 		
 		class PvBarreMenuWebBase extends PvComposantIUBase

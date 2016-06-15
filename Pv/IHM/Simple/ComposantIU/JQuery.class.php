@@ -16,6 +16,140 @@
 		}
 		define('PV_COMPOSANT_SIMPLE_JQUERY', 1) ;
 		
+		class PvFonctInstJQuery
+		{
+			public $NomMembreInst ;
+			public $Args = array() ;
+			public $Contenu = "" ;
+			public function __construct($nomMembreInst, $args, $ctn='')
+			{
+				$this->NomMembreInst = $nomMembreInst ;
+				$this->Args = $args ;
+				$this->Contenu = $ctn ;
+			}
+			public function CtnJSDef()
+			{
+				$ctn = '' ;
+				$ctn .= 'function ('.join(", ", $this->Args).') {
+'.$this->Contenu.'
+}' ;
+				return $ctn ;
+			}
+		}
+		
+		class PvEditeurBaseJQuery extends PvEditeurHtmlBase
+		{
+			protected $CfgInst ;
+			protected $FonctsInst = array() ;
+			protected function CtnJSCfgInst()
+			{
+				$ctn = "" ;
+				$ctn .= 'var cfgInst'.$this->IDInstanceCalc.' = '.svc_json_encode($this->CfgInst).' ;'."\n" ;
+				foreach($this->FonctsInst as $i => $fonctInst)
+				{
+					if($fonctInst->Contenu == "")
+					{
+						continue ;
+					}
+					$ctn .= 'cfgInst'.$this->IDInstanceCalc.'.'.$fonctInst->NomMembreInst.' = '.$fonctInst->CtnJSDef().PHP_EOL ;
+				}
+				return $ctn ;
+			}
+			protected function CtnJSDeclInst()
+			{
+				$ctn = '' ;
+				$ctn .= 'jQuery("#'.$this->IDInstanceCalc.'").find(cfgInst'.$this->IDInstanceCalc.') ;' ;
+				return $ctn ;
+			}
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->CfgInst = $this->CreeCfgInst() ;
+				$this->InitFonctsInst() ;
+			}
+			protected function CreeCfgInst()
+			{
+				return new StdClass() ;
+			}
+			protected function InitFonctsInst()
+			{
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = parent::RenduDispositifBrut().PHP_EOL ;
+				$ctn .= $this->RenduInstJS() ;
+				return $ctn ;
+			}
+			protected function RenduInstJS()
+			{
+				$ctn = '' ;
+				$ctn .= '<script type="text/javascript">
+	jQuery(function() {
+'.$this->CtnJSCfgInst().'
+'.$this->CtnJSDeclInst().'
+	}) ;
+</script>' ;
+				return $ctn ;
+			}
+		}
+		
+		class PvBarreMenuSuperfish extends PvBarreMenuWebBase
+		{
+			public static $SourceIncluse ;
+			public static $CheminJs = "js/superfish.min.js" ;
+			public static $CheminCSSPrinc = "css/superfish.css" ;
+			public static $CheminCSSNavbar = "css/superfish-navbar.css" ;
+			public static $CheminCSSVertical = "css/superfish-vertical.css" ;
+			public $AppliquerJQueryUi = 0 ;
+			public $CacherBordure = 0 ;
+			protected function RenduSourceIncluse()
+			{
+				$ok = $this->ObtientValeurStatique("SourceIncluse") ;
+				if($ok)
+				{
+					return '' ;
+				}
+				$ctn = '' ;
+				$ctn .= '<script type="text/javascript" src="'.PvBarreMenuSuperfish::$CheminJs.'"></script>'.PHP_EOL ;
+				$ctn .= '<link rel="stylesheet" type="text/css" href="'.PvBarreMenuSuperfish::$CheminCSSPrinc.'">'.PHP_EOL ;
+				$ctn .= '<link rel="stylesheet" type="text/css" href="'.PvBarreMenuSuperfish::$CheminCSSNavbar.'">'.PHP_EOL ;
+				$ctn .= '<link rel="stylesheet" type="text/css" href="'.PvBarreMenuSuperfish::$CheminCSSVertical.'">'.PHP_EOL ;
+				$this->AffecteValeurStatique("SourceIncluse", 1) ;
+				return $ctn ;
+			}
+			protected function RenduHabillageJQueryUi()
+			{
+				$ctn = '' ;
+				$ctn .= '<script type="text/javascript">'.PHP_EOL ;
+				$ctn .= 'jQuery(function () {
+var currentMenu = jQuery("#'.$this->IDInstanceCalc.'") ;
+currentMenu.find("li")
+	.addClass("ui-state-default")
+currentMenu.find("li a").hover(
+		function () { jQuery(this).addClass("ui-state-active"); },
+		function () { jQuery(this).removeClass("ui-state-active"); }
+	);'.PHP_EOL ;
+				if($this->CacherBordure)
+				{
+					$ctn .= 'currentMenu.find("li").css("border", "0px") ;'.PHP_EOL ;
+				}
+				$ctn .= '}) ;'.PHP_EOL ;
+				$ctn .= '</script>' ;
+				return $ctn ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				$ctn .= $this->RenduSourceIncluse() ;
+				$ctn .= parent::RenduDispositifBrut() ;
+				if($this->AppliquerJQueryUi)
+				{
+					$ctn .= PHP_EOL .$this->RenduHabillageJQueryUi() ;
+				}
+				return $ctn ;
+			}
+		}
+		
 		class PvConfigJQueryTreeview
 		{
 			public $persist = "location" ;
@@ -85,7 +219,7 @@
 			protected $CheminCSS = "css/slidebars.css" ;
 			protected $NomClsCSSSlideBar = "sb-left" ;
 			protected static $SourceIncluse = 0 ;
-			// Doit �tre initialis� avant la m�thode "ChargeConfig()"
+			// Doit etre initialis� avant la methode "ChargeConfig()"
 			public $ComposantSupport ;
 			public $LibelleLien = "Ouvrir le menu" ;
 			protected function InitConfig()
@@ -281,6 +415,110 @@ html.sb-active #sb-site, .sb-toggle-left, .sb-toggle-right, .sb-open-left, .sb-o
 				return $ctn ;
 			}
 		}
+		class PvConfigPriceFormat
+		{
+			public $prefix = "" ;
+			public $suffix = "" ;
+            public $centsSeparator = "." ;
+			public $thousandsSeparator = " " ;
+			public $limit = "" ;
+			public $centsLimit = 3 ;
+			public $clearPrefix = false ;
+			public $allowNegative = false ;
+			public $insertPlusSign = false ;
+		}
+		class PvPriceFormatJQuery extends PvZoneInvisibleHtml
+		{
+			public static $SourceIncluse = 0 ;
+			public $Config ;
+			protected $ValeurEditeur ;
+			public $DelaiRafraichValeur = 0.5 ;
+			public $CheminJs = "js/jquery.price_format.min.js" ;
+			protected function CreeFmtLbl()
+			{
+				return new PvFmtMonnaie() ;
+			}
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->Config = new PvConfigPriceFormat() ;
+			}
+			public function InclutLibSource()
+			{
+				$ctn = '' ;
+				if($this->ObtientValeurStatique('SourceIncluse') == 1)
+				{
+					return $ctn ;
+				}
+				$ctn .= $this->ZoneParent->RenduLienJsInclus($this->CheminJs) ;
+				$this->AffecteValeurStatique("SourceIncluse", 1) ;
+				return $ctn ;
+			}
+			protected function PrepareEditeur()
+			{
+				$this->ValeurEditeur = $this->Valeur ;
+				if(empty($this->ValeurEditeur))
+				{
+					$this->ValeurEditeur = "0" ;
+				}
+				if($this->Config->centsLimit > 0)
+				{
+					if(strpos($this->ValeurEditeur, ".") === false)
+					{
+						$this->ValeurEditeur .= ".".str_repeat("0", $this->Config->centsLimit) ;
+					}
+					else
+					{
+						$partiesNb = explode(".", $this->ValeurEditeur, 2) ;
+						if(strlen($partiesNb[1]) < $this->Config->centsLimit)
+						{
+							$this->ValeurEditeur .= str_repeat("0", $this->Config->centsLimit - strlen($partiesNb[1])) ;
+						}
+					}
+				}
+				// print $this->ValeurEditeur ;
+			}
+			protected function RenduEditeur()
+			{
+				$ctn = '' ;
+				$this->PrepareEditeur() ;
+				$ctn .= '<input id="Editeur_'.$this->IDInstanceCalc.'"' ;
+				$ctn .= ' value="'.htmlentities($this->ValeurEditeur).'"' ;
+				$ctn .= ' type="text"' ;
+				$ctn .= $this->RenduAttrStyleCSS() ;
+				$ctn .= ' />' ;
+				return $ctn ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				$ctn .= $this->InclutLibSource() ;
+				$ctn .= $this->RenduEditeur() ;
+				$ctn .= parent::RenduDispositifBrut() ;
+				$ctn .= $this->ZoneParent->RenduContenuJsInclus('function FixeValeur'.$this->IDInstanceCalc.'() {
+	var maskValue = new String(jQuery("#Editeur_'.$this->IDInstanceCalc.'").val()) ;
+	var result = "" ;
+	for(var i=0; i<maskValue.length; i++)
+	{
+		var currentChar = maskValue.charAt(i) ;
+		if(currentChar != '.svc_json_encode($this->Config->thousandsSeparator).')
+		{
+			if(currentChar == '.svc_json_encode($this->Config->centsSeparator).')
+				currentChar = "." ;
+			if(! isNaN(currentChar) || currentChar == "-" || currentChar == ".")
+				result += currentChar ;
+		}
+	}
+	jQuery("#'.$this->IDInstanceCalc.'").val(result) ;
+	setTimeout("FixeValeur'.$this->IDInstanceCalc.'()", '.(1000 * $this->DelaiRafraichValeur).') ;
+}
+jQuery(function () {
+	jQuery("#Editeur_'.$this->IDInstanceCalc.'").priceFormat('.svc_json_encode($this->Config).') ;
+	FixeValeur'.$this->IDInstanceCalc.'() ;
+})') ;
+				return $ctn ;
+			}
+		}
         
         class ResultTypeahead
         {
@@ -447,6 +685,132 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
                 return $ctn ;
             }
         }
+		
+		class PvSelect2 extends PvEditeurBaseJQuery
+		{
+			public $CheminFichierJs = "js/select2.min.js" ;
+			public $CheminFichierCSS = "css/select2.min.css" ;
+			public $FournisseurDonnees ;
+			public $NomColonneLibelle ;
+			public $NomColonneValeur ;
+			public $ActSupport ;
+			public $Largeur = '200px' ;
+			public $MaxElemsParPage = 30 ;
+			public $FiltresSelection = array() ;
+			public function ExtraitFiltresSelection($termeRech)
+			{
+				$filtres = $this->FiltresSelection ;
+				return $filtres ;
+			}
+			public function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->ActSupport = new PvActSupportSelect2() ;
+			}
+			public function AdopteZone($nom, & $zone)
+			{
+				parent::AdopteZone($nom, $zone) ;
+				$this->InscritActionAvantRendu("ActSupport_".$this->IDInstanceCalc, $this->ActSupport) ;
+				$this->CfgInst->ajax->url = $this->ActSupport->ObtientUrl() ;
+			}
+			public function ChargeConfig()
+			{
+				parent::ChargeConfig() ;
+				$this->ActSupport->ChargeConfig() ;
+			}
+			protected function InitFonctsInst()
+			{
+				$this->FonctsInst[] = new PvFonctInstJQuery("escapeMarkup", array("markup"), "return markup ;") ;
+				$this->FonctsInst[] = new PvFonctInstJQuery("ajax.data", array("params"), "return {
+	q: params.term,
+	page: params.page
+} ;") ;
+			}
+			protected function RenduEditeurBrut()
+			{
+				$ctn = '' ;
+				$ctn .= '<select name="'.htmlentities($this->NomElementHtml).'" id="'.$this->IDInstanceCalc.'"'.$this->RenduAttrStyleCSS().'>'.PHP_EOL ;
+				$ctn .= '</select>' ;
+				return $ctn ;
+			}
+			protected function CreeCfgInst()
+			{
+				return new PvCfgSelect2() ;
+			}
+			protected function CtnJSDeclInst()
+			{
+				$ctn = 'jQuery("#'.$this->IDInstanceCalc.'").select2(cfgInst'.$this->IDInstanceCalc.') ;' ;
+				return $ctn ;
+			}
+			protected function RenduSourceBrut()
+			{
+				$this->FonctsInst[] = new PvFonctInstJQuery("ajax.processResults", array("data", "params"), 'params.page = params.page || 1;
+return {
+	results: jQuery.map(data.items, function (item) {
+		return {
+			text: item.'.$this->NomColonneLibelle.',
+			id: item.'.$this->NomColonneValeur.'
+		};
+	}),
+	pagination: {
+		more: (params.page * '.$this->MaxElemsParPage.') < data.total_count
+	}
+};') ;
+				return '<script type="text/javascript" src="'.$this->CheminFichierJs.'"></script>
+<link rel="stylesheet" type="text/css" href="'.$this->CheminFichierCSS.'">'.PHP_EOL ;
+			}
+		}
+		class PvActSupportSelect2 extends PvActionResultatJSONZoneWeb
+		{
+			protected $TermeRech ;
+			protected function ConstruitResultat()
+			{
+				$comp = & $this->ComposantIUParent ;
+				$fourn = & $this->ComposantIUParent->FournisseurDonnees ;
+				$this->Resultat = new PvResultSelect2() ;
+				// print "hh : ".get_class($comp) ;
+				if($this->EstNul($comp) || $comp->EstNul($fourn))
+				{
+					return ;
+				}
+				$this->TermeRech = (isset($_GET["q"])) ? $_GET["q"] : '' ;
+				$filtres = $comp->ExtraitFiltresSelection($this->TermeRech) ;
+				// $this->Resultat->total_count = $fourn->CompteElements(array(), $filtres) ;
+				$this->Resultat->items = $fourn->RechDebuteElements($filtres, array($comp->NomColonneLibelle, $comp->NomColonneValeur), $this->TermeRech) ;
+				$this->Resultat->total_count = count($this->Resultat->items) ;
+				// print_r($fourn) ;
+			}
+		}
+		class PvResultSelect2
+		{
+			public $items = array() ;
+			public $total_count = 0 ;
+		}
+		class PvCfgSelect2
+		{
+			public $ajax ;
+			public $escapeMarkup ;
+			public $minimumInputLength = 1 ;
+			public $placeholder = "" ;
+			public $allowClear = true ;
+			public $data = true ;
+			public $tags = false ;
+			public $tokenSeparators = array() ;
+			public function __construct()
+			{
+				$this->ajax = new PvCfgAjaxSelect2() ;
+			}
+		}
+		class PvCfgAjaxSelect2
+		{
+			public $url ;
+			public $dataType = "json" ;
+			public $type = "GET" ;
+			public $delay = 250 ;
+			public $data ;
+			public $processResults ;
+			public $cache = true ;
+		}
 	}
 	
 ?>

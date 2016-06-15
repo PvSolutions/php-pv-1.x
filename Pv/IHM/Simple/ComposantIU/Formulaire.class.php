@@ -23,7 +23,7 @@
 			include dirname(__FILE__)."/ActCmd.class.php" ;
 		}
 		define('PV_COMPOSANT_SIMPLE_IU_FORMULAIRE', 1) ;
-			
+		
 		class PvFormulaireDonneesHtml extends PvComposantIUDonneesSimple
 		{
 			public $TypeComposant = "FormulaireDonneesHTML" ;
@@ -733,7 +733,7 @@
 			protected function RenduBlocCommandes()
 			{
 				$ctn = '' ;
-				if(! $this->CacherBlocCommandes && ! $this->CacherFormulaireFiltres)
+				if(! $this->CacherBlocCommandes && ! $this->CacherFormulaireFiltres && ! $this->ImpressionEnCours())
 				{
 					if($this->ElementEnCoursTrouve)
 					{

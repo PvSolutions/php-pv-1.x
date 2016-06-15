@@ -57,9 +57,12 @@
 			public $name = "" ;
 			public $controllers = array() ;
 		}
-		class PvConfigComposantBaseExtJS extends PvConfigElemExtJS
+		class PvConfigClasseExtJS extends PvConfigElemExtJS
 		{
 			public $extend = '' ;
+		}
+		class PvConfigComposantBaseExtJS extends PvConfigClasseExtJS
+		{
 			public $alias = '' ;
 			public $layout = 'fit' ;
 		}
@@ -67,6 +70,8 @@
 		{
 			public $extend = '' ;
 			public $alias = '' ;
+			public $stores = array() ;
+			public $models = array() ;
 		}
 		class PvConfigViewportExtJS extends PvConfigComposantBaseExtJS
 		{
@@ -74,6 +79,7 @@
 		}
 		class PvConfigWidgetExtJS extends PvConfigComposantBaseExtJS
 		{
+			public $id = '' ;
 			public $iconCls = '' ;
 			public $items = array() ;
 			public $dockedItems = array() ;
@@ -102,12 +108,14 @@
 			public $ElementsExtJS = array() ;
 			public $CreaAuto = 1 ;
 			public $DefAuto = 1 ;
+			protected $InclutXTypeCrea = 1 ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
 				$this->CfgDefExtJS = $this->CreeCfgDefExtJS() ;
 				$this->CfgCreaExtJS = $this->CreeCfgCreaExtJS() ;
-				$this->CfgCreaExtJS->xtype = $this->IDInstanceCalc ;
+				if($this->InclutXTypeCrea)
+					$this->CfgCreaExtJS->xtype = $this->IDInstanceCalc ;
 			}
 			protected function CreeCfgDefExtJS()
 			{
@@ -131,9 +139,17 @@
 				$elem->AdopteComposantParentExtJS($nom, $this) ;
 				return $elem ;
 			}
+			public function ObtientAliasClasseExtJS()
+			{
+				return (($this->NomClasseExtJS != '') ? $this->NomClasseExtJS : $this->IDInstanceCalc) ;
+			}
 			public function ObtientNomClasseExtJS()
 			{
-				return $this->ObtientNomAppExtJS().'.'.$this->EspaceNommageExtJS.'.'.(($this->NomClasseExtJS != '') ? $this->NomClasseExtJS : $this->IDInstanceCalc) ;
+				return $this->ObtientNomAppExtJS().'.'.$this->EspaceNommageExtJS.'.'.$this->ObtientAliasClasseExtJS() ;
+			}
+			public function ObtientLienClasseExtJS()
+			{
+				return $this->ObtientAliasClasseExtJS()."@".$this->ObtientNomAppExtJS().'.'.$this->EspaceNommageExtJS ;
 			}
 			public function RenduComposantExtJS()
 			{
@@ -193,6 +209,7 @@
 			public $CtnFoncInitComponentExtJS = '' ;
 			public $ListenersExtJS = array() ;
 			protected $DefItemsDansInitComponent = 0 ;
+			protected $AutoFixerAlias = 1 ;
 			public function & InsereListenerExtJS($listener)
 			{
 				return $this->InscritListenerExtJS($listener) ;
@@ -242,7 +259,10 @@
 			public function PrepareRenduJS()
 			{
 				parent::PrepareRenduJS() ;
-				$this->CfgDefExtJS->alias = 'widget.'.$this->IDInstanceCalc ;
+				if($this->AutoFixerAlias)
+				{
+					$this->CfgDefExtJS->alias = 'widget.'.$this->IDInstanceCalc ;
+				}
 				if($this->NomClasseExtendExtJS != '')
 				{
 					$this->CfgDefExtJS->extend = $this->NomClasseExtendExtJS ;
@@ -327,26 +347,6 @@
 				$this->InscritElementExtJS($nom, $controller) ;
 				return $controller ;
 			}
-			public function InsereStore($nom, $store)
-			{
-				return $this->InscritStore($nom, $store) ;
-			}
-			public function InscritStore($nom, & $store)
-			{
-				$this->Stores[$nom] = & $store ;
-				$this->InscritElementExtJS($nom, $store) ;
-				return $store ;
-			}
-			public function InsereModel($nom, $model)
-			{
-				return $this->InscritModel($nom, $model) ;
-			}
-			public function InscritModel($nom, & $model)
-			{
-				$this->Models[$nom] = & $model ;
-				$this->InscritElementExtJS($nom, $model) ;
-				return $model ;
-			}
 			public function ChargeConfig()
 			{
 				parent::ChargeConfig() ;
@@ -418,27 +418,27 @@
 			}
 		}
 		
-		class PvFiltreDonneesExtJS extends PvFiltreDonneesBase
+		class PvFiltreDonneesExtJS extends PvFiltreDonneesHttpGet
 		{
 			public $TypeLiaisonParametre = "extjs" ;
 			public $NomClasseComposant = "PvTextFieldExtJS" ;
 		}
 		
-		class PvConfigStoreExtJS extends PvConfigElemExtJS
+		class PvConfigStoreExtJS
 		{
 			public $extend ;
 			public $model ;
-			public $autoload = true ;
+			public $autoLoad = true ;
 			public $proxy ;
 			public function __construct()
 			{
 				$this->proxy = new PvConfigProxyStoreExtJS() ;
 			}
 		}
-		class PvConfigModelExtJS extends PvConfigElemExtJS
+		class PvConfigModelExtJS
 		{
 			public $extend ;
-			public $requires = array() ;
+			public $requires = array("Ext.data.reader.Json") ;
 			public $fields = array() ;
 		}
 		
@@ -464,27 +464,74 @@
 		{
 			public $type = 'json' ;
 			public $root ;
-			public $successProperty ;
+			public $successProperty = "succes" ;
 		}
 		
 		class PvStoreExtJS extends PvElemComposantExtJS
 		{
 			public $EspaceNommageExtJS = "store" ;
 			public $NomClasseExtendExtJS = "Ext.data.Store" ;
-			public $CreaAuto = 0 ;
+			public $ModelExtJS ;
+			public $ProxyExtJS ;
+			protected $AutoFixerAlias = 0 ;
+			protected $InclutXTypeCrea = 0 ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->ModelExtJS = new PvModelExtJS() ;
+				$this->ProxyExtJS = new PvProxyStoreExtJS() ;
+			}
 			protected function CreeCfgDefExtJS()
 			{
 				return new PvConfigStoreExtJS() ;
 			}
+			public function PrepareRenduJS()
+			{
+				parent::PrepareRenduJS() ;
+				$this->CfgDefExtJS->proxy = & $this->ProxyExtJS->CfgCreaExtJS ;
+				$this->CfgDefExtJS->model = $this->ModelExtJS->ObtientNomClasseExtJS() ;
+			}
+			public function AdopteComposantParentExtJS($nom, & $compParent)
+			{
+				parent::AdopteComposantParentExtJS($nom, $compParent) ;
+				$this->ModelExtJS->AdopteComposantParentExtJS($nom."_model", $this) ;
+				$this->ModelExtJS->ChargeConfig() ;
+				$this->ProxyExtJS->AdopteComposantParentExtJS($nom."_proxy", $this) ;
+				$this->ProxyExtJS->ChargeConfig() ;
+				$this->ZoneParent->ApplicationExtJS->ControllerParDefaut->CfgDefExtJS->stores[] = $this->ObtientLienClasseExtJS() ;
+			}
+			public function RenduComposantExtJS()
+			{
+				$ctn = '' ;
+				$ctn .= $this->ModelExtJS->RenduComposantExtJS() ;
+				$ctn .= parent::RenduComposantExtJS() ;
+				return $ctn ;
+			}
 		}
 		class PvModelExtJS extends PvElemComposantExtJS
 		{
+			protected $AutoFixerAlias = 0 ;
 			public $EspaceNommageExtJS = "model" ;
 			public $NomClasseExtendExtJS = "Ext.data.Model" ;
-			public $CreaAuto = 0 ;
+			public function AdopteComposantParentExtJS($nom, & $compParent)
+			{
+				parent::AdopteComposantParentExtJS($nom, $compParent) ;
+				$this->ZoneParent->ApplicationExtJS->ControllerParDefaut->CfgDefExtJS->models[] = $this->ObtientLienClasseExtJS() ;
+			}
 			protected function CreeCfgDefExtJS()
 			{
 				return new PvConfigModelExtJS() ;
+			}
+		}
+		class PvProxyStoreExtJS extends PvElemComposantExtJS
+		{
+			public $EspaceNommageExtJS = "proxy" ;
+			public $NomClasseExtendExtJS = "Ext.data.proxy" ;
+			public $CreaAuto = 0 ;
+			protected $InclutXTypeCrea = 0 ;
+			protected function CreeCfgCreaExtJS()
+			{
+				return new PvConfigProxyStoreExtJS() ;
 			}
 		}
 		
@@ -522,6 +569,7 @@
 			public function PrepareRenduJS()
 			{
 				parent::PrepareRenduJS() ;
+				$this->CfgCreaExtJS->id = $this->IDInstanceCalc ;
 				$this->CfgDefExtJS->items = array() ;
 				$this->CfgDefExtJS->dockedItems = array() ;
 				if(! $this->DefItemsDansInitComponent)

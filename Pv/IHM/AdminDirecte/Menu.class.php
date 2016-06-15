@@ -88,11 +88,27 @@
 				return htmlentities('javascript:ouvreOngletCadre('.$nomScript.', '.$cheminIcone.', '.$titre.', \''.$url.'\') ;') ;
 			}
 		}
+		
 		class PvMenuAdminDirecteFige extends PvMenuFige
 		{
 			public $NomClasseSousMenuScript = "PvMenuAdminDirecteScript" ;
 			public $NomClasseSousMenuFenetre = "PvMenuAdminDirecteFenetreScript" ;
 			public $NomClasseSousMenuFige = "PvMenuAdminDirecteFige" ;
+			public function & InscritSousMenuFermeOnglActif()
+			{
+				$menu = $this->InscritSousMenu("PvMenuAdminDirecteFermeOnglActif", "SousMenu_".count($this->Menus)) ;
+				return $menu ;
+			}
+			public function & InscritSousMenuFermeTousOngls()
+			{
+				$menu = $this->InscritSousMenu("PvMenuAdminDirecteFermeTousOngls", "SousMenu_".count($this->Menus)) ;
+				return $menu ;
+			}
+			public function & InscritSousMenuFermeAutresOngls()
+			{
+				$menu = $this->InscritSousMenu("PvMenuAdminDirecteFermeAutresOngls", "SousMenu_".count($this->Menus)) ;
+				return $menu ;
+			}
 			public function InscritSousMenuRedirScript($nomScript)
 			{
 				$nom = $nomScript ;
@@ -114,6 +130,27 @@
 				$menu = $this->InscritSousMenu($this->NomClasseSousMenuFenetre, $nom) ;
 				$menu->NomScript = $nomScript ;
 				return $menu ;
+			}
+		}
+		class PvMenuAdminDirecteFermeOnglActif extends PvMenuAdminDirecteFige
+		{
+			public function ObtientUrl()
+			{
+				return "javascript:fermeOngletActif() ;" ;
+			}
+		}
+		class PvMenuAdminDirecteFermeTousOngls extends PvMenuAdminDirecteFige
+		{
+			public function ObtientUrl()
+			{
+				return "javascript:fermeTousLesOnglets() ;" ;
+			}
+		}
+		class PvMenuAdminDirecteFermeAutresOngls extends PvMenuAdminDirecteFige
+		{
+			public function ObtientUrl()
+			{
+				return "javascript:fermeOngletsNonSelection() ;" ;
 			}
 		}
 		class PvMenuAdminDirecteOngletScript extends PvMenuAdminDirecteScript

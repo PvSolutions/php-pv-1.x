@@ -82,6 +82,9 @@
 			public function RechExacteElements($filtres, $nomColonne, $valeur)
 			{
 			}
+			public function RechDebuteElements($filtres, $nomColonnes, $valeur)
+			{
+			}
 		}
 		class PvFournisseurDonneesNatif extends PvFournisseurDonneesBase
 		{
@@ -306,6 +309,30 @@
 					$fournisseur->ValeurFaux = $valeurFaux ;
 				if($libelleFaux !== null)
 					$fournisseur->LibelleFaux = $libelleFaux ;
+				return $fournisseur ;
+			}
+		}
+		class PvFournisseurDonneesRangee extends PvFournisseurDonneesDirect
+		{
+			public $NomCleRangee = "Rangee" ;
+			public $ValeurMin = 0 ;
+			public $ValeurMax = 0 ;
+			public $NomAttributValeur = "Valeur" ;
+			public function ChargeConfig()
+			{
+				parent::ChargeConfig() ;
+				$vals = array() ;
+				for($i=$this->ValeurMin; $i <= $this->ValeurMax; $i++)
+				{
+					$vals[] = array($this->NomAttributValeur => $i) ;
+				}
+				$this->Valeurs[$this->NomCleRangee] = $vals ;
+			}
+			public static function Cree($valeurMin, $valeurMax)
+			{
+				$fournisseur = new PvFournisseurDonneesRangee() ;
+				$fournisseur->ValeurMin = $valeurMin ;
+				$fournisseur->ValeurMax = $valeurMax ;
 				return $fournisseur ;
 			}
 		}
@@ -590,23 +617,6 @@
 				}
 				return $total ;
 			}
-			public function RechExacteElements($filtres, $nomColonne, $valeur)
-			{
-				$expression = $this->ExtraitExpressionFiltres($filtres) ;
-				$requeteSql = "select * from ".$this->RequeteSelection." t1" ;
-				$nomFiltre = uniqid('Flt') ;
-				$condFiltre = $this->BaseDonnees->EscapeVariableName($nomColonne).' = '.$this->BaseDonnees->ParamPrefix.$nomFiltre ;
-				if(count($expression->Parametres) > 0)
-				{
-					$requeteSql .= " where ".$expression->Texte.' and '.$nomFiltre ;
-				}
-				else
-				{
-					$requeteSql .= ' where '.$condFiltre ;
-				}
-				$lignes = $this->BaseDonnees->FetchSqlRows($requeteSql, array_merge($expression->Parametres, $this->ParamsSelection, array($nomFiltre => $valeur))) ;
-				return $lignes ;
-			}
 			public function AjoutElement($filtres)
 			{
 				if(! $this->BaseDonneesValide())
@@ -707,6 +717,62 @@
 				if($requete == false or $requete->RessourceSupport == false)
 					return false ;
 				return $this->BaseDonnees->CloseQuery($requete->RessourceSupport) ;
+			}
+			public function RechDebuteElements($filtres, $nomColonnes, $valeur)
+			{
+				$valeur = strtoupper($valeur) ;
+				$expression = $this->ExtraitExpressionFiltres($filtres) ;
+				$requeteSql = "select * from ".$this->RequeteSelection." t1" ;
+				if($expression->Texte != '')
+				{
+					$requeteSql .= " where ".$expression->Texte ;
+				}
+				$filtresExtra = array() ;
+				if($valeur != '')
+				{
+					$exprDebute = '' ;
+					foreach($nomColonnes as $i => $nomColonne)
+					{
+						$nomFiltre = uniqid('Flt').$i ;
+						$condFiltre = $this->BaseDonnees->SqlIndexOf('UPPER('.$this->BaseDonnees->EscapeVariableName($nomColonne).')', $this->BaseDonnees->ParamPrefix.$nomFiltre).' = 1' ;
+						$filtresExtra[$nomFiltre] = $valeur ;
+						if($i > 0)
+						{
+							$exprDebute .= " or " ;
+						}
+						$exprDebute .= $condFiltre ;
+					}
+				}
+				if($expression->Texte != '')
+				{
+					$requeteSql .= ' and ('.$exprDebute.')' ;
+				}
+				else
+				{
+					$requeteSql .= ' where ('.$exprDebute.')' ;
+				}
+				// print $requeteSql."\n" ;
+				$params = array_merge($expression->Parametres, $this->ParamsSelection, $filtresExtra) ;
+				// print_r($params) ;
+				$lignes = $this->BaseDonnees->FetchSqlRows($requeteSql, $params) ;
+				return $lignes ;
+			}
+			public function RechExacteElements($filtres, $nomColonne, $valeur)
+			{
+				$expression = $this->ExtraitExpressionFiltres($filtres) ;
+				$requeteSql = "select * from ".$this->RequeteSelection." t1" ;
+				$nomFiltre = uniqid('Flt') ;
+				$condFiltre = $this->BaseDonnees->EscapeVariableName($nomColonne).' = '.$this->BaseDonnees->ParamPrefix.$nomFiltre ;
+				if($expression->Texte != "")
+				{
+					$requeteSql .= " where ".$expression->Texte.' and '.$condFiltre ;
+				}
+				else
+				{
+					$requeteSql .= ' where '.$condFiltre ;
+				}
+				$lignes = $this->BaseDonnees->FetchSqlRows($requeteSql, array_merge($expression->Parametres, $this->ParamsSelection, array($nomFiltre => $valeur))) ;
+				return $lignes ;
 			}
 		}
 	

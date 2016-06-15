@@ -60,7 +60,17 @@
 				{
 					return '// Application ExtJS non definie' ;
 				}
-				return $this->ApplicationExtJS->RenduComposantExtJS() ;
+				$ctn = '' ;
+				$ctn .= $this->ApplicationExtJS->RenduComposantExtJS()."\r\n" ;
+				foreach($this->ApplicationExtJS->Models as $i => & $model)
+				{
+					$ctn .= $model->RenduComposantExtJS()."\r\n" ;
+				}
+				foreach($this->ApplicationExtJS->Stores as $i => & $store)
+				{
+					$ctn .= $store->RenduComposantExtJS()."\r\n" ;
+				}
+				return $ctn ;
 			}
 			protected function & ControllerExtJS()
 			{

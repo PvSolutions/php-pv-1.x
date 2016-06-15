@@ -38,6 +38,7 @@
 						$this->ScriptParent->ObtientUrl(),
 						array_merge(
 							$this->Params,
+							$params,
 							array($this->ZoneParent->NomParamActionAppelee => $this->NomElementZone)
 						)
 					) ;
@@ -77,6 +78,21 @@
 			}
 			public function Execute()
 			{
+			}
+		}
+		class PvActionImprimeScript extends PvActionBaseZoneWebSimple
+		{
+			public function Execute()
+			{
+				$this->ZoneParent->DemarreRenduImpression() ;
+				echo $this->ZoneParent->RenduEnteteDocument() ;
+				echo '<body onload="window.print() ;">' ;
+				echo $this->ZoneParent->ScriptPourRendu->RenduDispositif() ;
+				echo $this->ZoneParent->RenduPiedDocument() ;
+				echo '</body>
+</html>' ;
+				$this->ZoneParent->TermineRenduImpression() ;
+				exit ;
 			}
 		}
 		class PvActionRenduPageWeb extends PvActionBaseZoneWebSimple
@@ -263,7 +279,10 @@
 			public $InclureEnteteContenu = 0 ;
 			public function Execute()
 			{
-				$this->Resultat = new StdClass() ;
+				if(! is_object($this->Resultat))
+				{
+					$this->Resultat = new StdClass() ;
+				}
 				$this->ConstruitResultat() ;
 				if($this->InclureEnteteContenu)
 				{
@@ -276,6 +295,9 @@
 			protected function ConstruitResultat()
 			{
 			}
+		}
+		class PvActionEnvoiJSON extends PvActionResultatJSONZoneWeb
+		{
 		}
 		class PvActionEnvoiFichierBaseZoneWeb extends PvActionBaseZoneWebSimple
 		{
@@ -390,6 +412,20 @@
 			{
 				return "" ;
 			}
+			protected function RenduFiltre(& $filtre, & $composant)
+			{
+				$ctn = '' ;
+				if($composant->Editable)
+				{
+					// $ctn .= $filtre->Lie() ;
+					$ctn .= $filtre->Rendu() ;
+				}
+				else
+				{
+					$ctn .= $filtre->Etiquette() ;
+				}
+				return $ctn ;
+			}
 		}
 		class PvDessinateurRenduHtmlFiltresDonnees extends PvDessinateurRenduBase
 		{
@@ -466,15 +502,7 @@
 					$ctn .= '<td' ;
 					$ctn .= ' valign="top"' ;
 					$ctn .= '>'.PHP_EOL ;
-					if($composant->Editable)
-					{
-						// $ctn .= $filtre->Lie() ;
-						$ctn .= $filtre->Rendu().PHP_EOL ;
-					}
-					else
-					{
-						$ctn .= $filtre->Etiquette().PHP_EOL ;
-					}
+					$ctn .= $this->RenduFiltre($filtre, $composant).PHP_EOL ;
 					$ctn .= '</td>'.PHP_EOL ;
 					$filtreRendus++ ;
 					if($filtreRendus % $this->MaxFiltresParLigne == 0)
@@ -530,15 +558,7 @@
 					$ctn .= '<td' ;
 					$ctn .= ' valign="top"' ;
 					$ctn .= '>'.PHP_EOL ;
-					if($composant->Editable)
-					{
-						// $ctn .= $filtre->Lie() ;
-						$ctn .= $filtre->Rendu().PHP_EOL ;
-					}
-					else
-					{
-						$ctn .= $filtre->Etiquette().PHP_EOL ;
-					}
+					$ctn .= $this->RenduFiltre($filtre, $composant).PHP_EOL ;
 					$ctn .= '</td>'.PHP_EOL ;
 					$ctn .= '</tr>'.PHP_EOL ;
 				}
@@ -1277,6 +1297,10 @@
 			{
 				return "" ;
 			}
+			public function InclureEnvoiFiltres()
+			{
+				return 1 ;
+			}
 		}
 		class PvCommandeRedirectionHttp extends PvCommandeComposantIUBase
 		{
@@ -1391,6 +1415,15 @@
 			protected function ExecuteInstructions()
 			{
 			}
+		}
+		
+		class PvCommandeImprime extends PvCommandeComposantIUBase
+		{
+			// protected function Extrait
+			protected function ExecuteInstructions()
+			{
+				
+			}	
 		}
 		
 		class PvElementCommandeBase extends PvElementAccessible

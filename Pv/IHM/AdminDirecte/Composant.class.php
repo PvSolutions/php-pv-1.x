@@ -112,6 +112,10 @@
 			public $RafraichOnglActif = 0 ;
 			public $UrlOnglActifSurFerm = "" ;
 			public $OptionsOnglet = array() ;
+			public function InclureEnvoiFiltres()
+			{
+				return 0 ;
+			}
 			public function DefinitScriptOnglActifSurFerm(& $script, $params=array())
 			{
 				$this->UrlOnglActifSurFerm = $script->ObtientUrlParam($params) ;

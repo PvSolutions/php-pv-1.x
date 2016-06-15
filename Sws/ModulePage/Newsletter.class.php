@@ -2,6 +2,10 @@
 	
 	if(! defined('ENTITE_NEWSLETTER_SWS'))
 	{
+		if(! class_exists('phpmailer'))
+		{
+			include dirname(__FILE__)."/../../misc/phpmailer/class.phpmailer.php" ;
+		}
 		define('ENTITE_NEWSLETTER_SWS', 1) ;
 		
 		class ModuleNewsletterSws extends ModulePageBaseSws
@@ -35,6 +39,10 @@
 				$this->InsereMdlRubrNewsletter(new MdlLstArtsNewsletterSws()) ;
 				$this->InsereMdlRubrNewsletter(new MdlDescArtsNewsletterSws()) ;
 			}
+			public function ObtientMdlRubrNewsletterNomme($nom)
+			{
+				return (isset($this->MdlsRubrNewsletter[$nom])) ? $this->MdlsRubrNewsletter[$nom] : null ;
+			}
 			public function TitreMdlsRubrNewsletter()
 			{
 				$results = array() ;
@@ -48,7 +56,95 @@
 			{
 				$this->ChargeMdlsRubrNewsletter() ;
 				$this->EntiteNewsletter = $this->InsereEntite("newsletter", $this->CreeEntiteNewsletter()) ;
-				$this->EntiteAbonNewsletter = $this->InsereEntite("abonne_newsletter", $this->CreeEntiteAbonNewsletter()) ;
+			}
+		}
+		
+		class TacheEnvoiJournauxNewsletterSws extends TacheWebBaseSws
+		{
+			public $DelaiExecution = 1 ;
+			public function ExecuteInstructions()
+			{
+				$timestmp = date("U") ;
+				$noSemaine = date("W", $timestmp) ;
+				$noAnnee = date("Y", $timestmp) ;
+				$module = $this->ObtientModulePage() ;
+				$entite = $this->ObtientEntitePage() ;
+				$bd = $this->ObtientBDSupport() ;
+				$lgnDiffusion = $bd->FetchSqlRow("select * from ".$bd->EscapeTableName($entite->NomTableDiffusion)." where no_annee=".$bd->ParamPrefix."noAnnee and no_semaine=".$bd->ParamPrefix."noSemaine", array("noAnnee" => $noAnnee, "noSemaine" => $noSemaine)) ;
+				if(! is_array($lgnDiffusion) || count($lgnDiffusion) > 0)
+				{
+					return ;
+				}
+				$idCtrl = uniqid() ;
+				$bd->InsertRow($entite->NomTableDiffusion, array("no_annee" => $noAnnee, "no_semaine" => $noSemaine, "id_ctrl" => $idCtrl)) ;
+				$lgnDiffusion = $bd->FetchSqlRow("select * from ".$bd->EscapeTableName($entite->NomTableDiffusion)." where id_ctrl=".$bd->ParamPrefix."idCtrl", array("idCtrl" => $idCtrl)) ;
+				if(! is_array($lgnDiffusion))
+				{
+					return ;
+				}
+				$lgns = $bd->FetchSqlRows("select t1.* from ".$bd->EscapeTableName($entite->NomTableRubr)." t1 left join ".$bd->EscapeTableName($entite->NomTable)." t2 on t1.".$bd->EscapeVariableName($entite->NomColIdNewsletterRubr)." = t2.".$bd->EscapeVariableName($entite->NomColId)) ;
+				$blocsJournal = array() ;
+				$zone = $this->ZoneParent() ;
+				foreach($lgns as $i => $lgn)
+				{
+					$mdlRubrNewsletter = $module->ObtientMdlRubrNewsletterNomme($lgn["ref_modele_rubrique"]) ;
+					$blocJournal = '' ;
+					if($mdlRubrNewsletter != null)
+					{
+						$lgnsResults = $mdlRubrNewsletter->LgnsSelectResultsSupport($entite, $lgn, $zone) ;
+						// print_r($lgnResults) ;
+						if(is_array($lgnsResults))
+						{
+							$total = count($lgnsResults) ;
+							foreach($lgnsResults as $i => $lgnRes)
+							{
+								$blocJournal .= $mdlRubrNewsletter->RenduResultSupport($zone, $entite, $lgnRes, $i, $total).PHP_EOL ;
+							}
+						}
+					}
+					$blocsJournal[$lgn[$entite->NomColIdRubr]] = $blocJournal ;
+				}
+				$sqlAbonmts = 'select t1.*, t2.'.$bd->EscapeVariableName($entite->NomColIdCtrlAbon).' id_ctrl_abon, t2.'.$bd->EscapeVariableName($entite->NomColNomAbon).' nom_abon, t2.'.$bd->EscapeVariableName($entite->NomColPrenomAbon).' prenom_abon, t2.'.$bd->EscapeVariableName($entite->NomColEmailAbon).' email_abon from '.$bd->EscapeTableName($entite->NomTableAbonmt).' t1 inner join '.$bd->EscapeTableName($entite->NomTableAbon).' t2 on t1.'.$bd->EscapeVariableName($entite->NomColIdAbonAbonmt).' = t2.'.$bd->EscapeVariableName($entite->NomColIdAbon).' where t2.'.$bd->EscapeVariableName($entite->NomColActiveAbon).' = 1 and t1.'.$bd->EscapeVariableName($entite->NomColActiveAbonmt).'= 1 order by t2.'.$bd->EscapeVariableName($entite->NomColIdAbon).' asc, t1.'.$bd->EscapeVariableName($entite->NomColIdRubrAbonmt).' asc' ;
+				$lgnsAbonmts = $bd->FetchSqlRows($sqlAbonmts) ;
+				if(is_array($lgnsAbonmts))
+				{
+					$idAbon = 0 ;
+					$journalAbon = "" ;
+					$lgnAbonmtPrec = array() ;
+					foreach($lgnsAbonmts as $i => $lgnAbonmt)
+					{
+						$idAbonEnCours = $lgnAbonmt[$entite->NomColIdAbonAbonmt] ;
+						if($idAbon != $idAbonEnCours)
+						{
+							if($idAbon != 0)
+							{
+								$journalAbon .= $entite->RenduPiedJournal($lgnAbonmtPrec, $zone).PHP_EOL ;
+								$mailer = $entite->CreateMailer() ;
+								$mailer->AddAddress($lgnAbonmt["email_abon"], $lgnAbonmt["prenom_abon"]." ".$lgnAbonmt["nom_abon"]) ;
+								$mailer->Subject = $entite->CreeSujetJournal($lgnAbonmt) ;
+								$mailer->Body = $journalAbon ;
+								$ok = $mailer->Send() ;
+								$bd->InsertRow($entite->NomTableJournal,
+									array(
+										"id_abonne" => $idAbon,
+										"contenu" => $journalAbon,
+										"id_diffusion" => $lgnDiffusion["id"],
+										"succes" => $ok,
+										"msg_erreur" => $mailer->ErrorInfo,
+									)
+								) ;
+							}
+							$journalAbon = '' ;
+							$journalAbon .= $entite->RenduEnteteJournal($lgnAbonmt, $zone).PHP_EOL ;
+						}
+						// echo $entite->NomColIdRubrAbonmt." : ".$lgnAbonmt[$entite->NomColIdRubrAbonmt] ;
+						$journalAbon .= $blocsJournal[$lgnAbonmt[$entite->NomColIdRubrAbonmt]] ;
+						$lgnAbonmtPrec = $lgnAbonmt ;
+						$idAbon = $lgnAbonmt[$entite->NomColIdAbonAbonmt] ;
+					}
+				}
+				// print_r($blocsJournal) ;
+				// $this->TerminerExecution = 0 ;
 			}
 		}
 		
@@ -71,6 +167,8 @@
 			public $InclureScriptLst = 1 ;
 			public $InclureScriptConsult = 0 ;
 			public $InclureScriptEnum = 0 ;
+			public $NomTableDiffusion = "diffusion_newsletter" ;
+			public $NomTableJournal = "journal_newsletter" ;
 			// Definition membres rubrique newsletter
 			public $NomTableRubr = "rubr_newsletter" ;
 			public $NomColIdRubr = "id" ;
@@ -109,11 +207,65 @@
 			public $LibTitreRubr = "Titre" ;
 			public $LibIdNewsletterRubr = "Newsletter" ;
 			public $LibIdEntSupportRubr = "Entit&eacute; support" ;
+			public $LibSousMenuListeAbons = "Abonn&eacute;s" ;
+			public $LibSousMenuListeJournaux = "Journaux" ;
+			public $SousMenuListeAbons ;
 			public $ScriptListeRubrs ;
 			public $ScriptAjoutRubr ;
 			public $ScriptModifRubr ;
 			public $ScriptSupprRubr ;
 			public $ScriptInscritAbon ;
+			public $ScriptListeAbons ;
+			public $ScriptDetailAbon ;
+			public $ScriptSupprAbon ;
+			public $ScriptListeJournaux ;
+			public $Mailer ;
+			public $HoteMailer = "smtp.gmail.com" ;
+			public $PortMailer = "465" ;
+			public $CompteMailer = "lebdenat@gmail.com" ;
+			public $MotPasseMailer = "alhprog" ;
+			public $FromMailer = "lebdenat@gmail.com" ;
+			public $FromNameMailer = "Alhassane Abdel" ;
+			public $ReplyToMailer ;
+			public $SMTPSecureMailer = "ssl" ;
+			public function CreeSujetJournal(& $lgn)
+			{
+				return 'Newsletter du '.date("d/m/Y") ;
+			}
+			public function RenduEnteteJournal(& $lgn, & $zone)
+			{
+				$ctn = '' ;
+				$ctn .= '<p>Bonjour '.$lgn["prenom_abon"].' '.$lgn["nom_abon"].', vous recevez ce mail parce que vous &ecirc;tes abonn&eacute; &agrave; la newsletter.</p>' ;
+				return $ctn ;
+			}
+			public function RenduPiedJournal(& $lgn, & $zone)
+			{
+				$ctn = '' ;
+				$url = $zone->ObtientUrlParam(array("id_ctrl" => $lgn["id_ctrl_abon"], "email" => $lgn["email_abon"])) ;
+				$ctn .= '<p>Si vous souhaitez ne plus recevoir ces mails. Veuillez annuler votre abonnement en cliquant sur ce <a href="'.$url.'" target="_blank">lien</a></p>' ;
+				return $ctn ;
+			}
+			public function & CreateMailer()
+			{
+				$mailer = new PHPMailer();
+				$mailer->IsSMTP();
+				if($this->SMTPSecureMailer != '')
+				{
+					$mailer->SMTPSecure = $this->SMTPSecureMailer;
+				}
+				$mailer->Host = $this->HoteMailer;
+				$mailer->Port = $this->PortMailer;
+
+				if($this->MotPasseMailer != '')
+				{
+					$mailer->SMTPAuth = true;
+					$mailer->Username = $this->CompteMailer;
+					$mailer->Password = $this->MotPasseMailer;
+				}
+				$mailer->From = $this->FromMailer ;
+				$mailer->FromName = $this->FromNameMailer ;
+				return $mailer ;
+			}
 			public function SqlListeColsSelect(& $bd)
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;
@@ -147,11 +299,40 @@
 				$this->ScriptAjoutRubr = $this->InsereScript('ajout_rubr_'.$this->NomEntite, new ScriptAjoutRubrNewsletterSws(), $zone, $this->ObtientPrivilegesEdit()) ;
 				$this->ScriptModifRubr = $this->InsereScript('modif_rubr_'.$this->NomEntite, new ScriptModifRubrNewsletterSws(), $zone, $this->ObtientPrivilegesEdit()) ;
 				$this->ScriptSupprRubr = $this->InsereScript('suppr_rubr_'.$this->NomEntite, new ScriptSupprRubrNewsletterSws(), $zone, $this->ObtientPrivilegesEdit()) ;
+				$this->ScriptListeAbons = $this->InsereScript('liste_abons_'.$this->NomEntite, new ScriptListeAbonsNewsletterSws(), $zone, $this->ObtientPrivilegesEdit()) ;
+				$this->ScriptDetailAbon = $this->InsereScript('detail_abon_'.$this->NomEntite, new ScriptDetailAbonNewsletterSws(), $zone, $this->ObtientPrivilegesEdit()) ;
+				$this->ScriptListeJournaux = $this->InsereScript('liste_journaux_'.$this->NomEntite, new ScriptListeJournauxNewsletterSws(), $zone, $this->ObtientPrivilegesEdit()) ;
+				$this->ScriptContenuJournal = $this->InsereScript('contenu_journal_'.$this->NomEntite, new ScriptContenuJournalNewsletterSws(), $zone, $this->ObtientPrivilegesEdit()) ;
+				// $this->RemplitTachesWebGlobal($zone) ;
+			}
+			protected function RemplitTachesWebGlobal(& $zone)
+			{
+				$this->TacheEnvoiNewsletter = $this->InsereTacheWeb('envoi_journaux_'.$this->NomElementModule, new TacheEnvoiJournauxNewsletterSws(), $zone) ;
 			}
 			public function RemplitZonePubl(& $zone)
 			{
-				parent::RemplitZoneAdmin($zone) ;
+				parent::RemplitZonePubl($zone) ;
+				$this->RemplitTachesWebGlobal($zone) ;
 				$this->ScriptInscritAbon = $this->InsereScript('inscrit_abonne_'.$this->NomEntite, new ScriptInscritAbonNewsletterSws(), $zone, $this->ObtientPrivilegesConsult()) ;
+				$this->ScriptInscritAbon = $this->InsereScript('annule_abonne_'.$this->NomEntite, new ScriptAnnuleAbonNewsletterSws(), $zone, $this->ObtientPrivilegesConsult()) ;
+			}
+			protected function RemplitMenuInt(& $menu)
+			{
+				parent::RemplitMenuInt($menu) ;
+				$this->SousMenuListeAbons = $menu->InscritSousMenuScript('liste_abons_'.$this->NomEntite) ;
+				$this->SousMenuListeAbons->Titre = $this->LibSousMenuListeAbons ;
+				$this->SousMenuListeJournaux = $menu->InscritSousMenuScript('liste_journaux_'.$this->NomEntite) ;
+				$this->SousMenuListeJournaux->Titre = $this->LibSousMenuListeJournaux ;
+			}
+			public function SqlSelectDiffus()
+			{
+				$bd = $this->ObtientBDSupport() ;
+				return "(
+					select t1.*, t2.".$bd->EscapeVariableName($this->NomColIdCtrlAbon)." id_ctrl_abon, t2.".$bd->EscapeVariableName($this->NomColNomAbon)." nom_abon, t2.".$bd->EscapeVariableName($this->NomColPrenomAbon)." prenom_abon, t2.".$bd->EscapeVariableName($this->NomColEmailAbon)." email_abon, t3.no_semaine, t3.no_annee
+					from ".$bd->EscapeTableName($this->NomTableJournal)." t1 left join ".$bd->EscapeTableName($this->NomTableAbon)." t2 on t1.id_abonne = t2.".$bd->EscapeVariableName($this->NomColIdAbon)."
+					left join ".$bd->EscapeTableName($this->NomTableDiffusion)." t3
+					on t1.id_diffusion = t3.id
+				)" ;
 			}
 		}
 		
@@ -413,6 +594,7 @@
 		class MdlRubrBaseNewsletterSws
 		{
 			public $Active = 1 ;
+			public $MaxResultsSupport = 8 ;
 			public function EstPossible(& $entite, & $script)
 			{
 				$bd = $script->ObtientBDSupport() ;
@@ -446,9 +628,18 @@
 				$sql = '' ;
 				return $sql ;
 			}
-			public function SqlSelectResultsSupport(& $entite, & $script, $lgn)
+			public function LgnsSelectResultsSupport(& $entite, $lgn, & $zone)
 			{
-				return '' ;
+				return array() ;
+			}
+			public function RenduResultSupport(& $zone, & $entite, $lgn, $position=0, $total=0)
+			{
+				$entiteArt = & $entite->ModuleParent->SystemeParent->ModuleArticle->EntiteArticle ;
+				$ctn = '' ;
+				$ctn .= '<div>'.PHP_EOL ;
+				$ctn .= '<a href="'.$zone->ObtientUrl().'?'.urlencode($zone->NomParamScriptAppele).'='.urlencode($zone->ValeurParamScriptAppele).'&'.urlencode($entiteArt->NomParamId).'='.intval($lgn["id"]).'" target="_blank">'.$lgn["titre"].'</a>'.PHP_EOL ;
+				$ctn .= '</div>' ;
+				return $ctn ;
 			}
 		}
 		class MdlLstArtsNewsletterSws extends MdlRubrBaseNewsletterSws
@@ -464,16 +655,21 @@
 			public function RemplitMenuEntite(& $menu, & $entite)
 			{
 			}
-			public function SqlSelectEntiteSupport(& $entite, & $script)
+			public function LgnsSelectResultsSupport(& $entite, $lgn, & $zone)
 			{
-				$bd = $script->ObtientBDSupport() ;
-				$entiteRubr = $entite->ModuleParent->SystemeParent->ModuleArticle->EntiteRubrique ;
-				$sql = 'select '.$bd->EscapeVariableName($entiteRubr->NomColId).' id, '.$bd->EscapeVariableName($entiteRubr->NomColTitre).' titre from '.$bd->EscapeTableName($entiteRubr->NomTable).' order by '.$bd->EscapeVariableName($entiteRubr->NomColDatePubl).' desc, '.$bd->EscapeVariableName($entiteRubr->NomColHeurePubl).' desc' ;
-				return $sql ;
+				$bd = $entite->ObtientBDSupport() ;
+				$entiteRubr = & $entite->ModuleParent->SystemeParent->ModuleArticle->EntiteRubrique ;
+				$entiteArt = & $entiteRubr->ModuleParent->EntiteArticle ;
+				$sql = 'select '.$bd->EscapeVariableName($entiteArt->NomColId).' id, '.$bd->EscapeVariableName($entiteArt->NomColTitre).' titre from '.$bd->EscapeTableName($entiteArt->NomTable).' where '.$bd->EscapeVariableName($entiteArt->NomColIdRubr).'='.$bd->ParamPrefix.'idSupport order by '.$bd->EscapeVariableName($entiteArt->NomColDatePubl).' desc, '.$bd->EscapeVariableName($entiteArt->NomColHeurePubl).' desc' ;
+				$lgns = $bd->LimitSqlRows($sql, array("idSupport" => $lgn["id_entite_support"]), 0, $this->MaxResultsSupport) ;
+				return $lgns ;
 			}
-			public function SqlSelectResultsSupport(& $entite, & $script, $lgn)
+			public function SqlSelectResultsSupport(& $entite, $lgn)
 			{
-				return '' ;
+				$bd = $entite->ObtientBDSupport() ;
+				$entiteArt = & $entite->ModuleParent->SystemeParent->ModuleArticle->EntiteArticle ;
+				$sql = 'select '.$bd->EscapeVariableName($entiteArt->NomColId).' id, '.$bd->EscapeVariableName($entiteArt->NomColTitre).' titre, '.$bd->EscapeVariableName($entiteArt->NomColCheminImage).' chemin_image, '.$bd->EscapeVariableName($entiteArt->NomColDescription).' description, '.$bd->EscapeVariableName($entiteArt->NomColDatePubl).' date_publication, '.$bd->EscapeVariableName($entiteArt->NomColHeurePubl).' heure_publication from '.$bd->EscapeTableName($entiteArt->NomTable).' where '.$bd->EscapeVariableName($entiteArt->NomColIdRubr).'=:idSupport order by '.$bd->EscapeVariableName($entiteArt->NomColDatePubl).' desc, '.$bd->EscapeVariableName($entiteArt->NomColHeurePubl).' desc' ;
+				return $sql ;
 			}
 		}
 		class MdlDescArtsNewsletterSws extends MdlLstArtsNewsletterSws
@@ -486,18 +682,14 @@
 			{
 				return 'Derniers articles de rubrique et sous-rubriques' ;
 			}
-		}
-		
-		class EntiteAbonNewsletterSws extends EntiteTableSws
-		{
-			public $TitreMenu = "Abonn&eacute;s" ;
-			public $TitreAjoutEntite = "Ajout abonn&eacute;" ;
-			public $TitreModifEntite = "Modification abonn&eacute;" ;
-			public $TitreSupprEntite = "Suppression abonn&eacute;" ;
-			public $TitreListageEntite = "Liste des abonn&eacute;s" ;
-			public $TitreConsultEntite = "D&eacute;tails abonn&eacute;" ;
-			public $NomEntite = "abonne_newsletter" ;
-			public $NomTable = "abonne_newsletter" ;
+			public function SqlSelectResultsSupport(& $entite, $lgn)
+			{
+				$bd = $entite->ObtientBDSupport() ;
+				$entiteArt = & $entite->ModuleParent->SystemeParent->ModuleArticle->EntiteArticle ;
+				$entiteRubr = & $entite->ModuleParent->SystemeParent->ModuleArticle->EntiteRubrique ;
+				$sql = 'select t1.'.$bd->EscapeVariableName($entiteArt->NomColId).' id, t1.'.$bd->EscapeVariableName($entiteArt->NomColTitre).' titre, t1.'.$bd->EscapeVariableName($entiteArt->NomColCheminImage).' chemin_image, t1.'.$bd->EscapeVariableName($entiteArt->NomColDescription).' description, t1.'.$bd->EscapeVariableName($entiteArt->NomColDatePubl).' date_publication, t1.'.$bd->EscapeVariableName($entiteArt->NomColHeurePubl).' heure_publication from '.$bd->EscapeTableName($entiteArt->NomTable).' t1 left join '.$bd->EscapeTableName($entiteRubr->NomTable).' t2 on t1.'.$bd->EscapeVariableName($entiteArt->NomColIdRubr).' = t2.'.$bd->EscapeVariableName($entiteArt->NomColId).' where '.$bd->SqlIndexOf($bd->SqlConcat(array("', '", ':idSupport', "','")), $bd->EscapeVariableName($entiteRubr->NomColIdChemin)).' > 0 order by t1.'.$bd->EscapeVariableName($entiteArt->NomColDatePubl).' desc, t1.'.$bd->EscapeVariableName($entiteArt->NomColHeurePubl).' desc' ;
+				return $sql ;
+			}
 		}
 		
 		class ScriptBaseRubrNewsletterSws extends ScriptAdminBaseSws
@@ -694,6 +886,71 @@
 			public $NomClasseCmdExecFormPrinc = "PvCommandeSupprElement" ;
 		}
 		
+		class ScriptListeAbonsNewsletterSws extends ScriptAdminBaseSws
+		{
+			public $TitreDocument = "Abonn&eacute;s newsletter" ;
+			public $Titre = "Abonn&eacute;s newsletter" ;
+			protected $FltNom ;
+			protected $FltDateMinInscript ;
+			protected $FltDateMaxInscript ;
+			protected $FltEmail ;
+			protected $DefColId ;
+			protected $DefColNom ;
+			protected $DefColPrenom ;
+			protected $DefColEmail ;
+			protected $DefColActive ;
+			protected $LienActDetails ;
+			protected $LienActSuppr ;
+			protected $DefColDateCreation ;
+			protected $TablPrinc ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$entite = $this->ObtientEntitePage() ;
+				$entite->PrepareScriptAdmin($this) ;
+				$this->DetermineTablPrinc() ;
+			}
+			protected function DetermineTablPrinc()
+			{
+				$entite = $this->ObtientEntitePage() ;
+				$bd = $this->ObtientBDSupport() ;
+				$this->TablPrinc = new PvTableauDonneesHtml() ;
+				$this->TablPrinc->AdopteScript('tablPrinc', $this) ;
+				$this->TablPrinc->ChargeConfig() ;
+				$this->FltEmail = $this->TablPrinc->InsereFltSelectHttpGet('email', $bd->SqlIndexOf('<self>', $bd->EscapeVariableName($entite->NomColEmailAbon).' > 0')) ;
+				$this->FltEmail->Libelle = "Email" ;
+				$this->FltNom = $this->TablPrinc->InsereFltSelectHttpGet('nom', $bd->SqlIndexOf('upper(<self>)', 'upper('.$bd->EscapeVariableName($entite->NomColNomAbon).')').' > 0 or '.$bd->SqlIndexOf('upper(<self>)', 'upper('.$bd->EscapeVariableName($entite->NomColNomAbon).')').' > 0') ;
+				$this->FltNom->Libelle = "Nom" ;
+				$this->FltDateMinInscript = $this->TablPrinc->InsereFltSelectHttpGet('date_debut', $bd->SqlStrToDate('<self>').' <= '.$bd->EscapeVariableName($entite->NomColDateCreationAbon)) ;
+				$this->FltDateMinInscript->Libelle = "Date debut" ;
+				$this->FltDateMinInscript->ValeurParDefaut = date("Y-m-d", date("U") - 84600 * 30) ;
+				$this->FltDateMinInscript->DeclareComposant("PvCalendarDateInput") ;
+				$this->FltDateMaxInscript = $this->TablPrinc->InsereFltSelectHttpGet('date_fin', $bd->SqlStrToDate('<self>').' >= '.$bd->EscapeVariableName($entite->NomColDateCreationAbon)) ;
+				$this->FltDateMaxInscript->Libelle = "Date fin" ;
+				$this->FltDateMaxInscript->DeclareComposant("PvCalendarDateInput") ;
+				$this->DefColId = $this->TablPrinc->InsereDefColCachee($entite->NomColIdAbon) ;
+				$this->DefColNom = $this->TablPrinc->InsereDefCol($entite->NomColNomAbon, "Nom") ;
+				$this->DefColPrenom = $this->TablPrinc->InsereDefCol($entite->NomColPrenomAbon, "Prenoms") ;
+				$this->DefColEmail = $this->TablPrinc->InsereDefCol($entite->NomColEmailAbon, "Email") ;
+				$this->DefColActive = $this->TablPrinc->InsereDefColBool($entite->NomColActiveAbon, "Actif") ;
+				$this->DefColActive->AlignElement = "center" ;
+				$this->DefColDateCreation = $this->TablPrinc->InsereDefCol($entite->NomColDateCreationAbon, "Date inscription", $bd->SqlDateToStrFr($bd->EscapeVariableName($entite->NomColDateCreationAbon), 1)) ;
+				$this->DefColActions = $this->TablPrinc->InsereDefColActions("Actions") ;
+				$this->LienDetails = $this->TablPrinc->InsereLienAction($this->DefColActions, '?'.urlencode($this->ZoneParent->NomParamScriptAppele).'=detail_abon_'.$entite->NomEntite.'&id=${id}', 'D&eacute;tails') ;
+				$this->TablPrinc->FournisseurDonnees = $this->CreeFournDonnees() ;
+				$this->TablPrinc->FournisseurDonnees->RequeteSelection = $entite->NomTableAbon ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$entite = $this->ObtientEntitePage() ;
+				$ctn = parent::RenduDispositifBrut() ;
+				$ctn .= $entite->RenduAvantCtnSpec($this) ;
+				$ctn .= $this->TablPrinc->RenduDispositif() ;
+				$ctn .= $entite->RenduApresCtnSpec($this) ;
+				return $ctn ;
+			}
+		}
+		
 		class ScriptEditAbonNewsletterSws extends ScriptPublBaseSws
 		{
 			public $FormPrinc ;
@@ -807,6 +1064,267 @@
 			public $NomClasseCmdExecFormPrinc = "CmdEditAbonNewsletterSws" ;
 			public $LibCmdExecFormPrinc = "S'incrire" ;
 		}
+		class ScriptAnnuleAbonNewsletterSws extends ScriptPublBaseSws
+		{
+			protected $ValeurParamEmail ;
+			protected $ValeurParamIdCtrl ;
+			public $Titre = "Annulation abonnement newsletter" ;
+			public $TitreDocument = "Annulation abonnement newsletter" ;
+			public $MessageErreur = "" ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$this->DetermineParamsAnnulation() ;
+			}
+			protected function DetermineParamsAnnulation()
+			{
+				$this->ValeurParamEmail = trim(_GET_def("email")) ;
+				$this->ValeurParamIdCtrl = trim(_GET_def("ref_ctrl")) ;
+				$entite = $this->ObtientEntitePage() ;
+				$bd = $this->ObtientBDSupport() ;
+				if($this->ValeurParamEmail != '' && $this->ValeurParamIdCtrl != '')
+				{
+					$sql = "select * from ".$bd->EscapeTableName($entite->NomTableAbon)." where ".$bd->EscapeVariableName($entite->NomColIdCtrlAbon)."=:idCtrl and ".$bd->EscapeVariableName($entite->NomColEmailAbon)."=:email and ".$bd->EscapeVariableName($entite->NomColActiveAbon)." = 1" ;
+					$lgn = $bd->FetchSqlRow($sql, array("idCtrl" => $this->ValeurParamIdCtrl, "email" => $this->ValeurParamEmail)) ;
+					if(is_array($lgn))
+					{
+						if(count($lgn) > 0)
+						{
+							$bd->RunSql("update ".$bd->EscapeTableName($entite->NomTableAbon)." set ".$bd->EscapeVariableName($entite->NomColActiveAbon)." = 0 where ".$bd->EscapeVariableName($entite->NomColIdAbon)." = :id", array("id" => $lgn["id"])) ;
+						}
+						else
+						{
+							$this->MessageErreur = "L'adresse Email n'est pas abonn&eacute; &agrave; la newsletter ou le code de v&eacute;rification n'est plus valide" ;
+						}
+					}
+					else
+					{
+						$this->MessageErreur = "La base de donn&eacute;e des newsletter est actuellement indisponible. Veuillez r&eacute;essayer plus tard" ;
+					}
+				}
+			}
+			public function RenduSpecifique()
+			{
+				$ctn = "" ;
+				if($this->MessageErreur != "")
+				{
+					$ctn .= '<div class="Erreur">'.$this->MessageErreur.'</div>' ;
+				}
+				else
+				{
+					$ctn .= "<div class='Succes'>L'abonnement &agrave; la newsletter de l'adresse email ".htmlentities($this->ValeurParamEmail)." a &eacute;t&eacute; annul&eacute;.</div>"  ;
+				}
+				return $ctn ;
+			}
+		}
+		
+		class ScriptDetailAbonNewsletterSws extends ScriptAdminBaseSws
+		{
+			public $FormPrinc ;
+			public $FltIdFormPrinc ;
+			public $FltIdNewsletterFormPrinc ;
+			public $FltIdCtrlFormPrinc ;
+			public $FltNomFormPrinc ;
+			public $CompNomFormPrinc ;
+			public $LargeurNomFormPrinc = "240px" ;
+			public $FltPrenomFormPrinc ;
+			public $CompPrenomFormPrinc ;
+			public $LargeurPrenomFormPrinc = "350px" ;
+			public $FltEmailFormPrinc ;
+			public $CompEmailFormPrinc ;
+			public $LargeurEmailFormPrinc = "350px" ;
+			public $FltRubrsFormPrinc ;
+			public $CompRubrsFormPrinc ;
+			public $FltIdNewsletterRubrsFormPrinc ;
+			public $EditableFormPrinc = 0 ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$entite = $this->ObtientEntitePage() ;
+				$entite->PrepareScriptAdmin($this) ;
+				$this->DetermineFormPrinc() ;
+			}
+			protected function DetermineFormPrinc()
+			{
+				$entite = $this->ObtientEntitePage() ;
+				$bd = $this->ObtientBDSupport() ;
+				$this->FormPrinc = new PvFormulaireDonneesHtml() ;
+				$this->FormPrinc->InclureElementEnCours = 1 ;
+				$this->FormPrinc->InclureTotalElements = 1 ;
+				$this->FormPrinc->LibelleCommandeExecuter = "Changer statut" ;
+				$this->FormPrinc->MaxFiltresEditionParLigne = 1 ;
+				$this->FormPrinc->NomClasseCommandeExecuter = "CmdChangeStatutAbonNewsletterSws" ;
+				$this->FormPrinc->Editable = 0 ;
+				$this->FormPrinc->AdopteScript("formPrinc", $this) ;
+				$this->FormPrinc->ChargeConfig() ;
+				$this->FltIdFormPrinc = $this->FormPrinc->InsereFltLgSelectHttpGet("id", $bd->EscapeVariableName($entite->NomColIdAbon)." = <self>") ;
+				$this->FltNomFormPrinc = $this->FormPrinc->InsereFltEditHttpPost("nom", $entite->NomColNomAbon) ;
+				$this->FltNomFormPrinc->Libelle = "Nom" ;
+				$this->CompNomFormPrinc = $this->FltNomFormPrinc->ObtientComposant() ;
+				$this->CompNomFormPrinc->Largeur = $this->LargeurNomFormPrinc ;
+				$this->FltPrenomFormPrinc = $this->FormPrinc->InsereFltEditHttpPost("prenom", $entite->NomColPrenomAbon) ;
+				$this->FltPrenomFormPrinc->Libelle = "Prenom" ;
+				$this->CompPrenomFormPrinc = $this->FltPrenomFormPrinc->ObtientComposant() ;
+				$this->CompPrenomFormPrinc->Largeur = $this->LargeurPrenomFormPrinc ;
+				$this->FltEmailFormPrinc = $this->FormPrinc->InsereFltEditHttpPost("email", $entite->NomColEmailAbon) ;
+				$this->FltEmailFormPrinc->Libelle = "Email" ;
+				$this->CompEmailFormPrinc = $this->FltEmailFormPrinc->ObtientComposant() ;
+				$this->FltActiveFormPrinc = $this->FormPrinc->InsereFltEditHttpPost("active", $entite->NomColActiveAbon) ;
+				$this->FltActiveFormPrinc->Libelle = "Actif" ;
+				$this->FltActiveFormPrinc = $this->FltActiveFormPrinc->DeclareComposant("PvZoneSelectBoolHtml") ;
+				$this->FltRubrsFormPrinc = $this->FormPrinc->InsereFltEditHttpPost("id_rubrique", "") ;
+				$this->FltRubrsFormPrinc->Libelle = "Rubriques" ;
+				$this->CompRubrsFormPrinc = $this->FltRubrsFormPrinc->DeclareComposant("PvZoneBoiteOptionsCocherHtml") ;
+				$this->CompRubrsFormPrinc->FournisseurDonnees = $this->CreeFournDonnees() ;
+				$this->CompRubrsFormPrinc->FournisseurDonnees->RequeteSelection = "(select t1.*, t2.".$bd->EscapeVariableName($entite->NomColIdAbonAbonmt)." id_abonne, t2.".$bd->EscapeVariableName($entite->NomColActiveAbonmt)." from ".$bd->EscapeTableName($entite->NomTableRubr)." t1 left join ".$bd->EscapeTableName($entite->NomTableAbonmt)." t2 on t1.".$bd->EscapeVariableName($entite->NomColIdRubr)."=t2.".$bd->EscapeVariableName($entite->NomColIdRubrAbonmt)." order by ".$bd->EscapeVariableName($entite->NomColIdNewsletterRubr)." desc)" ;
+				$this->CompRubrsFormPrinc->NomColonneValeur = $entite->NomColIdRubr ;
+				$this->CompRubrsFormPrinc->NomColonneLibelle = $entite->NomColTitreRubr ;
+				$this->CompRubrsFormPrinc->NomColonneValeurParDefaut = $entite->NomColActiveAbonmt ;
+				$this->FltIdAbonRubrsFormPrinc = $this->CreeFiltreHttpGet("id", "id_abonne = <self>") ;
+				$this->FltIdAbonRubrsFormPrinc->EstObligatoire = 1 ;
+				$this->CompRubrsFormPrinc->FiltresSelection[] = & $this->FltIdAbonRubrsFormPrinc ;
+				$this->CompRubrsFormPrinc->MaxColonnesParLigne = 1 ;
+				$this->CompRubrsFormPrinc->CocherAutoPremiereOption = 0 ;
+				$this->FormPrinc->FournisseurDonnees = $this->CreeFournDonnees() ;
+				$this->FormPrinc->FournisseurDonnees->TableEdition = $entite->NomTableAbon ;
+				$this->FormPrinc->FournisseurDonnees->RequeteSelection = $entite->NomTableAbon ;
+				$this->FormPrinc->RedirigeAnnulerVersScript("liste_abons_".$entite->NomEntite) ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$entite = $this->ObtientEntitePage() ;
+				$ctn = '' ;
+				$ctn .= $entite->RenduAvantCtnSpec($this) ;
+				$ctn .= parent::RenduDispositifBrut() ;
+				$ctn .= $entite->RenduApresCtnSpec($this) ;
+				return $ctn ;
+			}
+			public function RenduSpecifique()
+			{
+				$ctn = '' ;
+				$ctn .= $this->FormPrinc->RenduDispositif() ;
+				// print_r($this->CompRubrsFormPrinc->FournisseurDonnees->BaseDonnees) ;
+				return $ctn ;
+			}
+		}
+		
+		class ScriptListeJournauxNewsletterSws extends ScriptAdminBaseSws
+		{
+			public $FltEmail ;
+			public $FltNom ;
+			public $FltDateDebut ;
+			public $FltDateFin ;
+			public $DefColNomAbon ;
+			public $DefColEmail ;
+			public $DefColDateCreation ;
+			public $DefColSemaine ;
+			public $DefColAnnee ;
+			public $DefColActions ;
+			public $LienDetails ;
+			public $TablPrinc ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$entite = $this->ObtientEntitePage() ;
+				$entite->PrepareScriptAdmin($this) ;
+				$this->DetermineTablPrinc() ;
+			}
+			protected function DetermineTablPrinc()
+			{
+				$bd = $this->ObtientBDSupport() ;
+				$entite = $this->ObtientEntitePage() ;
+				$this->TablPrinc = new PvTableauDonneesHtml() ;
+				$this->TablPrinc->AdopteScript("tablPrinc", $this) ;
+				$this->TablPrinc->ChargeConfig() ;
+				$this->FltEmail = $this->TablPrinc->InsereFltSelectHttpGet("email", $bd->SqlIndexOf("upper(email_abon)", "upper(<self>)")." > 0") ;
+				$this->FltEmail->Libelle = "Email" ;
+				$this->FltNom = $this->TablPrinc->InsereFltSelectHttpGet("nom", $bd->SqlIndexOf("upper(nom_abon)", "upper(<self>)")." > 0 or ".$bd->SqlIndexOf("upper(prenom_abon)", "upper(<self>)")." > 0") ;
+				$this->FltNom->Libelle = "Nom" ;
+				$this->FltDateDebut = $this->TablPrinc->InsereFltSelectHttpGet("date_debut", $bd->SqlDatePart("date_creation")." >= ".$bd->SqlDatePart("<self>")) ;
+				$this->FltDateDebut->Libelle = "Date debut" ;
+				$this->FltDateDebut->DeclareComposant("PvCalendarDateInput") ;
+				$this->FltDateFin = $this->TablPrinc->InsereFltSelectHttpGet("date_fin", $bd->SqlDatePart("date_creation")." <= ".$bd->SqlDatePart("<self>")) ;
+				$this->FltDateFin->Libelle = "Date fin" ;
+				$this->FltDateFin->DeclareComposant("PvCalendarDateInput") ;
+				$this->DefColId = $this->TablPrinc->InsereDefColCachee("id") ;
+				$this->DefColNom = $this->TablPrinc->InsereDefCol("nom_abon", "Nom") ;
+				$this->DefColPrenom = $this->TablPrinc->InsereDefCol("prenom_abon", "Pr&eacute;noms") ;
+				$this->DefColEmail = $this->TablPrinc->InsereDefCol("email_abon", "Email") ;
+				$this->DefColDateCreation = $this->TablPrinc->InsereDefCol("date_creation", "Date envoi") ;
+				$this->DefColDateCreation->AlignElement = "center" ;
+				$this->DefColDateCreation->AliasDonnees = $bd->SqlDateToStrFr("date_creation", 1) ;
+				$this->DefColSemaine = $this->TablPrinc->InsereDefCol("no_semaine", "Semaine") ;
+				$this->DefColSemaine->AlignElement = "center" ;
+				$this->DefColAnnee = $this->TablPrinc->InsereDefCol("no_annee", "Ann&eacute;e") ;
+				$this->DefColAnnee->AlignElement = "center" ;
+				$this->DefColActions = $this->TablPrinc->InsereDefColActions("Actions") ;
+				$this->LienDetails = $this->TablPrinc->InsereLienAction($this->DefColActions, "javascript:afficheContenuJournal(\${id})", "D&eacute;tails") ;
+				$this->TablPrinc->FournisseurDonnees = $this->CreeFournDonnees() ;
+				$hauteurCadre = 450 ;
+				$largeurCadre = 676 ;
+				$this->TablPrinc->FournisseurDonnees->RequeteSelection = $entite->SqlSelectDiffus() ;
+				$this->TablPrinc->ContenuAvantRendu .= '<div id="Fenetre_'.$this->TablPrinc->IDInstanceCalc.'" class="ui-dialog"><iframe id="Cadre_'.$this->TablPrinc->IDInstanceCalc.'" style="width:98%; height:'.($hauteurCadre - 80).'px;" frameborder="0"></iframe></div>
+<script type="text/javascript">
+	function afficheContenuJournal(id) {
+		jQuery("#Fenetre_'.$this->TablPrinc->IDInstanceCalc.'").dialog({
+				autoOpen : true, width:'.$largeurCadre.', height:'.$hauteurCadre.', resizable : false,
+		modal : true, buttons : { "Fermer" : function () { jQuery( this ).dialog("close"); }}
+		}) ;
+		jQuery("#Cadre_'.$this->TablPrinc->IDInstanceCalc.'").attr("src", "?'.urlencode($this->ZoneParent->NomParamScriptAppele).'=contenu_journal_'.urlencode($entite->NomEntite).'&id=" + id.toString()) ;
+	}
+</script>' ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$entite = $this->ObtientEntitePage() ;
+				$ctn = '' ;
+				$ctn .= $entite->RenduAvantCtnSpec($this) ;
+				$ctn .= parent::RenduDispositifBrut() ;
+				$ctn .= $entite->RenduApresCtnSpec($this) ;
+				return $ctn ;
+			}
+			public function RenduSpecifique()
+			{
+				$ctn = '' ;
+				$ctn .= $this->TablPrinc->RenduDispositif() ;
+				return $ctn ;
+			}
+		}
+		class ScriptContenuJournalNewsletterSws extends ScriptAdminBaseSws
+		{
+			public $ValeurParamIdDiffus ;
+			public $LgnDiffus = array() ;
+			public $UtiliserCorpsDocZone = 0 ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$this->DetermineDiffus() ;
+			}
+			protected function DetermineDiffus()
+			{
+				$this->ValeurParamIdDiffus = _GET_def("id") ;
+				$bd = $this->ObtientBDSupport() ;
+				$entite = $this->ObtientEntitePage() ;
+				$this->LgnDiffus = $bd->FetchSqlRow("select * from ".$entite->SqlSelectDiffus()." t1 where id=:id", array("id" => $this->ValeurParamIdDiffus)) ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				if(! count($this->LgnDiffus))
+				{
+					$ctn .= '<div class="ui-widget ui-state-error">Journal non trouv&eacute;</div>' ;
+				}
+				else
+				{
+					$ctn .= '<table cellspacing="0" cellpadding="4" class="ui-widget ui-widget-content" align="center" width="100%">
+	<tr><td class="ui-widget ui-state-default"><b>Semaine</b> #'.$this->LgnDiffus["no_semaine"].' '.$this->LgnDiffus["no_annee"].'</td></tr>
+	<tr><td class="ui-widget ui-state-default"><b>Destinataire</b> : '.$this->LgnDiffus["prenom_abon"].' '.$this->LgnDiffus["nom_abon"].' &lt;'.$this->LgnDiffus["email_abon"].'&gt;</td></tr>
+	<tr><td class="ui-widget">'.$this->LgnDiffus["contenu"].'</td></tr>
+</table>' ;
+				}
+				return $ctn ;
+			}
+		}
 		
 		class CritrDejaEnregNewsletterSws extends PvCritereBase
 		{
@@ -836,6 +1354,7 @@
 				}
 			}
 		}
+		
 		class CmdEditAbonNewsletterSws extends PvCommandeEditionElementBase
 		{
 			public $Mode = 1 ;
@@ -885,6 +1404,31 @@
 				}
 				// 
 				// foreach()
+			}
+		}
+		class CmdChangeStatutAbonNewsletterSws extends PvCommandeExecuterBase
+		{
+			public $Mode = 1 ;
+			public $MessageSuccesExecution = "Le statut de l'abonn&eacute; a chang&eacute;" ;
+			public function ExecuteInstructions()
+			{
+				$this->ScriptParent->FltIdFormPrinc->Lie() ;
+				$entite = $this->ScriptParent->ObtientEntitePage() ;
+				$bd = $this->ScriptParent->ObtientBDSupport() ;
+				if($this->StatutExecution == 1)
+				{
+					$sql = "update ".$bd->EscapeTableName($entite->NomTableAbon)." set ".$bd->EscapeVariableName($entite->NomColActiveAbon)." = case when ".$bd->EscapeVariableName($entite->NomColActiveAbon)." = 1 then 0 else 1 end where ".$bd->EscapeVariableName($entite->NomColIdAbon)." = :idAbon" ;
+					$ok = $bd->RunSql($sql, array("idAbon" => $this->ScriptParent->FltIdFormPrinc->Lie())) ;
+					$this->StatutExecution = $ok ;
+					if(! $ok)
+					{
+						$this->RenseigneErreur("Erreur : ".$bd->ConnectionException) ;
+					}
+					else
+					{
+						$this->ConfirmeSucces($this->MessageSuccesExecution) ;
+					}
+				}
 			}
 		}
 	}

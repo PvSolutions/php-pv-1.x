@@ -18,11 +18,82 @@
 		
 		class PvDocumentWebBase
 		{
+			protected function RenduDefsJS(& $zone)
+			{
+				$ctn = '' ;
+				$ctn = '' ;
+				for($i=0; $i<count($zone->ContenusJs); $i++)
+				{
+					$ctnJs = $zone->ContenusJs[$i] ;
+					$ctn .= $ctnJs->RenduDispositif().PHP_EOL ;
+				}
+				return $ctn ;
+				return $ctn ;
+			}
+			protected function RenduDefsCSS(& $zone)
+			{
+				$ctn = '' ;
+				for($i=0; $i<count($zone->ContenusCSS); $i++)
+				{
+					$ctnCSS = $zone->ContenusCSS[$i] ;
+					$ctn .= $ctnCSS->RenduDispositif().PHP_EOL ;
+				}
+				return $ctn ;
+			}
+			public function PrepareRendu(& $zone)
+			{
+			}
 			public function RenduEntete(& $zone)
 			{
 			}
 			public function RenduPied(& $zone)
 			{
+			}
+		}
+		class PvDocumentHtmlSimple extends PvDocumentWebBase
+		{
+			public function RenduEntete(& $zone)
+			{
+				$ctn = '' ;
+				$ctn .= '<!doctype html>'.PHP_EOL ;
+				$ctn .= '<html lang="'.$zone->LangueDocument.'">'.PHP_EOL ;
+				$ctn .= '<head>'.PHP_EOL ;
+				$ctn .= '<title>'.$zone->ObtientTitreDocument().'</title>'.PHP_EOL ;
+				$ctn .= '<meta name="keywords" value="'.htmlentities($zone->ObtientMotsCleMetaDocument()).'" />'.PHP_EOL ;
+				$ctn .= '<meta name="description" value="'.htmlentities($zone->ObtientDescMetaDocument()).'" />'.PHP_EOL ;
+				if($zone->EncodageDocument != '')
+					$ctn .= '<meta charset="'.$zone->EncodageDocument.'" />'.PHP_EOL ;
+				$viewport = $zone->ObtientViewportMetaDocument() ;
+				if($viewport != '')
+				{
+					$ctn .= '<meta name="viewport" value="'.htmlentities($viewport).'" />'.PHP_EOL ;
+				}
+				$auteur = $zone->ObtientAuteurMetaDocument() ;
+				if($auteur != '')
+				{
+					$ctn .= '<meta name="author" value="'.htmlentities($auteur).'" />'.PHP_EOL ;
+				}
+				$ctn .= '<meta name="description" value="'.htmlentities($zone->ObtientDescMetaDocument()).'" />'.PHP_EOL ;
+				if($zone->InclureCtnJsEntete)
+				{
+					$ctn .= $this->RenduDefsJS($zone) ;
+				}
+				$ctn .= $this->RenduDefsCSS($zone) ;
+				$ctn .= $zone->RenduExtraHead ;
+				$ctn .= '</head>'.PHP_EOL ;
+				$ctn .= '<body>' ;
+				return $ctn ;
+			}
+			public function RenduPied(& $zone)
+			{
+				$ctn = '' ;
+				if(! $zone->InclureCtnJsEntete)
+				{
+					$ctn .= $this->RenduDefsJS($zone) ;
+				}
+				$ctn .= '</body>'.PHP_EOL ;
+				$ctn .= '</html>' ;
+				return $ctn ;
 			}
 		}
 		class PvDocBoiteDialogueWeb extends PvDocumentWebBase
@@ -107,7 +178,7 @@
 			public $NomElementGest ;
 			public $GestParent ;
 			protected $Etat ;
-			public $DelaiExecution = 86400 ;
+			public $DelaiExecution = 3600 ;
 			protected $TerminerExecution = 0 ;
 			public function InitConfig()
 			{
@@ -120,7 +191,7 @@
 			}
 			public function ObtientCheminFichier()
 			{
-				return $this->GestParent->ObtientCheminDossierTaches()."/".$this->IDInstanceCalc.".dat" ;
+				return $this->GestParent->ObtientCheminDossierTaches()."/".$this->NomElementGest.".dat" ;
 			}
 			protected function ObtientCtnBrutEtat()
 			{
@@ -175,6 +246,10 @@
 				$this->NomElementGest = $nom ;
 				$this->GestParent = & $gest ;
 			}
+			public function & ZoneParent()
+			{
+				return $this->GestParent->ZoneParent ;
+			}
 			public function EstPret()
 			{
 				if(! $this->Etat->EstDefini())
@@ -183,11 +258,11 @@
 				}
 				if($this->Etat->Statut == PvEtatServPersist::ETAT_DEMARRE)
 				{
-					return 0 ;
+					return 1 ;
 				}
 				$timestampAtteint = $this->Etat->TimestmpFinSession + ($this->DelaiExecution * 3600) ;
 				$ok = 0 ;
-				if(date("U") >= $timestampAtteint)
+				if(($this->Etat->Statut == PvEtatServPersist::ETAT_STOPPE || $this->Etat->Statut == PvEtatServPersist::ETAT_NON_DEFINI) && date("U") >= $timestampAtteint)
 				{
 					$ok = 1 ;
 				}
@@ -199,8 +274,12 @@
 				{
 					return ;
 				}
-				$this->Etat->TimestmpDebutSession = date("U") ;
-				$this->Etat->Statut = PvEtatServPersist::ETAT_DEMARRE ;
+				if($this->Etat->Statut != PvEtatServPersist::ETAT_DEMARRE)
+				{
+					$this->Etat->TimestmpDebutSession = date("U") ;
+					$this->Etat->Statut = PvEtatServPersist::ETAT_DEMARRE ;
+				}
+				$this->Etat->TimestmpCapt = date("U") ;
 				$ok = $this->SauveEtat() ;
 				if(! $ok)
 				{
@@ -331,6 +410,10 @@
 					$this->ValeurParamTacheAppelee = "" ;
 				}
 			}
+			public function PossedeTacheAppelee()
+			{
+				return ($this->ValeurParamTacheAppelee != "") ? 1 : 0 ;
+			}
 			public function & InsereTacheWeb($nom, $tache)
 			{
 				$this->GestTachesWeb->InsereTache($nom, $tache) ;
@@ -393,6 +476,16 @@
 			protected function ChargeGestTachesWeb()
 			{
 			}
+			public function & ObtientActionsAvantRendu()
+			{
+				$actions = $this->ActionsAvantRendu ;
+				return $actions ;
+			}
+			public function & ObtientActionsApresRendu()
+			{
+				$actions = $this->ActionsApresRendu ;
+				return $actions ;
+			}
 			protected function ChargeActionsAvantRendu()
 			{
 			}
@@ -430,6 +523,10 @@
 				}
 				$action = new $nomClasseAction() ;
 				return $action ;
+			}
+			public function PossedeActionAppelee()
+			{
+				return ($this->ValeurParamActionAppelee != "") ? 1 : 0 ;
 			}
 			public function InsereActionAvantRendu($nomAction, $action)
 			{
@@ -484,9 +581,11 @@
 				if($this->RenduDocumentWebActive())
 				{
 					$this->DetecteDocumentWebSelect() ;
-					$ctn .= $this->DocumentWebSelect->RenduEntete($zone) ;
+					$this->InclutLibrairiesExternes() ;
+					$this->DocumentWebSelect->PrepareRendu($this) ;
+					$ctn .= $this->DocumentWebSelect->RenduEntete($this) ;
 					$ctn .= $this->RenduContenuCorpsDocument() ;
-					$ctn .= $this->DocumentWebSelect->RenduPied($zone) ;
+					$ctn .= $this->DocumentWebSelect->RenduPied($this) ;
 				}
 				else
 				{
@@ -504,29 +603,22 @@
 						$ctn .= $this->RenduDebutCorpsDocument().PHP_EOL ;
 					}
 					$ctn .= $this->RenduPiedDocument().PHP_EOL ;
-					if($this->ActiverRafraichScript && ($this->ScriptPourRendu->DoitAutoRafraich()))
-					{
-						$ctn .= '<script type="text/javascript">
-		var oldOnLoadFunc = window.onload ;
-		var annuleAutoRafraich = 0 ;
-		var idAutoRafraich = 0 ;
-		function programmeAutoRafraich() {
-			idAutoRafraich = setTimeout('.intval($this->ScriptPourRendu->DelaiAutoRafraich).', function() {
-				if(idAutoRafraich > 0)
-					window.location = '.json_encode($this->ScriptPourRendu->ObtientUrlParam($this->ScriptPourRendu->ParamsAutoRafraich)).' ;
-			}) ;
-		}
-		if(oldOnLoadFunc == null)
-		{
-			oldOnLoadFunc = function() {} ;
-		}
-		window.onload = function() {
-			oldOnLoadFunc() ;
-			programmeAutoRafraich() ;
-		}
-	</script>'.PHP_EOL ;
-					}
 					$ctn .= '</html>' ;
+				}
+				$ctn .= $this->RenduAutoRafraich() ;
+				return $ctn ;
+			}
+			public function RenduAutoRafraich()
+			{
+				$ctn = '' ;
+				if($this->ActiverRafraichScript && ($this->ScriptPourRendu->DoitAutoRafraich()))
+				{
+					$ctn .= '<script type="text/javascript">
+	function execAutoRafraich() {
+		window.location = '.json_encode($this->ScriptPourRendu->ObtientUrlParam($this->ScriptPourRendu->ParamsAutoRafraich)).' ;
+	}
+	window.setTimeout("execAutoRafraich()", '.intval($this->ScriptPourRendu->DelaiAutoRafraich).' * 1000) ;
+</script>'.PHP_EOL ;
 				}
 				return $ctn ;
 			}
@@ -565,27 +657,47 @@
 					array_splice($this->ContenusJs, 0, 0, $lstCtnJs) ;
 				}
 			}
-			protected function RenduEnteteDocument()
+			public function ObtientTitreDocument()
+			{
+				$titreDocument = $this->ScriptPourRendu->ObtientTitreDocument() ;
+				return (($titreDocument != "") ? $titreDocument : $this->TitreDocument) ;
+			}
+			public function ObtientMotsCleMetaDocument()
+			{
+				return ($this->ScriptPourRendu->MotsCleMeta != "") ? $this->ScriptPourRendu->MotsCleMeta : $this->MotsCleMeta ;
+			}
+			public function ObtientViewportMetaDocument()
+			{
+				return ($this->ScriptPourRendu->ViewportMeta != "") ? $this->ScriptPourRendu->ViewportMeta : $this->ViewportMeta ;
+			}
+			public function ObtientAuteurMetaDocument()
+			{
+				return ($this->ScriptPourRendu->AuteurMeta != "") ? $this->ScriptPourRendu->AuteurMeta : $this->AuteurMeta ;
+			}
+			public function ObtientDescMetaDocument()
+			{
+				return ($this->ScriptPourRendu->DescriptionMeta != "") ? $this->ScriptPourRendu->DescriptionMeta : $this->DescriptionMeta ;
+			}
+			public function RenduEnteteDocument()
 			{
 				$this->InclutLibrairiesExternes() ;
 				$ctn = '' ;
 				$ctn .= '<head>'.PHP_EOL ;
 				if($this->EncodageDocument != '')
 					$ctn .= '<meta charset="'.$this->EncodageDocument.'" />'.PHP_EOL ;
-				$titreDocument = $this->ScriptPourRendu->ObtientTitreDocument() ;
-				$ctn .= '<title>'.(($titreDocument != "") ? $titreDocument : $this->TitreDocument).'</title>'.PHP_EOL ;
-				$ctn .= '<meta name="keywords" value="'.htmlentities(($this->ScriptPourRendu->MotsCleMeta != "") ? $this->ScriptPourRendu->MotsCleMeta : $this->MotsCleMeta).'" />'.PHP_EOL ;
-				$viewport = ($this->ScriptPourRendu->ViewportMeta != "") ? $this->ScriptPourRendu->ViewportMeta : $this->ViewportMeta ;
+				$ctn .= '<title>'.$this->ObtientTitreDocument().'</title>'.PHP_EOL ;
+				$ctn .= '<meta name="keywords" value="'.htmlentities($this->ObtientMotsCleMetaDocument()).'" />'.PHP_EOL ;
+				$viewport = $this->ObtientViewportMetaDocument() ;
 				if($viewport != '')
 				{
 					$ctn .= '<meta name="viewport" value="'.htmlentities($viewport).'" />'.PHP_EOL ;
 				}
-				$auteur = ($this->ScriptPourRendu->AuteurMeta != "") ? $this->ScriptPourRendu->AuteurMeta : $this->AuteurMeta ;
+				$auteur = $this->ObtientAuteurMetaDocument() ;
 				if($auteur != '')
 				{
 					$ctn .= '<meta name="author" value="'.htmlentities($auteur).'" />'.PHP_EOL ;
 				}
-				$ctn .= '<meta name="description" value="'.htmlentities(($this->ScriptPourRendu->DescriptionMeta != "") ? $this->ScriptPourRendu->DescriptionMeta : $this->DescriptionMeta).'" />'.PHP_EOL ;
+				$ctn .= '<meta name="description" value="'.htmlentities($this->ObtientDescMetaDocument()).'" />'.PHP_EOL ;
 				for($i=0; $i<count($this->ContenusCSS); $i++)
 				{
 					$ctnCSS = $this->ContenusCSS[$i] ;
@@ -609,7 +721,7 @@
 				}
 				return $ctn ;
 			}
-			protected function RenduPiedDocument()
+			public function RenduPiedDocument()
 			{
 			}
 			protected function RenduEnteteCorpsDocument()
@@ -661,25 +773,27 @@
 				// print_r(array_keys($this->ActionsAvantRendu)) ;
 				$this->DetermineEnvironnement($script) ;
 				$this->ExecuteRequeteSoumise($script) ;
-				$this->DetecteActionAppelee() ;
 				// $script->PrepareRendu() ;
+				$this->ScriptPourRendu = $script ;
+				$this->RenduEnCours = 1 ;
+				$this->DetecteActionAppelee() ;
 				if($this->ValeurParamActionAppelee !== false)
 				{
 					$this->ExecuteActionAppelee($this->ActionsAvantRendu) ;
 				}
 				if($this->AnnulerRendu)
 				{
+					$this->RenduEnCours = 0 ;
+					$this->ScriptPourRendu = null ;
 					return ;
 				}
-				$this->ScriptPourRendu = $script ;
-				$this->RenduEnCours = 1 ;
 				$ctn = $this->RenduDocument() ;
-				$this->RenduEnCours = 0 ;
-				$this->ScriptPourRendu = null ;
 				if($this->ValeurParamActionAppelee !== false)
 				{
 					$this->ExecuteActionAppelee($this->ActionsApresRendu) ;
 				}
+				$this->RenduEnCours = 0 ;
+				$this->ScriptPourRendu = null ;
 				echo $ctn ;
 			}
 			protected function ExecuteRequeteSoumise(& $script)

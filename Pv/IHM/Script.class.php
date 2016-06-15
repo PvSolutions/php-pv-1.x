@@ -30,6 +30,7 @@
 			public $TitreDocument = "" ;
 			public $Privileges = array() ;
 			public $NecessiteMembreConnecte = 0 ;
+			public $AnnulDetectMemberCnx = 0 ;
 			public function ChargeConfig()
 			{
 				parent::ChargeConfig() ;

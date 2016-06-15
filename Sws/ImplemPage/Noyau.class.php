@@ -154,6 +154,11 @@
 				$this->InscritScript($nom, $script, $zone, $privs) ;
 				return $script ;
 			}
+			public function InsereScript($nom, $script, & $zone, $privs=array())
+			{
+				$this->InscritScript($nom, $script, $zone, $privs) ;
+				return $script ;
+			}
 			public function & InscritScript($nom, & $script, & $zone, $privs=array())
 			{
 				$script->NomImplemPage = $this->NomElementSyst;
@@ -164,6 +169,22 @@
 				}
 				$zone->InscritScript($nom, $script);
 				return $script ;
+			}
+			public function & InsereTacheWeb($nom, $tache, & $zone)
+			{
+				$this->InscritTacheWeb($nom, $tache, $zone) ;
+				return $tache;
+			}
+			public function InscritNouvTacheWeb($nom, $tache, & $zone)
+			{
+				$this->InscritTacheWeb($nom, $tache, $zone) ;
+				return $tache ;
+			}
+			public function & InscritTacheWeb($nom, & $tache, & $zone)
+			{
+				$tache->NomModulePage = $this->NomElementSyst;
+				$zone->InscritTacheWeb($nom, $tache);
+				return $tache ;
 			}
 			public function ObtientFournEntitesAppl()
 			{

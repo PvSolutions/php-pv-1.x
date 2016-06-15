@@ -319,7 +319,7 @@
 				$this->InscritScript($nom, $script, $zone, $privs) ;
 				return $script;
 			}
-			public function InscritNouvScript($nom, $script, & $zone, $privs=array())
+			public function & InscritNouvScript($nom, $script, & $zone, $privs=array())
 			{
 				$this->InscritScript($nom, $script, $zone, $privs) ;
 				return $script ;
@@ -335,7 +335,70 @@
 				$zone->InscritScript($nom, $script);
 				return $script ;
 			}
+			public function & InsereTacheWeb($nom, $tache, & $zone)
+			{
+				$this->InscritTacheWeb($nom, $tache, $zone) ;
+				return $tache;
+			}
+			public function InscritNouvTacheWeb($nom, $tache, & $zone)
+			{
+				$this->InscritTacheWeb($nom, $tache, $zone) ;
+				return $tache ;
+			}
+			public function & InscritTacheWeb($nom, & $tache, & $zone)
+			{
+				$tache->NomModulePage = $this->NomElementSyst;
+				$zone->InscritTacheWeb($nom, $tache);
+				return $tache ;
+			}
 		}
+		class TacheWebBaseSws extends PvTacheWebBaseSimple
+		{
+			public $NomEntitePage ;
+			public $NomImplemPage ;
+			public $NomModulePage ;
+			public function CreeFournDonnees()
+			{
+				return ReferentielSws::$SystemeEnCours->CreeFournDonnees() ;
+			}
+			public function ObtientBDSupport()
+			{
+				return ReferentielSws::$SystemeEnCours->BDSupport ;
+			}
+			public function & ObtientSystemeSws()
+			{
+				return ReferentielSws::$SystemeEnCours ;
+			}
+			public function & ObtientModulePage()
+			{
+				$modulePage = new ModulePageIndefiniSws();
+				if($this->NomModulePage != '')
+				{
+					$modulePage = ReferentielSws::$SystemeEnCours->ObtientModulePageParNom($this->NomModulePage) ;
+				}
+				return $modulePage ;
+			}
+			public function & ObtientEntitePage()
+			{
+				$entitePage = new EntitePageIndefSws() ;
+				$modulePage = $this->ObtientModulePage() ;
+				if($modulePage->EstDefini() && $this->NomEntitePage != '' && isset($modulePage->Entites[$this->NomEntitePage]))
+				{
+					$entitePage = & $modulePage->Entites[$this->NomEntitePage] ;
+				}
+				return $entitePage ;
+			}
+			public function & ObtientImplemPage()
+			{
+				$implPage = new ImplemPageIndefSws() ;
+				if($this->NomImplemPage != '')
+				{
+					$implPage = ReferentielSws::$SystemeEnCours->ObtientImplemPageParNom($this->NomImplemPage) ;
+				}
+				return $implPage ;
+			}
+		}
+		
 		class ModulePageIndefiniSws extends ModulePageBaseSws
 		{
 			public $NomRef = "indefini" ;
@@ -512,7 +575,21 @@
 				$script->NomEntitePage = $this->NomElementModule ;
 				$this->ModuleParent->InscritScript($nom, $script, $zone, $privs);
 			}
-			protected function & ObtientBDSupport()
+			protected function InsereTacheWeb($nom, $tache, & $zone)
+			{
+				$this->InscritTacheWeb($nom, $tache, $zone) ;
+				return $tache;
+			}
+			protected function InscritNouvTacheWeb($nom, $tache, & $zone)
+			{
+				$this->InscritTacheWeb($nom, $tache, $zone) ;
+			}
+			protected function InscritTacheWeb($nom, & $tache, & $zone)
+			{
+				$tache->NomEntitePage = $this->NomElementModule ;
+				$this->ModuleParent->InscritTacheWeb($nom, $tache, $zone);
+			}
+			public function & ObtientBDSupport()
 			{
 				$bd = null ;
 				if($this->EstNul($this->ModuleParent))

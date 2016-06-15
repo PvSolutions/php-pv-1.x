@@ -712,6 +712,8 @@
 			}
 			function format_money($number, $decimal_count=2, $max_length=5)
 			{
+				if($number == "")
+					$number = 0 ;
 				$result = number_format($number, $decimal_count, ',', ' ');
 				if($decimal_count)
 				{
@@ -1163,7 +1165,7 @@
 				{
 					return 0 ;
 				}
-				if(! preg_match('/^[a-z0-9_]{4,}@[a-z0-9_\.\-]{2,}$/i', $email))
+				if(! preg_match('/^[a-z0-9_\.]{4,}@[a-z0-9_\.\-]{2,}$/i', $email))
 				{
 					$ok = 0 ;
 				}
@@ -3476,6 +3478,7 @@
 				$keywords = array_slice(array_keys($keyCounts), 0, $maxKeywords) ;
 				return $keywords ;
 			}
+			
 			function popularKeywords_clearWord($x)
 			{
 				return trim(strtolower($x));

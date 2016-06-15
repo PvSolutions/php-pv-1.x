@@ -201,6 +201,7 @@
 			public $NomClasseRemplisseurConfigMembership = "PvRemplisseurConfigMembershipSimple" ;
 			public $RemplisseurConfigMembership = null ;
 			public $MessageScriptMalRefere = "<p>Ce script n'est pas bien refere. Il ne peut etre affiche.</p>" ;
+			public $AnnulDetectMemberCnx = 0 ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -631,7 +632,7 @@
 			}
 			protected function DetecteMembreConnecte()
 			{
-				if($this->Membership == null)
+				if($this->Membership == null || $this->AnnulDetectMemberCnx == 1)
 				{
 					return ;
 				}
@@ -710,6 +711,19 @@
 					return null ;
 				}
 				return $this->Membership->MemberLogged->RawData[$nomAttr] ;
+			}
+			public function PossedeTousPrivileges()
+			{
+				$ok = 1 ;
+				foreach($this->Membership->MemberLogged->Profile->Privileges as $nomRole => $priv)
+				{
+					if($priv->Enabled == 0)
+					{
+						$ok = 0 ;
+						break ;
+					}
+				}
+				return $ok ;
 			}
 			public function PossedePrivilege($nomRole)
 			{
@@ -910,6 +924,7 @@
 			public $NomSessionTraducteur = "traducteur" ;
 			public $NomParamTraducteur = "traducteur" ;
 			public $ReglesHtmlSur = array() ;
+			protected $PourImpression = 0 ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -934,6 +949,10 @@
 				// print_r($captures) ;
 				$url = (isset($_SERVER["HTTPS"])) ? 'https' : 'http'.'://'.$_SERVER["SERVER_NAME"].'/'.$this->CheminFichierRelatif ;
 				return $url ;
+			}
+			public function ObtientUrlParam($params=array())
+			{
+				return $this->ObtientUrl()."?".http_build_query_string($params) ;
 			}
 			public function ObtientUrlScript($nomScript, $params=array())
 			{
@@ -969,7 +988,7 @@
 			}
 			public function ChargeTraducteurActif()
 			{
-				$nomSession = $this->IDInstanceCalc.'_'.$this->NomSessionTraducteur ;
+				$nomSession = $this->NomElementApplication.'_'.$this->NomSessionTraducteur ;
 				$nomParam = $this->NomParamTraducteur ;
 				$nomTrad = '' ;
 				if(isset($_GET[$nomParam]))
@@ -990,6 +1009,18 @@
 			{
 				$result = $ctn ;
 				return $result ;
+			}
+			public function DemarreRenduImpression()
+			{
+				$this->PourImpression = 1 ;
+			}
+			public function TermineRenduImpression()
+			{
+				$this->PourImpression = 1 ;
+			}
+			public function ImpressionEnCours()
+			{
+				return $this->PourImpression ;
 			}
 		}
 		class PvZoneRequetesBase extends PvZoneIHMDeBase

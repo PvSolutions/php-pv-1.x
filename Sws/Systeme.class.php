@@ -261,6 +261,7 @@
 			}
 			public function RemplitZoneAdmin(& $zone)
 			{
+				$zone->GestTachesWeb->NomDossierTaches = $this->CheminAdminVersPubl. DIRECTORY_SEPARATOR .$zone->GestTachesWeb->NomDossierTaches ;
 				$this->RemplitZoneAdminSpec($zone) ;
 				$nomModules = array_keys($this->ModulesPage) ;
 				foreach($nomModules as $i => $nomModule)

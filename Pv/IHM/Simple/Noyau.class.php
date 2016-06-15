@@ -123,6 +123,10 @@
 		
 		class PvFormatteurColonneDonnees extends PvObjet
 		{
+			public function EstAccessible(& $zone, $colonne)
+			{
+				return true ;
+			}
 			public function Encode(& $script, $colonne, $ligne)
 			{
 				if(isset($ligne[$colonne->NomDonnees]))
@@ -233,6 +237,10 @@
 			public $Liens = array() ;
 			public $InclureIcone = 0 ;
 			public $SeparateurLiens = "&nbsp;&nbsp;" ;
+			public function EstAccessible(& $zone, $colonne)
+			{
+				return ! $zone->ImpressionEnCours() ;
+			}
 			public function Encode(& $script, $colonne, $ligne)
 			{
 				$ctn = '' ;
@@ -340,6 +348,15 @@
 			public $ExporterDonneesObligatoire = 0 ;
 			public $FormatValeur ;
 			public $RenvoyerValeurVide = 1 ;
+			public function EstVisible(& $zone)
+			{
+				$ok = $this->Visible == 1 ;
+				if($this->EstPasNul($this->Formatteur))
+				{
+					$ok = $this->Formatteur->EstAccessible($zone, $this) ;
+				}
+				return $ok ;
+			}
 			public function DeclareFormatteurLiens()
 			{
 				$this->Formatteur = new PvFormatteurColonneLiens() ;
@@ -437,7 +454,7 @@
 			{
 				// return slugify($valeur) ;
 				$a = array('À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ð', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'ß', 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'Ð', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'N', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'Œ', 'œ', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'Š', 'š', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Ÿ', 'Z', 'z', 'Z', 'z', 'Ž', 'ž', 'z', 'ƒ');
-				$b = array('A', 'A', 'A', 'A', 'A', 'A', 'AE', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'D', 'N', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 's', 'a', 'a', 'a', 'a', 'a', 'a', 'ae', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'D', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'N', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'OE', 'oe', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'S', 's', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Y', 'Z', 'z', 'Z', 'z', 'Z', 'z', 's', 'f');
+				$b = array('A', 'A', 'A', 'A', 'A', 'A', 'AE', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'D', 'N', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 's', 'a', 'a', 'a', 'a', 'a', 'a', 'ae', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'D', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'N', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'OE', 'oe', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'S', 's', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Y', 'Z', 'z', 'Z', 'z', 'Z', 'z', 'z', 'f');
 				return str_replace($a, $b, $valeur);
 			}
 		}
@@ -521,6 +538,10 @@
 			public $AppliquerCorrecteurValeur = 1 ;
 			public $CorrecteurValeur = null ;
 			public $FormatteurEtiquette = null ;
+			public function ImpressionEnCours()
+			{
+				return $this->EstPasNul($this->ZoneParent) && $this->ZoneParent->ImpressionEnCours() ;
+			}
 			public function InserePrefxErr($contenu)
 			{
 				$this->InserePrefixeLib(new PvMarqErrFiltreDonnees($contenu)) ;
@@ -675,7 +696,7 @@
 			}
 			public function Rendu()
 			{
-				if($this->EstEtiquette)
+				if($this->EstEtiquette || $this->ImpressionEnCours())
 				{
 					return $this->Etiquette() ;
 				}
@@ -693,6 +714,10 @@
 				$this->Composant->FiltreParent = null ;
 				return $ctn ;
 			}
+			public function DefinitFmtLbl($fmt)
+			{
+				$this->ObtientComposant()->FmtLbl = $fmt ;
+			}
 			public function Etiquette()
 			{
 				if($this->EstNul($this->Composant))
@@ -703,7 +728,7 @@
 				{
 					return "(Composant nul)" ;
 				}
-				$this->Composant->Valeur = html_entity_decode($this->FormatteurEtiquette->Applique($this->Lie(), $this)) ;
+				$this->Composant->Valeur = $this->FormatteurEtiquette->Applique(html_entity_decode($this->Lie()), $this) ;
 				$this->Composant->FiltreParent = $this ;
 				$ctn = $this->Composant->RenduEtiquette() ;
 				$this->Composant->FiltreParent = null ;

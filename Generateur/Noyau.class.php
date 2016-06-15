@@ -16,7 +16,6 @@
 			public $FichiersCrees = array() ;
 			public $Active = 1 ;
 			protected $ExecutionAnnulee = 0 ;
-			public $NomBD = "" ;
 			public $NomProjet = "" ;
 			public $VersionProjet = "" ;
 			public $BasesDonnees = array() ;
@@ -34,13 +33,20 @@
 			{
 				return $this->CheminDossierDestination(). DIRECTORY_SEPARATOR . $this->CheminRelatifBibliotheques ;
 			}
-			public function InscritPortion(& $portion)
+			public function InscritPortion($portion)
 			{
 				$this->Portions[] = & $portion ;
+				$portion->AdopteGenerateur(count($this->Portions), $this) ;
 			}
 			public function InscritNouvPortion($portion)
 			{
 				$this->InscritPortion($portion) ;
+				return $portion ;
+			}
+			public function & InserePortion($portion)
+			{
+				$this->InscritPortion($portion) ;
+				return $portion ;
 			}
 			public function & ObtientBD($nom)
 			{

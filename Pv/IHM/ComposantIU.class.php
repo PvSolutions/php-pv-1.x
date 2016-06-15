@@ -20,6 +20,10 @@
 			public $Privileges = array() ;
 			public $MessageMalRefere = "<p>Ce composant n'est pas bien refere. Il ne peut etre affiche</p>" ;
 			public $MessageInaccessible = "<p>Vous n'avez pas les droits necessaires pour afficher ce composant.</p>" ;
+			public function ImpressionEnCours()
+			{
+				return $this->EstPasNul($this->ZoneParent) && $this->ZoneParent->ImpressionEnCours() ;
+			}
 			public function EstAccessible()
 			{
 				if(! $this->NecessiteMembreConnecte)
@@ -395,6 +399,7 @@
 	function SoumetFormulaire'.$this->IDInstanceCalc.'(form)
 	{
 		var urlFormulaire = "'.$urlFormulaire.'" ;
+		///JJJ
 		var parametresGet = '.json_encode($filtresGets).' ;
 		if(parametresGet != undefined)
 		{
