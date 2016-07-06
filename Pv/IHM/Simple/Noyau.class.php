@@ -135,7 +135,8 @@
 			}
 			public function ObtientDonnees($colonne, $ligne)
 			{
-				$donnees = array_merge($ligne, array('self' => (isset($ligne[$colonne->NomDonnees])) ? $ligne[$colonne->NomDonnees] : '')) ;
+				$valeurCourante = (isset($ligne[$colonne->NomDonnees])) ? $ligne[$colonne->NomDonnees] : '' ;
+				$donnees = array_merge($ligne, array('self' => $valeurCourante, 'this' => $valeurCourante)) ;
 				return $donnees ;
 			}
 		}
@@ -347,11 +348,13 @@
 			public $ExporterDonnees = 1 ;
 			public $ExporterDonneesObligatoire = 0 ;
 			public $FormatValeur ;
+			public $StyleCSS ;
+			public $NomClasseCSS ;
 			public $RenvoyerValeurVide = 1 ;
 			public function EstVisible(& $zone)
 			{
 				$ok = $this->Visible == 1 ;
-				if($this->EstPasNul($this->Formatteur))
+				if($ok && $this->EstPasNul($this->Formatteur))
 				{
 					$ok = $this->Formatteur->EstAccessible($zone, $this) ;
 				}

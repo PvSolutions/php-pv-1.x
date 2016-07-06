@@ -155,6 +155,7 @@
 			public $CtrlTachesProgs ;
 			public $CtrlServsPersists ;
 			public $ChemRelRegServsPersists ;
+			protected $_ClientsMail = array() ;
 			public function ObtientChemRelRegServsPersists()
 			{
 				return dirname(__FILE__)."/".$this->CheminFichierRelatif."/".$this->ChemRelRegServsPersists ;
@@ -246,6 +247,24 @@
 			{
 				$this->BasesDonnees[$nom] = & $bd ;
 				// $this->InscritElement($nom, $bd) ;
+			}
+			public function InscritClientMail($nom, & $client)
+			{
+				$this->_ClientsMail[$nom] = & $client ;
+			}
+			public function InsereClientMail($nom, $client)
+			{
+				$this->InscritClientMail($nom, $client) ;
+				return $client ;
+			}
+			public function & ClientsMail()
+			{
+				return $this->_ClientsMail ;
+			}
+			public function & ClientMailNomme($nom)
+			{
+				$client = (isset($this->_ClientsMail[$nom])) ? $this->_ClientsMail[$nom] : null ;
+				return $client ;
 			}
 			public function EnregIHM(& $ihm)
 			{

@@ -283,7 +283,14 @@
 				$nomEltCoteSrv = ($this->FiltreParent != '') ? $this->FiltreParent->NomEltCoteSrv : $this->NomEltCoteSrv ;
 				if($this->InclureCheminCoteServeur)
 				{
-					$ctn .= $this->LibelleCoteSrv.' <input type="text" class="EditeurCheminCoteServeur" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlentities(trim($this->Valeur)).'" size="20" />' ;
+					if($this->CheminCoteServeurEditable)
+					{
+						$ctn .= $this->LibelleCoteSrv.' <input type="text" class="EditeurCheminCoteServeur" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlentities(trim($this->Valeur)).'" size="20" />' ;
+					}
+					else
+					{
+						$ctn .= htmlentities($this->Valeur) ;
+					}
 				}
 				else
 				{

@@ -54,6 +54,15 @@
 				$url = $this->ZoneParent->ObtientUrl()."?".urlencode($this->ZoneParent->NomParamActionAppelee).'='.urlencode($this->NomElementZone).$chaineParams ;
 				return $url ;
 			}
+			public function ObtientUrlFmt($params=array(), $autresParams=array())
+			{
+				$url = $this->ObtientUrl($autresParams) ;
+				foreach($params as $nom => $val)
+				{
+					$url .= '&'.urlencode($nom).'='.$val ;
+				}
+				return $url ;
+			}
 			public function AdopteZone($nom, & $zone)
 			{
 				$this->ZoneParent = & $zone ;

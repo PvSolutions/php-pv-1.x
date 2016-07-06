@@ -412,6 +412,7 @@
 			public $NomParamMotPasse = "motDePasse" ;
 			public $ValeurParamMotPasse = "" ;
 			public $NomParamSoumetTentative = "tentativeConnexion" ;
+			public $NomClsCSSFormulaireDonnees = "FormulaireConnexion" ;
 			public $ValeurParamSoumetTentative = 1 ;
 			public $TentativeConnexionEnCours = 0 ;
 			public $TentativeConnexionValidee = 0 ;
@@ -562,7 +563,7 @@
 			public function RenduSpecifique()
 			{
 				$ctn = '' ;
-				$ctn .= '<form class="user_login_box" action="'.$this->ObtientUrl().'" method="post">'.PHP_EOL ;
+				$ctn .= '<form class="user_login_box '.$this->NomClsCSSFormulaireDonnees.'" action="'.$this->ObtientUrl().'" method="post">'.PHP_EOL ;
 				$ctn .= '<div align="center">'.PHP_EOL ;
 				if($this->TentativeConnexionEnCours && $this->TentativeConnexionValidee == 0)
 				{
@@ -657,7 +658,8 @@
 		{
 			public $Titre = "Inscription" ;
 			public $TitreDocument = "Inscription" ;
-			public $NomClasseFormulaireDonnees = "PvCommandeInscriptionMS" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireInscriptionMembreMS" ;
+			public $NomClsCSSFormulaireDonnees = "FormulaireInscription" ;
 			public $Securiser = 0 ;
 			public $FltCaptcha ;
 			public $CompCaptcha ;
@@ -669,9 +671,75 @@
 			public $InclureMsgConnexion = 1 ;
 			public $AlignMsgConnexion = "center" ;
 			public $FormatMsgConnexion = 'D&eacute;j&agrave; inscrit ? <a href="${url}">Connectez-vous !</a>' ;
+			public $ActiverConfirmMail = 0 ;
+			public $MsgSuccesConfirmMail = '<b>${login_member}</b>, Votre inscription a &eacute;t&eacute; confirm&eacute;e. Vous pouvez d&eacute;sormais vous connecter sur le site web' ;
+			public $EmailEnvoiConfirm = 'inscriptions@localhost' ;
+			public $MsgErreurConfirmMail = 'Votre inscription n\'a pas &eacute;t&eacute; confirm&eacute;e. Veuillez v&eacute;rifier dans votre bo&icirc;te mail.' ;
+			public $SujetMailConfirm = 'Confirmation inscription membre' ;
+			public $CorpsMailConfirm = '<p>Bonjour ${login_member},</p>
+<p>Veuillez cliquer sur ce lien pour confirmer votre inscription.</p>
+<p><a href="${url}">${url}</a></p>
+Cordialement' ;
+			protected $NomColConfirmMail = "enable_confirm_mail" ;
+			protected $NomColCodeConfirmMail = "code_confirm_mail" ;
+			protected $_FltConfirmMail ;
+			protected $_FltCodeConfirm ;
+			protected $NomParamLoginConfirm = "login_confirm" ;
+			protected $NomParamCodeConfirm = "code_confirm" ;
+			protected $NomParamEmailConfirm = "email_confirm" ;
+			protected $DemandeConfirmMail = -1 ;
+			protected $LgnMembreConfirm = null ;
+			public $Detaille = 1 ;
+			protected $ValeurDefautNomMembre = "Utilisateur" ;
+			protected $ValeurDefautPrenomMembre = "Sans nom" ;
+			protected $ValeurDefautAdresseMembre = "" ;
+			protected $ValeurDefautContactMembre = "" ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$this->DetermineConfirm() ;
+			}
+			protected function DetermineConfirm()
+			{
+				if(! $this->DoitConfirmMail() || (! isset($_GET[$this->NomParamLoginConfirm]) || ! isset($_GET[$this->NomParamCodeConfirm]) || ! isset($_GET[$this->NomParamEmailConfirm])))
+				{
+					return ;
+				}
+				$login = $_GET[$this->NomParamLoginConfirm] ;
+				$code = $_GET[$this->NomParamCodeConfirm] ;
+				$email = $_GET[$this->NomParamEmailConfirm] ;
+				$membership = & $this->ZoneParent->Membership ;
+				$bd = $membership->Database ;
+				$sql = 'select * from '.$bd->EscapeTableName($membership->MemberTable).' where '.$bd->EscapeFieldName($membership->MemberTable, $membership->LoginMemberColumn).' = :login and '.$bd->EscapeFieldName($membership->MemberTable, $membership->EmailMemberColumn).'= :email and '.$bd->EscapeFieldName($membership->MemberTable, $this->NomColCodeConfirmMail).'= :code and '.$bd->EscapeFieldName($membership->MemberTable, $this->NomColConfirmMail).'=1' ;
+				$lgn = $bd->FetchSqlRow($sql, array("login" => $login, "email" => $email, "code" => $code)) ;
+				if(is_array($lgn) && count($lgn) > 0)
+				{
+					$this->LgnMembreConfirm = $lgn ;
+					$this->LgnMembreConfirm["login_member"] = $lgn[$membership->LoginMemberColumn] ;
+					$ok = $bd->UpdateRow(
+						$membership->MemberTable,
+						array(
+							$this->NomColCodeConfirmMail => '',
+							$membership->EnableMemberColumn => $membership->EnableMemberTrueValue,
+							$this->NomColConfirmMail => 0
+						),
+						$bd->EscapeFieldName($membership->MemberTable, $membership->LoginMemberColumn).' = :login',
+						array("login" => $login)
+					) ;
+					if($ok)
+					{
+						$this->DemandeConfirmMail = 1 ;
+					}
+					else
+					{
+						$this->DemandeConfirmMail = 0 ;
+					}
+				}
+			}
 			protected function ChargeConfigComposantFormulaireDonnees()
 			{
 				$form = & $this->ComposantFormulaireDonnees ;
+				$membership = & $this->ZoneParent->Membership ;
 				parent::ChargeConfigComposantFormulaireDonnees() ;
 				if($this->Securiser)
 				{
@@ -679,7 +747,7 @@
 					$this->CompCaptcha = $this->FltCaptcha->DeclareComposant("PvZoneCommonCaptcha") ;
 				}
 				$fltActiver = & $form->FiltreActiverMembre ;
-				$fltActiver->ValeurParDefaut = $this->ValeurActiveParDefaut ;
+				$fltActiver->ValeurParDefaut = ($this->DoitConfirmMail()) ? $membership->EnableMemberFalseValue() : $this->ValeurActiveParDefaut ;
 				$fltActiver->Invisible = 1 ;
 				$fltProfil = & $form->FiltreProfilMembre ;
 				if(count($this->IdProfilsAcceptes) > 0)
@@ -702,15 +770,58 @@
 					$fltProfil->ValeurParDefaut = $this->IdProfilParDefaut ;
 					$fltProfil->Invisible = 1 ;
 				}
+				if($this->Detaille == 0)
+				{
+					foreach($form->FiltresEdition as $i => & $flt)
+					{
+						if($flt->TypeLiaisonParametre != "get" && $flt->TypeLiaisonParametre != "post")
+						{
+							continue ;
+						}
+						if(! in_array($flt->NomParametreLie, array("filtreLoginMembre", "filtreMotPasseMembre", "filtreEmailMembre", "filtreProfilMembre")))
+						{
+							$flt->Invisible = 1 ;
+						}
+					}
+					$form->FiltreNomMembre->ValeurParDefaut = $this->ValeurDefautNomMembre ;
+					$form->FiltrePrenomMembre->ValeurParDefaut = $this->ValeurDefautPrenomMembre ;
+					$form->FiltreAdresseMembre->ValeurParDefaut = $this->ValeurDefautAdresseMembre ;
+					$form->FiltreContactMembre->ValeurParDefaut = $this->ValeurDefautContactMembre ;
+				}
+				if($this->DoitConfirmMail())
+				{
+					$this->_FltConfirmMail = $form->InsereFltEditFixe("confirm_mail", 1, $this->NomColConfirmMail) ;
+					$this->_FltCodeConfirm = $form->InsereFltEditFixe("code_confirm", rand(1000, 9999), $this->NomColCodeConfirmMail) ;
+				}
 				$form->CommandeExecuter->Libelle = $this->LibelleCmdExecuter ;
 				$form->RedirigeAnnulerVersScript($this->ZoneParent->NomScriptConnexion) ;
 			}
+			public function CodeConfirmMail()
+			{
+				return $this->_FltCodeConfirm->Lie() ;
+			}
+			public function DoitConfirmMail()
+			{
+				return ($this->ActiverConfirmMail && $this->NomColConfirmMail != '' && $this->NomColCodeConfirmMail != '') ;
+			}
 			public function RenduSpecifique()
 			{
-				$ctn = parent::RenduSpecifique() ;
-				if($this->InclureMsgConnexion == 1)
+				$ctn = '' ;
+				if($this->DemandeConfirmMail == -1)
 				{
-					$ctn .= $this->RenduMsgConnexion() ;
+					$ctn = parent::RenduSpecifique() ;
+					if($this->InclureMsgConnexion == 1)
+					{
+						$ctn .= $this->RenduMsgConnexion() ;
+					}
+				}
+				elseif($this->DemandeConfirmMail == 0)
+				{
+					$ctn .= '<p>'.$this->MsgErreurConfirmMail.'</p>' ;
+				}
+				else
+				{
+					$ctn .= '<p>'._parse_pattern($this->MsgSuccesConfirmMail, $this->LgnMembreConfirm).'</p>' ;
 				}
 				return $ctn ;
 			}

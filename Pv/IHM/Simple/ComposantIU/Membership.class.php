@@ -155,6 +155,10 @@
 				$this->DessinateurFiltresEdition->MaxFiltresParLigne = 1 ;
 			}
 		}
+		class PvFormulaireInscriptionMembreMS extends PvFormulaireAjoutMembreMS
+		{
+			public $NomClasseCommandeExecuter = "PvCommandeInscriptionMembreMS" ;
+		}
 		class PvFormulaireModifMembreMS extends PvFormulaireModifDonneesHtml
 		{
 			protected $InclureFiltresMembre = 1 ;
@@ -205,7 +209,9 @@
 		}
 		class PvFormulaireModifInfosMS extends PvFormulaireModifMembreMS
 		{
+			protected $InclureFiltresMembre = 1 ;
 			public $UtiliserFiltresGlobaux = 0 ;
+			public $InscrireCommandeAnnuler = 0 ;
 		}
 		class PvFormulaireSupprMembreMS extends PvFormulaireSupprDonneesHtml
 		{
@@ -613,9 +619,27 @@
 			public $Mode = 1 ;
 			public $MessageSuccesExecution = "Le membre a &eacute;t&eacute; ajout&eacute; avec succ&egrave;s" ;
 		}
-		class PvCommandeInscriptionMS extends PvCommandeAjoutMembreMS
+		class PvCommandeInscriptionMembreMS extends PvCommandeAjoutMembreMS
 		{
 			public $MessageSuccesExecution = "Votre inscription a &eacute;t&eacute; prise en compte" ;
+			public function ExecuteInstructions()
+			{
+				parent::ExecuteInstructions() ;
+				$form = & $this->FormulaireDonneesParent ;
+				$script = & $form->ScriptParent ;
+				if($this->StatutExecution == 1 && $script->DoitConfirmMail())
+				{
+					$params = $form->ExtraitValeursParametre($form->FiltresEdition) ;
+					$params["url"] = $script->ObtientUrlParam(array(
+						"login_confirm" => $form->FiltreLoginMembre->Lie(),
+						"email_confirm" => $form->FiltreEmailMembre->Lie(),
+						"code_confirm" => $script->CodeConfirmMail(),
+					)) ;
+					$sujetMail = _parse_pattern($script->SujetMailConfirm, $params) ;
+					$corpsMail = _parse_pattern($script->CorpsMailConfirm, $params) ;
+					send_html_mail($form->FiltreEmailMembre->Lie(), $sujetMail, $corpsMail, $script->EmailEnvoiConfirm) ;
+				}
+			}
 		}
 		class PvCommandeModifMembreMS extends PvCommandeEditionMembreMSBase
 		{
@@ -1607,14 +1631,13 @@
 			{
 				$membership = $form->ZoneParent->Membership ;
 				$this->InitFormulaireMembre($form) ;
-				if($form->InclureElementEnCours)
-				{
-					$i = 0 ;
-					$form->FiltresLigneSelection[$i] = $form->ScriptParent->CreeFiltreMembreConnecte('idMembre', 'MEMBER_ID') ;
-					$form->FiltresLigneSelection[$i]->ExpressionDonnees = $membership->Database->EscapeVariableName($membership->IdMemberColumn).' = <self>' ;
-					$form->FiltreIdMembreEnCours = & $form->FiltresLigneSelection[$i] ;
-				}
+				$i = 0 ;
+				$form->FiltresLigneSelection[$i] = $form->ScriptParent->CreeFiltreMembreConnecte('idMembre', 'MEMBER_ID') ;
+				$form->FiltresLigneSelection[$i]->ExpressionDonnees = $membership->Database->EscapeVariableName($membership->IdMemberColumn).' = <self>' ;
+				$form->FiltreIdMembreEnCours = & $form->FiltresLigneSelection[$i] ;
 				$this->RemplitFiltresEditionFormMembre($form) ;
+				$form->FiltreActiverMembre->EstEtiquette = 1 ;
+				$form->FiltreProfilMembre->EstEtiquette = 1 ;
 			}
 			public function RemplitFormulaireChangeMPMembre(& $form)
 			{

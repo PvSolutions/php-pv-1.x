@@ -1015,6 +1015,15 @@
 								{
 									$ctn .= ' align="'.$colonne->AlignElement.'"' ;
 								}
+								if($colonne->StyleCSS != '')
+								{
+									$ctn .= ' style="'.htmlentities($colonne->StyleCSS).'"' ;
+								}
+								if($colonne->NomClasseCSS != '')
+								{
+									$ctn .= ' class="'.htmlentities($colonne->NomClasseCSS).'"' ;
+								}
+
 								$ctn .= '>' ;
 								$ctn .= $colonne->FormatteValeur($this, $ligne) ;
 								$ctn .= '</td>'.PHP_EOL ;
