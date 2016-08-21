@@ -186,6 +186,18 @@
 				$this->CtrlServsPersists = new PvCtrlServsPersistsApp() ;
 				$this->InscritTacheProg($nomElem, $this->CtrlServsPersists) ;
 			}
+			public function & InscritStopServsPersists($nomElem='stopTachesProgs')
+			{
+				$stopServsPersists = new PvStopServsPersistsApp() ;
+				$this->InscritTacheProg($nomElem, $stopServsPersists) ;
+				return $stopServsPersists ;
+			}
+			public function & InscritArretServsPersists($cheminRelatif="", $nomElem='stopTachesProgs')
+			{
+				$stopServsPersists = $this->InscritStopServsPersists($nomElem) ;
+				$stopServsPersists->CheminFichierRelatif = $cheminRelatif ;
+				return $stopServsPersists ;
+			}
 			protected function ChargeBasesDonnees()
 			{
 			}
@@ -227,6 +239,26 @@
 				}
 				$this->Elements[$nom] = & $element ;
 				$element->AdopteApplication($nom, $this) ;
+			}
+			public function & InsereBaseDonnees($nom, $bd)
+			{
+				$this->InscritBaseDonnees($nom, $bd) ;
+				return $bd ;
+			}
+			public function & InsereTacheProg($nom, $tacheProg)
+			{
+				$this->InscritTacheProg($nom, $tacheProg) ;
+				return $tacheProg ;
+			}
+			public function & InsereServPersist($nom, $srvPersist)
+			{
+				$this->InscritServPersist($nom, $srvPersist) ;
+				return $srvPersist ;
+			}
+			public function & InsereIHM($nom, $ihm)
+			{
+				$this->InscritIHM($nom, $ihm) ;
+				return $ihm ;
 			}
 			public function InscritIHM($nom, & $ihm)
 			{
@@ -549,6 +581,10 @@
 			{
 				$os = $this->ObtientOS() ;
 				$cmd = $this->ObtientCmdExecProg($prog) ;
+				if($cmd == '')
+				{
+					return false ;
+				}
 				// echo $cmd."\n" ;
 				if($os == 'Linux')
 				{
@@ -805,14 +841,17 @@
 			}
 			public function DemarreService()
 			{
+				$this->ArreteService() ;
+				$this->LanceProcessus() ;
+			}
+			public function ArreteService()
+			{
 				$this->DetecteEtat() ;
-				// print_r($this->Etat) ;
 				if($this->Etat->PID != 0)
 				{
 					$processMgr = OsProcessManager::Current() ;
 					$processMgr->KillProcessIDs($processMgr->KillProcessList(array($this->Etat->PID))) ;
 				}
-				$this->LanceProcessus() ;
 			}
 			public function EstDemarre()
 			{
@@ -904,7 +943,9 @@
 				{
 					if($this->LimiterDelaiBoucle)
 						$oldTimeLimit = $this->FixeTempsExec($this->DelaiBoucle) ;
+					$this->PrepareSession() ;
 					$this->ExecuteSession() ;
+					$this->TermineSession() ;
 					if($this->LimiterDelaiBoucle)
 						$this->FixeTempsExec($oldTimeLimit) ;
 					$this->TotalSessions++ ;
@@ -920,6 +961,12 @@
 				}
 			}
 			protected function ExecuteSession()
+			{
+			}
+			protected function PrepareSession()
+			{
+			}
+			protected function TermineSession()
 			{
 			}
 			protected function PrepareEnvironnement()

@@ -165,13 +165,14 @@
 				if($this->StatutSelectionDetecte)
 					return ;
 				$this->EstSelectionne = $this->ObtientStatutSelection() ;
+				$menus = $this->SousMenusAffichables() ;
 				if(! $this->EstSelectionne)
 				{
-					$nomSousMenus = array_keys($this->SousMenus) ;
+					$nomSousMenus = array_keys($menus) ;
 					foreach($nomSousMenus as $i => $nom)
 					{
-						$this->SousMenus[$nom]->DetecteStatutSelection() ;
-						$this->EstSelectionne = $this->SousMenus[$nom]->EstSelectionne ;
+						$menus[$nom]->DetecteStatutSelection() ;
+						$this->EstSelectionne = $menus[$nom]->EstSelectionne ;
 						if($this->EstSelectionne)
 						{
 							break ;
@@ -183,6 +184,22 @@
 			{
 				$selectionne = 0 ;
 				return $selectionne ;
+			}
+			public function EstAffichable()
+			{
+				return $this->EstVisible == 1 && $this->EstAccessible() ;
+			}
+			public function SousMenusAffichables()
+			{
+				$menus = array() ;
+				foreach($this->SousMenus as $nom => $sousMenu)
+				{
+					if($sousMenu->EstAffichable())
+					{
+						$menus[$nom] = & $this->SousMenus[$nom] ;
+					}
+				}
+				return $menus ;
 			}
 			public function & InscritSousMenuFige($nom, $titre="")
 			{
@@ -236,11 +253,11 @@
 			{
 				return (isset($this->ValsConfigSpec[$nom])) ? $this->ValsConfigSpec[$nom] : $valParDefaut ;
 			}
-			public function ObtientValConfigSpec($nom, $valParDefaut)
+			public function ObtientValConfigSpec($nom, $valParDefaut=false)
 			{
 				return $this->ObtientValeurConfigSpec($nom, $valParDefaut) ;
 			}
-			public function ObtientValCfgSpec($nom, $valParDefaut)
+			public function ObtientValCfgSpec($nom, $valParDefaut=false)
 			{
 				return $this->ObtientValeurConfigSpec($nom, $valParDefaut) ;
 			}
@@ -460,7 +477,8 @@
 			{
 				$ctn = '' ;
 				$ctn .= $menu->ObtientDefinitions() ;
-				foreach($menu->SousMenus as $i => $sousMenu)
+				$menus = $menu->SousMenusAffichables() ;
+				foreach($menus as $i => $sousMenu)
 				{
 					$ctn .= $this->RenduDefinitionsMenu($sousMenu) ;
 				}
@@ -481,7 +499,7 @@
 			{
 				$ctn = '' ;
 				// print count($menu->SousMenus) ;
-				if(! $menu->EstVisible || ! $menu->EstAccessible())
+				if(! $menu->EstAffichable())
 				{
 					return '' ;
 				}
@@ -495,7 +513,8 @@
 					$ctn .= $this->RenduTitreMenu($menu).PHP_EOL ;
 					$ctn .= $this->RenduTagFermLien($menu).PHP_EOL ;
 				}
-				if(count($menu->SousMenus))
+				$menus = $menu->SousMenusAffichables() ;
+				if(count($menus))
 				{
 					$ctn .= '<ul' ;
 					if($menu->EstMenuRacine())
@@ -503,14 +522,10 @@
 						$ctn .= ' id="'.$this->IDInstanceCalc.'" class="'.$this->NomClasseCSSMenuRacine.'"' ;
 					}
 					$ctn .= '>'.PHP_EOL ;
-					$nomSousMenus = array_keys($menu->SousMenus) ;
+					$nomSousMenus = array_keys($menus) ;
 					foreach($nomSousMenus as $i => $nomSousMenu)
 					{
-						$sousMenu = $menu->SousMenus[$nomSousMenu] ;
-						if(! $sousMenu->EstVisible)
-						{
-							continue ;
-						}
+						$sousMenu = $menus[$nomSousMenu] ;
 						$ctn .= $this->RenduMenu($sousMenu).PHP_EOL ;
 					}
 					$ctn .= '</ul>'.PHP_EOL ;
@@ -600,7 +615,7 @@
 			protected function RenduMenu($menu)
 			{
 				$ctn = '' ;
-				if(! $menu->EstVisible || ! $menu->EstAccessible())
+				if(! $menu->EstAffichable())
 				{
 					return '' ;
 				}
@@ -614,7 +629,8 @@
 					$ctn .= $this->RenduTitreMenu($menu) ;
 					$ctn .= $this->RenduTagFermLien($menu).PHP_EOL ;
 				}
-				if(count($menu->SousMenus))
+				$menus = $menu->SousMenusAffichables() ;
+				if(count($menus))
 				{
 					$ctn .= '<div' ;
 					if($menu->EstMenuRacine())
@@ -622,14 +638,10 @@
 						$ctn .= ' id="'.$this->IDInstanceCalc.'" class="'.$this->NomClasseCSSMenuRacine.'"' ;
 					}
 					$ctn .= '>'.PHP_EOL ;
-					$nomSousMenus = array_keys($menu->SousMenus) ;
+					$nomSousMenus = array_keys($menus) ;
 					foreach($nomSousMenus as $i => $nomSousMenu)
 					{
-						$sousMenu = $menu->SousMenus[$nomSousMenu] ;
-						if(! $sousMenu->EstVisible)
-						{
-							continue ;
-						}
+						$sousMenu = $menus[$nomSousMenu] ;
 						$ctn .= $this->RenduMenu($sousMenu).PHP_EOL ;
 					}
 					$ctn .= '</div>'.PHP_EOL ;
@@ -689,14 +701,15 @@
 					return '' ;
 				}
 				$menu->ComposantSupport = $this ;
-				if(count($menu->SousMenus))
+				$menus = $menu->SousMenusAffichables() ;
+				if(count($menus))
 				{
 					$ctn .= '<div id="'.$this->IDInstanceCalc.'" class="'.$this->NomClasseCSSMenuRacine.'">'.PHP_EOL ;
-					$nomSousMenus = array_keys($menu->SousMenus) ;
+					$nomSousMenus = array_keys($menus) ;
 					$totalMenus = 0 ; 
 					foreach($nomSousMenus as $i => $nomSousMenu)
 					{
-						$sousMenu = $menu->SousMenus[$nomSousMenu] ;
+						$sousMenu = $menus[$nomSousMenu] ;
 						if(! $sousMenu->EstVisible)
 						{
 							if($i == count($menu->SousMenus) - 1)
@@ -727,7 +740,7 @@
 							$attr .= ' class="'.$this->NomClasseCSSCellSelect.'"' ;
 						$ctn .= '<td'.$attr.' valign="bottom">'.$this->RenduSousMenu($sousMenu).'</td>'.PHP_EOL ;
 						$totalMenus++ ;
-						if($totalMenus % $this->MaxColonnes == $this->MaxColonnes || $i == count($menu->SousMenus) - 1)
+						if($totalMenus % $this->MaxColonnes == $this->MaxColonnes || $i == count($menus) - 1)
 						{
 							$ctn .= $this->RenduPiedTabl() ;
 						}
@@ -796,23 +809,26 @@
 			protected function RenduMenuRacine(& $menu)
 			{
 				$ctn = '' ;
-				if(! $menu->EstVisible || ! $menu->EstAccessible())
+				/*
+				if(! $menu->EstAffichable())
 				{
 					return '' ;
 				}
+				*/
 				$menu->ComposantSupport = $this ;
-				if(count($menu->SousMenus))
+				$menus = $menu->SousMenusAffichables() ;
+				if(count($menus))
 				{
 					$ctn .= '<table' ;
 					$ctn .= ' align="'.$this->AlignMenuRacine.'"' ;
 					$ctn .= ' id="'.$this->IDInstanceCalc.'" class="'.$this->NomClasseCSSMenuRacine.'"' ;
 					$ctn .= '>'.PHP_EOL ;
 					$ctn .= '<tr>'.PHP_EOL ;
-					$nomSousMenus = array_keys($menu->SousMenus) ;
+					$nomSousMenus = array_keys($menus) ;
 					foreach($nomSousMenus as $i => $nomSousMenu)
 					{
-						$sousMenu = $menu->SousMenus[$nomSousMenu] ;
-						if(! $sousMenu->EstVisible)
+						$sousMenu = $menus[$nomSousMenu] ;
+						if(! $sousMenu->EstAffichable())
 						{
 							continue ;
 						}
@@ -827,7 +843,7 @@
 			protected function RenduMenuNv1($menu)
 			{
 				$ctn = '' ;
-				if(! $menu->EstVisible || ! $menu->EstAccessible())
+				if(! $menu->EstAffichable())
 				{
 					return '' ;
 				}
@@ -867,6 +883,126 @@
 				$ctn .= $this->RenduTitreMenu($menu) ;
 				$ctn .= $this->RenduTagFermLien($menu) ;
 				$ctn .= '</div>' ;
+				return $ctn ;
+			}
+		}
+		
+		class PvBarreRubanJQuery extends PvBarreMenuWebBase
+		{
+			public $NomClasseCSSMenuRacine = "MenuRacine jquery-ruban" ;
+			public $TypeComposant = 'BarreMenuHTML' ;
+			protected function RenduMenuRacine(& $menu)
+			{
+				$ctn = '' ;
+				$ctn .= '<div' ;
+				$ctn .= ' id="'.$this->IDInstanceCalc.'" class="'.$this->NomClasseCSSMenuRacine.'"' ;
+				$ctn .= '>'.PHP_EOL ;
+				$ctn .= '<ul>'.PHP_EOL ;
+				$menus = $menu->SousMenusAffichables() ;
+				foreach($menus as $n => & $sousMenu)
+				{
+					$ctn .= '<li><a href="#'.$sousMenu->IDInstanceCalc.'_Onglet">'.$this->RenduIconeMenu($sousMenu).$this->RenduTitreMenu($sousMenu).'</a></li>'.PHP_EOL ;
+				}
+				$ctn .= '</ul>'.PHP_EOL ;
+				foreach($menus as $n => & $sousMenu)
+				{
+					$ctn .= '<div id="'.$sousMenu->IDInstanceCalc.'_Onglet">'.$this->RenduOngletMenu($sousMenu).'</div>'.PHP_EOL ;
+				}
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '<script language="javascript">
+	if(jQuery) {
+		jQuery(function() {
+			jQuery("#'.$this->IDInstanceCalc.'").tabs() ;
+		}) ;
+	} else {
+		alert("Le composant necessite JQuery pour s\'afficher correctement !!!") ;
+	}
+</script>' ;
+				return $ctn ;
+			}
+			protected function RenduOngletMenu(& $menu)
+			{
+				$ctn = '' ;
+				$ctn .= '<table width="100%" class="jquery-ruban-onglet" cellspacing="0" cellpadding="2">'.PHP_EOL ;
+				$ctn .= '<tr>'.PHP_EOL ;
+				$ctn .= '<td align="left">'.PHP_EOL ;
+				$ctn .= '<table>'.PHP_EOL ;
+				$menus = $menu->SousMenusAffichables() ;
+				foreach($menus as $n => $sousMenu)
+				{
+					$ctn .= '<tr>'.PHP_EOL ;
+					$ctn .= '<td>'.PHP_EOL ;
+					$ctn .= $this->RenduMenuRuban($sousMenu) ;
+					$ctn .= '</td>'.PHP_EOL ;
+					$ctn .= '</tr>'.PHP_EOL ;
+				}
+				$ctn .= '</table>'.PHP_EOL ;
+				$ctn .= '</td>'.PHP_EOL ;
+				$ctn .= '</tr>'.PHP_EOL ;
+				$ctn .= '</table>' ;
+				return $ctn ;
+			}
+			protected function RenduMenuSpecRuban(& $menu)
+			{
+				$ctn = '' ;
+				$styleMenu = strtolower($this->ObtientValCfgSpec("style-menu-ruban-jquery", "aucun")) ;
+				switch($styleMenu)
+				{
+					case "illustration" :
+					case "miniature" :
+					{
+						$ctn .= $this->RenduLnIllustrMenuRuban($menu) ;
+					}
+					break ;
+					case "texte" :
+					case "textuel" :
+					{
+						$ctn .= $this->RenduLnTextuelMenuRuban($menu) ;
+					}
+					break ;
+				}
+				return $ctn ;
+			}
+			protected function RenduLnIllustrMenuRuban(& $menu)
+			{
+				$ctn = '' ;
+				$ctn .= '<table><tr><td align="center">'.$this->RenduMiniatureMenu($menu).'</td></tr><tr><td align="center">'.$this->RenduTitreMenu($menu).'</td></tr></table>' ;
+				return $ctn ;
+			}
+			protected function RenduLnTextuelMenuRuban(& $menu)
+			{
+				$ctn = '' ;
+				$ctn .= '<table><tr><td align="center">'.$this->RenduIconeMenu($menu).'</td><td align="center">'.$this->RenduTitreMenu($menu).'</td></tr></table>' ;
+				return $ctn ;
+			}
+			protected function RenduTablIconesMenuRuban(& $menu)
+			{
+				$ctn = '' ;
+				$menus = $menu->SousMenusAffichables() ;
+				$totalMenus = count($menus) ;
+				$maxCols = intval($totalMenus / 2) + ((($totalMenus % 2) > 0) ? 1 : 0) ;
+				$ctn .= '<table>' ;
+				if($totalMenus > 0)
+				{
+					$ctn .= '<tr>' ;
+					$i = 0 ;
+					foreach($menus as $nom => $sousMenu)
+					{
+						if($i == $maxCols)
+						{
+							$ctn .= '</tr><tr>' ;
+						}
+						$ctn .= '<td><a href="'.$this->ObtientUrlMenu($menu).'">'.$this->RenduIconeMenu($menu).'</td>' ;
+						$i++ ;
+					}
+					$ctn .= '</tr>' ;
+					$ctn .= '<tr><td align="center" colspan="'.$maxCols.'">'.$this->RenduTitreMenu($menu).'</td></tr>' ;
+				}
+				else
+				{
+					$ctn .= '<tr><td align="center">'.$this->RenduTitreMenu($menu).'</td></tr>' ;
+				}
+				$ctn .= '</table>' ;
 				return $ctn ;
 			}
 		}

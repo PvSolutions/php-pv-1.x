@@ -1253,7 +1253,8 @@
 					{
 						return "" ;
 					}
-					$url = "http://".$_SERVER['SERVER_NAME'] ;
+					$protocol = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] != "") ? "https" : "http" ;
+					$url = $protocol."://".$_SERVER['SERVER_NAME'] ;
 					if($_SERVER['SERVER_PORT'] != '80')
 					{
 						$url .= ':'.$_SERVER['SERVER_PORT'] ;

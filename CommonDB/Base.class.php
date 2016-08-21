@@ -2468,6 +2468,125 @@
 				$this->StoredProcCursor = false ;
 				return $ok ;
 			}
+			function CallStoredProcSqlInto($procName, $params=array(), $outParams=array())
+			{
+				$sql = '' ;
+				$sql .= 'BEGIN '.$procName.'(' ;
+				$i = 0 ;
+				foreach($params as $name => $value)
+				{
+					if($name != $this->ExprKeyName)
+					{
+						$paramString = "" ;
+						if($i > 0)
+						{
+							$sql .= ', ' ;
+						}
+						if(isset($params[$this->ExprKeyName][$name]))
+						{
+							$paramString = str_replace(
+								$this->ExprParamPattern,
+								$this->ParamPrefix.$name,
+								$params[$this->ExprKeyName][$name]
+							) ;
+						}
+						else
+						{
+							$paramString = $this->ParamPrefix.$name ;
+						}
+						$i++ ;
+						$sql .= $paramString ;
+					}
+				}
+				foreach($outParams as $j => $outName)
+				{
+					if($j > 0 || $i > 0)
+					{
+						$sql .= ", " ;
+					}
+					$sql .= $this->ParamPrefix.$outName ;
+				}
+				$sql .= ') ;' ;
+				$sql .= 'END ;' ;
+				// echo $sql ;
+				return $sql ;
+			}
+			function & PrepareSqlInto($sql, & $outResults, $params=array())
+			{
+				$this->CaptureQuery($sql, $params) ;
+				$stmt = false ;
+				try
+				{
+					$stmt = oci_parse($this->Connection, $sql) ;
+					if($stmt !== false)
+					{
+						// print $sql.' '.print_r($params, true)."\n" ;
+						foreach($params as $n => $v)
+						{
+							oci_bind_by_name($stmt, $this->ParamPrefix.$n, $params[$n]) ;
+						}
+						foreach($outResults as $n => $v)
+						{
+							oci_bind_by_name($stmt, $this->ParamPrefix.$n, $outResults[$n], 255) ;
+						}
+					}
+					else
+					{
+						$this->SetConnectionExceptionFromOciError(oci_error($this->Connection)) ;
+					}
+				}
+				catch(Exception $ex)
+				{
+				}
+				return $stmt ;
+			}
+			function FetchStoredProcInto($storedProc, $params=array(), $outParams=array())
+			{
+				$stmt = false ;
+				if(! $this->InitConnection())
+				{
+					return $stmt ;
+				}
+				$this->ClearConnectionException() ;
+				$outResults = array_fill_keys($outParams, "") ;
+				$sql = $this->CallStoredProcSqlInto($storedProc, $params, $outParams) ;
+				$stmt = $this->PrepareSqlInto($sql, $outResults, $params) ;
+				if($stmt === false)
+				{
+					return $stmt ;
+				}
+				$res = false ;
+				try
+				{
+					$res = oci_execute($stmt, OCI_COMMIT_ON_SUCCESS) ;
+					$exceptionMsg = "" ;
+					if(! $res)
+					{
+						$exceptionMsg = $this->ReadErrorMsg(oci_error($stmt)) ;
+						$this->SetConnectionException($exceptionMsg) ;
+						$res = false ;
+					}
+					$this->LaunchSqlProfiler($sql, strval($res), $exceptionMsg) ;
+				}
+				catch(Exception $ex)
+				{
+					$this->SetConnectionException($ex->getMessage()) ;
+				}
+				if($stmt !== false)
+				{
+					oci_free_statement($stmt) ;
+					$stmt = false ;
+				}
+				$this->AutoFinalConnection() ;
+				if($res)
+				{
+					return $outResults ;
+				}
+				else
+				{
+					return false ;
+				}
+			}
 			function LimitSqlRowsReq($sql, $params=array(), $start=0, $limit=1000, $extra='')
 			{
 				$sql = 'select * from 
@@ -2541,6 +2660,14 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 					$sql .= $list[$i] ;
 				}
 				return $sql ;
+			}
+			function SqlDateDiff($expr1, $expr2)
+			{
+				return "(cast(".$expr1." as date) - cast(".$expr2." as date)) * 24*60*60" ;
+			}
+			function SqlNow()
+			{
+				return "SYSDATE" ;
 			}
 			function SqlDateExpr($dateValue)
 			{

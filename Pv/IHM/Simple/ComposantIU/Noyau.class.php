@@ -30,6 +30,50 @@
 			public $ComposantIUParent = null ;
 			public $NomElementComposantIU = "" ;
 			public $Params = array() ;
+			public function Invoque($params=array(), $valeurPost=array(), $async=1)
+			{
+				$urlAct = $this->ObtientUrl($params) ;
+				$parts = parse_url($urlAct) ;
+				$port = $parts["port"] != '' ? $parts["port"] : (($parts["scheme"] == "https") ? 443 : 80) ;
+				$chainePostee = http_build_query_string($valeurPost) ;
+				$res = false ;
+				$fh = fsockopen($parts["host"], $port, $errno, $errstr, 30) ;
+				if ($fh)
+				{
+					if($chainePostee == '')
+					{
+						$ctn = "GET ".$parts["path"]."?".$parts["query"]." HTTP/1.0\r\n";
+						$ctn .= "Host: ".$parts["host"].":".$port."\r\n" ;
+						$ctn .= "Content-Type: text/html\r\n" ;
+						$ctn .= "Connection: Close\r\n\r\n" ;
+					}
+					else
+					{
+						$ctn = "POST ".$parts["path"]."?".$parts["query"]." HTTP/1.1\r\n";
+						$ctn .= "Host: ".$parts["host"].":".$port."\r\n" ;
+						$ctn .= "Content-Type: application/x-www-form-urlencoded\r\n" ;
+						$ctn .= "Content-Length: ".strlen($chainePostee)."\r\n" ;
+						$ctn .= "Connection: Close\r\n\r\n" ;
+						$ctn .= $chainePostee ;
+						// print $ctn ;
+					}
+					$ok = fputs($fh, $ctn) ;
+					if($async == 0)
+					{
+						$res = '' ;
+						while(! feof($fh))
+						{
+							$res .= fgets($fh) ;
+						}
+					}
+					else
+					{
+						$res = $ok ;
+					}
+					fclose($fh) ;
+				}
+				return $res ;
+			}
 			public function ObtientUrl($params=array())
 			{
 				if($this->EstPasNul($this->ScriptParent))
@@ -1184,6 +1228,11 @@
 				$this->MessageExecution = $messageErreur ;
 				$this->StatutExecution = 0 ;
 			}
+			protected function ConfirmeSucces($msgSucces = '')
+			{
+				$this->StatutExecution = 1 ;
+				$this->MessageExecution = ($msgSucces == '') ? $this->MessageSuccesExecution : $msgSucces ;
+			}
 			protected function ExecuteInstructions()
 			{
 			}
@@ -1245,12 +1294,31 @@
 					return ;
 				}
 				// echo $this->MessageExecution ;
+				$this->VerifiePreRequis() ;
+				if($this->StatutExecution == 0)
+				{
+					return ;
+				}
 				$this->ExecuteInstructions() ;
 				if($this->StatutExecution == 0)
 				{
 					return ;
 				}
 				$this->ExecuteActions() ;
+			}
+			protected function VerifiePreRequis()
+			{
+				
+			}
+			protected function VerifieFichiersUpload(& $filtres)
+			{
+				foreach($filtres as $n => & $flt)
+				{
+					if($flt->ToujoursRenseignerFichier == 1 && $flt->Lie() == '')
+					{
+						$this->RenseigneErreur(0, $flt->LibelleErreurTelecharg) ;
+					}
+				}
 			}
 			protected function RespecteCriteres()
 			{

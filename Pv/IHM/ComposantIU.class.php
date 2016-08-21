@@ -326,6 +326,7 @@
 			public $DesactBtnsApresSoumiss = 1 ;
 			public $ForcerDesactCache = 0 ;
 			public $SuffixeParamIdAleat = "id_aleat" ;
+			public $InstrsJSAvantSoumetForm = "" ;
 			public function CreeFournDonneesDirect($vals, $nomCle='')
 			{
 				$fourn = new PvFournisseurDonneesDirecte() ;
@@ -377,20 +378,6 @@
 				$urlFormulaire = remove_url_params(get_current_url()) ;
 				$urlFormulaire .= '?'.http_build_query_string($params) ;
 				$instrDesactivs = '' ;
-				if($this->DesactBtnsApresSoumiss)
-				{
-					$instrDesactivs = '		for(var i=0; i<form.elements.length; i++)
-		{
-			var elem = form.elements[i] ;
-			if(elem.type == "submit")
-			{
-				if(elem.disabled != undefined)
-					elem.disabled = "disabled" ;
-				else
-					elem.setAttribute("disabled", "disabled") ;
-			}
-		}'.PHP_EOL ;
-				}
 				if($this->ForcerDesactCache)
 				{
 					$urlFormulaire .= '&'.urlencode($this->NomParamIdAleat()).'='.htmlspecialchars(rand(0, 999999)) ;
@@ -421,10 +408,43 @@
 				}
 				urlFormulaire += encodeURIComponent(nomParam) + "=" + encodeURIComponent(valeurParam) ;
 			}
+		}'.(($this->DesactBtnsApresSoumiss) ? PHP_EOL ."\t\t".'ChangeStatutBtns'.$this->IDInstanceCalc.'(form, false)' : '').'
+		form.action = urlFormulaire ;
+		if(VerifFormulaire'.$this->IDInstanceCalc.'(form))
+		{
+			return true ;
 		}
-		// alert(urlFormulaire) ;
-'.$instrDesactivs.'		form.action = urlFormulaire ;
-		return true ;
+		else
+		{
+			'.(($this->DesactBtnsApresSoumiss) ? PHP_EOL ."\t\t".'ChangeStatutBtns'.$this->IDInstanceCalc.'(form, true)' : '').'
+			return false ;
+		}
+	}
+	function VerifFormulaire'.$this->IDInstanceCalc.'(form)
+	{
+		var OK = true ;'.(($this->InstrsJSAvantSoumetForm != '') ? PHP_EOL  .$this->InstrsJSAvantSoumetForm : '').'
+		return OK ;
+	}
+	function ChangeStatutBtns'.$this->IDInstanceCalc.'(form, statut)
+	{
+		for(var i=0; i<form.elements.length; i++)
+		{
+			var elem = form.elements[i] ;
+			if(elem.type == "submit")
+			{
+				if(statut == false)
+				{
+					if(elem.disabled != undefined)
+						elem.disabled = "disabled" ;
+					else
+						elem.setAttribute("disabled", "disabled") ;
+				}
+				else
+				{
+					elem.removeAttribute("disabled") ;
+				}
+			}
+		}
 	}
 </script>' ;
 				return $ctn ;

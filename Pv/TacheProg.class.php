@@ -53,6 +53,19 @@
 				echo $this->Message."\n" ;
 			}
 		}
+		class PvStopServsPersistsApp extends PvTacheCtrlBase
+		{
+			protected function ExecuteSession()
+			{
+				$nomServsPersists = array_keys($this->ApplicationParent->ServsPersists) ;
+				foreach($nomServsPersists as $i => $nomServPersist)
+				{
+					$servPersist = & $this->ApplicationParent->ServsPersists[$nomServPersist] ;
+					$servPersist->ArreteService() ;
+				}
+				echo $this->Message."\n" ;
+			}
+		}
 		
 		class PvTacheDossierSE extends PvTacheProg
 		{

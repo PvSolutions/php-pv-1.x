@@ -626,7 +626,7 @@
 				$ctn = '' ;
 				if(count($this->DispositionComposants))
 				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
 					foreach($this->DispositionComposants as $i => $id)
 					{
 						if($i > 0)
@@ -957,10 +957,9 @@
 		class PvCommandeFormulaireDonnees extends PvCommandeComposantIUBase
 		{
 			public $NecessiteFormulaireDonnees = 1 ;
-			protected function ConfirmeSucces($msgSucces = '')
+			protected function VerifiePreRequis()
 			{
-				$this->StatutExecution = 1 ;
-				$this->MessageExecution = ($msgSucces == '') ? $this->MessageSuccesExecution : $msgSucces ;
+				$this->VerifieFichiersUpload($this->FormulaireDonneesParent->FiltresEdition) ;
 			}
 		}
 		class PvCommandeAnnulerBase extends PvCommandeFormulaireDonnees

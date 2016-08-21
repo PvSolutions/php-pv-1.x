@@ -307,9 +307,9 @@ if(! defined("SERVICES_JSON_SLICE"))
 							case (($ord_var_c & 0xF0) == 0xE0):
 								// characters U-00000800 - U-0000FFFF, mask 1110XXXX
 								// see http://www.cl.cam.ac.uk/~mgk25/unicode.html#utf-8
-								$char = pack('C*', $ord_var_c,
-											 ord($var{$c + 1}),
-											 ord($var{$c + 2}));
+								$char = @pack('C*', $ord_var_c,
+											 @ord($var{$c + 1}),
+											 @ord($var{$c + 2}));
 								$c += 2;
 								$utf16 = $this->utf82utf16($char);
 								$ascii .= sprintf('\u%04s', bin2hex($utf16));

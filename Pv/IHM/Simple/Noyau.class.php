@@ -976,6 +976,7 @@
 			public $CodeErreurDeplFicTelecharg = '502' ;
 			public $LibelleErreurDeplFicTelecharg = 'Le deplacement du fichier sur le serveur a &eacute;chou&eacute;. V&eacute;rifiez que vous avez les droits en ecriture.' ;
 			public $CodeErreurFicSoumisInexist = '503' ;
+			public $ToujoursRenseignerFichier = 1 ;
 			public $LibelleErreurFicSoumisInexist = 'Le fichier soumis n\'existe pas.' ;
 			public function AccepteImgsSeulem()
 			{

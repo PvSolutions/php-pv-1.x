@@ -94,6 +94,10 @@
 				$this->ZoneParent->ActionsApresRendu[$nomAction] = & $action ;
 				$action->AdopteScript($nomAction, $this) ;
 			}
+			public function InvoqueAction($valeurAction, $params=array(), $valeurPost=array(), $async=1)
+			{
+				return $this->ZoneParent->InvoqueAction($valeurAction, $params, $valeurPost, $async) ;
+			}
 			public function & CreeFiltreRef($nom, & $filtreRef)
 			{
 				$filtre = new PvFiltreDonneesRef() ;

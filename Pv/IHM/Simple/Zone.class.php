@@ -515,6 +515,18 @@
 					}
 				}
 			}
+			public function InvoqueAction($valeurAction, $params=array(), $valeurPost=array(), $async=1)
+			{
+				$nomActions = array_keys($this->ActionsAvantRendu) ;
+				foreach($nomActions as $i => $nomAction)
+				{
+					$action = & $this->ActionsAvantRendu[$nomAction] ;
+					if($action->Accepte($valeurAction))
+					{
+						$action->Invoque($params, $valeurPost, $async) ;
+					}
+				}
+			}
 			protected function & CreeAction($nomClasseAction)
 			{
 				if(! class_exists($nomClasseAction))
