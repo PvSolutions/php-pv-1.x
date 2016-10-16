@@ -48,7 +48,8 @@
 			public $ChaineAttributs ;
 			public $Cible ;
 			public $InclureIcone = 1 ;
-			public $HauteurIcone = "15" ;
+			public $InclureLibelle = 1 ;
+			public $HauteurIcone = "18" ;
 			public $NomDonneesValid = "" ;
 			public $Privileges = array() ;
 			public $ValeurVraiValid = 1 ;
@@ -66,7 +67,7 @@
 					return $ctn ;
 				}
 				$cheminIcone = _parse_pattern($this->FormatCheminIcone, $donneesUrl) ;
-				$ctn .= '<img src="'.$cheminIcone.'" height="'.$this->HauteurIcone.'" border="0" /> ' ;
+				$ctn .= '<img src="'.$cheminIcone.'" height="'.$this->HauteurIcone.'" border="0" />' ;
 				return $ctn ;
 			}
 			public function RenduPossible()
@@ -104,13 +105,25 @@
 				{
 					$ctn .= ' class="'.$this->ClasseCSS.'"' ;
 				}
-				$ctn .= '>' ;
-				$ctn .= $this->RenduIcone($donnees, $donneesUrl) ;
-				if($this->EncodeHtmlLibelle)
+				if($this->InclureLibelle == 0)
 				{
-					$libelle = htmlentities($libelle) ;
+					$ctn .= ' title="'.htmlspecialchars(_parse_pattern($this->FormatLibelle, $donnees)).'"' ;
 				}
-				$ctn .= $libelle ;
+				$ctn .= '>' ;
+				$ctnIcone = $this->RenduIcone($donnees, $donneesUrl) ;
+				$ctn .= $ctnIcone ;
+				if($this->InclureLibelle)
+				{
+					if($ctnIcone != '')
+					{
+						$ctn .= ' ' ;
+					}
+					if($this->EncodeHtmlLibelle)
+					{
+						$libelle = htmlentities($libelle) ;
+					}
+					$ctn .= $libelle ;
+				}
 				$ctn .= '</a>' ;
 				return $ctn ;
 			}
@@ -351,6 +364,7 @@
 			public $StyleCSS ;
 			public $NomClasseCSS ;
 			public $RenvoyerValeurVide = 1 ;
+			public $ValeurVide = "&nbsp;" ;
 			public function EstVisible(& $zone)
 			{
 				$ok = $this->Visible == 1 ;
@@ -404,7 +418,7 @@
 				if($this->NomDonnees != '')
 					$val = $this->EncodeValeur($ligne[$this->NomDonnees]) ;
 				if($val == "" && $this->RenvoyerValeurVide)
-					return $val ;
+					return $this->ValeurVide ;
 				if($this->FormatValeur != '')
 				{
 					$val = str_ireplace(array('${self}', '${luimeme}', '${soi}'), $val, $this->FormatValeur) ;
@@ -514,9 +528,14 @@
 			public $NomElementScript = "" ;
 			public $NomElementZone = "" ;
 			public $TypeLiaisonParametre = "" ;
+			public $Role = "base" ;
 			public $Liaison = null ;
 			public $Composant = null ;
 			public $Libelle = "" ;
+			public $CheminIcone = "" ;
+			public $NomClasseCSS = "" ;
+			public $NomClasseCSSIcone = "" ;
+			public $EspaceReserve = "" ;
 			public $NomClasseComposant = "PvZoneTexteHtml" ;
 			public $NomComposant = "" ;
 			public $NomParametreLie = "" ;
@@ -712,6 +731,7 @@
 					return "(Composant nul)" ;
 				}
 				$this->Composant->Valeur = $this->Lie() ;
+				$this->Composant->EspaceReserve = ($this->EspaceReserve != "") ? $this->EspaceReserve : $this->Libelle ;
 				$this->Composant->FiltreParent = $this ;
 				$ctn = $this->Composant->RenduDispositif() ;
 				$this->Composant->FiltreParent = null ;
@@ -775,6 +795,7 @@
 		class PvFiltreDonneesFixe extends PvFiltreDonneesBase
 		{
 			public $TypeLiaisonParametre = "hidden" ;
+			public $Role = "fixe" ;
 			public function NePasInclure()
 			{
 				return 0 ;
@@ -789,6 +810,7 @@
 		}
 		class PvFiltreDonneesRef extends PvFiltreDonneesBase
 		{
+			public $Role = "ref" ;
 			public $TypeLiaisonParametre = "hidden" ;
 			public $Source = null ;
 			public function NePasInclure()
@@ -811,6 +833,7 @@
 		}
 		class PvFiltreDonneesCookie extends PvFiltreDonneesBase
 		{
+			public $Role = "cookie" ;
 			public $TypeLiaisonParametre = "cookie" ;
 			public function ObtientValeurParametre()
 			{
@@ -819,6 +842,7 @@
 		}
 		class PvFiltreDonneesSession extends PvFiltreDonneesBase
 		{
+			public $Role = "session" ;
 			public $TypeLiaisonParametre = "session" ;
 			public function ObtientValeurParametre()
 			{
@@ -827,6 +851,7 @@
 		}
 		class PvFiltreDonneesMembreConnecte extends PvFiltreDonneesBase
 		{
+			public $Role = "membre_connecte" ;
 			public $TypeLiaisonParametre = "membre_connecte" ;
 			public function ObtientValeurParametre()
 			{
@@ -844,6 +869,7 @@
 		}
 		class PvFiltreDonneesHttpRequest extends PvFiltreDonneesBase
 		{
+			public $Role = "request" ;
 			public $TypeLiaisonParametre = "request" ;
 			public $AccepteTagsHtml = 1 ;
 			public $AccepteTagsSuspicieux = 0 ;
@@ -938,6 +964,7 @@
 		}
 		class PvFiltreDonneesHttpGet extends PvFiltreDonneesHttpRequest
 		{
+			public $Role = "get" ;
 			public $TypeLiaisonParametre = "get" ;
 			protected function CalculeValeurBruteNonCorrigee()
 			{
@@ -946,6 +973,7 @@
 		}
 		class PvFiltreDonneesHttpPost extends PvFiltreDonneesHttpRequest
 		{
+			public $Role = "post" ;
 			public $TypeLiaisonParametre = "post" ;
 			protected function CalculeValeurBruteNonCorrigee()
 			{
@@ -954,6 +982,7 @@
 		}
 		class PvFiltreDonneesHttpUpload extends PvFiltreDonneesBase
 		{
+			public $Role = "http_upload" ;
 			public $TypeLiaisonParametre = "post" ;
 			public $InfosTelechargement = array() ;
 			public $CheminDossier = "." ;
@@ -972,11 +1001,12 @@
 			public $LibelleErreurTelecharg = '' ;
 			public $SourceTelechargement = '' ;
 			public $CodeErreurMauvaiseExt = '501' ;
+			public $LibelleErreurAucunFich = 'Aucun fichier n\'a &eacute;t&eacute; soumis' ;
 			public $LibelleErreurMauvaiseExt = 'Mauvais format pour le fichier soumis.' ;
 			public $CodeErreurDeplFicTelecharg = '502' ;
 			public $LibelleErreurDeplFicTelecharg = 'Le deplacement du fichier sur le serveur a &eacute;chou&eacute;. V&eacute;rifiez que vous avez les droits en ecriture.' ;
 			public $CodeErreurFicSoumisInexist = '503' ;
-			public $ToujoursRenseignerFichier = 1 ;
+			public $ToujoursRenseignerFichier = 0 ;
 			public $LibelleErreurFicSoumisInexist = 'Le fichier soumis n\'existe pas.' ;
 			public function AccepteImgsSeulem()
 			{
@@ -1008,7 +1038,7 @@
 			{
 				if($this->DejaTelecharge == 1)
 				{
-					return ;
+					return $this->CheminFichierDest ;
 				}
 				if(! isset($_FILES[$this->NomParametreLie]) && ! isset($_POST[$this->NomEltCoteSrv.$this->NomParametreLie]))
 				{
@@ -1031,7 +1061,7 @@
 					{
 						$this->CheminFichierSoumis = $_POST[$this->NomEltCoteSrv.$this->NomParametreLie] ;
 					}
-					if($this->CheminFichierSoumis != '')
+					if($this->CheminFichierSoumis != '' && file_exists($this->CheminFichierSoumis))
 					{
 						$infosFichier = pathinfo($this->CheminFichierSoumis) ;
 						$this->NomFichierSelect = $infosFichier["basename"] ;
@@ -1064,7 +1094,7 @@
 				}
 				else
 				{
-					if($this->CheminFichierDest != "" && ! file_exists($this->CheminFichierDest))
+					if($this->ToujoursRenseignerFichier == 1 && $this->CheminFichierDest == "")
 					{
 						$this->CodeErreurTelechargement = $this->CodeErreurFicSoumisInexist ;
 						$this->LibelleErreurTelecharg = $this->LibelleErreurFicSoumisInexist ;
@@ -1072,6 +1102,7 @@
 					}
 				}
 				$this->DejaTelecharge = 1 ;
+				// echo $this->NomParametreLie.' '.$this->CheminFichierDest.'<br>' ;
 				return $this->CheminFichierDest ;
 			}
 		}

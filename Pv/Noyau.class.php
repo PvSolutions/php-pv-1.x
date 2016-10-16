@@ -40,6 +40,11 @@
 			public $NomClasseInstance = "" ;
 			public $IndiceInstance = 0 ;
 			static $TotalInstances = 0 ;
+			public function CreeInstanceGener()
+			{
+				$nomClasse = get_class($this) ;
+				return new $nomClasse() ;
+			}
 			public function ObtientValStatique($nomPropriete, $valParDefaut=false)
 			{
 				return $this->ObtientValeurStatique($nomPropriete, $valParDefaut) ;
@@ -138,6 +143,7 @@
 			public $CheminIconeElem = "images/icone-elem-app.png" ;
 			public $CheminMiniatureElem = "images/miniature-elem-app.png" ;
 			public $ValeurUniteTache = 5 ;
+			public $AutoDetectChemRelFichierActif = 1 ;
 			public $ModelesOperation = array() ;
 			public $IHMs = array() ;
 			public $SystTrad ;
@@ -145,6 +151,7 @@
 			public $ServsPersists = array() ;
 			public $TachesProgs = array() ;
 			public $Elements = array() ;
+			public $CheminFichierElementActifFixe = "" ;
 			public $CheminFichierElementActif = "" ;
 			public $CheminFichierAbsolu = "" ;
 			public $CheminFichierRelatif = "../.." ;
@@ -362,6 +369,11 @@
 					$this->CheminFichierAbsolu .= "/".$this->CheminFichierRelatif ;
 				}
 				$this->CheminFichierAbsolu = realpath($this->CheminFichierAbsolu) ;
+				if($this->AutoDetectChemRelFichierActif == 0)
+				{
+					$this->CheminFichierElementActif = $this->CheminFichierElementActifFixe ;
+					return ;
+				}
 				if(php_sapi_name() == "cli")
 				{
 					$this->CheminFichierElementActif = $_SERVER["argv"][0] ;
@@ -379,6 +391,94 @@
 				$this->ChargeConfig() ;
 				$this->DetecteElementActif() ;
 				$this->ExecuteElementActif() ;
+			}
+			public static function TelechargeUrl($url, $valeurPost=array(), $async=1)
+			{
+				$parts = parse_url($url) ;
+				$port = $parts["port"] != '' ? $parts["port"] : (($parts["scheme"] == "https") ? 443 : 80) ;
+				$chainePostee = http_build_query_string($valeurPost) ;
+				$res = false ;
+				$fh = fsockopen($parts["host"], $port, $errno, $errstr, 30) ;
+				if ($fh)
+				{
+					if($chainePostee == '')
+					{
+						$ctn = "GET ".$parts["path"]."?".$parts["query"]." HTTP/1.0\r\n";
+						$ctn .= "Host: ".$parts["host"].":".$port."\r\n" ;
+						$ctn .= "Content-Type: text/html\r\n" ;
+						$ctn .= "Connection: Close\r\n\r\n" ;
+					}
+					else
+					{
+						$ctn = "POST ".$parts["path"]."?".$parts["query"]." HTTP/1.1\r\n";
+						$ctn .= "Host: ".$parts["host"].":".$port."\r\n" ;
+						$ctn .= "Content-Type: application/x-www-form-urlencoded\r\n" ;
+						$ctn .= "Content-Length: ".strlen($chainePostee)."\r\n" ;
+						$ctn .= "Connection: Close\r\n\r\n" ;
+						$ctn .= $chainePostee ;
+						// print $ctn ;
+					}
+					$ok = fputs($fh, $ctn) ;
+					if($async == 0)
+					{
+						$res = '' ;
+						while(! feof($fh))
+						{
+							$res .= fgets($fh) ;
+						}
+					}
+					else
+					{
+						$res = $ok ;
+					}
+					fclose($fh) ;
+				}
+				return $res ;
+			}
+			public static function TelechargeShell($commande, $async=1)
+			{
+				$fh = popen($commande, "r") ;
+				if($async == 1)
+				{
+					if($fh !== false)
+					{
+						pclose($fh) ;
+						return 1 ;
+					}
+					else
+					{
+						return 0 ;
+					}
+				}
+				$res = '' ;
+				while(! feof($fh))
+				{
+					$res .= fgets($fh) ;
+				}
+				pclose($fh) ;
+				return $res ;
+			}
+			public static function ObtientCheminPHP()
+			{
+				$phpbin = preg_replace("@/lib(64)?/.*$@", "/bin/php", ini_get("extension_dir"));
+				$execPath = dirname($phpbin)."/php" ;
+				if($os == 'Windows')
+					$execPath .= ".exe" ;
+				return $execPath ;
+			}
+			public static function EncodeArgsShell($args)
+			{
+				$cmd = '' ;
+				foreach($args as $nom => $val)
+				{
+					$cmd .= ' -'.$nom.'='.escapeshellarg($val) ;
+				}
+				return $cmd ;
+			}
+			public static function ObtientOS()
+			{
+				$os = (PHP_OS == "WINNT" || PHP_OS == "WIN32") ? 'Windows' : 'Linux' ;
+				return $os ;
 			}
 		}
 		
@@ -547,25 +647,18 @@
 			}
 			protected function ObtientOS()
 			{
-				$os = (PHP_OS == "WINNT" || PHP_OS == "WIN32") ? 'Windows' : 'Linux' ;
-				return $os ;
+				return PvApplication::ObtientOS() ;
 			}
 			public function ObtientCmdExecProg(& $prog)
 			{
 				$os = $this->ObtientOS() ;
-				$phpbin = preg_replace("@/lib(64)?/.*$@", "/bin/php", ini_get("extension_dir"));
-				$execPath = dirname($phpbin)."/php" ;
-				if($os == 'Windows')
-					$execPath .= ".exe" ;
+				$execPath = PvApplication::ObtientCheminPHP() ;
 				$cmd = realpath(dirname(__FILE__).'/../../'.$prog->CheminFichierRelatif) ;
 				if($cmd === false)
 				{
 					return "" ;
 				}
-				foreach($prog->ArgsParDefaut as $nom => $val)
-				{
-					$cmd .= ' -'.$nom.'='.escapeshellarg($val) ;
-				}
+				$cmd .= PvApplication::EncodeArgsShell($prog->ArgsParDefaut) ;
 				$cmd = $execPath.' '.$cmd ;
 				if($os == 'Linux')
 				{

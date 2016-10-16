@@ -34,6 +34,14 @@
 			{
 				return ($this->DerniereException != null) ? 1 : 0 ;
 			}
+			public function MessageException()
+			{
+				if($this->DerniereException == null)
+				{
+					return "" ;
+				}
+				return $this->DerniereException->Message ;
+			}
 			protected function VideDerniereException()
 			{
 			}

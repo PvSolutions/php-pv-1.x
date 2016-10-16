@@ -811,6 +811,123 @@ return {
 			public $processResults ;
 			public $cache = true ;
 		}
+		
+		class PvJQueryLightbox extends PvComposantIUBase
+		{
+			public static $CheminFichierJs = "js/lightbox.min.js" ;
+			public static $CheminFichierCSS = "css/lightbox.min.css" ;
+			public static $SourceIncluse = 0 ;
+			public $NomColCheminImage = "chemin_image" ;
+			public $NomColCheminMiniature = "chemin_miniature" ;
+			public $NomColTitre = "titre" ;
+			public $FournisseurDonnees = null ;
+			public $LargeurMiniature = 60 ;
+			public $FiltresSelection = array() ;
+			public $MsgPreRequisNonVerif = "Pr&eacute;requis non v&eacute;rifi&eacute;s : fournisseur de donn&eacute;es non configur&eacute;" ;
+			protected static function InclutLibSource()
+			{
+				if(PvJQueryLightbox::$SourceIncluse == 1)
+				{
+					return '' ;
+				}
+				$ctn = '' ;
+				$ctn .= '<link rel="stylesheet" href="'.PvJQueryLightbox::$CheminFichierCSS.'">'.PHP_EOL ;
+				$ctn .= '<script type="text/javascript" src="'.PvJQueryLightbox::$CheminFichierJs.'"></script>'.PHP_EOL ;
+				return $ctn ;
+			}
+			protected function VerifiePreRequis()
+			{
+				if($this->EstNul($this->FournisseurDonnees))
+				{
+					return 0 ;
+				}
+				if($this->FournisseurDonnees->RequeteSelection == "")
+				{
+					return 0 ;
+				}
+				return 1 ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				$ctn .= PvJQueryLightbox::InclutLibSource() ;
+				$ctn .= '<div id="'.$this->IDInstanceCalc.'">'.PHP_EOL ;
+				if($this->VerifiePreRequis() == 0)
+				{
+					$ctn .= '<div class="Erreur">'.$this->MsgPreRequisNonVerif.'</div>' ;
+				}
+				else
+				{
+					$fourn = & $this->FournisseurDonnees ;
+					$requeteSupport = $fourn->OuvreRequeteSelectElements($this->FiltresSelection) ;
+					while($lgn = $fourn->LitRequete($requeteSupport))
+					{
+						$cheminImage = $lgn[$this->NomColCheminImage] ;
+						$cheminMiniature = $cheminImage ;
+						$titre = "" ;
+						if(isset($lgn[$this->NomColCheminMiniature]))
+						{
+							$cheminMiniature = $lgn[$this->NomColCheminMiniature] ;
+						}
+						if(isset($lgn[$this->NomColTitre]))
+						{
+							$titre = $lgn[$this->NomColTitre] ;
+						}
+						$ctn .= '<a href="'.htmlspecialchars($cheminImage).'" data-lightbox="lightbox-'.$this->IDInstanceCalc.'" data-title="'.htmlspecialchars($titre).'"><img src="'.htmlspecialchars($cheminMiniature).'" alt="'.htmlspecialchars($titre).'" border="0" width="'.$this->LargeurMiniature.'" /></a>'.PHP_EOL ;
+					}
+					$fourn->FermeRequete($requeteSupport) ;
+				}
+				$ctn .= '</div>'.PHP_EOL ;
+				return $ctn ;
+			}
+		}
+		
+		class PvCfgJQuerySnowfall
+		{
+			public $flakeCount = 35 ;
+			public $flakeColor = "#ffffff" ;
+			public $flakePosition= 'absolute';
+			public $flakeIndex= 999999 ;
+			public $minSize = 1 ;
+			public $maxSize = 2 ;
+			public $minSpeed = 1 ;
+			public $maxSpeed = 5 ;
+			public $round = false ;
+			public $shadow = false ;
+			public $collection = false ;
+			public $collectionHeight = 40 ;
+			public $deviceorientation = false ;
+		}
+		class PvJQuerySnowfall extends PvComposantIUBase
+		{
+			public static $CheminFichierJs = "js/snowfall.jquery.min.js" ;
+			public static $SourceIncluse = 0 ;
+			public $Cfg = null ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->Cfg = new PvCfgJQuerySnowfall() ;
+			}
+			protected static function InclutLibSource()
+			{
+				if(PvJQuerySnowfall::$SourceIncluse == 1)
+				{
+					return '' ;
+				}
+				$ctn = '' ;
+				$ctn .= '<script type="text/javascript" src="'.PvJQuerySnowfall::$CheminFichierJs.'"></script>'.PHP_EOL ;
+				return $ctn ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				$ctn .= PvJQuerySnowfall::InclutLibSource() ;
+				$ctn .= '<script type="text/javascript">
+	jQuery(document).snowfall('.svc_json_encode($this->Cfg).') ;
+</script>'.PHP_EOL ;
+				return $ctn ;
+			}
+		}
 	}
 	
 ?>

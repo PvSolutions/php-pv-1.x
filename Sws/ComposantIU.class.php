@@ -14,6 +14,10 @@
 		{
 			include dirname(__FILE__)."/ComposantIU/EditeurSiteWeb.class.php" ;
 		}
+		if(! defined('COMP_PACK_PUBL_1_SWS'))
+		{
+			include dirname(__FILE__)."/ComposantIU/PackPubl1.class.php" ;
+		}
 		define('COMPOSANT_IU_SWS', 1) ;
 	}
 	

@@ -20,11 +20,12 @@
 			public $BarreLiensMembre ;
 			public $InclureScriptsMembership = 1 ;
 			public $CheminLogo = "../images/logo.png" ;
+			public $TitreLogo = "SWS" ;
 			public $MsgCopyright = "SWS (C) Tous droits r&eacute;serv&eacute;s" ;
 			public $InclureJQuery = 1 ;
 			public $InclureJQueryUi = 1 ;
 			public $IncRenduBarreLiensMembre = 1 ;
-			public $IncRenduLogo = 1 ;
+			public $IncRenduLogo = 0 ;
 			public function NiveauAdmin()
 			{
 				return "admin" ;
@@ -35,6 +36,14 @@
 				$ctn .= 'body, p, div, form, table, tr, td, th {
 	font-family:tahoma ;
 	font-size:12px ;
+}
+.logo {
+	font-size:48px ;
+	font-family:tahoma ;
+	font-weight:normal ;
+	padding:0px ;
+	margin-top:8px ;
+	margin-bottom:8px ;
 }
 .titre {
 	font-size:16px;
@@ -60,6 +69,18 @@
 }
 .sws-ui-padding-12 {
 	padding:12px ;
+}
+.sws-ui-margin-2 {
+	margin:2px ;
+}
+.sws-ui-margin-4 {
+	margin:4px ;
+}
+.sws-ui-margin-8 {
+	margin:8px ;
+}
+.sws-ui-margin-12 {
+	margin:12px ;
 }' ;
 				return $ctn ;
 			}
@@ -88,12 +109,16 @@
 <td class="menu-haut">'.$this->BarreLiensMembre->RenduDispositif().'</td>
 </tr>' ;
 				}
+				$ctn .= '<tr><td>' ;
 				if($this->IncRenduLogo)
 				{
-					$ctn .= '<tr>
-<td><img src="'.$this->CheminLogo.'" /></td>
-</tr>'.PHP_EOL ;
+					$ctn .= '<img src="'.$this->CheminLogo.'" />' ;
 				}
+				else
+				{
+					$ctn .= '<h1 class="logo">'.$this->TitreLogo.'</h1>' ;
+				}
+				$ctn .= '</td></tr>'.PHP_EOL ;
 				$ctn .= '<tr>
 <td>'.PHP_EOL ;
 				return $ctn ;

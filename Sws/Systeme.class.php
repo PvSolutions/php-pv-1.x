@@ -40,6 +40,14 @@
 			public $NomScriptListeModulesPage = "liste_module_page" ;
 			public $ScriptListeModulesPage = "liste_module_page" ;
 			public $MaxColonnesBarreMenuModsPage = 10 ;
+			public function ObtientBDSupport()
+			{
+				return $this->BDSupport ;
+			}
+			public function SqlCheminPubl($colonne)
+			{
+				return $this->BDSupport->SqlSubstr($colonne, strlen($this->CheminAdminVersPubl."/") + 1, $this->BDSupport->SqlLength($colonne)) ;
+			}
 			public function ObtientCheminPubl($chemin)
 			{
 				return substr($chemin, strlen($this->CheminAdminVersPubl."/"), strlen($chemin)) ;
@@ -53,6 +61,12 @@
 			{
 				$barreMenu = new PvTablMenuHoriz() ;
 				$barreMenu->MaxColonnes = $this->MaxColonnesBarreMenuModsPage ;
+				return $barreMenu ;
+			}
+			public function CreeBarreMenuImplemsPage()
+			{
+				$barreMenu = new PvCadreMenuWeb() ;
+				// $barreMenu->MaxColonnes = $this->MaxColonnesBarreMenuModsPage ;
 				return $barreMenu ;
 			}
 			public function CreeBarreMenuEntitesPage()
@@ -241,6 +255,10 @@
 			}
 			public function RemplitZonePubl(& $zone)
 			{
+				if(count($this->PrivilegesPassePartout) > 0)
+				{
+					array_splice($zone->PrivilegesPassePartout, count($zone->PrivilegesPassePartout), 0, $this->PrivilegesPassePartout) ;
+				}
 				$this->RemplitZonePublSpec($zone) ;
 				$nomModules = array_keys($this->ModulesPage) ;
 				foreach($nomModules as $i => $nomModule)
@@ -262,6 +280,10 @@
 			public function RemplitZoneAdmin(& $zone)
 			{
 				$zone->GestTachesWeb->NomDossierTaches = $this->CheminAdminVersPubl. DIRECTORY_SEPARATOR .$zone->GestTachesWeb->NomDossierTaches ;
+				if(count($this->PrivilegesPassePartout) > 0)
+				{
+					array_splice($zone->PrivilegesPassePartout, count($zone->PrivilegesPassePartout), 0, $this->PrivilegesPassePartout) ;
+				}
 				$this->RemplitZoneAdminSpec($zone) ;
 				$nomModules = array_keys($this->ModulesPage) ;
 				foreach($nomModules as $i => $nomModule)
@@ -282,6 +304,10 @@
 			}
 			public function RemplitZoneMembre(& $zone)
 			{
+				if(count($this->PrivilegesPassePartout) > 0)
+				{
+					array_splice($zone->PrivilegesPassePartout, count($zone->PrivilegesPassePartout), 0, $this->PrivilegesPassePartout) ;
+				}
 				$this->RemplitZoneMembreSpec($zone) ;
 				$nomModules = array_keys($this->ModulesPage) ;
 				foreach($nomModules as $i => $nomModule)
@@ -511,12 +537,14 @@
 			public $ModuleArticle ;
 			public $ModuleMenu ;
 			public $ModuleSlider ;
+			public $ModulePhototheque ;
 			public $ModuleContact ;
 			public $ModuleLivreDOr ;
 			public $ModuleNewsletter ;
 			public $ImplemCommentaire ;
 			public $PrivilegesConsult = array() ;
 			public $PrivilegesEdit = array() ;
+			public $PrivilegesPassePartout = array("super_admin") ;
 			protected function CreeModulePageRacine()
 			{
 				return new ModulePageRacineSws() ;
@@ -532,6 +560,10 @@
 			protected function CreeModuleSlider()
 			{
 				return new ModuleSliderSws() ;
+			}
+			protected function CreeModulePhototheque()
+			{
+				return new ModulePhotothequeSws() ;
 			}
 			protected function CreeModuleContact()
 			{
@@ -553,6 +585,10 @@
 			{
 				return new ImplemCommentaireSws() ;
 			}
+			protected function CreeImplemShopping()
+			{
+				return new ImplemShoppingSws() ;
+			}
 			protected function ChargeModulesPage()
 			{
 				$this->ModulePageRacine = $this->CreeModulePageRacine() ;
@@ -563,6 +599,8 @@
 				$this->InscritModulePage('', $this->ModuleContact) ;
 				$this->ModuleSlider = $this->CreeModuleSlider() ;
 				$this->InscritModulePage('', $this->ModuleSlider) ;
+				$this->ModulePhototheque = $this->CreeModulePhototheque() ;
+				$this->InscritModulePage('', $this->ModulePhototheque) ;
 				$this->ModuleLivreDOr = $this->CreeModuleLivreDOr() ;
 				$this->InscritModulePage('', $this->ModuleLivreDOr) ;
 				$this->ModuleArticle = $this->CreeModuleArticle() ;
@@ -578,7 +616,10 @@
 			{
 				$this->ImplemCommentaire = $this->CreeImplemCommentaire() ;
 				$this->InscritImplemPage('', $this->ImplemCommentaire) ;
-				$this->ImplemCommentaire->EntitesAppls[] = $this->ModuleArticle->EntiteArticle->NomEntite ;
+				$this->ImplemCommentaire->InscritEntiteApplNom($this->ModuleArticle->EntiteArticle->NomEntite) ;
+				$this->ImplemShopping = $this->CreeImplemShopping() ;
+				$this->InscritImplemPage('', $this->ImplemShopping) ;
+				$this->ImplemShopping->InscritEntiteApplNom($this->ModuleArticle->EntiteArticle->NomEntite) ;
 			}
 		}
 		

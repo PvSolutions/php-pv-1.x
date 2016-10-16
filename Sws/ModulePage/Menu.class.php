@@ -184,6 +184,12 @@
 				$compGroupe->NomColonneValeur = $this->ModuleParent->EntiteGroupeMenu->NomColId ;
 				$compGroupe->NomColonneLibelle = $this->ModuleParent->EntiteGroupeMenu->NomColTitre ;
 			}
+			protected function NomColsSommaire()
+			{
+				$result = parent::NomColsSommaire() ;
+				$result[] = new ColSommaireEntiteSws($this->NomColTitre, $this->LibTitre) ;
+				return $result ;
+			}
 		}
 		class EntiteGroupeMenuSws extends EntiteTableSws
 		{
@@ -204,7 +210,12 @@
 			public $DefColTblListTitre ;
 			public $FltTblListTitre ;
 			public $LibTblListTitre = "Titre" ;
+			public $LibTotalMenus = "Total menus" ;
 			public $NomParamTblListTitre = "pTitre" ;
+			public $TitreDocScriptMenus = "Menus du groupe de menu" ;
+			public $TitreScriptMenus = "Menus du groupe de menu" ;
+			protected $ScriptMenus ;
+			protected $FltFrmElemTotMenus ;
 			public function SqlListeColsSelect(& $bd)
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;
@@ -214,9 +225,24 @@
 			protected function ChargeFrmElem(& $frm)
 			{
 				parent::ChargeFrmElem($frm) ;
+				$bd = $this->ObtientBDSupport() ;
+				$entMenu = & $this->ModuleParent->EntiteMenu ;
 				$this->FltFrmElemTitre = $frm->InsereFltEditHttpPost($this->NomParamTitre, $this->NomColTitre) ;
 				$this->FltFrmElemTitre->Libelle = $this->LibTitre ;
-				$this->FltFrmElemTitre->Largeur = "180" ;
+				$this->CompFrmElemTitre = $this->FltFrmElemTitre->ObtientComposant() ;
+				$this->CompFrmElemTitre->Largeur = "300px" ;
+				if($frm->InclureElementEnCours == 1)
+				{
+					$this->FltFrmElemTotMenus = $frm->InsereFltEditHttpPost("total_menus", $this->NomColId) ;
+					$this->FltFrmElemTotMenus->NePasLierParametre = 1 ;
+					$this->FltFrmElemTotMenus->NePasLierColonne = 1 ;
+					$this->FltFrmElemTotMenus->Libelle = $this->LibTotalMenus ;
+					$this->CompFrmElemTotMenus = $this->FltFrmElemTotMenus->DeclareComposant("PvZoneCorrespHtml") ;
+					$this->CompFrmElemTotMenus->FournisseurDonnees = $this->CreeFournDonnees() ;
+					$this->CompFrmElemTotMenus->FournisseurDonnees->RequeteSelection = '(select '.$bd->EscapeVariableName($entMenu->NomColIdGroupe).' id, count(0) total from '.$bd->EscapeTableName($entMenu->NomTable).' group by '.$bd->EscapeVariableName($entMenu->NomColIdGroupe).')' ;
+					$this->CompFrmElemTotMenus->NomColonneValeur = $entMenu->NomColId ;
+					$this->CompFrmElemTotMenus->NomColonneLibelle = "total" ;
+				}
 			}
 			protected function ChargeTblList(& $tbl)
 			{
@@ -227,12 +253,51 @@
 				$this->FltTblListTitre = $tbl->InsereFltSelectHttpGet($this->NomParamTblListTitre, $bd->SqlIndexOf('UPPER('.$bd->EscapeVariableName($this->NomColTitre).')', 'UPPER(<self>)').' > 0') ;
 				$this->FltTblListTitre->Libelle = $this->LibTblListTitre ;
 			}
+			protected function NomColsSommaire()
+			{
+				$result = parent::NomColsSommaire() ;
+				$result[] = new ColSommaireEntiteSws($this->NomColTitre, $this->LibTitre) ;
+				return $result ;
+			}
 			protected function FinalTblList(& $tbl)
 			{
+				$this->LienMenus = $tbl->InsereIconeAction($this->DefColTblListActs, $this->ScriptMenus->ObtientUrlFmt(array('id' => '${id}')), "images/icones/menus-groupe-menu.png", "Menus") ;
 				parent::FinalTblList($tbl) ;
+			}
+			public function RemplitZoneAdmin(& $zone)
+			{
+				parent::RemplitZoneAdmin($zone) ;
+				$this->ScriptMenus = $this->InsereScript("menus_groupe_menu", new ScriptMenusGroupeMenuSws(), $zone) ;
 			}
 		}
 		
+		class ScriptMenusGroupeMenuSws extends ScriptSommEntiteTableSws
+		{
+			public $EstScriptSession ;
+			protected $DefColId ;
+			protected $DefColTitre ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$entite = $this->ObtientEntitePage() ;
+				$this->TitreDocument = $entite->TitreDocScriptMenus ;
+				$this->Titre = $entite->TitreScriptMenus ;
+			}
+			protected function DetermineCompPrinc()
+			{
+				$entite = $this->ObtientEntitePage() ;
+				$entMenu = & $entite->ModuleParent->EntiteMenu ;
+				$bd = & $entite->ObtientBDSupport() ;
+				$this->CompPrinc = new PvTableauDonneesHtml() ;
+				$this->CompPrinc->AdopteScript("compPrinc", $this) ;
+				$this->CompPrinc->ChargeConfig() ;
+				$this->DefColId = $this->CompPrinc->InsereDefColCachee($this->NomColId) ;
+				$this->DefColTitre = $this->CompPrinc->InsereDefCol($entMenu->NomColTitre, $entMenu->NomLibTitre) ;
+				$fournDonnees = $entite->CreeFournDonnees() ;
+				$fournDonnees->RequeteSelection = $bd->EscapeTableName($entMenu->NomTable) ;
+				$this->CompPrinc->FournisseurDonnees = & $fournDonnees ;				
+			}
+		}
 	}
 	
 ?>

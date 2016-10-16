@@ -10,6 +10,10 @@
 		{
 			include dirname(__FILE__).'/ImplemPage/Commentaire.class.php' ;
 		}
+		if(! defined('IMPLEM_SHOPPING_SWS'))
+		{
+			include dirname(__FILE__).'/ImplemPage/Shopping.class.php' ;
+		}
 	}
 	
 ?>

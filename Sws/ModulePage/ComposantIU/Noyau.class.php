@@ -6,7 +6,7 @@
 		
 		class GrilleModulesSws extends PvGrilleDonneesHtml
 		{
-			public $ContenuLigneModele = '<a href="${url}"><div align="center"><img src="${chemin_icone}" /></div><div align="center">${titre}</div></a>' ;
+			public $ContenuLigneModele = '<a href="${url}"><div align="center"><img src="${chemin_icone}" border="0" /></div><div align="center">${titre}</div></a>' ;
 			public $AlignVCellule = "bottom" ;
 			public $DefColTitre ;
 			public $DefColUrl ;

@@ -163,6 +163,16 @@
 				}
 			}
 		}
+		class PvActCmdFormMail extends PvActCmdEnvoiMail
+		{
+			protected function ConstruitContenuMessage()
+			{
+				$form = & $this->FormulaireDonneesParent ;
+				$valeurFiltres = $form->ExtraitValeursFiltres($this->FiltresCibles) ;
+				$this->SujetMessage = _parse_pattern($this->FormatSujetMessage, $valeursFiltres) ;
+				$this->ContenuMessage = $form->DessinateurFiltresEdition->VersionTexte($form, $form->FiltresEdition) ;
+			}
+		}
 		
 	}
 	

@@ -8,6 +8,10 @@
 		}
 		define("NOYAU_IMPLEM_PAGE_SWS", 1) ;
 		
+		class CfgBaseApplImplemSws
+		{
+		}
+		
 		class ImplemPageBaseSws extends ElementRenduBaseSws
 		{
 			public $EstIndefini = 0 ;
@@ -15,10 +19,18 @@
 			public $NomRef = "base" ;
 			public $EntitesAppls = array() ;
 			public $ModulesAppls = array() ;
+			protected $CfgsEntitesAppls = array() ;
+			protected $CfgsModulesAppls = array() ;
 			public $PrivilegesConsult = array() ;
 			public $RemplZoneMembrePossible = 1 ;
 			public $RemplZonePublPossible = 1 ;
 			public $RemplZoneAdminPossible = 1 ;
+			public $BarreMenu ;
+			public $BarreElemsRendu ;
+			public function CreeCfgAppl()
+			{
+				return new CfgBaseApplImplemSws() ;
+			}
 			public function SupporteEntite(& $entite)
 			{
 				return (in_array($entite->NomElementModule, $this->EntitesAppls) || in_array($entite->ModuleParent->NomElementSyst, $this->ModulesAppls)) ;
@@ -207,6 +219,40 @@
 				$fourn->Valeurs["entitesAppl"] = $entitesAppl ;
 				return $fourn ;
 			}
+			public function InscritEntiteAppl(& $entite, $cfg=null)
+			{
+				$this->InscritEntiteApplNom($entite->NomElementModule, $cfg) ;
+			}
+			public function InscritModuleAppl(& $module, $cfg=null)
+			{
+				$this->InscritModuleApplNom($module->NomElementSyst, $cfg) ;
+			}
+			public function InscritNomEntiteAppl(& $entite, $cfg=null)
+			{
+				$this->InscritEntiteApplNom($entite->NomElementModule, $cfg) ;
+			}
+			public function InscritNomModuleAppl(& $module, $cfg=null)
+			{
+				$this->InscritModuleApplNom($module->NomElementSyst, $cfg) ;
+			}
+			public function InscritEntiteApplNom($nomEntite, $cfg=null)
+			{
+				if($cfg == null)
+				{
+					$cfg = $this->CreeCfgAppl() ;
+				}
+				$this->EntitesAppls[] = $nomEntite ;
+				$this->CfgEntitesAppls[$nomEntite] = $cfg ;
+			}
+			public function InscritModuleApplNom($nomModule, $cfg=null)
+			{
+				if($cfg == null)
+				{
+					$cfg = $this->CreeCfgAppl() ;
+				}
+				$this->ModulesAppls[] = $nomModule ;
+				$this->CfgModulesAppls[$nomModule] = $cfg ;
+			}
 			public function ObtientNomEntitesAppl()
 			{
 				$entitesAppl = array() ;
@@ -227,6 +273,68 @@
 			}
 			public function AppliqueApresCmdEntite($nomAction, & $cmd, & $entite)
 			{
+			}
+			public function RemplitMenu(& $menu)
+			{
+				$menuImplem = $menu->InscritSousMenuFige($this->NomElementSyst) ;
+				$menuImplem->Titre = $this->TitreMenu ;
+				$this->RemplitMenuSpec($menuImplem) ;
+			}
+			public function RemplitMenuSpec(& $menu)
+			{
+			}
+			protected function CreeBarreMenuImplems()
+			{
+				return ReferentielSws::$SystemeEnCours->CreeBarreMenuImplemsPage() ;
+			}
+			protected function ChargeBarreMenu(& $barreMenu)
+			{
+				$barreMenu->InclureRenduIcone = 0 ;
+				/*
+				$this->MenuAccueil = $barreMenu->MenuRacine->InscritSousMenuScript($barreMenu->ZoneParent->NomScriptParDefaut) ;
+				$this->MenuAccueil->Titre = "Accueil" ;
+				*/
+				foreach($this->SystemeParent->ImplemsPage as $nom => & $implem)
+				{
+					$implem->RemplitMenu($barreMenu->MenuRacine) ;
+				}
+			}
+			protected function InscritBarreMenu(& $script)
+			{
+				$this->BarreMenu = $this->InsereBarreMenu($script) ;
+			}
+			protected function & InsereBarreMenu(& $script)
+			{
+				$barreMenu = $this->CreeBarreMenuImplems($script) ;
+				$barreMenu->AdopteScript("barreMenu", $script) ;
+				$barreMenu->ChargeConfig() ;
+				$this->ChargeBarreMenu($barreMenu) ;
+				return $barreMenu ;
+			}
+			protected function CreeBarreElemsRendu()
+			{
+				return ReferentielSws::$SystemeEnCours->CreeBarreElemsRendu() ;
+			}
+			protected function & InsereBarreElemsRendu(& $script)
+			{
+				$barreMenu = $this->CreeBarreElemsRendu($script) ;
+				$barreMenu->AdopteScript("barreElemsRendu", $script) ;
+				$barreMenu->ChargeConfig() ;
+				$this->ChargeBarreElemsRendu($barreMenu) ;
+				return $barreMenu ;
+			}
+			protected function InscritBarreElemsRendu(& $script)
+			{
+				$this->BarreElemsRendu = $this->InsereBarreElemsRendu($script) ;
+			}
+			public function PrepareScriptAdmin(& $script)
+			{
+				if(! $script->UtiliserCorpsDocZone)
+				{
+					return ;
+				}
+				$this->InscritBarreMenu($script) ;
+				$this->InscritBarreElemsRendu($script) ;
 			}
 		}
 		
@@ -251,6 +359,29 @@
 			}
 			public function PrepareScriptLst(& $script, & $entite)
 			{
+			}
+		}
+		
+		class ScriptAdminImplemBaseSws extends ScriptAdminBaseSws
+		{
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$implemPage = $this->ObtientImplemPage() ;
+				$implemPage->PrepareScriptAdmin($this) ;
+			}
+			public function RenduEnteteAdmin()
+			{
+				$implemPage = $this->ObtientImplemPage() ;
+				$ctn = '' ;
+				$ctn .= $implemPage->BarreElemsRendu->RenduDispositif() ;
+				$ctn .= $implemPage->BarreMenu->RenduDispositif() ;
+				return $ctn ;
+			}
+			public function RenduPiedAdmin()
+			{
+				$ctn = "" ;
+				return $ctn ;
 			}
 		}
 	}

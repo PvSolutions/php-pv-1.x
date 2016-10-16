@@ -405,6 +405,10 @@
 				}
 				return $cols ;
 			}
+			public function DoitInclureElement()
+			{
+				return $this->InclureTotalElements && $this->InclureElementEnCours ;
+			}
 			public function CalculeElementsRendu()
 			{
 				$this->ElementsEnCours = array() ;
@@ -418,7 +422,6 @@
 				if($this->InclureElementEnCours)
 				{
 					$this->CalculeElementsEnCours() ;
-					// print_r($this->ElementsEnCours) ;
 					// echo "Err : ".$this->FournisseurDonnees->BaseDonnees->ConnectionException ;
 					// print_r($this->FournisseurDonnees->BaseDonnees) ;
 					// print_r($this->ElementsEnCours) ;
@@ -907,6 +910,19 @@
 					$this->DessinateurFiltresEdition->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
 				}
 			}
+			public function NotifieParMail($de, $a, $cc='', $cci='')
+			{
+				if($this->EstNul($this->CommandeExecuter))
+				{
+					throw new Exception("La commande 'Executer' n'a pas ete initialisee pour les envois de mail") ;
+					return ;
+				}
+				$actCmd = $this->CommandeExecuter->InsereActCmd("PvActCmdFormMail", array()) ;
+				$actCmd->A = $a ;
+				$actCmd->De = $de ;
+				$actCmd->Cc = $cc ;
+				$actCmd->Cci = $cci ;
+			}
 			public function RedirigeAnnulerVersUrl($url)
 			{
 				if($this->EstNul($this->CommandeAnnuler))
@@ -964,6 +980,10 @@
 		}
 		class PvCommandeAnnulerBase extends PvCommandeFormulaireDonnees
 		{
+			/* Ne verifie pas le telechargement des fichiers :) */
+			protected function VerifiePreRequis()
+			{
+			}
 		}
 		class PvCommandeExecuterBase extends PvCommandeFormulaireDonnees
 		{
@@ -1051,6 +1071,44 @@
 		class PvCommandeSupprElement extends PvCommandeEditionElementBase
 		{
 			public $Mode = 3 ;
+		}
+		class PvCommandeRedirectScriptSession extends PvCommandeAnnulerBase
+		{
+			public $UrlDefaut = '' ;
+			protected function ExecuteInstructions()
+			{
+				$adr = & $this->ZoneParent->AdrScriptSession ;
+				$ctn = '' ;
+				if($adr->ChaineGet != '')
+				{
+					$ctn .= '<!doctype html>
+<html>
+<head><title>Redirection en cours...</title></head>
+<body>
+<form style="display:none" id="FormRetour" action="'.htmlspecialchars($adr->ChaineGet).'" method="post">' ;
+					foreach($adr->DonneesPost as $nom => $valeur)
+					{
+						if(is_array($valeur))
+						{
+							$valeur = join(",", $valeur) ;
+						}
+						$ctn .= '<input type="hidden" name="'.htmlspecialchars($nom).'" value="'.htmlspecialchars($valeur).'" />' ;
+						
+					}
+					$ctn .= '<input type="submit" value="envoyer" /></form>
+<script language="javascript">
+	document.getElementById("FormRetour").submit() ;
+</script>
+</body>
+</html>' ;
+					echo $ctn ;
+					exit ;
+				}
+				elseif($this->UrlDefaut != '')
+				{
+					redirect_to($this->UrlDefaut) ;
+				}
+			}
 		}
 		
 		class PvModeEditionElement

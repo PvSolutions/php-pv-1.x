@@ -113,6 +113,8 @@
 			public $GestScriptsExec ;
 			public $Scripts = array() ;
 			public $NomParamScriptAppele = "appelleScript" ;
+			public $AutoDetectParamScriptAppele = 1 ;
+			public $ValeurParamScriptAppeleFixe = "" ;
 			public $ValeurParamScriptAppele = "" ;
 			public $ScriptParDefaut = null ;
 			public $NomScriptParDefaut = "accueil" ;
@@ -295,151 +297,166 @@
 					return ;
 				if(! $this->PossedeMembreConnecte())
 				{
-					if(class_exists($this->NomClasseScriptConnexion))
-					{
-						$nomClasse = $this->NomClasseScriptConnexion ;
-						$this->ScriptConnexion = new $nomClasse() ;
-						$this->InscritScript($this->NomScriptConnexion, $this->ScriptConnexion) ;
-					}
-					if($this->AutoriserInscription && class_exists($this->NomClasseScriptInscription))
-					{
-						$nomClasse = $this->NomClasseScriptInscription ;
-						$this->ScriptInscription = new $nomClasse() ;
-						$this->InscritScript($this->NomScriptInscription, $this->ScriptInscription) ;
-					}
-					if(class_exists($this->NomClasseScriptRecouvreMP))
-					{
-						$nomClasse = $this->NomClasseScriptRecouvreMP ;
-						$this->ScriptRecouvreMP = new $nomClasse() ;
-						$this->InscritScript($this->NomScriptRecouvreMP, $this->ScriptRecouvreMP) ;
-					}
+					$this->ChargeScriptsMSNonConnecte() ;
 				}
 				else
 				{
-					if(class_exists($this->NomClasseScriptDeconnexion))
-					{
-						$nomClasse = $this->NomClasseScriptDeconnexion ;
-						$this->ScriptDeconnexion = new $nomClasse() ;
-						$this->ScriptDeconnexion->NecessiteMembreConnecte = 1 ;
-						$this->InscritScript($this->NomScriptDeconnexion, $this->ScriptDeconnexion) ;
-					}
-					if($this->Membership->MemberLogged->ADActivated != $this->Membership->ADActivatedMemberTrueValue)
-					{
-						if(class_exists($this->NomClasseScriptChangeMotPasse))
-						{
-							$nomClasse = $this->NomClasseScriptChangeMotPasse ;
-							$this->ScriptChangeMotPasse = new $nomClasse() ;
-							$this->InscritScript($this->NomScriptChangeMotPasse, $this->ScriptChangeMotPasse) ;
-						}
-						if($this->Membership->MemberLogged->MustChangePassword == $this->Membership->MustChangePasswordMemberTrueValue && class_exists($this->NomClasseScriptDoitChangerMotPasse))
-						{
-							$nomClasse = $this->NomClasseScriptDoitChangerMotPasse ;
-							$this->ScriptDoitChangerMotPasse = new $nomClasse() ;
-							$this->InscritScript($this->NomScriptDoitChangerMotPasse, $this->ScriptDoitChangerMotPasse) ;
-						}
-					}
-					if(class_exists($this->NomClasseScriptChangeMPMembre))
-					{
-						$nomClasse = $this->NomClasseScriptChangeMPMembre ;
-						$this->ScriptChangeMPMembre = new $nomClasse() ;
-						$this->InscritScript($this->NomScriptChangeMPMembre, $this->ScriptChangeMPMembre) ;
-					}
+					$this->ChargeScriptsMSConnecte() ;
+				}
+			}
+			protected function ChargeScriptsMSNonConnecte()
+			{
+				if(class_exists($this->NomClasseScriptConnexion))
+				{
+					$nomClasse = $this->NomClasseScriptConnexion ;
+					$this->ScriptConnexion = new $nomClasse() ;
+					$this->InscritScript($this->NomScriptConnexion, $this->ScriptConnexion) ;
+				}
+				if($this->AutoriserInscription && class_exists($this->NomClasseScriptInscription))
+				{
+					$nomClasse = $this->NomClasseScriptInscription ;
+					$this->ScriptInscription = new $nomClasse() ;
+					$this->InscritScript($this->NomScriptInscription, $this->ScriptInscription) ;
+				}
+				if(class_exists($this->NomClasseScriptRecouvreMP))
+				{
+					$nomClasse = $this->NomClasseScriptRecouvreMP ;
+					$this->ScriptRecouvreMP = new $nomClasse() ;
+					$this->InscritScript($this->NomScriptRecouvreMP, $this->ScriptRecouvreMP) ;
+				}
+			}
+			public function MembreADActive()
+			{
+				return ($this->EstPasNul($this->Membership->MemberLogged) && $this->Membership->MemberLogged->ADActivated != $this->Membership->ADActivatedMemberTrueValue) ;
+			}
+			public function MembreDoitChangerMP()
+			{
+				return ($this->EstPasNul($this->Membership->MemberLogged) && $this->Membership->MemberLogged->MustChangePassword == $this->Membership->MustChangePasswordMemberTrueValue) ;
+			}
+			protected function ChargeScriptsMSConnecte()
+			{
+				if(class_exists($this->NomClasseScriptDeconnexion))
+				{
+					$nomClasse = $this->NomClasseScriptDeconnexion ;
+					$this->ScriptDeconnexion = new $nomClasse() ;
+					$this->InscritScript($this->NomScriptDeconnexion, $this->ScriptDeconnexion) ;
+				}
+				if($this->MembreADActive())
+				{
 					if(class_exists($this->NomClasseScriptChangeMotPasse))
 					{
 						$nomClasse = $this->NomClasseScriptChangeMotPasse ;
 						$this->ScriptChangeMotPasse = new $nomClasse() ;
 						$this->InscritScript($this->NomScriptChangeMotPasse, $this->ScriptChangeMotPasse) ;
 					}
-					if(class_exists($this->NomClasseScriptAjoutMembre))
+					if($this->MembreDoitChangerMP() && class_exists($this->NomClasseScriptDoitChangerMotPasse))
 					{
-						$nomClasse = $this->NomClasseScriptAjoutMembre ;
-						$this->ScriptAjoutMembre = new $nomClasse() ;
-						$this->ScriptAjoutMembre->DeclarePrivileges($this->PrivilegesEditMembership) ;
-						$this->InscritScript($this->NomScriptAjoutMembre, $this->ScriptAjoutMembre) ;
+						$nomClasse = $this->NomClasseScriptDoitChangerMotPasse ;
+						$this->ScriptDoitChangerMotPasse = new $nomClasse() ;
+						$this->InscritScript($this->NomScriptDoitChangerMotPasse, $this->ScriptDoitChangerMotPasse) ;
 					}
-					if(class_exists($this->NomClasseScriptModifMembre))
-					{
-						$nomClasse = $this->NomClasseScriptModifMembre ;
-						$this->ScriptModifMembre = new $nomClasse() ;
-						$this->ScriptModifMembre->DeclarePrivileges($this->PrivilegesEditMembership) ;
-						$this->InscritScript($this->NomScriptModifMembre, $this->ScriptModifMembre) ;
-					}
-					if($this->AutoriserModifPrefs && class_exists($this->NomClasseScriptModifPrefs))
-					{
-						$nomClasse = $this->NomClasseScriptModifPrefs ;
-						$this->ScriptModifPrefs = new $nomClasse() ;
-						$this->InscritScript($this->NomScriptModifPrefs, $this->ScriptModifPrefs) ;
-					}
-					if(class_exists($this->NomClasseScriptSupprMembre))
-					{
-						$nomClasse = $this->NomClasseScriptSupprMembre ;
-						$this->ScriptSupprMembre = new $nomClasse() ;
-						$this->ScriptSupprMembre->DeclarePrivileges($this->PrivilegesEditMembership) ;
-						$this->InscritScript($this->NomScriptSupprMembre, $this->ScriptSupprMembre) ;
-					}
-					if(class_exists($this->NomClasseScriptListeMembres))
-					{
-						$nomClasse = $this->NomClasseScriptListeMembres ;
-						$this->ScriptListeMembres = new $nomClasse() ;
-						$this->ScriptListeMembres->DeclarePrivileges($this->PrivilegesEditMembership) ;
-						$this->InscritScript($this->NomScriptListeMembres, $this->ScriptListeMembres) ;
-					}
-					if(class_exists($this->NomClasseScriptAjoutProfil))
-					{
-						$nomClasse = $this->NomClasseScriptAjoutProfil ;
-						$this->ScriptAjoutProfil = new $nomClasse() ;
-						$this->ScriptAjoutProfil->DeclarePrivileges($this->PrivilegesEditMembership) ;
-						$this->InscritScript($this->NomScriptAjoutProfil, $this->ScriptAjoutProfil) ;
-					}
-					if(class_exists($this->NomClasseScriptModifProfil))
-					{
-						$nomClasse = $this->NomClasseScriptModifProfil ;
-						$this->ScriptModifProfil = new $nomClasse() ;
-						$this->ScriptModifProfil->DeclarePrivileges($this->PrivilegesEditMembership) ;
-						$this->InscritScript($this->NomScriptModifProfil, $this->ScriptModifProfil) ;
-					}
-					if(class_exists($this->NomClasseScriptSupprProfil))
-					{
-						$nomClasse = $this->NomClasseScriptSupprProfil ;
-						$this->ScriptSupprProfil = new $nomClasse() ;
-						$this->ScriptSupprProfil->DeclarePrivileges($this->PrivilegesEditMembership) ;
-						$this->InscritScript($this->NomScriptSupprProfil, $this->ScriptSupprProfil) ;
-					}
-					if(class_exists($this->NomClasseScriptListeProfils))
-					{
-						$nomClasse = $this->NomClasseScriptListeProfils ;
-						$this->ScriptListeProfils = new $nomClasse() ;
-						$this->ScriptListeProfils->DeclarePrivileges($this->PrivilegesEditMembership) ;
-						$this->InscritScript($this->NomScriptListeProfils, $this->ScriptListeProfils) ;
-					}
-					if(class_exists($this->NomClasseScriptAjoutRole))
-					{
-						$nomClasse = $this->NomClasseScriptAjoutRole ;
-						$this->ScriptAjoutRole = new $nomClasse() ;
-						$this->ScriptAjoutRole->DeclarePrivileges($this->PrivilegesEditMembership) ;
-						$this->InscritScript($this->NomScriptAjoutRole, $this->ScriptAjoutRole) ;
-					}
-					if(class_exists($this->NomClasseScriptModifRole))
-					{
-						$nomClasse = $this->NomClasseScriptModifRole ;
-						$this->ScriptModifRole = new $nomClasse() ;
-						$this->ScriptModifRole->DeclarePrivileges($this->PrivilegesEditMembership) ;
-						$this->InscritScript($this->NomScriptModifRole, $this->ScriptModifRole) ;
-					}
-					if(class_exists($this->NomClasseScriptSupprRole))
-					{
-						$nomClasse = $this->NomClasseScriptSupprRole ;
-						$this->ScriptSupprRole = new $nomClasse() ;
-						$this->ScriptSupprRole->DeclarePrivileges($this->PrivilegesEditMembership) ;
-						$this->InscritScript($this->NomScriptSupprRole, $this->ScriptSupprRole) ;
-					}
-					if(class_exists($this->NomClasseScriptListeRoles))
-					{
-						$nomClasse = $this->NomClasseScriptListeRoles ;
-						$this->ScriptListeRoles = new $nomClasse() ;
-						$this->ScriptListeRoles->DeclarePrivileges($this->PrivilegesEditMembership) ;
-						$this->InscritScript($this->NomScriptListeRoles, $this->ScriptListeRoles) ;
-					}
+				}
+				if(class_exists($this->NomClasseScriptChangeMPMembre))
+				{
+					$nomClasse = $this->NomClasseScriptChangeMPMembre ;
+					$this->ScriptChangeMPMembre = new $nomClasse() ;
+					$this->InscritScript($this->NomScriptChangeMPMembre, $this->ScriptChangeMPMembre) ;
+				}
+				if(class_exists($this->NomClasseScriptChangeMotPasse))
+				{
+					$nomClasse = $this->NomClasseScriptChangeMotPasse ;
+					$this->ScriptChangeMotPasse = new $nomClasse() ;
+					$this->InscritScript($this->NomScriptChangeMotPasse, $this->ScriptChangeMotPasse) ;
+				}
+				if(class_exists($this->NomClasseScriptAjoutMembre))
+				{
+					$nomClasse = $this->NomClasseScriptAjoutMembre ;
+					$this->ScriptAjoutMembre = new $nomClasse() ;
+					$this->ScriptAjoutMembre->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->InscritScript($this->NomScriptAjoutMembre, $this->ScriptAjoutMembre) ;
+				}
+				if(class_exists($this->NomClasseScriptModifMembre))
+				{
+					$nomClasse = $this->NomClasseScriptModifMembre ;
+					$this->ScriptModifMembre = new $nomClasse() ;
+					$this->ScriptModifMembre->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->InscritScript($this->NomScriptModifMembre, $this->ScriptModifMembre) ;
+				}
+				if($this->AutoriserModifPrefs && class_exists($this->NomClasseScriptModifPrefs))
+				{
+					$nomClasse = $this->NomClasseScriptModifPrefs ;
+					$this->ScriptModifPrefs = new $nomClasse() ;
+					$this->InscritScript($this->NomScriptModifPrefs, $this->ScriptModifPrefs) ;
+				}
+				if(class_exists($this->NomClasseScriptSupprMembre))
+				{
+					$nomClasse = $this->NomClasseScriptSupprMembre ;
+					$this->ScriptSupprMembre = new $nomClasse() ;
+					$this->ScriptSupprMembre->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->InscritScript($this->NomScriptSupprMembre, $this->ScriptSupprMembre) ;
+				}
+				if(class_exists($this->NomClasseScriptListeMembres))
+				{
+					$nomClasse = $this->NomClasseScriptListeMembres ;
+					$this->ScriptListeMembres = new $nomClasse() ;
+					$this->ScriptListeMembres->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->InscritScript($this->NomScriptListeMembres, $this->ScriptListeMembres) ;
+				}
+				if(class_exists($this->NomClasseScriptAjoutProfil))
+				{
+					$nomClasse = $this->NomClasseScriptAjoutProfil ;
+					$this->ScriptAjoutProfil = new $nomClasse() ;
+					$this->ScriptAjoutProfil->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->InscritScript($this->NomScriptAjoutProfil, $this->ScriptAjoutProfil) ;
+				}
+				if(class_exists($this->NomClasseScriptModifProfil))
+				{
+					$nomClasse = $this->NomClasseScriptModifProfil ;
+					$this->ScriptModifProfil = new $nomClasse() ;
+					$this->ScriptModifProfil->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->InscritScript($this->NomScriptModifProfil, $this->ScriptModifProfil) ;
+				}
+				if(class_exists($this->NomClasseScriptSupprProfil))
+				{
+					$nomClasse = $this->NomClasseScriptSupprProfil ;
+					$this->ScriptSupprProfil = new $nomClasse() ;
+					$this->ScriptSupprProfil->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->InscritScript($this->NomScriptSupprProfil, $this->ScriptSupprProfil) ;
+				}
+				if(class_exists($this->NomClasseScriptListeProfils))
+				{
+					$nomClasse = $this->NomClasseScriptListeProfils ;
+					$this->ScriptListeProfils = new $nomClasse() ;
+					$this->ScriptListeProfils->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->InscritScript($this->NomScriptListeProfils, $this->ScriptListeProfils) ;
+				}
+				if(class_exists($this->NomClasseScriptAjoutRole))
+				{
+					$nomClasse = $this->NomClasseScriptAjoutRole ;
+					$this->ScriptAjoutRole = new $nomClasse() ;
+					$this->ScriptAjoutRole->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->InscritScript($this->NomScriptAjoutRole, $this->ScriptAjoutRole) ;
+				}
+				if(class_exists($this->NomClasseScriptModifRole))
+				{
+					$nomClasse = $this->NomClasseScriptModifRole ;
+					$this->ScriptModifRole = new $nomClasse() ;
+					$this->ScriptModifRole->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->InscritScript($this->NomScriptModifRole, $this->ScriptModifRole) ;
+				}
+				if(class_exists($this->NomClasseScriptSupprRole))
+				{
+					$nomClasse = $this->NomClasseScriptSupprRole ;
+					$this->ScriptSupprRole = new $nomClasse() ;
+					$this->ScriptSupprRole->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->InscritScript($this->NomScriptSupprRole, $this->ScriptSupprRole) ;
+				}
+				if(class_exists($this->NomClasseScriptListeRoles))
+				{
+					$nomClasse = $this->NomClasseScriptListeRoles ;
+					$this->ScriptListeRoles = new $nomClasse() ;
+					$this->ScriptListeRoles->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->InscritScript($this->NomScriptListeRoles, $this->ScriptListeRoles) ;
 				}
 			}
 			public function ChargeConfig()
@@ -593,10 +610,21 @@
 			{
 				$this->ValeurBruteParamScriptAppele = "" ;
 				$this->ValeurParamScriptAppele = $this->NomScriptParDefaut ;
-				if(isset($_GET[$this->NomParamScriptAppele]))
+				if($this->AutoDetectParamScriptAppele == 0)
 				{
-					$this->ValeurBruteParamScriptAppele = $_GET[$this->NomParamScriptAppele] ;
-					$this->ValeurParamScriptAppele = $this->ValeurBruteParamScriptAppele ;
+					if($this->ValeurParamScriptAppeleFixe != "")
+					{
+						$this->ValeurBruteParamScriptAppele = $this->ValeurParamScriptAppeleFixe ;
+						$this->ValeurParamScriptAppele = $this->ValeurBruteParamScriptAppele ;
+					}
+				}
+				else
+				{
+					if(isset($_GET[$this->NomParamScriptAppele]))
+					{
+						$this->ValeurBruteParamScriptAppele = $_GET[$this->NomParamScriptAppele] ;
+						$this->ValeurParamScriptAppele = $this->ValeurBruteParamScriptAppele ;
+					}
 				}
 			}
 			public function DeclareScript($nom, $nomClasseScript)
@@ -825,6 +853,13 @@
 			public function RedirigeVersScript(& $script, $params=array())
 			{
 			}
+			public function InvoqueScript($nomScript, $params=array(), $valeurPost=array(), $async=1)
+			{
+				return $this->InvoqueScriptSpec($nomScript, $params, $valeurPost, $async) ;
+			}
+			protected function InvoqueScriptSpec($nomScript, $params=array(), $valeurPost=array(), $async=1)
+			{
+			}
 		}
 		
 		class PvZoneDInclusions extends PvZoneIHMDeBase
@@ -947,20 +982,19 @@
 				}
 				// $cheminLocal = preg_match('/\.\.\/|\\\\/', $this->CheminFichierRelatif, $captures) ;
 				// print_r($captures) ;
-				$url = (isset($_SERVER["HTTPS"])) ? 'https' : 'http'.'://'.$_SERVER["SERVER_NAME"].'/'.$this->CheminFichierRelatif ;
+				$url = ((isset($_SERVER["HTTPS"])) ? 'https' : 'http').'://'.$_SERVER["SERVER_NAME"].(($_SERVER["SERVER_PORT"] != '') ? ':'.$_SERVER["SERVER_PORT"] : '').'/'.$this->CheminFichierRelatif ;
 				return $url ;
 			}
 			public function ObtientUrlParam($params=array())
 			{
 				return $this->ObtientUrl()."?".http_build_query_string($params) ;
 			}
-			public function ObtientUrlScript($nomScript, $params=array())
+			public function ObtientUrlScript($nomScript, $params=array(), $strict=1)
 			{
-				if(! isset($this->Scripts[$nomScript]))
+				if(! isset($this->Scripts[$nomScript]) && $strict == 1)
 					return false ;
-				$script = $this->Scripts[$nomScript] ;
 				$chaineParams = http_build_query_string($params) ;
-				$url = $this->ObtientUrl()."?".urlencode($this->NomParamScriptAppele).'='.urlencode($script->NomElementZone) ;
+				$url = $this->ObtientUrl()."?".urlencode($this->NomParamScriptAppele).'='.urlencode($nomScript) ;
 				if($chaineParams != '')
 				{
 					$url .= '&'.$chaineParams ;
@@ -1022,6 +1056,10 @@
 			{
 				return $this->PourImpression ;
 			}
+			public function InvoqueScriptSpec($nomScript, $params=array(), $valeurPost=array(), $async=1)
+			{
+				return PvApplication::TelechargeUrl($this->ObtientUrlScript($nomScript, $params, 0), $valeurPost, $async) ;
+			}
 		}
 		class PvZoneRequetesBase extends PvZoneIHMDeBase
 		{
@@ -1031,6 +1069,58 @@
 		
 		class PvZoneConsole extends PvZoneIHMDeBase
 		{
+			protected $ArgsExecution = array() ;
+			public function Execute()
+			{
+				$this->DetecteArgsExecution() ;
+				parent::Execute() ;
+			}
+			protected function DetecteArgsExecution()
+			{
+				$platf = new PvPlateformProcConsole() ;
+				$this->ArgsExecution = $platf->RecupArgs() ;
+			}
+			protected function DetecteParamScriptAppele()
+			{
+				$this->ValeurBruteParamScriptAppele = "" ;
+				$this->ValeurParamScriptAppele = $this->NomScriptParDefaut ;
+				if(isset($this->ArgsExecution[$this->NomParamScriptAppele]))
+				{
+					$this->ValeurBruteParamScriptAppele = $this->ArgsExecution[$this->NomParamScriptAppele] ;
+					$this->ValeurParamScriptAppele = $this->ValeurBruteParamScriptAppele ;
+				}
+			}
+			public function ObtientUrl()
+			{
+				if($this->ApplicationParent->NomElementActif == $this->NomElementApplication)
+				{
+					$url = $_SERVER["argv"][0] ;
+					return $url ;
+				}
+				else
+				{
+					$execPath = PvApplication::ObtientCheminPHP() ;
+					$cmd = realpath(dirname(__FILE__).'/../../../'.$this->CheminFichierRelatif) ;
+					return $execPath.' '.$cmd ;
+				}
+			}
+			public function ObtientUrlParam($params=array())
+			{
+				return $this->ObtientUrl()." ".PvApplication::EncodeArgsShell($params) ;
+			}
+			public function ObtientUrlScript($nomScript, $params=array(), $strict=1)
+			{
+				if(! isset($this->Scripts[$nomScript]) && $strict == 1)
+					return false ;
+				$params[$this->NomParamScriptAppele] = $nomScript ;
+				$url = $this->ObtientUrl()." ".PvApplication::EncodeArgsShell($params) ;
+				// echo $url ;
+				return $url ;
+			}
+			public function InvoqueScriptSpec($nomScript, $params=array(), $valeurPost=array(), $async=1)
+			{
+				return PvApplication::TelechargeShell($this->ObtientUrlScript($nomScript, $params, 0), $valeurPost, $async) ;
+			}
 		}
 		class PvZoneBureau extends PvZoneIHMDeBase
 		{

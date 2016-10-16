@@ -82,6 +82,7 @@
 			public $FltTblListForm ;
 			public $NomParamTblListContenu = "pContenu" ;
 			public $NomParamTblListForm = "pIdForm" ;
+			public $HauteurMaxLogoContact = 60 ;
 			protected function CreeScriptPoster()
 			{
 				return new ScriptPosterContactSws() ;
@@ -136,6 +137,7 @@
 			}
 			protected function RenduFormParent(& $script)
 			{
+				$syst = ReferentielSws::$SystemeEnCours ;
 				$ctn = '' ;
 				$ctn .= '<h3 class="titre">'.htmlentities($this->LgnForm["titre"]).'</h3>'.PHP_EOL ;
 				$ctn .= '<table width="100%" cellspacing="0" cellpadding="0">
@@ -159,7 +161,7 @@
 </td>'.PHP_EOL ;
 				if($this->LgnForm["chemin_logo"] != "")
 				{
-					$ctn .= '<td width="30%" valign="top"><img src="'.$this->LgnForm["chemin_logo"].'" /></td>'.PHP_EOL ;
+					$ctn .= '<td width="30%" valign="top"><img src="'.$syst->ObtientCheminPubl($this->LgnForm["chemin_logo"]).'" height="'.$this->HauteurMaxLogoContact.'" /></td>'.PHP_EOL ;
 				}
 				$ctn .= '</tr>'.PHP_EOL ;
 				$ctn .= '</table>' ;
@@ -294,6 +296,8 @@
 			public $SecuriserEdition = 1 ;
 			public $AccepterSommaire = 0 ;
 			public $AccepterGraphique = 0 ;
+			public $InclureScriptConsult = 0 ;
+			public $InclureScriptEnum = 0 ;
 			public $AccepterTexte = 1 ;
 			public $FltFrmElemTitre ;
 			public $FltFrmElemNomSociete ;

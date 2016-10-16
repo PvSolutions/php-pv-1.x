@@ -202,6 +202,7 @@
 			public $FormatPaquet ;
 			public $DelaiAttente = 1 ;
 			public $MaxSessions = 0 ;
+			protected $DernErrEnvoiDemande ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -253,6 +254,7 @@
 				$this->FluxEnvoi = stream_socket_client($this->ExtraitAdresse(), $codeErreur, $msgErreur, $this->DelaiOuvrFlux, STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT) ;
 				$partieResult = '' ;
 				$resultat = '' ;
+				$this->DernErrEnvoiDemande = '' ;
 				$longueurMax = 1024 ;
 				if($this->FluxEnvoi !== false)
 				{
@@ -268,13 +270,33 @@
 						{
 							stream_set_timeout($this->FluxEnvoi, $this->DelaiLectFlux) ;
 							$partieResult = fread($this->FluxEnvoi, $longueurMax) ;
-							$resultat .= $partieResult ;
+							if($partieResult !== false)
+							{
+								$resultat .= $partieResult ;
+							}
+							else
+							{
+								$this->DernErrEnvoiDemande = "lecture_flux_socket_echoue" ;
+								break ;
+							}
 						}
 						while(strlen($partieResult) == $longueurMax) ;
 					}
+					else
+					{
+						$this->DernErrEnvoiDemande = "ecriture_sur_le_flux_socket_echoue" ;
+					}
 					$this->FermeFluxEnvoi() ;
 				}
+				else
+				{
+					$this->DernErrEnvoiDemande = "ouverture_du_flux_socket_echoue" ;
+				}
 				return $this->FormatPaquet->Decode($resultat) ;
+			}
+			public function ObtientErrEnvoiDemande()
+			{
+				return $this->DernErrEnvoiDemande ;
 			}
 			protected function RecoitDemandes()
 			{

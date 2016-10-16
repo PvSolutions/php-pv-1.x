@@ -52,6 +52,7 @@
 			public $Largeur = "" ;
 			public $Hauteur = "" ;
 			public $Valeur = "" ;
+			public $EspaceReserve = "" ;
 			public $FmtLbl ;
 			public $EncodeHtmlEtiquette = 1 ;
 			public $AttrsSupplHtml = array() ;
@@ -102,6 +103,10 @@
 			protected function RenduAttrsSupplHtml()
 			{
 				$ctn = '' ;
+				if($this->EspaceReserve != "")
+				{
+					$ctn .= ' placeholder="'.$this->EspaceReserve.'"' ;
+				}
 				if(count($this->AttrsSupplHtml) > 0)
 				{
 					foreach($this->AttrsSupplHtml as $attr => $val)
@@ -155,6 +160,7 @@
 			protected function CalculeLibelle()
 			{
 				$lignes = $this->FournisseurDonnees->RechExacteElements($this->FiltresSelection, $this->NomColonneValeur, $this->Valeur) ;
+				// print_r($this->FournisseurDonnees) ;
 				$etiquette = '' ;
                 // print_r($lignes) ;
 				if(count($lignes) > 0)
@@ -163,7 +169,14 @@
 				}
 				else
 				{
-					$this->Libelle = $this->LibelleNonTrouve ;
+					if($this->FournisseurDonnees->ExceptionTrouvee())
+					{
+						$this->Libelle = "Erreur : ".$this->DerniereException->Message ;
+					}
+					else
+					{
+						$this->Libelle = $this->LibelleNonTrouve ;
+					}
 				}
 				return $etiquette ;
 			}
@@ -237,6 +250,7 @@
 			public $InclureCheminCoteServeur = 1 ;
 			public $CheminCoteServeurEditable = 1 ;
 			public $InclureZoneSelectFichier = 1 ;
+			public $TailleEditeurCoteServeur = "40" ;
 			public $TypeElementFormulaire = "file" ;
 			public $NomEltCoteSrv = "CoteSrv_" ;
 			public $LibelleCoteSrv = "Chemin sur le serveur" ;
@@ -252,18 +266,22 @@
 				}
 				if($this->InclureZoneSelectFichier)
 						$ctn .= '<br />' ;
+				$ctn .= '<table>' ;
+				$ctn .= '<tr>' ;
+				$ctn .= '<td>'.PHP_EOL ;
 				$ctn .= $this->RenduCheminCoteServeur() ;
+				$ctn .= '</td>'.PHP_EOL ;
 				if($this->InclureErreurTelecharg)
 				{
-					$ctn .= '</td>'.PHP_EOL ;
-					$ctn .= '<td>'.PHP_EOL ;
 					if($this->FiltreParent->CodeErreurTelechargement != '')
 					{
+						$ctn .= '<td>'.PHP_EOL ;
 						$ctn .= $this->FiltreParent->LibelleErreurTelecharg ;
+						$ctn .= '</td>'.PHP_EOL ;
 					}
-					$ctn .= '</td>'.PHP_EOL ;
-					$ctn .= '</tr>'.PHP_EOL ;
 				}
+				$ctn .= '</tr>'.PHP_EOL ;
+				$ctn .= '</table>' ;
 				return $ctn ;
 			}
 			protected function RenduZoneSelectFichier()
@@ -285,7 +303,7 @@
 				{
 					if($this->CheminCoteServeurEditable)
 					{
-						$ctn .= $this->LibelleCoteSrv.' <input type="text" class="EditeurCheminCoteServeur" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlentities(trim($this->Valeur)).'" size="20" />' ;
+						$ctn .= $this->LibelleCoteSrv.' <input type="text" class="EditeurCheminCoteServeur" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlentities(trim($this->Valeur)).'" size="'.$this->TailleEditeurCoteServeur.'" />' ;
 					}
 					else
 					{
@@ -1116,7 +1134,7 @@
 				$this->CorrigeIDsElementHtml() ;
 				$ctn = '' ;
 				$styleCSS = '' ;
-				$ctn .= '<input type="checkbox" value="'.htmlentities($this->ValeurVrai).'" onclick="document.getElementById(\''.$this->IDInstanceCalc.'\').value = (this.checked) ? '.htmlentities(svc_json_encode($this->ValeurVrai)).' : '.htmlentities(svc_json_encode($this->ValeurFaux)).';"'.(($this->Valeur == $this->ValeurVrai) ? ' checked' : '').' />' ;
+				$ctn .= '<input id="'.$this->IDInstanceCalc.'_Support" type="checkbox" value="'.htmlentities($this->ValeurVrai).'" onclick="document.getElementById(\''.$this->IDInstanceCalc.'\').value = (this.checked) ? '.htmlentities(svc_json_encode($this->ValeurVrai)).' : '.htmlentities(svc_json_encode($this->ValeurFaux)).';"'.(($this->Valeur == $this->ValeurVrai) ? ' checked' : '').' />' ;
 				$ctn .= '<input name="'.$this->NomElementHtml.'"' ;
 				$ctn .= ' id="'.$this->IDInstanceCalc.'"' ;
 				$ctn .= ' type="hidden"' ;

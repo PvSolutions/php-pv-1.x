@@ -559,6 +559,7 @@
 			public $IdMemberNotFoundValue = -1 ;
 			public $MemberTable = "membership_member" ;
 			public $EnableMemberColumn = "enabled" ;
+			public $LoginWithEmail = 0 ;
 			public $LockedMemberTrueValue = "1" ;
 			public $LockedMemberColumn = "locked" ;
 			public $TotalRetryMemberColumn = "total_retry" ;
@@ -676,7 +677,7 @@
 			public $OldPasswordMemberAlias = "" ;
 			public $NewPasswordMemberLabel = "Nouveau mot de passe" ;
 			public $NewPasswordMemberAlias = "" ;
-			public $ConfirmPasswordMemberLabel = "Confirmer le nouveau mot de passe" ;
+			public $ConfirmPasswordMemberLabel = "Confirmer le mot de passe" ;
 			public $ConfirmPasswordMemberAlias = "" ;
 			public $NewPasswordMemberFormatErrorLabel = "Le nouveau mot de passe n'a pas le bon format." ;
 			public $NewPasswordMemberFormatErrorAlias = "" ;
@@ -704,6 +705,7 @@
 			public $LdapConnections = array() ;
 			public $TriggerInsertProfileRow = 1 ;
 			public $TriggerDeleteProfileRow = 1 ;
+			public $ConfirmSetPasswordEnabled = 0 ;
 			// The membership will insert into privilege tables the
 			public $TriggerInsertRoleRow = 1 ;
 			public $TriggerDeleteRoleRow = 1 ;
@@ -785,7 +787,14 @@
 				$sql .= ', '.$this->Database->EscapeFieldName("MEMBER_TABLE", $this->PasswordMemberColumn).' MEMBER_PASSWORD' ;
 				if($this->EmailMemberColumn != '')
 				{
-					$sql .= ', '.$this->Database->EscapeFieldName("MEMBER_TABLE", $this->EmailMemberColumn).' MEMBER_EMAIL' ;
+					if($this->LoginWithEmail == 0)
+					{
+						$sql .= ', '.$this->Database->EscapeFieldName("MEMBER_TABLE", $this->EmailMemberColumn).' MEMBER_EMAIL' ;
+					}
+					else
+					{
+						$sql .= ', '.$this->Database->EscapeFieldName("MEMBER_TABLE", $this->LoginMemberColumn).' MEMBER_EMAIL' ;
+					}
 				}
 				if($this->FirstNameMemberColumn != '')
 				{

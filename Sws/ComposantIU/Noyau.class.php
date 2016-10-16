@@ -37,6 +37,25 @@
 			}
 		}
 		
+		class TableauDonneesBaseSws extends PvTableauDonneesHtml
+		{
+		}
+		class FormulaireDonneesBaseSws extends PvTableauDonneesHtml
+		{
+		}
+		class TableauDonneesAdminSws extends PvTableauDonneesHtml
+		{
+			protected function InitDessinateurBlocCommandes()
+			{
+				parent::InitDessinateurBlocCommandes() ;
+				$this->DessinateurBlocCommandes->InclureIcone = 1 ;
+				$this->DessinateurBlocCommandes->InclureLibelle = 0 ;
+			}
+		}
+		class FormulaireDonneesAdminSws extends PvTableauDonneesHtml
+		{
+		}
+		
 		class DefNiveauFilArianeSws
 		{
 			public $ModeleUrl = "";

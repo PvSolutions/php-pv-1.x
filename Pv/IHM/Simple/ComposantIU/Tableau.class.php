@@ -450,6 +450,36 @@
 				array_splice($col->Formatteur->Liens, $index, 0, array(& $lien)) ;
 				return $lien ;
 			}
+			public function & InsereIconeAction(& $col, $formatUrl='', $formatCheminIcone='', $formatLib='')
+			{
+				$lien = null ;
+				if($this->EstNul($col) || $col->Formatteur == null)
+				{
+					return $lien ;
+				}
+				$lien = $this->CreeLienAction() ;
+				$lien->FormatURL = $formatUrl ;
+				$lien->FormatCheminIcone = $formatCheminIcone ;
+				$lien->FormatLibelle = $formatLib ;
+				$lien->InclureLibelle = 0 ;
+				$col->Formatteur->Liens[] = & $lien ;
+				return $lien ;
+			}
+			public function & InsereIconeActionAvant(& $col, $index, $formatUrl='', $formatCheminIcone='', $formatLib='')
+			{
+				$lien = null ;
+				if($this->EstNul($col) || $col->Formatteur == null)
+				{
+					return $lien ;
+				}
+				$lien = $this->CreeLienAction() ;
+				$lien->FormatURL = $formatUrl ;
+				$lien->FormatCheminIcone = $formatCheminIcone ;
+				$lien->FormatLibelle = $formatLib ;
+				$lien->InclureLibelle = 0 ;
+				array_splice($col->Formatteur->Liens, $index, 0, array(& $lien)) ;
+				return $lien ;
+			}
 			public function CreeLienAction()
 			{
 				return new PvConfigFormatteurColonneLien() ;
@@ -471,6 +501,30 @@
 				$this->InscritCommande($nomCmd, $cmd) ;
 				return $cmd ;
 			}
+			public function & InsereCmdExportTxt($nomCmd, $libelle='')
+			{
+				return $this->InsereCmdExportTexte($nomCmd, $libelle) ;
+			}
+			public function & InsereCmdExportXls($nomCmd, $libelle='')
+			{
+				return $this->InsereCmdExportExcel($nomCmd, $libelle) ;
+			}
+			public function & InsereCmdExportTexte($nomCmd, $libelle='')
+			{
+				$cmd = new PvCommandeExportVersTexte() ;
+				if($libelle != '')
+					$cmd->Libelle = $libelle ;
+				$this->InscritCommande($nomCmd, $cmd) ;
+				return $cmd ;
+			}
+			public function & InsereCmdExportExcel($nomCmd, $libelle='')
+			{
+				$cmd = new PvCommandeExportVersExcel() ;
+				if($libelle != '')
+					$cmd->Libelle = $libelle ;
+				$this->InscritCommande($nomCmd, $cmd) ;
+				return $cmd ;
+			}
 			public function DefinitionsColonnesExport()
 			{
 				$colonnes = array() ;
@@ -483,13 +537,16 @@
 				}
 				return $colonnes ;
 			}
-			public function ExtraitValeursExport($ligne)
+			public function ExtraitValeursExport($ligne, & $cmd)
 			{
 				$valeurs = array() ;
 				$colonnes = $this->DefinitionsColonnesExport() ;
 				foreach($colonnes as $i => $colonne)
 				{
-					$valeurs[] = $colonne->FormatteValeur($this, $ligne) ;
+					$valeur = $colonne->FormatteValeur($this, $ligne) ;
+					if($valeur == $colonne->ValeurVide)
+						$valeur = $cmd->ValeurVideExport ;
+					$valeurs[] = $valeur ;
 				}
 				return $valeurs ;
 			}
@@ -680,6 +737,13 @@
 				$ctn .= '<input type="submit" value="Envoyer" />'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
 				$ctn .= '<script type="text/javascript">'.PHP_EOL ;
+				$ctn .= $this->CtnJSEnvoiFiltres($parametresRendu).PHP_EOL ;
+				$ctn .= '</script>' ;
+				return $ctn ;
+			}
+			protected function CtnJSEnvoiFiltres(& $parametresRendu)
+			{
+				$ctn = '' ;
 				$ctn .= 'function SoumetEnvoiFiltres'.$this->IDInstanceCalc.'(parametres)
 {
 	var parametresGet = '.svc_json_encode($parametresRendu).' ;
@@ -718,8 +782,7 @@
 			formulaire.submit() ;
 		}
 	}
-}'.PHP_EOL ;
-				$ctn .= '</script>' ;
+}' ;
 				return $ctn ;
 			}
 			public function RenduFiltresNonRenseignes()
@@ -807,7 +870,7 @@
 				{
 					return '' ;
 				}
-				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
+				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;">'.PHP_EOL ;
 				$ctn .= '<table width="100%" cellspacing="0">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
 				{
@@ -1054,16 +1117,16 @@
 				$ctn .= '<tr>'.PHP_EOL ;
 				$ctn .= '<td align="left" width="50%" class="LiensRangee">'.PHP_EOL ;
 				$paramPremiereRangee = array_merge($parametresRendu, array($this->NomParamIndiceDebut() => 0)) ;
-				$ctn .= '<a href="javascript:'.$this->AppelJsEnvoiFiltres($paramPremiereRangee).'" title="'.htmlentities($this->TitrePremiereRangee).'">'.$this->LibellePremiereRangee.'</a>'.PHP_EOL ;
+				$ctn .= '<a href="javascript:'.$this->AppelJsEnvoiFiltres($paramPremiereRangee).'" title="'.$this->TitrePremiereRangee.'">'.$this->LibellePremiereRangee.'</a>'.PHP_EOL ;
 				$ctn .= $this->SeparateurLiensRangee ;
 				if($this->RangeeEnCours > 0)
 				{
 					$paramRangeePrecedente = array_merge($parametresRendu, array($this->NomParamIndiceDebut() => ($this->RangeeEnCours - 1) * $this->MaxElements)) ;
-					$ctn .= '<a href="javascript:'.$this->AppelJsEnvoiFiltres($paramRangeePrecedente).'" title="'.htmlentities($this->TitreRangeePrecedente).'">'.$this->LibelleRangeePrecedente.'</a>'.PHP_EOL ;
+					$ctn .= '<a href="javascript:'.$this->AppelJsEnvoiFiltres($paramRangeePrecedente).'" title="'.$this->TitreRangeePrecedente.'">'.$this->LibelleRangeePrecedente.'</a>'.PHP_EOL ;
 				}
 				else
 				{
-					$ctn .= '<a title="'.htmlentities($this->TitreRangeePrecedente).'">'.$this->LibelleRangeePrecedente.'</a>'.PHP_EOL ;
+					$ctn .= '<a title="'.$this->TitreRangeePrecedente.'">'.$this->LibelleRangeePrecedente.'</a>'.PHP_EOL ;
 				}
 				$ctn .= $this->SeparateurLiensRangee ;
 				$ctn .= '<input type="text" size="4" onChange="var nb = 0 ; try { nb = parseInt(this.value) ; } catch(ex) { } if (isNaN(nb) == true) { nb = 0 ; } SoumetEnvoiFiltres'.$this->IDInstanceCalc.'({'.htmlentities(svc_json_encode($this->NomParamIndiceDebut())).' : (nb - 1) * '.$this->MaxElements.'}) ;" value="'.($this->RangeeEnCours + 1).'" style="text-align:center" />'.PHP_EOL ;
@@ -1072,15 +1135,15 @@
 				if($this->RangeeEnCours < intval($this->TotalElements / $this->MaxElements))
 				{
 					$paramRangeeSuivante = array_merge($parametresRendu, array($this->NomParamIndiceDebut() => ($this->RangeeEnCours + 1) * $this->MaxElements)) ;
-					$ctn .= '<a href="javascript:'.$this->AppelJsEnvoiFiltres($paramRangeeSuivante).'" title="'.htmlentities($this->TitreRangeeSuivante).'">'.$this->LibelleRangeeSuivante.'</a>'.PHP_EOL ;
+					$ctn .= '<a href="javascript:'.$this->AppelJsEnvoiFiltres($paramRangeeSuivante).'" title="'.$this->TitreRangeeSuivante.'">'.$this->LibelleRangeeSuivante.'</a>'.PHP_EOL ;
 				}
 				else
 				{
-					$ctn .= '<a title="'.htmlentities($this->TitreRangeeSuivante).'">'.$this->LibelleRangeeSuivante.'</a>'.PHP_EOL ;
+					$ctn .= '<a title="'.$this->TitreRangeeSuivante.'">'.$this->LibelleRangeeSuivante.'</a>'.PHP_EOL ;
 				}
 				$paramDerniereRangee = array_merge($parametresRendu, array($this->NomParamIndiceDebut() => intval($this->TotalElements / $this->MaxElements) * $this->MaxElements)) ;
 				$ctn .= $this->SeparateurLiensRangee ;
-				$ctn .= '<a href="javascript:'.$this->AppelJsEnvoiFiltres($paramDerniereRangee).'" title="'.htmlentities($this->TitreDerniereRangee).'">'.$this->LibelleDerniereRangee.'</a>'.PHP_EOL ;
+				$ctn .= '<a href="javascript:'.$this->AppelJsEnvoiFiltres($paramDerniereRangee).'" title="'.$this->TitreDerniereRangee.'">'.$this->LibelleDerniereRangee.'</a>'.PHP_EOL ;
 				$ctn .= '</td>'.PHP_EOL ;
 				$ctn .= '<td align="right" class="InfosRangees" width="*">'.PHP_EOL ;
 				$valeursRangee = array(
@@ -1390,6 +1453,7 @@
 			public $TransfertBinaire = 1 ;
 			public $InclureEntete = 1 ;
 			public $RenseignerEntetesRequete = 1 ; 
+			public $ValeurVideExport = "" ;
 			protected function ExecuteInstructions()
 			{
 				if($this->RenseignerEntetesRequete)
@@ -1419,6 +1483,8 @@
 		{
 			public $SeparateurColonnes = ";" ;
 			public $SeparateurLignes = "\r\n" ;
+			public $ExprAvantValeur = "" ;
+			public $ExprApresValeur = "" ;
 			public $TotalLignes = 0 ;
 			public $NomFichier = "resultat.txt" ;
 			protected function EnvoieContenu()
@@ -1428,7 +1494,7 @@
 				$this->TotalLignes = 0 ;
 				while($ligne = $this->TableauDonneesParent->FournisseurDonnees->LitRequete($requete))
 				{
-					$valeurs = $this->TableauDonneesParent->ExtraitValeursExport($ligne) ;
+					$valeurs = $this->TableauDonneesParent->ExtraitValeursExport($ligne, $this) ;
 					$this->EnvoieValeurs($valeurs) ;
 					$this->TotalLignes++ ;
 				}
@@ -1460,7 +1526,7 @@
 					{
 						echo $this->SeparateurColonnes ;
 					}
-					echo $valeur ;
+					echo $this->ExprAvantValeur.$valeur.$this->ExprApresValeur ;
 				}
 				echo $this->SeparateurLignes ;
 			}

@@ -744,7 +744,7 @@
 				$entite = $this->ObtientEntitePage() ;
 				$zone = & $this->ZoneParent ;
 				$bd = $this->ObtientBDSupport() ;
-				$this->TablRubrs = new PvTableauDonneesHtml() ;
+				$this->TablRubrs = new TableauDonneesAdminSws() ;
 				$this->TablRubrs->ToujoursAfficher = 1 ;
 				$this->TablRubrs->AdopteScript('tablRubrs', $this) ;
 				$this->TablRubrs->ChargeConfig() ;
@@ -914,7 +914,7 @@
 			{
 				$entite = $this->ObtientEntitePage() ;
 				$bd = $this->ObtientBDSupport() ;
-				$this->TablPrinc = new PvTableauDonneesHtml() ;
+				$this->TablPrinc = new TableauDonneesAdminSws() ;
 				$this->TablPrinc->AdopteScript('tablPrinc', $this) ;
 				$this->TablPrinc->ChargeConfig() ;
 				$this->FltEmail = $this->TablPrinc->InsereFltSelectHttpGet('email', $bd->SqlIndexOf('<self>', $bd->EscapeVariableName($entite->NomColEmailAbon).' > 0')) ;
@@ -1233,7 +1233,7 @@
 			{
 				$bd = $this->ObtientBDSupport() ;
 				$entite = $this->ObtientEntitePage() ;
-				$this->TablPrinc = new PvTableauDonneesHtml() ;
+				$this->TablPrinc = new TableauDonneesAdminSws() ;
 				$this->TablPrinc->AdopteScript("tablPrinc", $this) ;
 				$this->TablPrinc->ChargeConfig() ;
 				$this->FltEmail = $this->TablPrinc->InsereFltSelectHttpGet("email", $bd->SqlIndexOf("upper(email_abon)", "upper(<self>)")." > 0") ;

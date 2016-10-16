@@ -32,11 +32,11 @@
 			public $NomEntite = "elem_slider" ;
 			public $NomTable = "elem_slider" ;
 			public $TitreMenu = "&Eacute;l&eacute;m. Slide" ;
-			public $TitreAjoutEntite = "Ajout élément slider" ;
-			public $TitreModifEntite = "Modification élément slider" ;
-			public $TitreSupprEntite = "Suppression élément slider" ;
-			public $TitreListageEntite = "Liste des éléments slider" ;
-			public $TitreConsultEntite = "Détails élément slider" ;
+			public $TitreAjoutEntite = "Ajout &eacute;l&eacute;ment slider" ;
+			public $TitreModifEntite = "Modification &eacute;l&eacute;ment slider" ;
+			public $TitreSupprEntite = "Suppression &eacute;l&eacute;ment slider" ;
+			public $TitreListageEntite = "Liste des &eacute;l&eacute;ments slider" ;
+			public $TitreConsultEntite = "D&eacute;tails &eacute;l&eacute;ment slider" ;
 			public $LibUrl = "Url" ;
 			public $LibDescription = "Description" ;
 			public $LibCheminImage = "Image" ;
@@ -86,6 +86,7 @@
 				// Chemin Image
 				$this->FltFrmElemCheminImage = $frm->InsereFltEditHttpUpload($this->NomParamCheminImage, $this->ModuleParent->SystemeParent->CheminAdminVersPubl."/".$this->CheminTelechargImage, $this->NomColCheminImage) ;
 				$this->FltFrmElemCheminImage->Libelle = $this->LibCheminImage ;
+				$this->FltFrmElemCheminImage->ToujoursRenseigner = 1 ;
 				// ID Slider
 				$this->FltFrmElemIdSlider = $frm->InsereFltEditHttpPost($this->NomParamIdSlider, $this->NomColIdSlider) ;
 				$this->FltFrmElemIdSlider->Libelle = $this->LibIdSlider ;

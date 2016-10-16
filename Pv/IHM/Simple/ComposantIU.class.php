@@ -54,6 +54,10 @@
 		{
 			include dirname(__FILE__)."/ComposantIU/Membership.class.php" ;
 		}
+		if(! defined('PV_COMPOSANT_SIMPLE_IU_ELEM_CSS'))
+		{
+			include dirname(__FILE__)."/ComposantIU/ElementCSS.class.php" ;
+		}
 		if(! defined('PV_COMPOSANT_SIMPLE_IU_ELEM_JS'))
 		{
 			include dirname(__FILE__)."/ComposantIU/ElementJS.class.php" ;

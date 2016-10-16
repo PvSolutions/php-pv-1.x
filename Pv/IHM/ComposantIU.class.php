@@ -422,6 +422,9 @@
 	}
 	function VerifFormulaire'.$this->IDInstanceCalc.'(form)
 	{
+		var nomCommande = "" ;
+		if(document.getElementsByName("'.$this->IDInstanceCalc.'_Commande").length > 0)
+			nomCommande = document.getElementsByName("'.$this->IDInstanceCalc.'_Commande")[0].value ;
 		var OK = true ;'.(($this->InstrsJSAvantSoumetForm != '') ? PHP_EOL  .$this->InstrsJSAvantSoumetForm : '').'
 		return OK ;
 	}

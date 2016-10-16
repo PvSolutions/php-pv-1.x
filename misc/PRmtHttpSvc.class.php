@@ -23,6 +23,7 @@
 		class PRmtHttpBaseSvc
 		{
             public $respCharset = "utf-8" ;
+            public $respContentTypePlain = 1 ;
 			protected $httpReqHeaders = array() ;
 			protected $methods = array() ;
 			protected $reqProviders = array() ;
@@ -227,6 +228,10 @@
 				$this->commonDBMethodProvider = $this->addMethodProvider(new PRmtCommonDBMethodProvider()) ;
 				$this->akMSMethodProvider = $this->addMethodProvider(new PRmtAkMSMethodProvider()) ;
 			}
+			protected function & installMSMethodProvider()
+			{
+				return $this->addMethodProvider(new PRmtAkMSMethodProvider()) ;
+			}
 			public function & insertSqlProvider($db) 
 			{
 				$methodProvider = $this->addMethodProvider(new PRmtSqlMethodProvider()) ;
@@ -311,7 +316,8 @@
 		{
 			public function render($resp, & $svc)
 			{
-				// Header("Content-type:application/json\n") ;
+				$contentType = ($svc->respContentTypePlain == 1) ? "text/plain" : "application/json" ;
+				Header("Content-type:".$contentType."\n") ;
 				header("Content-Type: text/html; charset=".$svc->respCharset."\n");
                 echo svc_json_encode($resp) ;
                 // print_r($resp) ;
@@ -1174,7 +1180,7 @@ left join ".$db->EscapeTableName($membership->RoleTable)." t3 on t2.".$db->Escap
 			protected $errorAlias = "not_empty" ;
 			protected function validateFilter(& $method, & $flt)
 			{
-				return ! empty(trim($flt->bind())) ;
+				return trim($flt->bind()) != '' ;
 			}
 		}
 		class PRmtSqlUniqueFilterRule extends PRmtSqlFilterRuleBase

@@ -41,7 +41,7 @@
 			public $TitreModifEntite = "Modification article" ;
 			public $TitreSupprEntite = "Suppression article" ;
 			public $TitreListageEntite = "Liste des articles" ;
-			public $TitreConsultEntite = "Détails article" ;
+			public $TitreConsultEntite = "D&eacute;tails article" ;
 			public $NomParamIdRubr = "id_rubrique" ;
 			public $NomColIdRubr = "id_rubrique" ;
 			public $LibIdRubr = "Rubrique" ;
@@ -152,7 +152,7 @@
 			{
 				parent::FinalTblList($tabl) ;
 				$bd = & $tabl->FournisseurDonnees->BaseDonnees ;
-				$tabl->FournisseurDonnees->RequeteSelection = '(select t1.*, '.$bd->SqlConcat(array('t2.'.$bd->EscapeVariableName($this->ModuleParent->EntiteRubrique->NomColTitreChemin), "', '", 't2.'.$bd->EscapeVariableName($this->ModuleParent->EntiteRubrique->NomColTitre))).' titre_conteneur from '.$bd->EscapeVariableName($this->NomTable).' t1 left join '.$bd->EscapeVariableName($this->ModuleParent->EntiteRubrique->NomTable).' t2 on t1.'.$bd->EscapeVariableName($this->NomColIdRubr).' = t2.'.$bd->EscapeVariableName($this->ModuleParent->EntiteRubrique->NomColId).')' ;
+				$tabl->FournisseurDonnees->RequeteSelection = '(select t1.*, '.$bd->SqlConcat(array('t2.'.$bd->EscapeVariableName($this->ModuleParent->EntiteRubrique->NomColTitreChemin), "'; '", 't2.'.$bd->EscapeVariableName($this->ModuleParent->EntiteRubrique->NomColTitre))).' titre_conteneur from '.$bd->EscapeVariableName($this->NomTable).' t1 left join '.$bd->EscapeVariableName($this->ModuleParent->EntiteRubrique->NomTable).' t2 on t1.'.$bd->EscapeVariableName($this->NomColIdRubr).' = t2.'.$bd->EscapeVariableName($this->ModuleParent->EntiteRubrique->NomColId).')' ;
 				// echo $tabl->FournisseurDonnees->RequeteSelection ;
 				if($this->InclureScriptEdit)
 				{
@@ -303,7 +303,7 @@
 			{
 				parent::FinalTblList($tabl) ;
 				$bd = & $tabl->FournisseurDonnees->BaseDonnees ;
-				$tabl->FournisseurDonnees->RequeteSelection = '(select t1.*, '.$bd->SqlConcat(array('t2.'.$bd->EscapeVariableName($this->NomColTitreChemin), "', '", 't2.'.$bd->EscapeVariableName($this->NomColTitre))).' titre_conteneur from '.$bd->EscapeVariableName($this->NomTable).' t1 left join '.$bd->EscapeVariableName($this->NomTable).' t2 on t1.'.$bd->EscapeVariableName($this->NomColIdConteneur).' = t2.'.$bd->EscapeVariableName($this->NomColId).')' ;
+				$tabl->FournisseurDonnees->RequeteSelection = '(select t1.*, '.$bd->SqlConcat(array('t2.'.$bd->EscapeVariableName($this->NomColTitreChemin), "'; '", 't2.'.$bd->EscapeVariableName($this->NomColTitre))).' titre_conteneur from '.$bd->EscapeVariableName($this->NomTable).' t1 left join '.$bd->EscapeVariableName($this->NomTable).' t2 on t1.'.$bd->EscapeVariableName($this->NomColIdConteneur).' = t2.'.$bd->EscapeVariableName($this->NomColId).')' ;
 				// echo $tabl->FournisseurDonnees->RequeteSelection ;
 				if($this->InclureScriptEdit)
 				{
@@ -346,7 +346,7 @@
 						$this->ScriptParent->ModulePage->EntiteRubrique->NomTable,
 						array(
 							$this->ScriptParent->ModulePage->EntiteRubrique->NomColIdChemin => $this->LgnRubrConteneur["id_chemin"].", ".$this->LgnRubrConteneur["id"],
-							$this->ScriptParent->ModulePage->EntiteRubrique->NomColTitreChemin => $this->LgnRubrConteneur["titre_chemin"].", ".$this->LgnRubrConteneur["titre"],
+							$this->ScriptParent->ModulePage->EntiteRubrique->NomColTitreChemin => $this->LgnRubrConteneur["titre_chemin"]."; ".$this->LgnRubrConteneur["titre"],
 						),
 						$bd->EscapeVariableName($this->ScriptParent->ModulePage->EntiteRubrique->NomColId).' = '.$bd->ParamPrefix.'idRubr',
 						array('idRubr' => $this->LgnRubrEdite["id"])

@@ -57,11 +57,29 @@
 			{
 				return $this->ScriptListeCmt->ObtientUrl() ;
 			}
+			public function ObtientCfgAppl(& $entite)
+			{
+				$cfg = $this->CreeCfgAppl() ;
+				if(isset($this->CfgsEntitesAppls[$entite->NomElementModule]))
+				{
+					$cfg = $this->CfgsEntitesAppls[$entite->NomElementModule] ;
+				}
+				elseif(isset($this->CfgsModulesAppls[$entite->ModuleParent->NomElementSyst]))
+				{
+					$cfg = $this->CfgsModulesAppls[$entite->ModuleParent->NomElementSyst] ;
+				}
+				return $cfg ;
+			}
 			protected function RemplitZoneAdminValide(& $zone)
 			{
 				$this->ScriptListeCmt = $this->InscritNouvScript("liste_msgs_".$this->NomElementSyst, new ScriptListeMsgsCmtSws(), $zone, $this->ObtientPrivilegesEdit()) ;
 				$this->ScriptPublieCmt = $this->InscritNouvScript("publie_msg_".$this->NomElementSyst, new ScriptPublieMsgCmtSws(), $zone, $this->ObtientPrivilegesEdit()) ;
 				// print_r($this->ObtientPrivilegesEdit()) ;
+			}
+			public function RemplitMenuSpec(& $menu)
+			{
+				$menuLst = $menu->InscritSousMenuScript("liste_msgs_".$this->NomElementSyst) ;
+				$menuLst->Titre = "Lister" ;
 			}
 			protected function CreeFormSoumetCmt()
 			{
@@ -276,7 +294,7 @@
 			}
 		}
 		
-		class ScriptListeMsgsCmtSws extends ScriptAdminBaseSws
+		class ScriptListeMsgsCmtSws extends ScriptAdminImplemBaseSws
 		{
 			public $Titre = "Commentaires post&eacute;s" ;
 			public $TablListeCmt ;
@@ -358,17 +376,19 @@
 			}
 			protected function CreeTableListeCmt()
 			{
-				return new PvTableauDonneesHtml() ;
+				return new TableauDonneesAdminSws() ;
 			}
 			public function RenduSpecifique()
 			{
 				$ctn = '' ;
 				// $ctn .= '<p>mmmm</p>' ;
+				$ctn .= $this->RenduEnteteAdmin() ;
 				$ctn .= $this->TablListeCmt->RenduDispositif() ;
+				$ctn .= $this->RenduPiedAdmin() ;
 				return $ctn ;
 			}
 		}
-		class ScriptPublieMsgCmtSws extends ScriptAdminBaseSws
+		class ScriptPublieMsgCmtSws extends ScriptAdminImplemBaseSws
 		{
 			public $Titre = "Modification statut de publication du commentaire" ;
 			public $ValIdCmtSoumis ;
@@ -428,10 +448,12 @@
 			{
 				$implem = $this->ObtientImplemPage() ;
 				$ctn = '' ;
+				$ctn .= $this->RenduEnteteAdmin() ;
 				$ctn .= '<div class="ui-widget ui-widget-content">'.PHP_EOL ;
 				$ctn .= '<p>'.$this->MsgResultat.'</p>'.PHP_EOL ;
 				$ctn .= '<p><a href="'.$implem->ScriptListeCmt->ObtientUrl().'">'.$this->LibRetourListeCmt.'</a></p>'.PHP_EOL ;
 				$ctn .= '</div>' ;
+				$ctn .= $this->RenduPiedAdmin() ;
 				return $ctn ;
 			}
 		}

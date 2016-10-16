@@ -304,9 +304,39 @@
 			}
 		}
 		
+		class PvAdrScriptSessionWeb
+		{
+			public $ChaineGet ;
+			public $DonneesPost ;
+			protected function Sauvegarde(& $zone)
+			{
+				$_SESSION[$zone->NomElementApplication."_AddrScriptSession"] = serialize($this) ;
+			}
+			protected function Restaure(& $zone)
+			{
+				if(isset($_SESSION[$zone->NomElementApplication."_AddrScriptSession"]))
+				{
+					return unserialize($_SESSION[$zone->NomElementApplication."_AddrScriptSession"]) ;
+				}
+				return new PvAdrScriptSessionWeb() ;
+			}
+			public function ImporteRequeteHttp(& $zone)
+			{
+				$this->ChaineGet = $_SERVER["REQUEST_URI"].$_REQUEST["QUERY_STRING"] ;
+				$this->DonneesPost = $_POST ;
+				$this->Sauvegarde($zone) ;
+				// print_r($_SESSION) ;
+			}
+			public function ExporteZone(& $zone)
+			{
+				return PvAdrScriptSessionWeb::Restaure($zone) ;
+			}
+		}
+		
 		class PvZoneWebSimple extends PvZoneWeb
 		{
 			public $TypeDocument ;
+			public $AdrScriptSession ;
 			public $DocumentsWeb = array() ;
 			public $GestTachesWeb ;
 			public $UtiliserDocumentWeb = 0 ;
@@ -380,6 +410,7 @@
 				parent::InitConfig() ;
 				$this->GestTachesWeb = new PvGestTachesWebSimple() ;
 				$this->GestTachesWeb->AdopteZone("gestTaches", $this) ;
+				$this->AdrScriptSession = new PvAdrScriptSessionWeb() ;
 			}
 			protected function ExecuteGestTachesWeb()
 			{
@@ -510,10 +541,23 @@
 					$action = & $actions[$nomAction] ;
 					if($action->Accepte($valeurAction))
 					{
+						if(! $action->EstAccessible())
+						{
+							$this->AfficheRenduInacessible() ;
+						}
 						$this->ActionsAppelees[] = & $action ;
 						$action->Execute() ;
 					}
 				}
+			}
+			public function ActionAccessible($nomAction)
+			{
+				$actions = $this->ObtientActionsAvantRendu() ;
+				if(! isset($actions[$nomAction]))
+				{
+					return 0 ;
+				}
+				return $actions[$nomAction]->EstAccessible() ;
 			}
 			public function InvoqueAction($valeurAction, $params=array(), $valeurPost=array(), $async=1)
 			{
@@ -783,6 +827,7 @@
 					return ;
 				}
 				// print_r(array_keys($this->ActionsAvantRendu)) ;
+				$this->ChargeScriptSession() ;
 				$this->DetermineEnvironnement($script) ;
 				$this->ExecuteRequeteSoumise($script) ;
 				// $script->PrepareRendu() ;
@@ -800,13 +845,34 @@
 					return ;
 				}
 				$ctn = $this->RenduDocument() ;
+				/*
 				if($this->ValeurParamActionAppelee !== false)
 				{
 					$this->ExecuteActionAppelee($this->ActionsApresRendu) ;
 				}
+				*/
 				$this->RenduEnCours = 0 ;
 				$this->ScriptPourRendu = null ;
+				if(! $this->PossedeActionAppelee())
+				{
+					$this->FixeAdrScriptSession($script) ;
+				}
 				echo $ctn ;
+			}
+			protected function ChargeScriptSession()
+			{
+				$adr = $this->AdrScriptSession->ExporteZone($this) ;
+				if($adr != null)
+				{
+					$this->AdrScriptSession = $adr ;
+				}
+			}
+			protected function FixeAdrScriptSession(& $script)
+			{
+				if($script->EstScriptSession)
+				{
+					$this->AdrScriptSession->ImporteRequeteHttp($this) ;
+				}
 			}
 			protected function ExecuteRequeteSoumise(& $script)
 			{
@@ -926,6 +992,51 @@
 				return $ctn ;
 			}
 		}
+		
+		class PvZoneConsoleSimple extends PvZoneConsole
+		{
+			public $ScriptPourRendu ;
+			public $InsererSautLigneFinal = 1 ;
+			public function RenduProgramme()
+			{
+				$ctn = '' ;
+				$ctn .= $this->ScriptPourRendu->RenduDispositif() ;
+				return $ctn ;
+			}
+			public function ExecuteScript(& $script)
+			{
+				$this->RapporteRequeteEnvoyee() ;
+				if($script->EstBienRefere() == 0)
+				{
+					$this->ExecuteScriptMalRefere($script) ;
+					return ;
+				}
+				$this->VerifieValiditeMotPasse($script) ;
+				if($script->EstAccessible() == 0)
+				{
+					$this->ExecuteScriptInaccessible($script) ;
+					return ;
+				}
+				$this->DetermineEnvironnement($script) ;
+				$this->ScriptPourRendu = $script ;
+				$this->RenduEnCours = 1 ;
+				if($this->AnnulerRendu)
+				{
+					$this->RenduEnCours = 0 ;
+					$this->ScriptPourRendu = null ;
+					return ;
+				}
+				$ctn = $this->RenduProgramme() ;
+				$this->RenduEnCours = 0 ;
+				$this->ScriptPourRendu = null ;
+				echo $ctn ;
+				if($this->InsererSautLigneFinal)
+				{
+					echo PHP_EOL ;
+				}
+			}
+		}
+		
 	}
 	
 ?>

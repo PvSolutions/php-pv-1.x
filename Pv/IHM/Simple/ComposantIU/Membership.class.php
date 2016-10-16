@@ -124,6 +124,7 @@
 			public $FiltreMotPasseMembre ;
 			public $FiltreEmailMembre ;
 			public $FiltreContactMembre ;
+			public $FiltreConfirmMotPasseMembre ;
 			public $FiltreAdresseMembre ;
 			public $FiltreNomMembre ;
 			public $FiltrePrenomMembre ;
@@ -166,6 +167,7 @@
 			public $FiltreIdMembre ;
 			public $FiltreLoginMembre ;
 			public $FiltreMotPasseMembre ;
+			public $FiltreConfirmMotPasseMembre ;
 			public $FiltreEmailMembre ;
 			public $FiltreContactMembre ;
 			public $FiltreAdresseMembre ;
@@ -218,6 +220,7 @@
 			public $NomClasseCommandeExecuter = "PvCommandeSupprMembreMS" ;
 			protected $InclureFiltresMembre = 1 ;
 			public $FiltreIdMembreEnCours ;
+			public $FiltreConfirmMotPasseMembre ;
 			public $FiltreIdMembre ;
 			public $FiltreLoginMembre ;
 			public $FiltreMotPasseMembre ;
@@ -542,7 +545,17 @@
 			}
 			protected function ValideFormatLogin($valeur)
 			{
-				return validate_name_user_format($valeur) ;
+				$membership = & $this->FormulaireDonneesParent->ZoneParent->Membership ;
+				$ok = false ;
+				if($membership->LoginWithEmail == 0)
+				{
+					$ok = validate_name_user_format($valeur) ;
+				}
+				else
+				{
+					$ok = validate_email_format($valeur) ;
+				}
+				return $ok ;
 			}
 			protected function ValideFormatMotPasse($valeur)
 			{
@@ -558,15 +571,20 @@
 				{
 					return ;
 				}
+				$form = & $this->FormulaireDonneesParent ;
+				$membership = & $this->FormulaireDonneesParent->ZoneParent->Membership ;
 				$this->FormulaireDonneesParent->LieTousLesFiltres() ;
 				$this->StatutVerifFiltresMembre = 1 ;
-				if(empty($this->FormulaireDonneesParent->FiltreLoginMembre->ValeurParametre) || strlen($this->FormulaireDonneesParent->FiltreLoginMembre->ValeurParametre) < 4 || strlen($this->FormulaireDonneesParent->FiltreLoginMembre->ValeurParametre) > 30)
+				if($this->FormulaireDonneesParent->FiltreLoginMembre->EstEtiquette == 0)
 				{
-					return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->LoginMemberFormatErrorLabel) ;
-				}
-				if(! $this->ValideFormatLogin($this->FormulaireDonneesParent->FiltreLoginMembre->ValeurParametre))
-				{
-					return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->LoginMemberFormatErrorLabel) ;
+					if(empty($this->FormulaireDonneesParent->FiltreLoginMembre->ValeurParametre) || strlen($this->FormulaireDonneesParent->FiltreLoginMembre->ValeurParametre) < 4 || strlen($this->FormulaireDonneesParent->FiltreLoginMembre->ValeurParametre) > 30)
+					{
+						return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->LoginMemberFormatErrorLabel) ;
+					}
+					if(! $this->ValideFormatLogin($this->FormulaireDonneesParent->FiltreLoginMembre->ValeurParametre))
+					{
+						return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->LoginMemberFormatErrorLabel) ;
+					}
 				}
 				if($this->Mode == 1)
 				{
@@ -587,9 +605,20 @@
 				{
 					return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->FirstNameMemberFormatErrorLabel) ;
 				}
-				if(! $this->ValideFormatEmail($this->FormulaireDonneesParent->FiltreEmailMembre->ValeurParametre))
+				if($membership->LoginWithEmail == 0)
 				{
-					return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->EmailMemberFormatErrorLabel) ;
+					if(! $this->ValideFormatEmail($this->FormulaireDonneesParent->FiltreEmailMembre->ValeurParametre))
+					{
+						return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->EmailMemberFormatErrorLabel) ;
+					}
+				}
+				$form = & $this->FormulaireDonneesParent ;
+				if($membership->ConfirmSetPasswordEnabled == 1 && $form->EstPasNul($form->FiltreConfirmMotPasseMembre))
+				{
+					if($form->FiltreConfirmMotPasseMembre->Lie() != $form->FiltreMotPasseMembre->Lie())
+					{
+						return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->ConfirmPasswordMemberMatchLabel) ;
+					}
 				}
 				$idMembre = ($this->FormulaireDonneesParent->EstNul($this->FormulaireDonneesParent->FiltreIdMembreEnCours)) ? '' : $this->FormulaireDonneesParent->FiltreIdMembreEnCours->ValeurParametre ;
 				$motPasse = ($this->FormulaireDonneesParent->EstNul($this->FormulaireDonneesParent->FiltreMotPasseMembre)) ? '' : $this->FormulaireDonneesParent->FiltreMotPasseMembre->ValeurParametre ;
@@ -597,7 +626,7 @@
 					$idMembre,
 					$this->FormulaireDonneesParent->FiltreLoginMembre->ValeurParametre,
 					$motPasse,
-					$this->FormulaireDonneesParent->FiltreEmailMembre->ValeurParametre
+					($membership->LoginWithEmail == 0) ? $this->FormulaireDonneesParent->FiltreEmailMembre->ValeurParametre : $this->FormulaireDonneesParent->FiltreLoginMembre->ValeurParametre
 				) ;
 				if(count($membreSimilaire) > 0)
 				{
@@ -627,17 +656,19 @@
 				parent::ExecuteInstructions() ;
 				$form = & $this->FormulaireDonneesParent ;
 				$script = & $form->ScriptParent ;
+				$membership = & $script->ZoneParent->Membership ;
 				if($this->StatutExecution == 1 && $script->DoitConfirmMail())
 				{
+					$email = ($membership->LoginWithEmail == 0) ? $form->FiltreEmailMembre->Lie() : $form->FiltreLoginMembre->Lie() ;
 					$params = $form->ExtraitValeursParametre($form->FiltresEdition) ;
 					$params["url"] = $script->ObtientUrlParam(array(
 						"login_confirm" => $form->FiltreLoginMembre->Lie(),
-						"email_confirm" => $form->FiltreEmailMembre->Lie(),
+						"email_confirm" => $email,
 						"code_confirm" => $script->CodeConfirmMail(),
 					)) ;
 					$sujetMail = _parse_pattern($script->SujetMailConfirm, $params) ;
 					$corpsMail = _parse_pattern($script->CorpsMailConfirm, $params) ;
-					send_html_mail($form->FiltreEmailMembre->Lie(), $sujetMail, $corpsMail, $script->EmailEnvoiConfirm) ;
+					send_html_mail($email, $sujetMail, $corpsMail, $script->EmailEnvoiConfirm) ;
 				}
 			}
 		}
@@ -1065,6 +1096,7 @@
 		{
 			public $InclureElementEnCours = 0 ;
 			public $InclureTotalElements = 0 ;
+			public $InscrireCommandeAnnuler = 0 ;
 			public $FiltreLoginMembre = null ;
 			public $FiltreEmailMembre = null ;
 			public $NomClasseCommandeExecuter = "PvCommandeExecuterBase" ;
@@ -1077,20 +1109,25 @@
 				$this->FiltreLoginMembre = $this->ScriptParent->CreeFiltreHttpPost("filtreLoginMembre") ;
 				$this->FiltreLoginMembre->Libelle = $membership->LoginMemberLabel ;
 				$this->FiltreLoginMembre->DeclareComposant("PvZoneTexteHtml") ;
-				$this->FiltresEdition[] = $this->FiltreLoginMembre ;
-				$this->FiltreEmailMembre = $this->ScriptParent->CreeFiltreHttpPost("filtreEmailMembre") ;
-				$this->FiltreEmailMembre->Libelle = $membership->EmailMemberLabel ;
-				$this->FiltreEmailMembre->DeclareComposant("PvZoneTexteHtml") ;
-				$this->FiltresEdition[] = $this->FiltreEmailMembre ;
-				$this->CritereEmail = $this->CommandeExecuter->InsereCritere("PvCritereFormatEmail", array("filtreEmailMembre")) ;
-				$this->ActCmdRecouvreMP = $this->CommandeExecuter->InsereActCmd("PvActCmdRecouvreMPMS", array("filtreLoginMembre", "filtreEmailMembre")) ;
+				$this->FiltresEdition[] = & $this->FiltreLoginMembre ;
+				$nomFltsRecr = array("filtreLoginMembre") ;
+				if($membership->LoginWithEmail == 0)
+				{
+					$this->FiltreEmailMembre = $this->ScriptParent->CreeFiltreHttpPost("filtreEmailMembre") ;
+					$this->FiltreEmailMembre->Libelle = $membership->EmailMemberLabel ;
+					$this->FiltreEmailMembre->DeclareComposant("PvZoneTexteHtml") ;
+					$this->FiltresEdition[] = & $this->FiltreEmailMembre ;
+					$this->CritereEmail = $this->CommandeExecuter->InsereCritere("PvCritereFormatEmail", array("filtreEmailMembre")) ;
+					$nomFltsRecr[] = "filtreEmailMembre" ;
+				}
+				$this->ActCmdRecouvreMP = $this->CommandeExecuter->InsereActCmd("PvActCmdRecouvreMPMS", $nomFltsRecr) ;
 				$this->InitDessinateurFiltresEdition() ;
 				$this->DessinateurFiltresEdition->MaxFiltresParLigne = 1 ;
 			}
 		}
 		class PvActCmdRecouvreMPMS extends PvActCmdBase
 		{
-			public $MessageSuccesEnvoiMail = "Le mot de passe a été envoyé par mail" ;
+			public $MessageSuccesEnvoiMail = "Le mot de passe a &eacute;t&eacute; envoy& par mail" ;
 			public $MessageSuccesAffiche = "Voici votre nouveau mot de passe : " ;
 			public $MessageErreur = "Invalide Nom d'utilisateur / Email" ;
 			public $EnvoiParMail = 0 ;
@@ -1104,8 +1141,14 @@
 				$this->LieFiltresCibles() ;
 				$membership = & $this->FormulaireDonneesParent->ZoneParent->Membership ;
 				$basedonnees = & $membership->Database ;
-				$sql = "select * from ".$membership->MemberTable.' MEMBER_TABLE where '.$basedonnees->EscapeFieldName('MEMBER_TABLE', $membership->LoginMemberColumn).'='.$basedonnees->ParamPrefix.'Login and '.$basedonnees->EscapeFieldName('MEMBER_TABLE', $membership->EmailMemberColumn).'='.$basedonnees->ParamPrefix.'Email' ;
-				$ligneMembre = $basedonnees->FetchSqlRow($sql, array('Login' => $this->FiltresCibles[0]->ValeurParametre, 'Email' => $this->FiltresCibles[1]->ValeurParametre)) ;
+				$sql = "select * from ".$membership->MemberTable.' MEMBER_TABLE where '.$basedonnees->EscapeFieldName('MEMBER_TABLE', $membership->LoginMemberColumn).'='.$basedonnees->ParamPrefix.'Login' ;
+				$params = array('Login' => $this->FiltresCibles[0]->ValeurParametre) ;
+				if($membership->LoginWithEmail == 0)
+				{
+					$sql .= ' and '.$basedonnees->EscapeFieldName('MEMBER_TABLE', $membership->EmailMemberColumn).'='.$basedonnees->ParamPrefix.'Email' ;
+					$params["Email"] = $this->FiltresCibles[1]->ValeurParametre ;
+				}
+				$ligneMembre = $basedonnees->FetchSqlRow($sql, $params) ;
 				if(count($ligneMembre) > 0)
 				{
 					$nouvMotPasse = $this->GenereNouvMotPasse() ;
@@ -1264,6 +1307,7 @@
 		
 		class PvRemplisseurConfigMembershipSimple
 		{
+			public $ConfirmMotPasseMembre = 0 ;
 			public $NomClasseLienModifTableauMembre = "PvConfigFormatteurColonneLien" ;
 			public $NomClasseLienChangeMPTableauMembre = "PvConfigFormatteurColonneLien" ;
 			public $NomClasseLienSupprTableauMembre = "PvConfigFormatteurColonneLien" ;
@@ -1421,7 +1465,7 @@
 				$form->FiltresEdition[$i]->NomColonneLiee = $membership->LoginMemberColumn ;
 				$form->FiltresEdition[$i]->NomParametreDonnees = $membership->LoginMemberColumn ;
 				$form->FiltresEdition[$i]->DeclareComposant("PvZoneTexteHtml") ;
-				$form->FiltresEdition[$i]->Libelle = $membership->LoginMemberLabel ;
+				$form->FiltresEdition[$i]->Libelle = ($membership->LoginWithEmail == 0) ? $membership->LoginMemberLabel : $membership->EmailMemberLabel ;
 				$form->FiltreLoginMembre = & $form->FiltresEdition[$i] ;
 				if(! $form->InclureElementEnCours)
 				{
@@ -1436,6 +1480,14 @@
 						$form->FiltresEdition[$i]->ExpressionColonneLiee = $membership->PasswordMemberExpr.'('.$membership->Database->ExprParamPattern.')' ;
 					}
 					$form->FiltreMotPasseMembre = & $form->FiltresEdition[$i] ;
+					if($membership->ConfirmSetPasswordEnabled == 1)
+					{
+						$i++ ;
+						$form->FiltreConfirmMotPasseMembre = $form->ScriptParent->CreeFiltreHttpPost("filtreConfirmMotPasseMembre") ;
+						$form->FiltreConfirmMotPasseMembre->Libelle = $membership->ConfirmPasswordMemberLabel ;
+						$form->FiltreConfirmMotPasseMembre->DeclareComposant("PvZoneMotPasseHtml") ;
+						$form->FiltresEdition[$i] = & $form->FiltreConfirmMotPasseMembre ;
+					}
 					if($membership->MustChangePasswordMemberColumn != '')
 					{
 						$i++ ;
@@ -1463,15 +1515,18 @@
 					$form->FiltresEdition[$i]->Libelle = $membership->LastNameMemberLabel ;
 					$form->FiltrePrenomMembre = & $form->FiltresEdition[$i] ;
 				}
-				if($membership->EmailMemberColumn != "")
+				if($membership->LoginWithEmail == 0)
 				{
-					$i++ ;
-					$form->FiltresEdition[$i] = $form->ScriptParent->CreeFiltreHttpPost("filtreEmailMembre") ;
-					$form->FiltresEdition[$i]->DeclareComposant("PvZoneTexteHtml") ;
-					$form->FiltresEdition[$i]->NomColonneLiee = $membership->EmailMemberColumn ;
-					$form->FiltresEdition[$i]->NomParametreDonnees = $membership->EmailMemberColumn ;
-					$form->FiltresEdition[$i]->Libelle = $membership->EmailMemberLabel ;
-					$form->FiltreEmailMembre = & $form->FiltresEdition[$i] ;
+					if($membership->EmailMemberColumn != "")
+					{
+						$i++ ;
+						$form->FiltresEdition[$i] = $form->ScriptParent->CreeFiltreHttpPost("filtreEmailMembre") ;
+						$form->FiltresEdition[$i]->DeclareComposant("PvZoneTexteHtml") ;
+						$form->FiltresEdition[$i]->NomColonneLiee = $membership->EmailMemberColumn ;
+						$form->FiltresEdition[$i]->NomParametreDonnees = $membership->EmailMemberColumn ;
+						$form->FiltresEdition[$i]->Libelle = $membership->EmailMemberLabel ;
+						$form->FiltreEmailMembre = & $form->FiltresEdition[$i] ;
+					}
 				}
 				if($membership->AddressMemberColumn != "")
 				{
@@ -1745,11 +1800,14 @@
 				$table->DefinitionsColonnes[$i]->Libelle = $membership->LastNameMemberLabel ;
 				$table->DefinitionColonnePrenom = & $table->DefinitionsColonnes[$i] ;
 				
-				$i++ ;
-				$table->DefinitionsColonnes[$i] = new PvDefinitionColonneDonnees() ;
-				$table->DefinitionsColonnes[$i]->NomDonnees = 'MEMBER_EMAIL' ;
-				$table->DefinitionsColonnes[$i]->Libelle = $membership->EmailMemberLabel ;
-				$table->DefinitionColonneEmail = & $table->DefinitionsColonnes[$i] ;
+				if($membership->LoginWithEmail == 0)
+				{
+					$i++ ;
+					$table->DefinitionsColonnes[$i] = new PvDefinitionColonneDonnees() ;
+					$table->DefinitionsColonnes[$i]->NomDonnees = 'MEMBER_EMAIL' ;
+					$table->DefinitionsColonnes[$i]->Libelle = $membership->EmailMemberLabel ;
+					$table->DefinitionColonneEmail = & $table->DefinitionsColonnes[$i] ;
+				}
 				
 				$table->DefinitionColonneProfil = $table->InsereDefCol("PROFILE_TITLE", $membership->ProfileMemberLabel) ;
 				$table->DefinitionColonneEnable = $table->InsereDefColBool("MEMBER_ENABLE", $membership->EnableMemberLabel) ;

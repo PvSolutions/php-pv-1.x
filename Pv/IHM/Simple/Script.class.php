@@ -18,6 +18,7 @@
 		
 		class PvScriptWebSimple extends PvScriptIHMDeBase
 		{
+			public $EstScriptSession = 0 ;
 			public $Titre ;
 			public $NomDocumentWeb ;
 			public $TitreDocument ;
@@ -424,7 +425,7 @@
 			public $UrlConnexionEchouee = "" ;
 			public $NomScriptConnexionReussie = "accueil" ;
 			public $NomScriptConnexionEchouee = "" ;
-			public $MessageConnexionReussie = 'Bienvenue, ${PSEUDO}. Vous vous êtes connecté avec succès' ;
+			public $MessageConnexionReussie = 'Bienvenue, ${PSEUDO}. Vous vous &ecirc;tes connect&eacute; avec succ&egrave;s' ;
 			public $IdMembre = -1 ;
 			public $NecessiteMembreConnecte = 0 ;
 			public $AfficherBoutonSoumettre = 1 ;
@@ -469,19 +470,7 @@
 				if($this->TentativeConnexionValidee == 1)
 				{
 					$this->ZoneParent->Membership->LogonMember($this->IdMembre) ;
-					$url = '' ;
-					if($this->NomScriptConnexionReussie != '' && isset($this->ZoneParent->Scripts[$this->NomScriptConnexionReussie]))
-					{
-						$url = $this->ZoneParent->Scripts[$this->NomScriptConnexionReussie]->ObtientUrl() ;
-					}
-					elseif($this->UrlConnexionReussie != '')
-					{
-						$url = $this->UrlConnexionReussie ;
-					}
-					if($url != '')
-					{
-						redirect_to($url) ;
-					}
+					$this->RedirigeConnexionReussie() ;
 				}
 				else
 				{
@@ -544,6 +533,27 @@
 						$this->MessageConnexionEchouee = $this->MessageErreurValidation ;
 					}
 				}
+			}
+			protected function RedirigeConnexionReussie()
+			{
+				$url = $this->ExtraitUrlConnexionReussie() ;
+				if($url != '')
+				{
+					redirect_to($url) ;
+				}
+			}
+			protected function ExtraitUrlConnexionReussie()
+			{
+				$url = '' ;
+				if($this->NomScriptConnexionReussie != '' && isset($this->ZoneParent->Scripts[$this->NomScriptConnexionReussie]))
+				{
+					$url = $this->ZoneParent->Scripts[$this->NomScriptConnexionReussie]->ObtientUrl() ;
+				}
+				elseif($this->UrlConnexionReussie != '')
+				{
+					$url = $this->UrlConnexionReussie ;
+				}
+				return $url ;
 			}
 			protected function RenduDispositifBrut()
 			{
@@ -620,6 +630,7 @@
 			public $UrlDeconnexionReussie = "" ;
 			public $NomScriptDeconnexionReussie = "" ;
 			public $MessageDeconnexionReussie = "Vous avez &eacute;t&eacute; d&eacute;connect&eacute; avec succ&egrave;s." ;
+			public $NecessiteMembreConnecte = 1 ;
 			public $MessageRetourAccueil = "Retour &agrave; la page d'accueil" ;
 			public function DetermineEnvironnement()
 			{
@@ -684,6 +695,12 @@
 <p>Veuillez cliquer sur ce lien pour confirmer votre inscription.</p>
 <p><a href="${url}">${url}</a></p>
 Cordialement' ;
+			public $EnvoiMailSuccesConfirm = 0 ;
+			public $SujetMailSuccesConfirm = 'Compte ${login_member} confirme' ;
+			public $CorpsMailSuccesConfirm = '<p>Bonjour ${login_member},</p>
+<p>Veuillez cliquer sur ce lien pour confirmer votre inscription.</p>
+<p><a href="${url}">${url}</a></p>
+Cordialement' ;
 			protected $NomColConfirmMail = "enable_confirm_mail" ;
 			protected $NomColCodeConfirmMail = "code_confirm_mail" ;
 			protected $_FltConfirmMail ;
@@ -692,12 +709,14 @@ Cordialement' ;
 			protected $NomParamCodeConfirm = "code_confirm" ;
 			protected $NomParamEmailConfirm = "email_confirm" ;
 			protected $DemandeConfirmMail = -1 ;
+			protected $MailSuccesConfirmEnvoye = false ;
 			protected $LgnMembreConfirm = null ;
 			public $Detaille = 1 ;
 			protected $ValeurDefautNomMembre = "Utilisateur" ;
 			protected $ValeurDefautPrenomMembre = "Sans nom" ;
 			protected $ValeurDefautAdresseMembre = "" ;
 			protected $ValeurDefautContactMembre = "" ;
+			protected $ConfirmMailSoumis = 0 ;
 			public function DetermineEnvironnement()
 			{
 				parent::DetermineEnvironnement() ;
@@ -709,17 +728,20 @@ Cordialement' ;
 				{
 					return ;
 				}
+				$this->ConfirmMailSoumis = 1 ;
 				$login = $_GET[$this->NomParamLoginConfirm] ;
 				$code = $_GET[$this->NomParamCodeConfirm] ;
 				$email = $_GET[$this->NomParamEmailConfirm] ;
 				$membership = & $this->ZoneParent->Membership ;
 				$bd = $membership->Database ;
-				$sql = 'select * from '.$bd->EscapeTableName($membership->MemberTable).' where '.$bd->EscapeFieldName($membership->MemberTable, $membership->LoginMemberColumn).' = :login and '.$bd->EscapeFieldName($membership->MemberTable, $membership->EmailMemberColumn).'= :email and '.$bd->EscapeFieldName($membership->MemberTable, $this->NomColCodeConfirmMail).'= :code and '.$bd->EscapeFieldName($membership->MemberTable, $this->NomColConfirmMail).'=1' ;
+				$nomColEmail = ($membership->LoginWithEmail == 0) ? $membership->EmailMemberColumn : $membership->LoginMemberColumn ;
+				$sql = 'select * from '.$bd->EscapeTableName($membership->MemberTable).' where '.$bd->EscapeFieldName($membership->MemberTable, $membership->LoginMemberColumn).' = :login and '.$bd->EscapeFieldName($membership->MemberTable, $nomColEmail).'= :email and '.$bd->EscapeFieldName($membership->MemberTable, $this->NomColCodeConfirmMail).'= :code and '.$bd->EscapeFieldName($membership->MemberTable, $this->NomColConfirmMail).'=1' ;
 				$lgn = $bd->FetchSqlRow($sql, array("login" => $login, "email" => $email, "code" => $code)) ;
 				if(is_array($lgn) && count($lgn) > 0)
 				{
 					$this->LgnMembreConfirm = $lgn ;
 					$this->LgnMembreConfirm["login_member"] = $lgn[$membership->LoginMemberColumn] ;
+					$email = ($membership->LoginWithEmail == 0) ? $this->LgnMembreConfirm[$membership->EmailMemberColumn] : $this->LgnMembreConfirm[$membership->LoginMemberColumn] ;
 					$ok = $bd->UpdateRow(
 						$membership->MemberTable,
 						array(
@@ -733,11 +755,21 @@ Cordialement' ;
 					if($ok)
 					{
 						$this->DemandeConfirmMail = 1 ;
+						if($this->EnvoiMailSuccesConfirm)
+						{
+							$sujetMail = _parse_pattern($this->SujetMailSuccesConfirm, $this->LgnMembreConfirm) ;
+							$corpsMail = _parse_pattern($this->CorpsMailSuccesConfirm, $this->LgnMembreConfirm) ;
+							$this->MailSuccesConfirmEnvoye = send_html_mail($email, $sujetMail, $corpsMail, $this->EmailEnvoiConfirm) ;
+						}
 					}
 					else
 					{
 						$this->DemandeConfirmMail = 0 ;
 					}
+				}
+				else
+				{
+					$this->DemandeConfirmMail = 0 ;
 				}
 			}
 			protected function ChargeConfigComposantFormulaireDonnees()
@@ -776,13 +808,18 @@ Cordialement' ;
 				}
 				if($this->Detaille == 0)
 				{
+					$nomFltsOblig = array("filtreLoginMembre", "filtreMotPasseMembre", "filtreEmailMembre", "filtreProfilMembre") ;
+					if($membership->ConfirmSetPasswordEnabled == 1)
+					{
+						$nomFltsOblig[] = "filtreConfirmMotPasseMembre" ;
+					}
 					foreach($form->FiltresEdition as $i => & $flt)
 					{
 						if($flt->TypeLiaisonParametre != "get" && $flt->TypeLiaisonParametre != "post")
 						{
 							continue ;
 						}
-						if(! in_array($flt->NomParametreLie, array("filtreLoginMembre", "filtreMotPasseMembre", "filtreEmailMembre", "filtreProfilMembre")))
+						if(! in_array($flt->NomParametreLie, $nomFltsOblig))
 						{
 							$flt->Invisible = 1 ;
 						}
@@ -1050,6 +1087,19 @@ Cordialement' ;
 				$script->ComposantFormulaireDonnees->FiltresLigneSelection[$i] = $script->CreeFiltreMembreConnecte($membership->IdMemberColumn) ;
 				$script->ComposantFormulaireDonnees->FiltresLigneSelection[$i]->ExpressionDonnees = $membership->Database->EscapeFieldName($membership->MemberTable, $membership->IdMemberColumn).' = <self>' ;
 				PvFournisseurComposantIUMS::RemplitFiltreEditionMembre($script) ;
+			}
+		}
+		
+		class PvScriptConsoleSimple extends PvScriptIHMDeBase
+		{
+			public function RenduDispositif()
+			{
+				return $this->RenduDispositifBrut() ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				return $ctn ;
 			}
 		}
 	}
