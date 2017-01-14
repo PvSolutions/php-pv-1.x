@@ -93,6 +93,7 @@
 			public $SurvolerLigneFocus = 1 ;
 			public $ExtraireValeursElements = 1 ;
 			public $NavigateurRangees = null ;
+			public $SourceValeursSuppl ;
 			public function InscritExtractValsIndex(& $extractVals, $indexCol)
 			{
 				if(! isset($this->DefinitionsColonnes[$indexCol]))
@@ -399,6 +400,13 @@
 				$defCol->Formatteur = new PvFormatteurColonneMonnaie() ;
 				return $defCol ;
 			}
+			public function & InsereDefColDateFr($nomDonnees, $libelle="", $inclureHeure=0)
+			{
+				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
+				$defCol->Formatteur = new PvFormatteurColonneDateFr() ;
+				$defCol->Formatteur->InclureHeure = $inclureHeure ;
+				return $defCol ;
+			}
 			public function & InsereDefColHtml($modeleHtml="", $libelle="")
 			{
 				$defCol = $this->InsereDefCol("", $libelle, "") ;
@@ -650,6 +658,7 @@
 					{
 						$this->IndiceDebut = intval($this->IndiceDebut / $this->MaxElements) * $this->MaxElements ;
 						$this->ElementsEnCoursBruts = $this->FournisseurDonnees->RangeeElements($defCols, $this->FiltresSelection, $this->IndiceDebut, $this->MaxElements, $this->IndiceColonneTri, $this->SensColonneTri) ;
+						// echo "Sql : ".$this->FournisseurDonnees->BaseDonnees->LastSqlText ;
 						if($this->FournisseurDonnees->ExceptionTrouvee())
 						{
 							$this->TotalElements = 0 ;
@@ -779,6 +788,7 @@
 				url += encodeURIComponent(nom) + "=" + encodeURIComponent(parametresGet[nom]) ;
 			}
 			formulaire.action = url ;
+			// alert(url) ;
 			formulaire.submit() ;
 		}
 	}
@@ -1341,37 +1351,12 @@
 				return $ctn ;
 			}
 		}
-		class PvSrcValsSupplGrilleDonnees
+		class PvSrcValsSupplGrilleDonnees extends PvSrcValsSupplLgnDonnees
 		{
 			public $InclureHtml = 1 ;
 			public $SuffixeHtml = "_html" ;
 			public $InclureUrl = 1 ;
 			public $SuffixeUrl = "_query_string" ;
-			public $LignesDonneesBrutes = null ;
-			public function Applique(& $composant, $ligneDonnees)
-			{
-				$this->LigneDonneesBrutes = $ligneDonnees ;
-				// print_r($ligneDonneesBrutes) ;
-				if($this->InclureHtml)
-				{
-					$ligneDonnees = array_merge(
-						$ligneDonnees,
-						array_apply_suffix(array_map('htmlentities', $this->LigneDonneesBrutes), $this->SuffixeHtml)
-					) ;
-				}
-				if($this->InclureUrl)
-				{
-					$ligneDonnees = array_merge(
-						$ligneDonnees,
-						array_apply_suffix(
-							array_map(
-								'urlencode',$this->LigneDonneesBrutes
-							), $this->SuffixeUrl
-						)
-					) ;
-				}
-				return $ligneDonnees ;
-			}
 		}
 		
 		class PvNavTableauDonneesHtml extends PvNavigateurRangeesDonneesBase

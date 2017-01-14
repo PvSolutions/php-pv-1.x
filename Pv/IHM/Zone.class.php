@@ -122,6 +122,7 @@
 			public $ScriptNonTrouve = null ;
 			public $Membership = null ;
 			public $NomClasseMembership = null ;
+			protected $NomScriptsEditMembership = array() ;
 			public $InclureScriptsMembership = 0 ;
 			public $PrivilegesEditMembership = array() ;
 			public $NomClasseScriptDeconnexion = "" ;
@@ -204,6 +205,10 @@
 			public $RemplisseurConfigMembership = null ;
 			public $MessageScriptMalRefere = "<p>Ce script n'est pas bien refere. Il ne peut etre affiche.</p>" ;
 			public $AnnulDetectMemberCnx = 0 ;
+			public function NatureZone()
+			{
+				return "base" ;
+			}
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -374,6 +379,7 @@
 					$this->ScriptAjoutMembre = new $nomClasse() ;
 					$this->ScriptAjoutMembre->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptAjoutMembre, $this->ScriptAjoutMembre) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptAjoutMembre ;
 				}
 				if(class_exists($this->NomClasseScriptModifMembre))
 				{
@@ -381,6 +387,7 @@
 					$this->ScriptModifMembre = new $nomClasse() ;
 					$this->ScriptModifMembre->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptModifMembre, $this->ScriptModifMembre) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptModifMembre ;
 				}
 				if($this->AutoriserModifPrefs && class_exists($this->NomClasseScriptModifPrefs))
 				{
@@ -394,6 +401,7 @@
 					$this->ScriptSupprMembre = new $nomClasse() ;
 					$this->ScriptSupprMembre->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptSupprMembre, $this->ScriptSupprMembre) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptSupprMembre ;
 				}
 				if(class_exists($this->NomClasseScriptListeMembres))
 				{
@@ -401,6 +409,7 @@
 					$this->ScriptListeMembres = new $nomClasse() ;
 					$this->ScriptListeMembres->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptListeMembres, $this->ScriptListeMembres) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptListeMembres ;
 				}
 				if(class_exists($this->NomClasseScriptAjoutProfil))
 				{
@@ -408,6 +417,7 @@
 					$this->ScriptAjoutProfil = new $nomClasse() ;
 					$this->ScriptAjoutProfil->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptAjoutProfil, $this->ScriptAjoutProfil) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptAjoutProfil ;
 				}
 				if(class_exists($this->NomClasseScriptModifProfil))
 				{
@@ -415,6 +425,7 @@
 					$this->ScriptModifProfil = new $nomClasse() ;
 					$this->ScriptModifProfil->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptModifProfil, $this->ScriptModifProfil) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptModifProfil ;
 				}
 				if(class_exists($this->NomClasseScriptSupprProfil))
 				{
@@ -422,6 +433,7 @@
 					$this->ScriptSupprProfil = new $nomClasse() ;
 					$this->ScriptSupprProfil->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptSupprProfil, $this->ScriptSupprProfil) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptSupprProfil ;
 				}
 				if(class_exists($this->NomClasseScriptListeProfils))
 				{
@@ -429,6 +441,7 @@
 					$this->ScriptListeProfils = new $nomClasse() ;
 					$this->ScriptListeProfils->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptListeProfils, $this->ScriptListeProfils) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptListeProfils ;
 				}
 				if(class_exists($this->NomClasseScriptAjoutRole))
 				{
@@ -436,6 +449,7 @@
 					$this->ScriptAjoutRole = new $nomClasse() ;
 					$this->ScriptAjoutRole->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptAjoutRole, $this->ScriptAjoutRole) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptAjoutRole ;
 				}
 				if(class_exists($this->NomClasseScriptModifRole))
 				{
@@ -443,6 +457,7 @@
 					$this->ScriptModifRole = new $nomClasse() ;
 					$this->ScriptModifRole->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptModifRole, $this->ScriptModifRole) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptModifRole ;
 				}
 				if(class_exists($this->NomClasseScriptSupprRole))
 				{
@@ -450,6 +465,7 @@
 					$this->ScriptSupprRole = new $nomClasse() ;
 					$this->ScriptSupprRole->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptSupprRole, $this->ScriptSupprRole) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptSupprRole ;
 				}
 				if(class_exists($this->NomClasseScriptListeRoles))
 				{
@@ -457,6 +473,7 @@
 					$this->ScriptListeRoles = new $nomClasse() ;
 					$this->ScriptListeRoles->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptListeRoles, $this->ScriptListeRoles) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptListeRoles ;
 				}
 			}
 			public function ChargeConfig()
@@ -702,6 +719,10 @@
 				}
 				return 0 ;
 			}
+			public function EstSuperAdminConnecte()
+			{
+				return $this->MembreSuperAdminConnecte() ;
+			}
 			public function MembreSuperAdminConnecte()
 			{
 				if(! $this->PossedeMembreConnecte())
@@ -753,15 +774,15 @@
 				}
 				return $ok ;
 			}
-			public function PossedePrivilege($nomRole)
+			public function PossedePrivilege($nomRole, $strict=0)
 			{
-				return $this->PossedePrivileges(array($nomRole)) ;
+				return $this->PossedePrivileges(array($nomRole), $strict) ;
 			}
-			public function PossedePrivileges($privileges=array())
+			public function PossedePrivileges($privileges=array(), $strict=0)
 			{
 				$ok = 0 ;
 				$privilegesSpec = $privileges ;
-				if(count($this->PrivilegesPassePartout) > 0)
+				if($strict == 0 && count($this->PrivilegesPassePartout) > 0)
 					array_splice($privileges, 0, 0, $this->PrivilegesPassePartout) ;
 				if($this->PossedeMembreConnecte() == 0)
 				{
@@ -790,7 +811,8 @@
 			}
 			public function DoitChangerMotPasse(& $script)
 			{
-				if($this->PossedeMembreConnecte() == 0 || ! $script->EstAccessible())
+				// if($this->PossedeMembreConnecte() == 0 || ! $script->EstAccessible())
+				if($this->PossedeMembreConnecte() == 0)
 				{
 					return 0 ;
 				}
@@ -873,6 +895,10 @@
 			public $PrefixeNomFichier = "" ;
 			public $SuffixeNomFichier = "" ;
 			public $BaliseContenuScript = "[main_content]" ;
+			public function NatureZone()
+			{
+				return "inclusions" ;
+			}
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -960,6 +986,10 @@
 			public $NomParamTraducteur = "traducteur" ;
 			public $ReglesHtmlSur = array() ;
 			protected $PourImpression = 0 ;
+			public function NatureZone()
+			{
+				return "web" ;
+			}
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -1070,6 +1100,10 @@
 		class PvZoneConsole extends PvZoneIHMDeBase
 		{
 			protected $ArgsExecution = array() ;
+			public function NatureZone()
+			{
+				return "console" ;
+			}
 			public function Execute()
 			{
 				$this->DetecteArgsExecution() ;

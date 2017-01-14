@@ -256,6 +256,7 @@
 			public $LibelleCoteSrv = "Chemin sur le serveur" ;
 			public $InclureApercu = 1 ;
 			public $LibelleApercu = "Aper&ccedil;u" ;
+			public $CibleApercu = "_blank" ;
 			protected function RenduDispositifBrut()
 			{
 				$this->CorrigeIDsElementHtml() ;
@@ -318,9 +319,13 @@
 				{
 					if($this->InclureCheminCoteServeur)
 						$ctn .= '&nbsp;&nbsp;' ;
-					$ctn .= '<a href="'.htmlentities($this->Valeur).'" target="_blank">'.$this->LibelleApercu.'</a>' ;
+					$ctn .= '<a href="'.htmlentities($this->Valeur).'" target="'.$this->CibleApercu.'">'.$this->LibelleApercu.'</a>' ;
 				}
 				return $ctn ;
+			}
+			public function RenduEtiquette()
+			{
+				return '<a href="'.htmlspecialchars($this->Valeur).'" target="'.$this->CibleApercu.'">'.$this->EncodeEtiquette($this->Valeur).'</a>' ;
 			}
 		}
 		class PvZoneCocherHtml extends PvElementFormulaireHtml
@@ -333,6 +338,7 @@
 			}
 			public function RenduOption()
 			{
+				$this->CorrigeIDsElementHtml() ;
 				$ctn = '' ;
 				$ctn .= '<input name="'.$this->NomElementHtml.'"' ;
 				$ctn .= ' id="'.$this->IDInstanceCalc.'"' ;
@@ -682,6 +688,7 @@
 				}
 				$this->FermeRequeteSupport() ;
 				$ctn .= '</table>' ;
+				$ctn .= '<input type="hidden" name="'.$this->NomElementHtml.'" id="'.$this->IDInstanceCalc.'" value="'.htmlentities($this->Valeur).'" />' ;
 				// print_r($this->FournisseurDonnees->BaseDonnees) ;
 				return $ctn ;
 			}
@@ -720,12 +727,13 @@
 				}
 				$ctn = '' ;
 				$nomElementHtml = $this->NomElementHtml ;
-				$ctn .= '<input type="radio" name="'.$nomElementHtml.'" id="'.$this->IDInstanceCalc.'_'.$position.'"' ;
+				$ctn .= '<input type="radio" id="'.$this->IDInstanceCalc.'_'.$position.'"' ;
 				$ctn .= ' value="'.htmlentities($valeur).'"' ;
 				if($this->EstValeurSelectionnee($valeur) || $forcerSelection)
 				{
 					$ctn .= ' checked' ;
 				}
+				$ctn .= ' onclick="document.getElementById(&quot;'.$this->IDInstanceCalc.'&quot;).value = this.value;"' ;
 				$ctn .= ' />' ;
 				return $ctn ;
 			}

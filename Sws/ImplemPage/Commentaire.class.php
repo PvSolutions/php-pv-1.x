@@ -378,15 +378,6 @@
 			{
 				return new TableauDonneesAdminSws() ;
 			}
-			public function RenduSpecifique()
-			{
-				$ctn = '' ;
-				// $ctn .= '<p>mmmm</p>' ;
-				$ctn .= $this->RenduEnteteAdmin() ;
-				$ctn .= $this->TablListeCmt->RenduDispositif() ;
-				$ctn .= $this->RenduPiedAdmin() ;
-				return $ctn ;
-			}
 		}
 		class ScriptPublieMsgCmtSws extends ScriptAdminImplemBaseSws
 		{
@@ -448,12 +439,10 @@
 			{
 				$implem = $this->ObtientImplemPage() ;
 				$ctn = '' ;
-				$ctn .= $this->RenduEnteteAdmin() ;
 				$ctn .= '<div class="ui-widget ui-widget-content">'.PHP_EOL ;
 				$ctn .= '<p>'.$this->MsgResultat.'</p>'.PHP_EOL ;
 				$ctn .= '<p><a href="'.$implem->ScriptListeCmt->ObtientUrl().'">'.$this->LibRetourListeCmt.'</a></p>'.PHP_EOL ;
 				$ctn .= '</div>' ;
-				$ctn .= $this->RenduPiedAdmin() ;
 				return $ctn ;
 			}
 		}

@@ -67,6 +67,7 @@
 			public $CacherFormulaireFiltres = 0 ;
 			public $CacherFormulaireFiltresApresCmd = 0 ;
 			public $MaxFiltresEditionParLigne = 0 ;
+			public $InclureRenduLibelleFiltresEdition = 1 ;
 			public $CommandeSelectionneeExec = 0 ;
 			public $MsgExecSuccesCommandeExecuter = "" ;
 			public $MsgExecEchecCommandeExecuter = "" ;
@@ -77,6 +78,9 @@
 			public $ActCmdsCommandeAnnuler = array() ;
 			public $CriteresCommandeAnnuler = array() ;
 			public $PopupMessageExecution = 0 ;
+			public $CacherMessageExecution = 0 ;
+			public $ElementsEnCoursEditables = 0 ;
+			public $TotalElementsEditables = 1 ;
 			public function & InsereFltEditRef($nom, & $filtreRef, $colLiee='', $nomComp='')
 			{
 				$flt = $this->CreeFiltreRef($nom, $filtreRef) ;
@@ -518,7 +522,7 @@
 				$this->DetecteCommandeSelectionnee() ;
 				$this->CommandeSelectionnee = null ;
 				$this->CommandeSelectionneeExec = 0 ;
-				if($this->ValeurParamIdCommande != "")
+				if($this->ValeurParamIdCommande != "" && isset($this->Commandes[$this->ValeurParamIdCommande]))
 				{
 					$this->CommandeSelectionnee = $this->Commandes[$this->ValeurParamIdCommande] ;
 				}
@@ -714,12 +718,12 @@
 						$ctn .= '>'.PHP_EOL ;
 						$ctn .= '<tr>'.PHP_EOL ;
 						$ctn .= '<td>'.PHP_EOL ;
-						$ctn .= $this->DessinateurFiltresEdition->Execute($this->ScriptParent, $this, $this->FiltresEdition) ;
+						$ctn .= $this->RenduFormulaireFiltreElemEnCours() ;
 						$ctn .= '</td>'.PHP_EOL ;
 						$ctn .= '</tr>'.PHP_EOL ;
 						$ctn .= '</table>'.PHP_EOL ;
-						$ctn .= $this->DeclarationSoumetFormulaireFiltres($this->FiltresEdition).PHP_EOL ;
 						$ctn .= '</div>' ;
+						$ctn .= $this->DeclarationSoumetFormulaireFiltres($this->FiltresEdition).PHP_EOL ;
 					}
 					else
 					{
@@ -731,6 +735,12 @@
 						$ctn .= $this->MessageAucunElement ;
 					}
 				}
+				return $ctn ;
+			}
+			protected function RenduFormulaireFiltreElemEnCours()
+			{
+				$ctn = '' ;
+				$ctn .= $this->DessinateurFiltresEdition->Execute($this->ScriptParent, $this, $this->FiltresEdition) ;
 				return $ctn ;
 			}
 			protected function RenduBlocCommandes()
@@ -759,7 +769,7 @@
 			protected function RenduResultatCommandeExecutee()
 			{
 				$ctn = '' ;
-				if($this->EstNul($this->CommandeSelectionnee))
+				if($this->EstNul($this->CommandeSelectionnee) || $this->CacherMessageExecution == 1)
 				{
 					return $ctn ;
 				}
@@ -813,6 +823,11 @@
 					return ;
 				}
 				$this->ChargeCommandeExecuter() ;
+			}
+			public function & InsereCommande($nomCommande, $commande)
+			{
+				$this->InscritCommande($nomCommande, $commande) ;
+				return $commande ;
 			}
 			public function InscritCommande($nomCommande, & $commande)
 			{
@@ -909,6 +924,7 @@
 				{
 					$this->DessinateurFiltresEdition->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
 				}
+				$this->DessinateurFiltresEdition->InclureRenduLibelle = $this->InclureRenduLibelleFiltresEdition ;
 			}
 			public function NotifieParMail($de, $a, $cc='', $cci='')
 			{

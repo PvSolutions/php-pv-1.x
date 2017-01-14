@@ -83,6 +83,7 @@
 			public $FltTblListTitre ;
 			public $LibTblListTitre = "Titre" ;
 			public $NomParamTblListTitre = "pTitre" ;
+			protected $PresentDansFluxRSS = 0 ;
 			public function SqlListeColsSelect(& $bd)
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;
@@ -209,6 +210,7 @@
 			public $FltFrmElemTitre ;
 			public $DefColTblListTitre ;
 			public $FltTblListTitre ;
+			protected $PresentDansFluxRSS = 0 ;
 			public $LibTblListTitre = "Titre" ;
 			public $LibTotalMenus = "Total menus" ;
 			public $NomParamTblListTitre = "pTitre" ;

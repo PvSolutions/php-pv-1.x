@@ -83,6 +83,7 @@
 			public $NomParamTblListContenu = "pContenu" ;
 			public $NomParamTblListForm = "pIdForm" ;
 			public $HauteurMaxLogoContact = 60 ;
+			protected $PresentDansFluxRSS = 0 ;
 			protected function CreeScriptPoster()
 			{
 				return new ScriptPosterContactSws() ;
@@ -337,6 +338,9 @@
 			public $FltFrmElemActiverEnvoiMail ;
 			public $FltFrmElemEmailsContact ;
 			public $LibActiverEnvoi = "Envoyer par mail" ;
+			protected $PresentDansFluxRSS = 0 ;
+			protected $InclureScriptConsultPlanSite = 1 ;
+			protected $NomColTitreConsultPlanSite = "titre" ;
 			public function SqlListeColsSelect(& $bd)
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;
@@ -388,6 +392,17 @@
 				$this->DefColTblListTitre->Largeur = "50%" ;
 				$this->FltTblListTitre = $tbl->InsereFltSelectHttpGet($this->NomParamTblListTitre, $bd->SqlIndexOf('UPPER('.$bd->EscapeVariableName($this->NomColTitre).')', 'UPPER(<self>)').' > 0') ;
 				$this->FltTblListTitre->Libelle = $this->LibTitre ;
+			}
+			public function RemplitMenuPlanSite(& $menu)
+			{
+				$this->MenuScriptEnumPlanSite = & $menu ;
+				$bd = $this->ObtientBDSupport() ;
+				$lgns = $bd->FetchSqlRows($this->SqlConsultPlanSite()) ;
+				$entiteMsg = & $this->ModuleParent->EntiteMsg ;
+				foreach($lgns as $i => $lgn)
+				{
+					$sousMenu = $this->MenuScriptEnumPlanSite->InscritSousMenuUrl($lgn["titre"], $entiteMsg->ScriptPoster->ObtientUrlParam(array($entiteMsg->NomParamIdForm => $lgn["id"]))) ;
+				}
 			}
 		}
 		

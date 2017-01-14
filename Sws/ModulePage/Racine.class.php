@@ -16,8 +16,12 @@
 		{
 			public $NomRef = "racine" ;
 			public $TitreMenu = "Accueil" ;
+			public $NomScriptRecherche = "recherche" ;
+			public $NomScriptPlanSite = "plan_site" ;
 			public $ScriptAccueil ;
+			public $InclurePlanSite = 1 ;
 			public $FournitFluxRSS = 1 ;
+			protected $PresentDansFluxRSS = 0 ;
 			protected function CreeActionFluxRSS()
 			{
 				return new ActionFluxRSSRacineSws() ;
@@ -26,6 +30,14 @@
 			{
 				return new ScriptAccueilBaseSws() ;
 			}
+			protected function CreeScriptPlanSite()
+			{
+				return new ScriptPlanSiteBaseSws() ;
+			}
+			protected function CreeScriptRecherche()
+			{
+				return new ScriptRechercheBaseSws() ;
+			}
 			protected function CreeScriptAccueilAdmin()
 			{
 				return new ScriptAccueilAdminBaseSws() ;
@@ -33,6 +45,17 @@
 			public function RemplitZonePublValide(& $zone)
 			{
 				$this->ScriptAccueil = $this->InsereScript($zone->NomScriptParDefaut, $this->CreeScriptAccueil(), $zone) ;
+				/*
+				if($this->InclureRecherche == 1)
+				{
+					$this->ScriptRecherche = $this->InsereScript($this->NomScriptPlanSite, $this->CreeScriptPlanSite(), $zone) ;
+				}
+				*/
+				if($this->InclurePlanSite == 1)
+				{
+					$this->ScriptPlanSite = $this->InsereScript($this->NomScriptPlanSite, $this->CreeScriptPlanSite(), $zone) ;
+					// echo "hds : ".$this->ScriptPlanSite->NomElementZone ;
+				}
 			}
 			public function RemplitZoneAdminValide(& $zone)
 			{
@@ -45,6 +68,56 @@
 			protected function RenduDispositifBrut()
 			{
 				return "Bienvenue sur le site web !!!" ;
+			}
+		}
+		class ScriptRechercheBaseSws extends ScriptBaseSws
+		{
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+			}
+			protected function DetermineTablRes()
+			{
+			}
+		}
+		class ScriptPlanSiteBaseSws extends ScriptBaseSws
+		{
+			protected $BarrePlanSite ;
+			public $Titre = "Plan du site" ;
+			public $TitreDocument = "Plan du site" ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$this->DetermineBarrePlanSite() ;
+			}
+			protected function CreeBarrePlanSite()
+			{
+				return new PvBarreMenuWebBase() ;
+			}
+			protected function DetermineBarrePlanSite()
+			{
+				$this->BarrePlanSite = $this->CreeBarrePlanSite() ;
+				$this->BarrePlanSite->AdopteScript("barrePlanSite", $this) ;
+				$this->BarrePlanSite->InclureRenduIcone = 0 ;
+				$this->BarrePlanSite->ChargeConfig() ;
+				$this->MenuAccueil = $this->BarrePlanSite->MenuRacine->InscritSousMenuScript($this->ZoneParent->NomScriptParDefaut) ;
+				$this->MenuAccueil->Titre = "Accueil" ;
+				$systemeSws = $this->ObtientSystemeSws() ;
+				$moduleParent = $this->ObtientModulePage() ;
+				foreach($systemeSws->ModulesPage as $nomModule => $module)
+				{
+					$module->RemplitMenuPlanSite($this->BarrePlanSite->MenuRacine) ;
+				}
+				if($moduleParent->FournitFluxRSS == 1)
+				{
+					$this->MenuRSS = $this->BarrePlanSite->MenuRacine->InscritSousMenuUrl("RSS", $moduleParent->ActionFluxRSS->ObtientUrl()) ;
+				}
+			}
+			public function RenduSpecifique()
+			{
+				$ctn = '' ;
+				$ctn .= $this->BarrePlanSite->RenduDispositif() ;
+				return $ctn ;
 			}
 		}
 		class ScriptAccueilAdminBaseSws extends ScriptBaseSws
@@ -458,6 +531,62 @@
 		
 		class ActionFluxRSSRacineSws extends ActionFluxRSSModuleSws
 		{
+			protected function PrepareDoc()
+			{
+				$sqls = array() ;
+				$systemeSws = & ReferentielSws::$SystemeEnCours ;
+				$bd = & $systemeSws->BDSupport ;
+				$modulePage = $this->ObtientModulePage() ;
+				foreach($systemeSws->ModulesPage as $nomModule => $module)
+				{
+					foreach($module->Entites as $nomEntite => $entite)
+					{
+						$sql = $entite->ObtientReqSqlFluxRSS() ;
+						if($sql != '')
+						{
+							$sqls[] = $sql.PHP_EOL ;
+						}
+					}
+				}
+				foreach($systemeSws->ImplemsPage as $nomImplem => $implem)
+				{
+					$sql = $implem->ObtientReqSqlFluxRSS() ;
+					if($sql != '')
+					{
+						$sqls[] = $sql.PHP_EOL ;
+					}
+				}
+				$sqlFluxRSS = join(" union ".PHP_EOL, $sqls) ;
+				// echo $sqlFluxRSS ;
+				if($sqlFluxRSS != "")
+				{
+					$sqlFluxRSS .= " order by date_publication desc, heure_publication desc limit 0, ".$modulePage->MaxElemsFluxRSS ;
+				}
+				if($sqlFluxRSS != "")
+				{
+					$lgns = $bd->FetchSqlRows($sqlFluxRSS) ;
+					foreach($lgns as $i => $lgn)
+					{
+						$elemRendu = $this->ObtientElemRendu($lgn) ;
+						$elemRendu->FormatElemLienLgnRSS($lgn) ;
+						$this->InscritElemLienLgn($lgn) ;
+					}
+				}
+			}
+			protected function & ObtientElemRendu(& $lgn)
+			{
+				$systemeSws = & ReferentielSws::$SystemeEnCours ;
+				$elemRendu = new ElementRenduBaseSws() ;
+				if($lgn["nature_rendu"] == "entite")
+				{
+					$elemRendu = & $systemeSws->ModulesPage[$lgn["groupe_rendu"]]->Entites[$lgn["elem_rendu"]] ;
+				}
+				elseif($lgn["nature_rendu"] == "implem")
+				{
+					$elemRendu = & $systemeSws->ImplemsPage[$lgn["elem_rendu"]] ;
+				}
+				return $elemRendu ;
+			}
 		}
 		
 		class CritrCodeSecurValideRecommandEntSws extends PvCritereBase

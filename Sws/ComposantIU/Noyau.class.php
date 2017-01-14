@@ -40,7 +40,7 @@
 		class TableauDonneesBaseSws extends PvTableauDonneesHtml
 		{
 		}
-		class FormulaireDonneesBaseSws extends PvTableauDonneesHtml
+		class FormulaireDonneesBaseSws extends PvFormulaireDonneesHtml
 		{
 		}
 		class TableauDonneesAdminSws extends PvTableauDonneesHtml
@@ -52,7 +52,7 @@
 				$this->DessinateurBlocCommandes->InclureLibelle = 0 ;
 			}
 		}
-		class FormulaireDonneesAdminSws extends PvTableauDonneesHtml
+		class FormulaireDonneesAdminSws extends PvFormulaireDonneesHtml
 		{
 		}
 		

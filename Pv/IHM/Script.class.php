@@ -23,12 +23,14 @@
 			public $ZoneParent = null ;
 			public $ApplicationParent = null ;
 			public $NomElementZone = "" ;
+			public $NomIntegrationParent = "" ;
 			public $ValeurAppel = "" ;
 			public $CheminIcone = "" ;
 			public $CheminMiniature = "" ;
 			public $Titre = "" ;
 			public $TitreDocument = "" ;
 			public $Privileges = array() ;
+			public $PrivilegesStricts = 0 ;
 			public $NecessiteMembreConnecte = 0 ;
 			public $AnnulDetectMemberCnx = 0 ;
 			public function ChargeConfig()
@@ -51,6 +53,10 @@
 			{
 				$this->ZoneParent->RapporteException($exception) ;
 			}
+			public function IntegrationParent()
+			{
+				return $this->ApplicationParent->ObtientIntegration($this->NomIntegrationParent) ;
+			}
 			public function DetermineEnvironnement()
 			{
 			}
@@ -63,7 +69,7 @@
 				{
 					return 1 ;
 				}
-				return $this->ZoneParent->PossedePrivileges($this->Privileges) ;
+				return $this->ZoneParent->PossedePrivileges($this->Privileges, $this->PrivilegesStricts) ;
 			}
 			public function Execute()
 			{

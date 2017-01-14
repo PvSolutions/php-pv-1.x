@@ -382,7 +382,10 @@
 			public $RenduEnCours = 0 ;
 			public $Habillage = null ;
 			public $ActiverRafraichScript = 1 ;
+			public $LibelleEspaceReserveFiltres = 0 ;
 			public $InclureScriptsMembership = 1 ;
+			public $NomDocumentWebEditMembership = "" ;
+			public $ModeRecouvrMP = "directe" ;
 			public $NomClasseHabillage = "PvHabillageSimpleBase" ;
 			public $NomClasseScriptRecouvreMP = "PvScriptRecouvreMPWeb" ;
 			public $NomClasseScriptInscription = "PvScriptInscriptionWeb" ;
@@ -405,6 +408,7 @@
 			public $NomClasseScriptSupprRole = "PvScriptSupprRoleMSWeb" ;
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesMSWeb" ;
 			protected $TacheAppelee ;
+			protected $ScriptExecuteAccessible = false ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -616,6 +620,14 @@
 				$script->Titre = $titre ;
 				$script->TitreDocument = $titre ;
 				return $script ;
+			}
+			protected function ChargeScriptsMSConnecte()
+			{
+				parent::ChargeScriptsMSConnecte() ;
+				foreach($this->NomScriptsEditMembership as $i => $nomScript)
+				{
+					$this->Scripts[$nomScript]->NomDocumentWeb = $this->NomDocumentWebEditMembership ;
+				}
 			}
 			protected function DetecteDocumentWebSelect()
 			{

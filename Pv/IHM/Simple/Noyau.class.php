@@ -94,9 +94,13 @@
 			{
 				$ctn = '' ;
 				$donneesUrl = array_map("urlencode", $donnees) ;
-				$href = $this->ObtientHrefFmt($donneesUrl) ;
+				$href = $this->ObtientHrefFmt(array_merge($donneesUrl, array_apply_suffix($donnees, "_brut"))) ;
 				$libelle = $this->ObtientLibelleFmt($donnees) ;
 				$ctn .= '<a href="'.htmlentities($href).'"' ;
+				if($this->Cible != '')
+				{
+					$ctn .= ' target="'.$this->Cible.'"' ;
+				}
 				if($this->ChaineAttributs != '')
 				{
 					$ctn .= ' '.$this->ChaineAttributs ;
@@ -225,6 +229,22 @@
 			{
 				$valeurEntree = $ligne[$colonne->NomDonnees] ;
 				return format_money($valeurEntree, $this->MaxDecimals, $this->MinChiffres) ;
+			}
+		}
+		class PvFormatteurColonneDateFr extends PvFormatteurColonneDonnees
+		{
+			public $InclureHeure = 0 ;
+			public function Encode(& $script, $colonne, $ligne)
+			{
+				$valeurEntree = $ligne[$colonne->NomDonnees] ;
+				if($this->InclureHeure == 1)
+				{
+					return date_time_fr($valeurEntree) ;
+				}
+				else
+				{
+					return date_fr($valeurEntree) ;
+				}
 			}
 		}
 		class PvFormatteurColonneModeleHtml extends PvFormatteurColonneDonnees
@@ -731,7 +751,11 @@
 					return "(Composant nul)" ;
 				}
 				$this->Composant->Valeur = $this->Lie() ;
-				$this->Composant->EspaceReserve = ($this->EspaceReserve != "") ? $this->EspaceReserve : $this->Libelle ;
+				$this->Composant->EspaceReserve = $this->EspaceReserve ;
+				if($this->Composant->EspaceReserve == "" && $this->ZoneParent->LibelleEspaceReserveFiltres == 1)
+				{
+					$this->Composant->EspaceReserve = $this->Libelle ;
+				}
 				$this->Composant->FiltreParent = $this ;
 				$ctn = $this->Composant->RenduDispositif() ;
 				$this->Composant->FiltreParent = null ;
@@ -989,6 +1013,7 @@
 			public $CheminFichierDest = "" ;
 			public $CheminFichierSrc = "" ;
 			public $DejaTelecharge = 0 ;
+			public $NettoyerCaractsFichier = 1 ;
 			public $ExtensionsAcceptees = array() ;
 			public $ExtensionsRejetees = array('pl', 'cgi', 'html', 'xhtml', 'html5', 'html4', 'xml', 'xss', 'rss', 'xlt', 'php', 'phtml', 'inc', 'js', 'vbs', 'py', 'bat', 'sh', 'cmd') ;
 			public $CheminFichierClient = "" ;
@@ -1034,6 +1059,11 @@
 				}
 				*/
 			}
+			protected function NettoieCaractsFichier($nomFich)
+			{
+				$result = preg_replace('/[^a-z0-9\_\.]/i', '_', $nomFich) ;
+				return $result ;
+			}
 			public function ObtientValeurParametre()
 			{
 				if($this->DejaTelecharge == 1)
@@ -1052,6 +1082,11 @@
 					$this->CheminFichierClient = $this->InfosTelechargement["name"] ;
 					$infosFichier = pathinfo($this->CheminFichierClient) ;
 					$this->NomFichierSelect = $infosFichier["basename"] ;
+					if($this->NettoyerCaractsFichier == 1)
+					{
+						$ancFich = $this->NomFichierSelect ;
+						$this->NomFichierSelect = $this->NettoieCaractsFichier($this->NomFichierSelect) ;
+					}
 					$this->ExtFichierSelect = (isset($infosFichier["extension"])) ? $infosFichier["extension"] : "" ;
 				}
 				else
@@ -1061,11 +1096,22 @@
 					{
 						$this->CheminFichierSoumis = $_POST[$this->NomEltCoteSrv.$this->NomParametreLie] ;
 					}
-					if($this->CheminFichierSoumis != '' && file_exists($this->CheminFichierSoumis))
+					if($this->CheminFichierSoumis != "")
 					{
-						$infosFichier = pathinfo($this->CheminFichierSoumis) ;
-						$this->NomFichierSelect = $infosFichier["basename"] ;
-						$this->ExtFichierSelect = (isset($infosFichier["extension"])) ? $infosFichier["extension"] : "" ;
+						$cheminFichierSoumis = realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/".$this->CheminFichierSoumis) ;
+						$cheminDossier = realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/".$this->CheminDossier) ;
+						if($this->CheminFichierSoumis != '' && file_exists($cheminFichierSoumis))
+						{
+							$infosFichier = pathinfo($cheminFichierSoumis) ;
+							$this->NomFichierSelect = str_replace("\\", "/", substr($cheminFichierSoumis, strlen($cheminDossier) + 1)) ;
+							$this->ExtFichierSelect = (isset($infosFichier["extension"])) ? $infosFichier["extension"] : "" ;
+							// echo $this->NomFichierSelect.' kkk <br>' ;
+						}
+					}
+					else
+					{
+						$this->NomFichierSelect = "" ;
+						$this->ExtFichierSelect = "" ;
 					}
 					// print_r("Doss : ".$this->CheminDossier) ;
 					// print_r($infosFichier) ;

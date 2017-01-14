@@ -33,6 +33,14 @@
 			public $StadeDev = "Beta" ;
 			public $AutoriserMailsEdition = 1 ;
 			public $EstIndefini = 0 ;
+			protected $DefFluxRSS ;
+			protected $PresentDansFluxRSS = 1 ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DefFluxRSS = new DefFluxRSSElemRenduSws() ;
+				$this->DefFluxRSS->Active = $this->PresentDansFluxRSS ;
+			}
 			public function ObtientVersion()
 			{
 				return $this->NumeroVersion.' '.$this->StadeDev ;
@@ -80,6 +88,24 @@
 				$barreMenu->MenuRacine->InscritSousMenuUrl("Espace publique", ReferentielSws::$SystemeEnCours->ObtientUrlZonePubl($barreMenu->ZoneParent)) ;
 				$barreMenu->MenuRacine->InscritSousMenuUrl("Administration", "?") ;
 			}
+			public function ObtientReqSqlFluxRSS()
+			{
+				if($this->DefFluxRSS->Active == 0)
+				{
+					return '' ;
+				}
+				$bd = $this->ObtientBDSupport() ;
+				$sql = 'select '.$this->DefFluxRSS->SqlListeCols($this, $bd) ;
+				$sql .= ' from '.$bd->EscapeVariableName($this->DefFluxRSS->NomTable) ;
+				$sql .= ' where '.$bd->EscapeVariableName($this->DefFluxRSS->NomColStatutPubl).' = 1' ;
+				return $sql ;
+			}
+			public function FormatElemLienLgnRSS(& $lgn)
+			{
+			}
+			public function RemplitMenuPlanSite(& $menu)
+			{
+			}
 		}
 		
 		class ModulePageBaseSws extends ElementRenduBaseSws
@@ -97,13 +123,6 @@
 			public $ActionFluxRSS ;
 			public $FournitFluxRSS = 0 ;
 			public $MaxElemsFluxRSS = 30 ;
-			public function SqlSelectFluxRSS(& $bd)
-			{
-			}
-			public function ParamsSelectFluxRSS(& $bd)
-			{
-				return array() ;
-			}
 			protected function CreeActionFluxRSS()
 			{
 				return new ActionEnvoiFichierBaseZoneSws() ;
@@ -117,19 +136,7 @@
 				if($this->FournitFluxRSS == 0)
 					return ;
 				$this->ActionFluxRSS = $this->InsereAction($this->ObtientNomActionFluxRSS(), $this->CreeActionFluxRSS(), $zone) ;
-			}
-			public function EnvoieContenuFluxRSS(& $action)
-			{
-				$bd = $this->ObtientBDSupport() ;
-				$sql = $this->SqlSelectFluxRSS($bd) ;
-				if($sql != "")
-				{
-					$lgns = $bd->FetchSqlRows($sql, $this->ParamsSelectFluxRSS($bd)) ;
-					foreach($lgns as $i => $lgn)
-					{
-					}
-				}
-				// foreach($this->)
+				// print get_class($this->ActionFluxRSS).'<br>' ;
 			}
 			public function ObtientUrlAdmin()
 			{
@@ -310,15 +317,17 @@
 			{
 				$action->NomModulePage = $this->NomElementSyst ;
 				$zone->InscritActionAvantRendu($nomAction, $action) ;
+				return $action ;
 			}
 			public function InsereActionAvantRendu($nomAction, $action, & $zone)
 			{
-				$this->InsereAction($nomAction, $action, $zone) ;
+				return $this->InsereAction($nomAction, $action, $zone) ;
 			}
 			public function InsereActionApresRendu($nomAction, $action, & $zone)
 			{
 				$action->NomModulePage = $this->NomElementSyst ;
 				$zone->InscritActionApresRendu($nomAction, $action) ;
+				return $action ;
 			}
 			public function & InsereScript($nom, $script, & $zone, $privs=array())
 			{
@@ -356,6 +365,13 @@
 				$tache->NomModulePage = $this->NomElementSyst;
 				$zone->InscritTacheWeb($nom, $tache);
 				return $tache ;
+			}
+			public function RemplitMenuPlanSite(& $menu)
+			{
+				foreach($this->Entites as $nomEntite => $entite)
+				{
+					$entite->RemplitMenuPlanSite($menu) ;
+				}
 			}
 		}
 		class TacheWebBaseSws extends PvTacheWebBaseSimple
@@ -411,26 +427,78 @@
 			public $EstIndefini = 1 ;
 		}
 		
-		class DefFluxRSSEntiteSws
+		class DefFluxRSSElemRenduSws
 		{
 			public $Active = 0 ;
-			public $NomTable ;
-			public $NomColId ;
-			public $NomColTitre ;
-			public $NomColDescription ;
-			public $NomColCheminImage ;
-			public $NomColCheminVideo ;
-			public $NomColCheminFichier ;
-			public function SqlListeCols(& $entite, & $bd)
+			public $NomTable = "" ;
+			public $NomColId = "id" ;
+			public $NomColTitre = "titre" ;
+			public $ExprColTitre = "" ;
+			public $NomColDescription = "description" ;
+			public $ExprColDescription = "" ;
+			public $NomColCheminImage = "chemin_image" ;
+			public $ExprColCheminImage = "" ;
+			public $NomColDatePubl = "date_publication" ;
+			public $NomColHeurePubl = "heure_publication" ;
+			public $NomColStatutPubl = "statut_publication" ;
+			public $NomColCheminVideo = "" ;
+			public $ExprColCheminVideo = "" ;
+			public $NomColCheminFichier = "" ;
+			public $ExprColCheminFichier = "" ;
+			public $ValeurColNatureRendu = "base" ;
+			public $ValeurColGroupeRendu ;
+			public $ValeurColElemRendu ;
+			public function SqlListeCols(& $elemRendu, & $bd)
 			{
 				$sql = '' ;
-				$sql .= "'".$entite->ModuleParent->NomElementSyst."' nom_module" ;
-				$sql .= "'".$entite->NomElementModule."' nom_entite" ;
-				$sql .= (($this->NomColTitre == "") ? $bd->EscapeVariableName($this->NomColTitre) : "''").' titre' ;
-				$sql .= (($this->NomColDescription == "") ? $bd->EscapeVariableName($this->NomColDescription) : "''").' description' ;
-				$sql .= (($this->NomColCheminImage == "") ? $bd->EscapeVariableName($this->NomColCheminImage) : "''").' chemin_image' ;
-				$sql .= (($this->NomColCheminVideo == "") ? $bd->EscapeVariableName($this->NomColCheminVideo) : "''").' chemin_video' ;
-				$sql .= (($this->NomColCheminFichier == "") ? $bd->EscapeVariableName($this->NomColCheminFichier) : "''").' chemin_fichier' ;
+				$sql .= "'".$this->ValeurColNatureRendu."' nature_rendu, " ;
+				$sql .= "'".$this->ValeurColGroupeRendu."' groupe_rendu, " ;
+				$sql .= "'".$this->ValeurColElemRendu."' elem_rendu, " ;
+				$sql .= (($this->NomColId != "") ? $bd->EscapeVariableName($this->NomColId) : "''").' id, ' ;
+				if($this->ExprColId == '')
+				{
+					$sql .= (($this->NomColTitre != "") ? $bd->EscapeVariableName($this->NomColTitre) : "''").' titre, ' ;
+				}
+				else
+				{
+					$sql .= $this->ExprColTitre.' titre, ' ;
+				}
+				if($this->ExprColDescription == '')
+				{
+					$sql .= (($this->NomColDescription != "") ? $bd->EscapeVariableName($this->NomColDescription) : "''").' description, ' ;
+				}
+				else
+				{
+					$sql .= $this->ExprColDescription.' description, ' ;
+				}
+				if($this->ExprColCheminImage == '')
+				{
+					$sql .= (($this->NomColCheminImage != "") ? $bd->EscapeVariableName($this->NomColCheminImage) : "''").' chemin_image, ' ;
+				}
+				else
+				{
+					$sql .= $this->ExprColCheminImage.' chemin_image, ' ;
+				}
+				if($this->ExprColCheminVideo == '')
+				{
+					$sql .= (($this->NomColCheminVideo != "") ? $bd->EscapeVariableName($this->NomColCheminVideo) : "''").' chemin_video, ' ;
+				}
+				else
+				{
+					$sql .= $this->ExprColCheminVideo.' chemin_video, ' ;
+				}
+				if($this->ExprColCheminFichier == '')
+				{
+					$sql .= (($this->NomColCheminFichier != "") ? $bd->EscapeVariableName($this->NomColCheminFichier) : "''").' chemin_fichier, ' ;
+				}
+				else
+				{
+					$sql .= $this->ExprColCheminFichier.' chemin_fichier, ' ;
+				}
+				$sql .= (($this->NomColDatePubl != "") ? $bd->EscapeVariableName($this->NomColDatePubl) : "''").' date_publication, ' ;
+				$sql .= (($this->NomColHeurePubl != "") ? $bd->EscapeVariableName($this->NomColHeurePubl) : "''").' heure_publication, ' ;
+				$sql .= (($this->NomColStatutPubl != "") ? $bd->EscapeVariableName($this->NomColStatutPubl) : "''").' statut_publication, ' ;
+				$sql .= "'' url" ;
 				return $sql ;
 			}
 		}
@@ -446,30 +514,28 @@
 			public $BarreMenu ;
 			public $BarreElemsRendu ;
 			public $MenuRacine ;
-			public $DefFluxRSS ;
 			public $AdaptFltsEdition ;
 			public $NomScriptsInscrits = array() ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->DefFluxRSS = new DefFluxRSSEntiteSws() ;
 				$this->InitAdaptFltsEdition() ;
 			}
 			protected function InitAdaptFltsEdition()
 			{
 				$this->AdaptFltsEdition = new AdaptFltsInactifEntiteSws() ;
 			}
+			public function ObtientReqSqlFluxRSS()
+			{
+				$this->DefFluxRSS->ValeurColGroupeRendu = $this->ModuleParent->NomElementSyst ;
+				$this->DefFluxRSS->ValeurColElemRendu = $this->NomElementModule ;
+				$this->DefFluxRSS->ValeurColNatureRendu = "entite" ;
+				return parent::ObtientReqSqlFluxRSS() ;
+			}
 			public function ObtientTitreMenu()
 			{
 				return ($this->TitreMenu == "") ? ($this->Titre == "") ? $this->PrefixeTitreMenu." ".$this->NomElementModule : $this->Titre : $this->TitreMenu ;
 			}
-			public function ObtientReqSqlFluxRSS()
-			{
-				$bd = $this->ObtientBDSupport() ;
-				$sql = 'select '.$this->DefFluxRSS->SqlListeCols($this, $bd) ;
-				$sql .= ' from '.$bd->EscapeVariableName($this->DefFluxRSS->NomTable) ;
-				return $sql ;
-			} 
 			public function CreeFournDonnees()
 			{
 				return $this->ModuleParent->CreeFournDonnees() ;
@@ -814,6 +880,11 @@
 			public $HauteurFenEditEntite = 525 ;
 			public $ActiverFenEditEntite = 0 ;
 			protected $SommaireElem ;
+			protected $MenuPlanSite ;
+			protected $InclureScriptEnumPlanSite = 0 ;
+			protected $InclureScriptConsultPlanSite = 0 ;
+			protected $NomColIdConsultPlanSite = "id" ;
+			protected $NomColTitreConsultPlanSite = "id" ;
 			public function ObtientCheminPubl($chemin)
 			{
 				return $this->ModuleParent->SystemeParent->ObtientCheminPubl($chemin) ;
@@ -1197,6 +1268,11 @@
 			{
 				$script->TitreDocument = $this->ObtientTitreDocConsultEntite() ;
 				$script->Titre = $this->ObtientTitreConsultEntite() ;
+				if($this->AccepterTitre == 1)
+				{
+					$script->TitreDocument = $this->LgnEnCours[$this->NomColTitre] ;
+					$script->Titre = $this->LgnEnCours[$this->NomColTitre] ;
+				}
 			}
 			protected function PrepareScriptLst(& $script)
 			{
@@ -1489,13 +1565,23 @@
 			}
 			protected function ChargeBlocConsult(& $bloc)
 			{
-				$ctnModele = '' ;
-				foreach($this->LgnEnCours as $nom => $val)
+				$bloc->Contenu = '' ;
+				if($this->AccepterAttrsPubl == 1)
 				{
-					$ctnModele .= '<div>${'.$nom.'}</div>' ;
+					$bloc->InsereEncodeurDateFr(array(
+					$this->NomColDatePubl, $this->NomColHeurePubl)) ;
+				}
+				if($this->AccepterAttrsTexte == 1)
+				{
+					if($this->AccepterSommaire == 1)
+					{
+						$bloc->InsereEncodeurNonVide(array("sommaire"), '<div class="sommaire">${luimeme}</div>', "bloc_") ;
+						$bloc->Contenu .= '${bloc_sommaire}' ;
+					}
+					$bloc->InsereEncodeurNonVide(array("description"), '<div class="description">${luimeme}</div>', "bloc_") ;
+					$bloc->Contenu .= '${bloc_description}' ;
 				}
 				$bloc->Params = $this->LgnEnCours ;
-				$bloc->Contenu = $ctnModele ;
 			}
 			protected function CreeBlocEnum()
 			{
@@ -1785,9 +1871,55 @@
 				$ctn .= $this->RenduApresCtnSpec($script) ;
 				return $ctn ;
 			}
+			public function ObtientReqSqlFluxRSS()
+			{
+				$this->DefFluxRSS->NomTable = $this->NomTable ;
+				return parent::ObtientReqSqlFluxRSS() ;
+			}
+			public function FormatElemLienLgnRSS(& $lgn)
+			{
+				if($this->InclureScriptConsult == 1)
+				{
+					$lgn["url"] = $this->ScriptConsult->ObtientUrlParam(array($this->NomParamId => $lgn["id"])) ;
+				}
+			}
 			public function NomParamsTexte()
 			{
 				return array($this->NomColTitre) ;
+			}
+			public function RemplitMenuPlanSite(& $menu)
+			{
+				if($this->InclureScriptEnumPlanSite == 1 && $this->InclureScriptEnum == 1)
+				{
+					$this->MenuScriptEnumPlanSite = $menu->InscritSousMenuScript($this->ScriptEnum->NomElementZone) ;
+					$this->MenuScriptEnumPlanSite->Titre = $this->TitreEnumEntite ;
+				}
+				else
+				{
+					$this->MenuScriptEnumPlanSite = & $menu ;
+				}
+				if($this->InclureScriptConsultPlanSite == 1 && $this->InclureScriptConsult == 1)
+				{
+					$bd = $this->ObtientBDSupport() ;
+					$lgns = $bd->FetchSqlRows($this->SqlConsultPlanSite()) ;
+					foreach($lgns as $i => $lgn)
+					{
+						$sousMenu = $this->MenuScriptEnumPlanSite->InscritSousMenuUrl($lgn["titre"], $this->ScriptConsult->ObtientUrlParam(array($this->NomParamId => $lgn["id"]))) ;
+					}
+				}
+			}
+			protected function SqlConsultPlanSite()
+			{
+				$bd = $this->ObtientBDSupport() ;
+				$sql = "select ".$bd->EscapeVariableName($this->NomColIdConsultPlanSite)." id" ;
+				$sql .= ", ".$bd->EscapeVariableName($this->NomColTitreConsultPlanSite)." titre" ;
+				$sql .= " from ".$bd->EscapeTableName($this->NomTable) ;
+				if($this->AccepterAttrsPubl == 1)
+				{
+					$sql .= " where ".$bd->EscapeVariableName($this->NomColStatutPubl)." = 1" ;
+					$sql .= " order by ".$bd->EscapeVariableName($this->NomColDatePubl)." desc, ".$bd->EscapeVariableName($this->NomColHeurePubl)." desc" ;
+				}
+				return $sql ;
 			}
 		}
 		class EntitePageWebSws extends EntiteTableSws
@@ -1844,8 +1976,6 @@
 			public $TotalLignesMotsClesMeta = 3 ;
 			public $TotalColonnesDescriptionMeta = 60 ;
 			public $TotalLignesDescriptionMeta = 4 ;
-			public $ContenuModeleConsult = '<div>${titre}</div>
-<div>${description}</div>' ;
 			public $FltTblListContenu ;
 			public $NomParamTblListContenu = "pContenu" ;
 			public $LibTblListContenu = "Contenu" ;
@@ -1856,6 +1986,7 @@
 			}
 			public function SqlListeColsSelect(& $bd)
 			{
+				$systeme = & $this->ModuleParent->SystemeParent ;
 				$sql = parent::SqlListeColsSelect($bd) ;
 				if($this->AccepterAttrsTexte == 1)
 				{
@@ -1871,6 +2002,9 @@
 					$sql .= ', '.$bd->EscapeVariableName($this->NomColCheminIcone).' chemin_icone' ;
 					$sql .= ', '.$bd->EscapeVariableName($this->NomColCheminImage).' chemin_image' ;
 					$sql .= ', '.$bd->EscapeVariableName($this->NomColCheminBanniere).' chemin_banniere' ;
+					$sql .= ', '.$systeme->SqlCheminPubl($bd->EscapeVariableName($this->NomColCheminIcone)).' chemin_icone_publ' ;
+					$sql .= ', '.$systeme->SqlCheminPubl($bd->EscapeVariableName($this->NomColCheminImage)).' chemin_image_publ' ;
+					$sql .= ', '.$systeme->SqlCheminPubl($bd->EscapeVariableName($this->NomColCheminBanniere)).' chemin_banniere_publ' ;
 				}
 				if($this->AccepterAttrsMeta == 1)
 				{
@@ -1882,6 +2016,8 @@
 			protected function PrepareScriptConsult(& $script)
 			{
 				parent::PrepareScriptConsult($script) ;
+				$script->TitreDocument = $this->LgnEnCours["titre"] ;
+				$script->Titre = $this->LgnEnCours["titre"] ;
 				if($this->AccepterAttrsMeta == 1)
 				{
 					if($this->LgnEnCours["mots_cles_meta"] != "")
@@ -1892,33 +2028,10 @@
 			}
 			protected function InitBlocConsult(& $bloc, & $script)
 			{
-				$bloc->ContenuModele = $this->ContenuModeleConsult ;
 			}
 			protected function ChargeBlocConsult(& $bloc)
 			{
-				$bloc->FournisseurDonnees = $bloc->ScriptParent->CreeFournDonnees() ;
-				$bloc->RequeteSelection = $this->SqlSelectLgn() ;
-				$bloc->ParamsSelection = array('idEntite' => $this->LgnEnCours["id"]) ;
-			}
-			public function RemplitScriptConsult(& $script)
-			{
-				if($this->VerifPreReqsScriptConsult($script))
-				{
-					parent::RemplitScriptConsult($script) ;
-				}
-				else
-				{
-					if($this->RedirScriptConsultIndisp)
-					{
-						$script->ZoneParent->RedirigeVersScript($script->ZoneParent->ObtientScriptParDefaut()) ;
-					}
-					else
-					{
-						$this->BlocConsult = new PvPortionRenduHtml() ;
-						$this->BlocConsult->AdopteScript("blocConsult", $script) ;
-						$this->BlocConsult->Contenu = $this->MsgScriptConsultIndisp ;
-					}
-				}
+				parent::ChargeBlocConsult($bloc) ;
 			}
 			protected function ChargeFrmElem(& $frm)
 			{
@@ -1976,6 +2089,20 @@
 					$comp = $this->FltFrmElemDescriptionMeta->DeclareComposant("PvZoneMultiligneHtml") ;
 					$comp->TotalColonnes = $this->TotalColonnesDescriptionMeta ;
 					$comp->TotalLignes = $this->TotalLignesDescriptionMeta ;
+				}
+			}
+			protected function ChargeBlocEnum(& $bloc)
+			{
+				parent::ChargeBlocEnum($bloc) ;
+				$bd = $this->ObtientBDSupport() ;
+				$bloc->InsereDefCol($this->NomColTitre) ;
+				if($this->InclureScriptConsult == 1)
+				{
+					$bloc->ContenuLigneModele = '<a href="'.$this->ScriptConsult->ObtientUrlFmt(array($this->NomParamId => '${'.$this->NomColId.'}')).'">${'.$this->NomColTitre.'}</a>' ;
+				}
+				else
+				{
+					$bloc->ContenuLigneModele = '${'.$this->NomColTitre.'}' ;
 				}
 			}
 			protected function ExtraitCtnPubl()
@@ -2076,6 +2203,16 @@
 						$this->FltTblListContenu->Composant->Largeur = "200px" ;
 					}
 				}
+			}
+			public function ObtientReqSqlFluxRSS()
+			{
+				$bd = $this->ObtientBDSupport() ;
+				if($this->AccepterAttrsMeta == 1)
+				{
+					$this->DefFluxRSS->ExprColDescription = 'case when '.$bd->SqlConcat(array($bd->EscapeVariableName($this->NomColMotsClesMeta), "' '", $bd->EscapeVariableName($this->NomColDescriptionMeta))).' is not null then '.$bd->SqlConcat(array($bd->EscapeVariableName($this->NomColMotsClesMeta), "' '", $bd->EscapeVariableName($this->NomColDescriptionMeta))).' else '.$bd->EscapeVariableName($this->NomColDescription).' end' ;
+					
+				}
+				return parent::ObtientReqSqlFluxRSS() ;
 			}
 		}
 		
@@ -2477,7 +2614,7 @@
 				$this->PrepareDoc() ;
 				$this->AfficheDebutDoc() ;
 				$this->AfficheChaineZone() ;
-				$this->AfficheModulePage() ;
+				// $this->AfficheModulePage() ;
 				$this->AfficheCorpsDoc() ;
 				$this->AfficheFinDoc() ;
 			}
@@ -2545,11 +2682,6 @@
 		}
 		class ActionFluxRSSModuleSws extends ActionFluxRSSBaseSws
 		{
-			protected function AfficheModulePage()
-			{
-				$modulePage = $this->ObtientModulePage() ;
-				$modulePage->EnvoieContenuFluxRSS($this) ;
-			}
 		}
 		
 		class ElemLienFluxRSSSws
@@ -2563,14 +2695,27 @@
 			{
 				if(isset($lgn["titre"]))
 					$this->Titre = $lgn["titre"] ;
+				$this->Description = "" ;
 				if(isset($lgn["description"]))
-					$this->Description = $lgn["description"] ;
+				{
+					if($this->Description != "")
+					{
+						$this->Description .= " " ;
+					}
+					$this->Description .= $lgn["description"] ;
+				}
 				if(isset($lgn["url"]))
 					$this->Url = $lgn["url"] ;
 				if(isset($lgn["image"]))
 					$this->Image = $lgn["image"] ;
 				if(isset($lgn["date_publication"]))
+				{
 					$this->DatePubl = $lgn["date_publication"] ;
+					if(isset($lgn["heure_publication"]))
+					{
+						$this->DatePubl .= " ".$lgn["heure_publication"] ;
+					}
+				}
 			}
 			public function ContenuRSS()
 			{
@@ -2595,14 +2740,15 @@
 				$val = strip_tags($this->Titre) ;
 				if(strlen($val) > 255)
 					$val = substr($val, 0, 255)."..." ;
-				return utf8_encode($val) ;
+				// return utf8_encode($val) ;
+				return $val	;
 			}
 			protected function ObtientDescriptionRSS()
 			{
 				$description = strip_tags($this->Description) ;
 				if(strlen($description) > 255)
 					$description = substr($description, 0, 255)."..." ;
-				return utf8_encode($description) ;
+				return $description ;
 			}
 		}
 		

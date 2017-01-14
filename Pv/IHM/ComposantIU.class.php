@@ -108,6 +108,11 @@
 				}
 				return "" ;
 			}
+			public function & InsereActionAvantRendu($nomAction, $action)
+			{
+				$this->InscritActionAvantRendu($nomAction, $action) ;
+				return $action ;
+			}
 			public function InscritActionAvantRendu($nomAction, & $action)
 			{
 				$this->ZoneParent->ActionsAvantRendu[$nomAction] = & $action ;
@@ -196,9 +201,9 @@
 				}
 				if($objet->RefererScriptLocal == 1)
 				{
-					if(! in_array($this->ZoneParent->ValeurParamScriptAppele, $objet->UrlsReferantsSurs))
+					if(! in_array($objet->ZoneParent->ValeurParamScriptAppele, $objet->UrlsReferantsSurs))
 					{
-						$objet->ScriptsReferantsSurs[] = $this->ZoneParent->ValeurParamScriptAppele ;
+						$objet->ScriptsReferantsSurs[] = $objet->ZoneParent->ValeurParamScriptAppele ;
 					}
 				}
 				if(! count($objet->UrlsReferantsSurs) && ! count($objet->HotesReferantsSurs) && ! count($objet->ScriptsReferantsSurs))

@@ -28,6 +28,7 @@
 			public $FiltresSelection = array() ;
 			public $NomColValeur = "pourcentage" ;
 			public $NomClasseCSS = "" ;
+			public $Align = "center" ;
 			public $Taille = "" ;
 			public $Couleur = "" ;
 			public $MsgPreRequisNonVerif = "Le fournisseur de donn&eacute;es n'est pas configur&eacute; correctement" ;
@@ -92,7 +93,7 @@
 			{
 				$ctn = '' ;
 				$ctn .= PvCercleProgressCSS::InclutLibSource() ;
-				$ctn .= '<div id="'.$this->IDInstanceCalc.'">'.PHP_EOL ;
+				$ctn .= '<div id="'.$this->IDInstanceCalc.'"'.(($this->Align != '') ? ' align="'.$this->Align.'"' : '').'>'.PHP_EOL ;
 				if(! $this->VerifiePreRequis())
 				{
 					$ctn .= '<div class="Erreur">'.$this->MsgPreRequisNonVerif.'</div>' ;
@@ -105,7 +106,7 @@
 				}
 				else
 				{
-					$ctn .= '<div class="c100 p'.$this->Pourcentage.''.(($this->Taille != '') ? $this->Taille : '').(($this->Couleur != '') ? $this->Couleur : '').''.(($this->NomClasseCSS != '') ? $this->NomClasseCSS : '').'">
+					$ctn .= '<div class="c100 p'.$this->Pourcentage.''.(($this->Taille != '') ? ' '.$this->Taille : '').(($this->Couleur != '') ? ' '.$this->Couleur : '').''.(($this->NomClasseCSS != '') ? $this->NomClasseCSS : '').'">
 <span>'.$this->Pourcentage.'%</span>
 <div class="slice">
 <div class="bar"></div>

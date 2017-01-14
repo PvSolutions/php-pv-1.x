@@ -219,6 +219,24 @@
 			public $LibTitreParent = "Rubr. conteneur" ;
 			public $GrilleSousRubr ;
 			public $GrilleArts ;
+			protected $InclureScriptConsultPlanSite = 1 ;
+			protected $NomColTitreConsultPlanSite = "titre" ;
+			public function ObtientReqSqlFluxRSS()
+			{
+				$this->DefFluxRSS->NomColCheminImage = "" ;
+				return parent::ObtientReqSqlFluxRSS() ;
+			}
+			protected function SqlConsultPlanSite()
+			{
+				$bd = $this->ObtientBDSupport() ;
+				$sql = "select ".$bd->EscapeVariableName($this->NomColIdConsultPlanSite)." id" ;
+				$sql .= ", ".$bd->EscapeVariableName($this->NomColTitreConsultPlanSite)." titre" ;
+				$sql .= " from ".$bd->EscapeTableName($this->NomTable) ;
+				$sql .= " where ".$bd->EscapeVariableName($this->NomColStatutPubl)." = 1" ;
+				$sql .= " and ".$bd->EscapeVariableName($this->NomColIdConteneur)." = 1" ;
+				$sql .= " order by ".$bd->EscapeVariableName($this->NomColDatePubl)." desc, ".$bd->EscapeVariableName($this->NomColHeurePubl)." desc" ;
+				return $sql ;
+			}
 			protected function RemplitMenuInt(& $menu)
 			{
 				parent::RemplitMenuInt($menu) ;

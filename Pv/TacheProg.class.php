@@ -20,6 +20,7 @@
 		
 		class PvCtrlTachesProgsApp extends PvTacheCtrlBase
 		{
+			public $DelaiTransition = 0 ;
 			protected function ExecuteSession()
 			{
 				$nomTaches = array_keys($this->ApplicationParent->TachesProgs) ;
@@ -31,12 +32,17 @@
 						continue ;
 					}
 					$tacheProg->LanceProcessus() ;
+					if($this->DelaiTransition > 0)
+					{
+						sleep($this->DelaiTransition) ;
+					}
 				}
 				echo $this->Message."\n" ;
 			}
 		}
 		class PvCtrlServsPersistsApp extends PvTacheCtrlBase
 		{
+			public $DelaiTransition = 0 ;
 			protected function ExecuteSession()
 			{
 				$nomServsPersists = array_keys($this->ApplicationParent->ServsPersists) ;
@@ -44,10 +50,14 @@
 				{
 					$servPersist = & $this->ApplicationParent->ServsPersists[$nomServPersist] ;
 					// print get_class($servPersist)." :\n" ;
-					if(! $servPersist->Verifie())
+					if(! $servPersist->EstServiceDemarre() || ! $servPersist->Verifie())
 					{
 						// echo get_class($servPersist)." doit etre redemarre\n" ;
 						$servPersist->DemarreService() ;
+						if($this->DelaiTransition > 0)
+						{
+							sleep($this->DelaiTransition) ;
+						}
 					}
 				}
 				echo $this->Message."\n" ;

@@ -78,7 +78,7 @@
 			public function SupprElement($filtresSelection)
 			{
 			}
-			public function OuvreRequeteSelectElements($filtres)
+			public function OuvreRequeteSelectElements($filtres, $colonnes=array())
 			{
 			}
 			public function LitRequete(& $requete)
@@ -247,7 +247,7 @@
 			public function SupprElement($filtresSelection)
 			{
 			}
-			public function OuvreRequeteSelectElements($filtres)
+			public function OuvreRequeteSelectElements($filtres, $colonnes=array())
 			{
 				$requete = false ;
 				if(! isset($this->Valeurs[$this->RequeteSelection]))
@@ -360,6 +360,8 @@
 			public $NomProcAjoutElement = "" ;
 			public $NomProcModifElement = "" ;
 			public $NomProcSupprElement = "" ;
+			public $NommerRequeteSelection = 1 ;
+			public $AliasRequeteSelection = "t1" ;
 			public function ExecuteRequete($requete, $params=array())
 			{
 				if(! $this->BaseDonneesValide())
@@ -422,7 +424,8 @@
 				foreach($colonnes as $i => $colonne)
 				{
 					$nomDonnees = ($colonne->NomDonneesTri != '') ? $colonne->NomDonneesTri : $colonne->NomDonnees ;
-					$aliasDonnees = ($colonne->AliasDonneesTri != '') ? $colonne->AliasDonneesTri : $colonne->AliasDonnees ;
+					$aliasDonnees = "" ;
+					$aliasDonnees = ($colonne->AliasDonneesTri != '') ? $colonne->AliasDonneesTri : $colonne->NomDonnees ;
 					if($nomDonnees != '' && $colonne->TriPrealable == 1)
 					{
 						if($ctn != '')
@@ -515,6 +518,19 @@
 				}
 				return $parametres ;
 			}
+			protected function ChaineRequeteSelection()
+			{
+				$req = "" ;
+				if($this->NommerRequeteSelection == 0)
+				{
+					$req = $this->RequeteSelection ;
+				}
+				else
+				{
+					$req = $this->RequeteSelection." ".$this->AliasRequeteSelection ;
+				}
+				return $req ;
+			}
 			public function SelectElements($colonnes, $filtres, $indiceColonneTri=0, $sensColonneTri="asc")
 			{
 				$this->VideDerniereException() ;
@@ -531,7 +547,7 @@
 				{
 					$expression = $this->ExtraitExpressionFiltres($filtres) ;
 					$texteColonnes = $this->ExtraitTexteColonnes($colonnes) ;
-					$requeteSql = "select ".$texteColonnes." from ".$this->RequeteSelection." t1" ;
+					$requeteSql = "select ".$texteColonnes." from ".$this->ChaineRequeteSelection() ;
 					if(count($expression->Parametres) > 0)
 					{
 						$requeteSql .= " where ".$expression->Texte ;
@@ -574,7 +590,7 @@
 					// print count($colonnes).'<br>' ;
 					$expression = $this->ExtraitExpressionFiltres($filtres) ;
 					$texteColonnes = $this->ExtraitTexteColonnes($colonnes) ;
-					$requeteSql = "select ".$texteColonnes." from ".$this->RequeteSelection." t1" ;
+					$requeteSql = "select ".$texteColonnes." from ".$this->ChaineRequeteSelection() ;
 					if(count($expression->Parametres) > 0)
 					{
 						$requeteSql .= " where ".$expression->Texte ;
@@ -614,12 +630,11 @@
 				{
 					$expression = $this->ExtraitExpressionFiltres($filtres) ;
 					$texteColonnes = $this->ExtraitTexteColonnes($colonnes) ;
-					$requeteSql = "select count(0) TOTAL from ".$this->RequeteSelection." t1" ;
+					$requeteSql = "select count(0) TOTAL from ".$this->ChaineRequeteSelection() ;
 					if(count($expression->Parametres) > 0)
 					{
 						$requeteSql .= " where ".$expression->Texte ;
 					}
-					// print $requeteSql ;
 					$total = $this->BaseDonnees->FetchSqlValue($requeteSql, array_merge($expression->Parametres, $this->ParamsSelection), "TOTAL") ;
 					$this->SauveExceptionBaseDonnees() ;
 				}
@@ -686,7 +701,7 @@
 				}
 				return $succes ;
 			}
-			public function OuvreRequeteSelectElements($filtres)
+			public function OuvreRequeteSelectElements($filtres, $colonnes = array())
 			{
 				if(! $this->BaseDonneesValide())
 					return null ;
@@ -701,7 +716,7 @@
 				{
 					$expression = $this->ExtraitExpressionFiltres($filtres) ;
 					// print_r(count($filtres)) ;
-					$requeteSql = "select * from ".$this->RequeteSelection." t1" ;
+					$requeteSql = "select ".$this->ExtraitTexteColonnes($colonnes)." from ".$this->ChaineRequeteSelection() ;
 					if(count($expression->Parametres) > 0)
 					{
 						$requeteSql .= " where ".$expression->Texte ;

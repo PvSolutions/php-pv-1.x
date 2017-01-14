@@ -882,6 +882,100 @@ return {
 			}
 		}
 		
+		class PvCfgJQueryVegas
+		{
+			public $slide = 0 ;
+			public $preload = false ;
+			public $preloadImage = false ;
+			public $preloadVideo = false ;
+			public $timer = true ;
+			public $overlay = false ;
+			public $autoplay = true ;
+			public $loop = true ;
+			public $shuffle = false ;
+			public $delay = 5000 ;
+			public $cover = true ;
+			public $color = "" ;
+			public $align = "center" ;
+			public $valign = "center" ;
+			public $transition = "random" ;
+			public $slides = array() ;
+		}
+		class PvSlideJQueryVegas
+		{
+			public $src ;
+		}
+		
+		class PvJQueryVegas extends PvComposantIUBase
+		{
+			public static $CheminFichierJs = "js/vegas.min.js" ;
+			public static $CheminFichierCSS = "css/vegas.min.css" ;
+			public static $SourceIncluse = 0 ;
+			public $NomColCheminImage = "chemin_image" ;
+			public $SelecteurJQuery = "body" ;
+			public $FournisseurDonnees = null ;
+			public $FiltresSelection = array() ;
+			public $CfgInst = null ;
+			public $MsgPreRequisNonVerif = "Pr&eacute;requis non v&eacute;rifi&eacute;s : fournisseur de donn&eacute;es non configur&eacute;" ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->CfgInst = new PvCfgJQueryVegas() ;
+			}
+			protected static function InclutLibSource()
+			{
+				if(PvJQueryVegas::$SourceIncluse == 1)
+				{
+					return '' ;
+				}
+				$ctn = '' ;
+				$ctn .= '<link rel="stylesheet" href="'.PvJQueryVegas::$CheminFichierCSS.'">'.PHP_EOL ;
+				$ctn .= '<script type="text/javascript" src="'.PvJQueryVegas::$CheminFichierJs.'"></script>'.PHP_EOL ;
+				PvJQueryVegas::$SourceIncluse = 1 ;
+				return $ctn ;
+			}
+			protected function VerifiePreRequis()
+			{
+				if($this->EstNul($this->FournisseurDonnees))
+				{
+					return 0 ;
+				}
+				if($this->FournisseurDonnees->RequeteSelection == "")
+				{
+					return 0 ;
+				}
+				return 1 ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				$ctn .= PvJQueryVegas::InclutLibSource() ;
+				if($this->VerifiePreRequis() == 0)
+				{
+					$ctn .= '<div id="'.$this->IDInstanceCalc.'" class="Erreur">'.$this->MsgPreRequisNonVerif.'</div>' ;
+				}
+				else
+				{
+					$fourn = & $this->FournisseurDonnees ;
+					$requeteSupport = $fourn->OuvreRequeteSelectElements($this->FiltresSelection) ;
+					$this->CfgInst->slides = array() ;
+					while($lgn = $fourn->LitRequete($requeteSupport))
+					{
+						$slide = new PvSlideJQueryVegas() ;
+						$slide->src = $lgn[$this->NomColCheminImage] ;
+						$this->CfgInst->slides[] = $slide ;
+					}
+					$fourn->FermeRequete($requeteSupport) ;
+					$ctn .= '<script type="text/javascript">
+jQuery(function() {
+jQuery("'.$this->SelecteurJQuery.'").vegas('.svc_json_encode($this->CfgInst).') ;
+}) ;
+</script>' ;
+				}
+				return $ctn ;
+			}
+		}
+		
 		class PvCfgJQuerySnowfall
 		{
 			public $flakeCount = 35 ;

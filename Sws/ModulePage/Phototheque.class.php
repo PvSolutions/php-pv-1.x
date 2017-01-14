@@ -61,6 +61,7 @@
 			public $FltTblListPhototheque ;
 			public $NomParamTblListPhototheque = "pIdPhototheque" ;
 			public $DefColTblListPhototheque ;
+			protected $PresentDansFluxRSS = 0 ;
 			public function SqlListeColsSelect(& $bd)
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;
@@ -128,6 +129,9 @@
 		{
 			public $InclureScriptConsult = 1 ;
 			public $InclureScriptEnum = 1 ;
+			protected $InclureScriptEnumPlanSite = 1 ;
+			protected $InclureScriptConsultPlanSite = 1 ;
+			protected $NomColTitreConsultPlanSite = "titre" ;
 			public $TitreMenu = "Phototh&egrave;ques" ;
 			public $TitreEnumEntite = "Phototh&egrave;ques" ;
 			public $TitreAjoutEntite = "Ajout photot&egrave;que" ;
@@ -146,7 +150,26 @@
 			public $NomParamDescription = "description" ;
 			public $NomColDescription = "description" ;
 			public $FltFrmElemDescription ;
+			public $NomClasseCmdSuppr = "CmdSupprPhotothequeSws" ;
 			protected $GrilleEnum ;
+			public function ObtientReqSqlFluxRSS()
+			{
+				$this->DefFluxRSS->NomColCheminImage = "" ;
+				return parent::ObtientReqSqlFluxRSS() ;
+			}
+			protected function PrepareScriptConsult(& $script)
+			{
+				parent::PrepareScriptConsult($script) ;
+				$script->TitreDocument = $this->LgnEnCours["titre"] ;
+				$script->Titre = $this->LgnEnCours["titre"] ;
+				if($this->AccepterAttrsMeta == 1)
+				{
+					if($this->LgnEnCours["mots_cles_meta"] != "")
+						$script->MotsCleMeta = $this->LgnEnCours["mots_cles_meta"] ;
+					if($this->LgnEnCours["description_meta"] != "")
+						$script->DescriptionMeta = $this->LgnEnCours["description_meta"] ;
+				}
+			}
 			protected function CreeBlocConsult()
 			{
 				return new PvJQueryLightbox() ;
@@ -165,6 +188,7 @@
 				$bloc->NomColTitre = $entiteImg->NomColTitre ;
 				$bloc->NomColCheminImage = "chemin_image_publ" ;
 				$bloc->NomColCheminMiniature = "chemin_miniature_publ" ;
+				$bloc->LargeurMiniature = 240 ;
 			}
 			protected function ChargeBlocEnum(& $bloc)
 			{
@@ -182,11 +206,11 @@
 				$bd = $this->ObtientBDSupport() ;
 				$entiteImg = & $this->ModuleParent->EntiteImagePhototheque ;
 				$sql = 'select t11.*, t21.'.$bd->EscapeVariableName($entiteImg->NomColCheminImage).', t21.'.$bd->EscapeVariableName($entiteImg->NomColCheminMiniature).', '.$syst->SqlCheminPubl('t21.'.$bd->EscapeVariableName($entiteImg->NomColCheminMiniature)).' chemin_miniature_publ from (
-select t1.'.$bd->EscapeVariableName($this->NomColId).', t1.'.$bd->EscapeVariableName($this->NomColTitre).', t1.'.$bd->EscapeVariableName($this->NomColStatutPubl).', t1.'.$bd->EscapeVariableName($this->NomColDatePubl).', t1.'.$bd->EscapeVariableName($this->NomColHeurePubl).', max('.$bd->SqlConcat(array('t2.'.$bd->EscapeVariableName($entiteImg->NomColDatePubl), '\' \'', 't2.'.$bd->EscapeVariableName($entiteImg->NomColHeurePubl))).') temps_publ_max_photo from '.$bd->EscapeTableName($this->NomTable).' t1 inner join '.$bd->EscapeTableName($entiteImg->NomTable).' t2 on t1.'.$bd->EscapeVariableName($this->NomColId).' = t2.'.$bd->EscapeVariableName($entiteImg->NomColIdPhototheque).' group by t1.'.$bd->EscapeVariableName($this->NomColId).', t1.'.$bd->EscapeVariableName($this->NomColTitre).'
+select t1.'.$bd->EscapeVariableName($this->NomColId).', t1.'.$bd->EscapeVariableName($this->NomColTitre).', t1.'.$bd->EscapeVariableName($this->NomColStatutPubl).', t1.'.$bd->EscapeVariableName($this->NomColDatePubl).', t1.'.$bd->EscapeVariableName($this->NomColHeurePubl).', max('.$bd->SqlConcat(array('t2.'.$bd->EscapeVariableName($entiteImg->NomColDatePubl), '\' \'', 't2.'.$bd->EscapeVariableName($entiteImg->NomColHeurePubl))).') temps_publ_max_photo, max(t2.'.$bd->EscapeVariableName($entiteImg->NomColId).') id_max_photo from '.$bd->EscapeTableName($this->NomTable).' t1 inner join '.$bd->EscapeTableName($entiteImg->NomTable).' t2 on t1.'.$bd->EscapeVariableName($this->NomColId).' = t2.'.$bd->EscapeVariableName($entiteImg->NomColIdPhototheque).' group by t1.'.$bd->EscapeVariableName($this->NomColId).', t1.'.$bd->EscapeVariableName($this->NomColTitre).'
 ) t11
 inner join '.$bd->EscapeTableName($entiteImg->NomTable).' t21
 on t11.'.$bd->EscapeVariableName($this->NomColId).' = t21.'.$bd->EscapeVariableName($entiteImg->NomColIdPhototheque).'
-where t11.temps_publ_max_photo = '.$bd->SqlConcat(array('t21.'.$bd->EscapeVariableName($entiteImg->NomColDatePubl), '\' \'', 't21.'.$bd->EscapeVariableName($entiteImg->NomColHeurePubl))) ;
+where t11.id_max_photo = t21.'.$bd->EscapeVariableName($entiteImg->NomColId).'' ;
 				$bloc->FournisseurDonnees->RequeteSelection = '('.$sql.')' ;
 				$bloc->ContenuLigneModele = '<div align="center"><a href="?'.urlencode($zone->NomParamScriptAppele).'='.urlencode($this->NomScriptConsult.'_'.$this->NomElementModule).'&id=${id}"><img src="${chemin_miniature_publ}" border="0" /></a></div>
 <div align="center"><a href="?'.urlencode($zone->NomParamScriptAppele).'='.urlencode($this->NomScriptConsult.'_'.$this->NomElementModule).'&id=${id}">${titre}</a></div>' ;
@@ -219,6 +243,24 @@ where t11.temps_publ_max_photo = '.$bd->SqlConcat(array('t21.'.$bd->EscapeVariab
 				$this->DefColTblListTitre = $tabl->InsereDefCol($this->NomColTitre, $this->LibTitre) ;
 			}
 		}
+		
+		class CmdSupprPhotothequeSws extends CmdSupprEntiteSws
+		{
+			public function ExecuteInstructions()
+			{
+				parent::ExecuteInstructions() ;
+				if($this->StatutExecution == 1)
+				{
+					$bd = $this->ScriptParent->ObtientBDSupport() ;
+					$entite = $this->ScriptParent->ObtientEntitePage() ;
+					$entiteImg = & $entite->ModuleParent->EntiteImagePhototheque ;
+					$sql = "delete from ".$bd->EscapeTableName($entiteImg->NomTable)." where ".$bd->EscapeVariableName($entiteImg->NomColIdPhototheque)." = :idPhototheque" ;
+					$idPhototheque = $entite->FltFrmElemId->Lie() ;
+					$ok = $bd->RunSql($sql, array("idPhototheque" => $idPhototheque)) ;
+				}
+			}
+		}
+		
 	}
 	
 ?>

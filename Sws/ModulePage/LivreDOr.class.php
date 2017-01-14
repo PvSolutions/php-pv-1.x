@@ -69,6 +69,7 @@
 			public $NomParamTblListIdLivreDOr = "pIdLivreDOr" ;
 			public $LibelleCmdEnvoi = "Envoyer" ;
 			public $MsgSuccesCmdEnvoi = "Votre message a &eacute;t&eacute; ajout&eacute; avec succ&egrave;s. Il sera valid&eacute; ulterieurement." ;
+			protected $PresentDansFluxRSS = 0 ;
 			protected function CreeScriptPoster()
 			{
 				return new ScriptPosterCmtLivreDOr() ;
@@ -214,6 +215,7 @@
 			public $LibelleLienEcrireMsg = "Ecrire un message" ;
 			public $CouleurTitreCmt = "#9a6951" ;
 			public $TailleTitreCmt = "14px" ;
+			protected $PresentDansFluxRSS = 0 ;
 			protected function VerifScriptListageCmt()
 			{
 				return $this->DetecteLgnEnCours() ;

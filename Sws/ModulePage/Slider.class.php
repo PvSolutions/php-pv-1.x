@@ -58,6 +58,7 @@
 			public $FltTblListSlider ;
 			public $NomParamTblListSlider = "pIdSlider" ;
 			public $DefColTblListSlider ;
+			protected $PresentDansFluxRSS = 0 ;
 			public function SqlListeColsSelect(& $bd)
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;
@@ -106,6 +107,7 @@
 				parent::ChargeTblList($tbl) ;
 				$bd = $this->ObtientBDSupport() ;
 				$tbl->FournisseurDonnees->RequeteSelection = $this->ReqSelectTblList($bd) ;
+				// echo $this->ReqSelectTblList($bd) ;
 				$this->DefColTblListSlider = $tbl->InsereDefCol("titre_slider_parent", $this->LibIdSlider) ;
 				$this->DefColTblListTitre->Largeur = "20%" ;
 				$this->DefColTblListSlider->Largeur = "20%" ;
@@ -138,6 +140,7 @@
 			public $NomColTitre = "titre" ;
 			public $DefColTblListTitre ;
 			public $FltFrmElemTitre ;
+			protected $PresentDansFluxRSS = 0 ;
 			public function SqlListeColsSelect(& $bd)
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;

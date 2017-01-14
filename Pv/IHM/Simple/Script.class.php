@@ -461,12 +461,12 @@
 				$this->TentativeConnexionValidee = 0 ;
 				if($this->TentativeConnexionEnCours && ! $this->ZoneParent->EstNul($this->ZoneParent->Membership) && $this->ValideTentativeConnexion())
 				{
-					$this->IdMembre = $this->ZoneParent->Membership->ValidateConnection($this->ValeurParamPseudo, $this->ValeurParamMotPasse) ;
+					$this->IdMembre = $this->ZoneParent->Membership->ValidateConnection(trim($this->ValeurParamPseudo), trim($this->ValeurParamMotPasse)) ;
 					$this->TentativeConnexionValidee = ($this->IdMembre != $this->ZoneParent->Membership->IdMemberNotFoundValue) ? 1 : 0 ;
+					// print_r($this->ZoneParent->Membership->Database) ;
+					// print_r($this->IdMembre.' jjj') ;
+					// exit ;
 				}
-				// print_r($this->ZoneParent->Membership->Database) ;
-				// print_r($this->IdMembre.' jjj') ;
-				// exit ;
 				if($this->TentativeConnexionValidee == 1)
 				{
 					$this->ZoneParent->Membership->LogonMember($this->IdMembre) ;
@@ -622,6 +622,182 @@
 			public $Titre = "Mot de passe oubli&eacute;" ;
 			public $TitreDocument = "Mot de passe oubli&eacute;" ;
 			public $NomClasseFormulaireDonnees = "PvFormulaireRecouvreMPMS" ;
+			public $EmailEnvoiRecouvr = '' ;
+			public $SujetMailSuccesRecouvr = 'R&eacute;initialisation de mot de passe' ;
+			public $CorpsMailSuccesRecouvr = '<p>Votre mot de passe a &eacute;t&eacute; r&eacute;initialis&eacute; avec succ&egrave;s :</p>
+<div><b>Login :</b> ${login}</div>
+<div><b>Mot de passe :</b> ${motPasse}</div>
+<p>Cordialement.</p>' ;
+			public $SujetMailDemRecouvr = 'R&eacute;initialisation de mot de passe' ;
+			public $CorpsMailDemRecouvr = '<p>Vous avez demand&eacute; de r&eacute;initialiser votre mot de passe.</p>
+<p>Veuillez cliquer <a href="${url}">ICI</a> pour confirmer.</p>
+<p>Cordialement</p>' ;
+			public $MessageSuccesEnvoiMail = "Les instructions &agrave; suivre pour recup&eacute;rer votre mot de passe vous ont &eacute;t&eacute; envoy&eacute;es par mail" ;
+			public $MessageSuccesDansMail = "Votre mot de passe vous a &eacute;t&eacute; envoy&eacute; par mail" ;
+			public $MessageSuccesAffiche = "Voici votre nouveau mot de passe : " ;
+			public $LibelleRetourConnexion = "Retour &agrave; la page de connexion" ;
+			public $MessageErreur = "Invalide Nom d'utilisateur / Email" ;
+			public $EnvoiParMail = 0 ;
+			public $ConfirmParUrl = 0 ;
+			public $NomParamLogin = "login" ;
+			public $NomParamEmail = "email" ;
+			public $NomParamConfirm = "confirm" ;
+			public $MessageConfirm = "" ;
+			public $MotPasseGenere ;
+			public $MessageExceptionRecouvr ;
+			public $LgnMembreRecouvr = array() ;
+			protected function GenereNouvMotPasse()
+			{
+				return uniqid() ;
+			}
+			protected function ExtraitLgnMembre(& $filtres)
+			{
+				$membership = & $this->ZoneParent->Membership ;
+				$basedonnees = & $membership->Database ;
+				$sql = "select * from ".$membership->MemberTable.' MEMBER_TABLE where '.$basedonnees->EscapeFieldName('MEMBER_TABLE', $membership->LoginMemberColumn).'='.$basedonnees->ParamPrefix.'Login' ;
+				$params = array('Login' => $filtres[0]->Lie()) ;
+				if($membership->LoginWithEmail == 0)
+				{
+					$sql .= ' and '.$basedonnees->EscapeFieldName('MEMBER_TABLE', $membership->EmailMemberColumn).'='.$basedonnees->ParamPrefix.'Email' ;
+					$params["Email"] = $filtres[1]->Lie() ;
+				}
+				$ligneMembre = $basedonnees->FetchSqlRow($sql, $params) ;
+				return $ligneMembre ;
+			}
+			protected function ExtraitEmailMembre($ligneMembre)
+			{
+				$membership = & $this->ZoneParent->Membership ;
+				return ($membership->LoginWithEmail == 0) ? $ligneMembre[$membership->LoginMemberColumn] : $ligneMembre[$membership->EmailMemberColumn] ;
+			}
+			public function ReinitMotPasse(& $filtres)
+			{
+				$ligneMembre = $this->ExtraitLgnMembre($filtres) ;
+				$ok = 0 ;
+				$membership = & $this->ZoneParent->Membership ;
+				$basedonnees = & $membership->Database ;
+				if(is_array($ligneMembre) && count($ligneMembre) > 0)
+				{
+					$this->MotPasseGenere = $this->GenereNouvMotPasse() ;
+					$ligneMembre["motPasse"] = $this->MotPasseGenere ;
+					$ligneMembre["login"] = $ligneMembre[$membership->LoginMemberColumn] ;
+					$nouvValeurs = array($membership->PasswordMemberColumn => $this->MotPasseGenere) ;
+					if($membership->MustChangePasswordMemberColumn != "")
+					{
+						$nouvValeurs[$membership->MustChangePasswordMemberColumn] = $membership->MustChangePasswordMemberTrueValue ;
+					}
+					if($membership->PasswordMemberExpr != "")
+					{
+						$nouvValeurs[$basedonnees->ExprKeyName] = array(
+							$membership->PasswordMemberColumn => $membership->PasswordMemberExpr.'('.$basedonnees->ExprParamPattern.')'
+						) ;
+					}
+					$ok = $basedonnees->UpdateRow(
+						$membership->MemberTable,
+						$nouvValeurs,
+						$membership->IdMemberColumn.' = '.$basedonnees->ParamPrefix.'Id',
+						array('Id' => $ligneMembre[$membership->IdMemberColumn])
+					) ;
+				}
+				else
+				{
+					$ok = 0 ;
+				}
+				if($ok && $this->EnvoiParMail == 1)
+				{
+					$email = $this->ExtraitEmailMembre($ligneMembre) ;
+					$sujetMail = _parse_pattern($this->SujetMailSuccesRecouvr, $ligneMembre) ;
+					$corpsMail = _parse_pattern($this->CorpsMailSuccesRecouvr, $ligneMembre) ;
+					send_html_mail($email, $sujetMail, $corpsMail, $this->EmailEnvoiRecouvr) ;
+				}
+				$this->LgnMembreRecouvr = $ligneMembre ;
+				return $ok ;
+			}
+			public function EnvoiMailConfirm(& $filtres)
+			{
+				$ligneMembre = $this->ExtraitLgnMembre($filtres) ;
+				$ok = 1 ;
+				$membership = & $this->ZoneParent->Membership ;
+				$basedonnees = & $membership->Database ;
+				if(! is_array($ligneMembre) || count($ligneMembre) == 0)
+				{
+					$ok = 0 ;
+				}
+				else
+				{
+					$email = $this->ExtraitEmailMembre($ligneMembre) ;
+					$sujetMail = _parse_pattern($this->SujetMailDemRecouvr, $ligneMembre) ;
+					$corpsMail = _parse_pattern($this->CorpsMailDemRecouvr, $ligneMembre) ;
+					$ok = send_html_mail($email, $sujetMail, $corpsMail, $this->EmailEnvoiRecouvr) ;
+					$ok = 1 ;
+				}
+				return $ok ;
+			}
+			public function EnvoiMailDem(& $filtres)
+			{
+				$ligneMembre = $this->ExtraitLgnMembre($filtres) ;
+				$ok = 1 ;
+				$membership = & $this->ZoneParent->Membership ;
+				$basedonnees = & $membership->Database ;
+				if(! is_array($ligneMembre) || count($ligneMembre) == 0)
+				{
+					$ok = 0 ;
+				}
+				else
+				{
+					$email = $this->ExtraitEmailMembre($ligneMembre) ;
+					$ligneMembre["url"] = $this->ObtientUrl()."&".$this->NomParamLogin."=".urlencode($ligneMembre[$membership->LoginMemberColumn])."&".$this->NomParamEmail."=".urlencode(($membership->LoginWithEmail == 1) ? $ligneMembre[$membership->LoginMemberColumn] : $ligneMembre[$membership->EmailMemberColumn])."&".$this->NomParamConfirm."=1" ;
+					$ligneMembre["login"] = $ligneMembre[$membership->LoginMemberColumn] ;
+					$sujetMail = _parse_pattern($this->SujetMailDemRecouvr, $ligneMembre) ;
+					$corpsMail = _parse_pattern($this->CorpsMailDemRecouvr, $ligneMembre) ;
+					// echo $corpsMail ;
+					$ok = send_html_mail($email, $sujetMail, $corpsMail, $this->EmailEnvoiRecouvr) ;
+				}
+				return $ok ;
+			}
+			public function DetermineEnvironnement()
+			{
+				$this->DetermineConfirm() ;
+				parent::DetermineEnvironnement() ;
+			}
+			protected function DetermineConfirm()
+			{
+				if($this->ConfirmParUrl == 0 || _GET_def($this->NomParamConfirm) != 1)
+				{
+					return ;
+				}
+				$filtres = array($this->CreeFiltreHttpGet($this->NomParamLogin), $this->CreeFiltreHttpGet($this->NomParamEmail)) ;
+				$ok = $this->ReinitMotPasse($filtres) ;
+				if($ok)
+				{
+					if($this->EnvoiParMail == 1)
+					{
+						$this->MessageConfirm = $this->MessageSuccesDansMail ;
+					}
+					else
+					{
+						$this->MessageConfirm = $this->MessageSuccesAffiche.' '.$this->MotPasseGenere ;
+					}
+				}
+				else
+				{
+					$this->MessageConfirm = $this->MessageErreur ;
+				}
+			}
+			public function RenduSpecifique()
+			{
+				$ctn = "" ;
+				if($this->ConfirmParUrl == 1 && $this->MessageConfirm != "")
+				{
+					$ctn .= '<p>'.$this->MessageConfirm.'</p>' ;
+				}
+				else
+				{
+					$ctn .= parent::RenduSpecifique() ;
+				}
+				$ctn .= '<br />
+<p><a href="'.$this->ZoneParent->ScriptConnexion->ObtientUrl().'">'.$this->LibelleRetourConnexion.'</a></p>' ;
+				return $ctn ;
+			}
 		}
 		class PvScriptDeconnexionWeb extends PvScriptWebSimple
 		{
@@ -698,9 +874,9 @@ Cordialement' ;
 			public $EnvoiMailSuccesConfirm = 0 ;
 			public $SujetMailSuccesConfirm = 'Compte ${login_member} confirme' ;
 			public $CorpsMailSuccesConfirm = '<p>Bonjour ${login_member},</p>
-<p>Veuillez cliquer sur ce lien pour confirmer votre inscription.</p>
-<p><a href="${url}">${url}</a></p>
+<p>Votre compte a ete bien confirme. Bienvenue sur notre site web.</p>
 Cordialement' ;
+			public $MsgSuccesCmdExecuter = 'Votre inscription a &eacute;t&eacute; prise en compte' ;
 			protected $NomColConfirmMail = "enable_confirm_mail" ;
 			protected $NomColCodeConfirmMail = "code_confirm_mail" ;
 			protected $_FltConfirmMail ;
@@ -835,6 +1011,7 @@ Cordialement' ;
 					$this->_FltCodeConfirm = $form->InsereFltEditFixe("code_confirm", rand(1000, 9999), $this->NomColCodeConfirmMail) ;
 				}
 				$form->CommandeExecuter->Libelle = $this->LibelleCmdExecuter ;
+				$form->CommandeExecuter->MessageSuccesExecution = $this->MsgSuccesCmdExecuter ;
 				$form->RedirigeAnnulerVersScript($this->ZoneParent->NomScriptConnexion) ;
 			}
 			public function CodeConfirmMail()

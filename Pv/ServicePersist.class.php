@@ -99,12 +99,14 @@
 					$this->ElementActif = null ;
 					$this->ElementsBruts = array() ;
 					$this->ChargeElements() ;
+					$this->SauveEtat() ;
 					foreach($this->ElementsBruts as $i => $elemBrut)
 					{
 						$this->ElementActif = $this->CreeElement() ;
 						$this->ElementActif->Index = $i ;
 						$this->ElementActif->ImporteContenu($elemBrut) ;
 						$this->TraiteElementActif() ;
+						$this->SauveEtat() ;
 					}
 					$this->VideElements() ;
 				}
@@ -114,6 +116,9 @@
 			{
 			}
 			protected function ChargeElements()
+			{
+			}
+			protected function VideElements()
 			{
 			}
 		}
@@ -259,10 +264,18 @@
 				if($this->FluxEnvoi !== false)
 				{
 					$ctnEncode = $this->FormatPaquet->Encode($contenu) ;
-					$ok = 1 ;
+					$ok = true ;
+					$msgErreur = null ;
 					if($ctnEncode != '')
 					{
-						$ok = @fputs($this->FluxEnvoi, $ctnEncode) ;
+						try
+						{
+							$ok = fputs($this->FluxEnvoi, $ctnEncode) ;
+						}
+						catch(Exception $ex)
+						{
+							$msgErreur = $ex->getMessage() ;
+						}
 					}
 					if($ok)
 					{
@@ -284,13 +297,20 @@
 					}
 					else
 					{
-						$this->DernErrEnvoiDemande = "ecriture_sur_le_flux_socket_echoue" ;
+						if($msgErreur != null)
+						{
+							$this->DernErrEnvoiDemande = $msgErreur ;
+						}
+						else
+						{
+							$this->DernErrEnvoiDemande = "ecriture_flux_socket_echoue" ;
+						}
 					}
 					$this->FermeFluxEnvoi() ;
 				}
 				else
 				{
-					$this->DernErrEnvoiDemande = "ouverture_du_flux_socket_echoue" ;
+					$this->DernErrEnvoiDemande = $codeErreur.'#'.$msgErreur ;
 				}
 				return $this->FormatPaquet->Decode($resultat) ;
 			}

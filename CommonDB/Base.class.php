@@ -2661,9 +2661,41 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 				}
 				return $sql ;
 			}
+			function SqlAddDays($expr, $val)
+			{
+				return "cast(".$expr." as date) + ".$val ;
+			}
+			function SqlAddHours($expr, $val)
+			{
+				return "cast(".$expr." as date) + (".$val." / 24)" ;
+			}
+			function SqlAddMinutes($expr, $val)
+			{
+				return "cast(".$expr." as date) + (".$val." / (24 * 60))" ;
+			}
+			function SqlAddSeconds($expr, $val)
+			{
+				return "cast(".$expr." as date) + (".$val." / (24 * 60 * 60))" ;
+			}
+			function SqlAddMonths($expr, $val)
+			{
+				return "add_months(cast(".$expr." as date), ".$val.")" ;
+			}
+			function SqlAddYears($expr, $val)
+			{
+				return "add_months(cast(".$expr." as date), ".$val." * 12)" ;
+			}
 			function SqlDateDiff($expr1, $expr2)
 			{
 				return "(cast(".$expr1." as date) - cast(".$expr2." as date)) * 24*60*60" ;
+			}
+			function SqlToInt($expr1)
+			{
+				return "CAST(".$expr1." AS INTEGER)" ;
+			}
+			function SqlToDouble($expr1)
+			{
+				return "CAST(".$expr1." AS DECIMAL)" ;
 			}
 			function SqlNow()
 			{
@@ -2678,6 +2710,10 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 				if($start == 0)
 					return "instr($expr, $search)" ;
 				return "instr($expr, $search, $start)" ;
+			}
+			function SqlDateToStr($dateName)
+			{
+				return "TO_CHAR(".$dateName.", 'YYYY-MM-DD HH24:MI:SS')" ;
 			}
 		}
 

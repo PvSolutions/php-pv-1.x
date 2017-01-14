@@ -27,6 +27,45 @@
 			public $RemplZoneAdminPossible = 1 ;
 			public $BarreMenu ;
 			public $BarreElemsRendu ;
+			public $ClsCSSLienTblList = "ui-widget" ;
+			public $LibAjoutTblList = "Ajouter" ;
+			public $LibModifTblList = "Modifier" ;
+			public $LibSupprTblList = "Supprimer" ;
+			public $ChemIconAjoutTblList = "images/icones/ajout.png" ;
+			public $ChemIconModifTblList = "images/icones/modif.png" ;
+			public $ChemIconSupprTblList = "images/icones/suppr.png" ;
+			protected $PresentDansFluxRSS = 0 ;
+			public function ObtientReqSqlFluxRSS()
+			{
+				$this->DefFluxRSS->ValeurColNatureRendu = "implem" ;
+				$this->DefFluxRSS->ValeurColGroupeRendu = "implems" ;
+				$this->DefFluxRSS->ValeurColElemRendu = $this->NomElementSyst ;
+				return parent::ObtientReqSqlFluxRSS() ;
+			}
+			public function & InsereIconeAction(& $tabl, & $colActs, $url, $cheminIcone, $libelle='')
+			{
+				$lien = $tabl->InsereIconeAction($colActs, $url, $cheminIcone, $libelle) ;
+				$lien->ClasseCSS = $this->ClsCSSLienTblList ;
+				return $lien ;
+			}
+			public function & InsereIconeActionModif(& $tabl, & $colActs, $url)
+			{
+				return $this->InsereIconeAction($tabl, $colActs, $url, $this->ChemIconModifTblList, $this->LibModifTblList) ;
+			}
+			public function & InsereIconeActionSuppr(& $tabl, & $colActs, $url)
+			{
+				return $this->InsereIconeAction($tabl, $colActs, $url, $this->ChemIconSupprTblList, $this->LibSupprTblList) ;
+			}
+			public function & InsereCmdRedirectUrlTabl(& $tabl, $nom, $url, $libelle, $cheminIcone="")
+			{
+				$cmd = $tabl->InsereCmdRedirectUrl($nom, $url, $libelle) ;
+				$cmd->CheminIcone = $cheminIcone ;
+				return $cmd ;
+			}
+			public function & InsereCmdAjoutTabl(& $tabl, $url)
+			{
+				return $this->InsereCmdRedirectUrlTabl($tabl, "cmdAjout", $url, $this->LibAjoutTblList, $this->ChemIconAjoutTblList) ;
+			}
 			public function CreeCfgAppl()
 			{
 				return new CfgBaseApplImplemSws() ;
@@ -244,6 +283,18 @@
 				$this->EntitesAppls[] = $nomEntite ;
 				$this->CfgEntitesAppls[$nomEntite] = $cfg ;
 			}
+			public function ObtientCfgEntiteAppl(&$entite)
+			{
+				return $this->ObtientCfgEntiteApplNom($entite->NomElementModule) ;
+			}
+			public function ObtientCfgEntiteApplNom($nomEntite)
+			{
+				if(in_array($nomEntite, $this->EntitesAppls))
+				{
+					return $this->CfgEntitesAppls[$nomEntite] ;
+				}
+				return $this->CreeCfgAppl() ;
+			}
 			public function InscritModuleApplNom($nomModule, $cfg=null)
 			{
 				if($cfg == null)
@@ -381,6 +432,21 @@
 			public function RenduPiedAdmin()
 			{
 				$ctn = "" ;
+				return $ctn ;
+			}
+			public function RenduSpecifique()
+			{
+				$ctn = '' ;
+				$ctn .= $this->TablListeCmt->RenduDispositif() ;
+				return $ctn ;
+			}
+			public function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				// $ctn .= '<p>mmmm</p>' ;
+				$ctn .= $this->RenduEnteteAdmin() ;
+				$ctn .= parent::RenduDispositifBrut() ;
+				$ctn .= $this->RenduPiedAdmin() ;
 				return $ctn ;
 			}
 		}

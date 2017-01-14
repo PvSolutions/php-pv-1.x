@@ -14,6 +14,14 @@
 			@session_start() ;
 		}
 		
+		if(! function_exists("mb_check_encoding"))
+		{
+			function mb_check_encoding($var, $encoding=null)
+			{
+				return false ;
+			}
+		}
+		
 		if(! function_exists('get_interpreter_path'))
 		{
 			$GLOBALS['USER_INTERPRETER_PATH'] = '' ;

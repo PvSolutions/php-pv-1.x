@@ -150,6 +150,7 @@
 			public $BasesDonnees = array() ;
 			public $ServsPersists = array() ;
 			public $TachesProgs = array() ;
+			public $Integrations = array() ;
 			public $Elements = array() ;
 			public $CheminFichierElementActifFixe = "" ;
 			public $CheminFichierElementActif = "" ;
@@ -181,6 +182,8 @@
 				$this->ChargeTachesProgs() ;
 				$this->ChargeServsPersists() ;
 				$this->ChargeIHMs() ;
+				$this->ChargeIntegrations() ;
+				$this->AppliqueIntegrations() ;
 				$this->ChargeElementHorsLigne() ;
 			}
 			public function InscritCtrlTachesProgs($nomElem='ctrlTachesProgs')
@@ -237,6 +240,37 @@
 			protected function ChargeElementHorsLigne()
 			{
 				$this->ElementHorsLigne = null ;
+			}
+			protected function ChargeIntegrations()
+			{
+			}
+			protected function AppliqueIntegrations()
+			{
+				$nomsIntegrs = array_keys($this->Integrations) ;
+				foreach($nomsIntegrs as $i => $nomIntegr)
+				{
+					$integr = & $this->Integrations[$nomIntegr] ;
+					$integr->ChargeConfig() ;
+					$integr->RemplitApplication($nomIntegr, $this) ;
+				}
+			}
+			public function & InscritIntegration($nomIntegr, & $integr)
+			{
+				return $this->InsereIntegration($nomIntegr, $integr) ;
+			}
+			public function InsereIntegration($nomIntegr, $integr)
+			{
+				$this->Integrations[$nomIntegr] = & $integr ;
+				return $integr ;
+			}
+			public function & ObtientIntegration($nomIntegr)
+			{
+				$integr = new PvIntegrationIndef() ;
+				if(isset($this->Integrations[$nomIntegr]))
+				{
+					$integr = & $this->Integrations[$nomIntegr] ;
+				}
+				return $integr ;
 			}
 			public function InscritElement($nom, & $element)
 			{
@@ -482,10 +516,106 @@
 			}
 		}
 		
+		class PvIntegration extends PvObjet
+		{
+			protected $NomIntegration ;
+			protected $PrivilegesGlobauxScript = array() ;
+			public function EstIndefinie()
+			{
+				return false ;
+			}
+			public function RemplitApplication($nomIntegration, & $app)
+			{
+				$this->NomIntegration = $nomIntegration ;
+				$this->RemplitBasesDonnees($app) ;
+				$this->RemplitTachesProgs($app) ;
+				$this->RemplitServsPersists($app) ;
+				$this->RemplitIHMs($app) ;
+				$this->RemplitApplicationSpec($app) ;
+				$this->NomIntegration = "" ;
+			}
+			protected function & InsereTacheProg($nom, $tacheProg, & $app)
+			{
+				$res = $app->InsereTacheProg($this->NomIntegration."_".$nom, $tacheProg) ;
+				$res->NomIntegrationParent = $this->NomIntegration ;
+				return $res ;
+			}
+			protected function & InsereServPersist($nom, $serv, & $app)
+			{
+				$res = $app->InsereServPersist($this->NomIntegration."_".$nom, $serv) ;
+				$res->NomIntegrationParent = $this->NomIntegration ;
+				return $res ;
+			}
+			protected function & InsereIHM($nom, $ihm, & $app)
+			{
+				$res = $app->InsereIHM($this->NomIntegration."_".$nom, $ihm) ;
+				$res->NomIntegrationParent = $this->NomIntegration ;
+				return $res ;
+			}
+			protected function & InsereScript($nom, $script, & $zone, $privs=array())
+			{
+				$res = $zone->InsereScript($this->NomIntegration."_".$nom, $script) ;
+				if(count($this->PrivilegesGlobauxScript) > 0)
+				{
+					array_splice($res->Privileges, count($res->Privileges), 0, $this->PrivilegesGlobauxScript) ;
+				}
+				if(count($privs) > 0)
+				{
+					array_splice($res->Privileges, count($res->Privileges), 0, $privs) ;
+				}
+				$res->NomIntegrationParent = $this->NomIntegration ;
+				return $res ;
+			}
+			protected function RemplitApplicationSpec(& $app)
+			{
+			}
+			protected function RemplitBasesDonnees(& $app)
+			{
+			}
+			protected function RemplitTachesProgs(& $app)
+			{
+				foreach($app->TachesProgs as $nom => & $tacheProg)
+				{
+					$this->RemplitTacheProg($tacheProg) ;
+				}
+			}
+			protected function RemplitServsPersists(& $app)
+			{
+				foreach($app->ServsPersists as $nom => & $serv)
+				{
+					$this->RemplitServPersist($serv) ;
+				}
+			}
+			protected function RemplitIHMs(& $app)
+			{
+				foreach($app->IHMs as $nom => & $ihm)
+				{
+					$this->RemplitIHM($ihm) ;
+				}
+			}
+			protected function RemplitIHM(& $ihm)
+			{
+			}
+			protected function RemplitServPersist(& $serv)
+			{
+			}
+			protected function RemplitTacheProg(& $tacheProg)
+			{
+			}
+		}
+		class PvIntegrationIndef extends PvIntegration
+		{
+			public function EstIndefinie()
+			{
+				return true ;
+			}
+		}
+		
 		class PvElementApplication extends PvObjet
 		{
 			public $ApplicationParent = null ;
 			public $NomElementApplication = "" ;
+			public $NomIntegrationParent = "" ;
 			public $CheminFichierRelatif = "" ;
 			public $AccepterTousChemins = 0 ;
 			public $Titre ;
@@ -497,6 +627,15 @@
 			public $FinExecution = 0 ;
 			public $TempsExecution = 0 ;
 			public $DelaiExecutionPrec = 0 ;
+			public $Integrations = array() ;
+			public function NatureElementApplication()
+			{
+				return "base" ;
+			}
+			public function IntegrationParent()
+			{
+				return $this->ApplicationParent->ObtientIntegration($this->NomIntegrationParent) ;
+			}
 			public function ObtientCheminIcone()
 			{
 				if($this->CheminIcone != '')
@@ -576,6 +715,10 @@
 		class PvIHM extends PvElementApplication
 		{
 			public $TypeIHM = "indefini" ;
+			public function NatureElementApplication()
+			{
+				return "ihm" ;
+			}
 		}
 		
 		class PvPlateformProc
@@ -854,20 +997,21 @@
 		{
 			public $Declenchs = array() ;
 			public $DeclenchParDefaut ;
+			public $ToujoursExecuter = 0 ;
+			public function NatureElementApplication()
+			{
+				return "tache_programmee" ;
+			}
 			protected function CreeDeclenchParDefaut()
 			{
 				return new PvDeclenchTacheIndef() ;
-			}
-			protected function InitConfig()
-			{
-				parent::InitConfig() ;
-				$this->DeclenchParDefaut = $this->CreeDeclenchParDefaut() ;
 			}
 			public function DelaiAtteint()
 			{
 				$ok = 0 ;
 				$declenchs = $this->Declenchs ;
-				array_splice($declenchs, 0, 0, array($this->DeclenchParDefaut)) ;
+				$declenchDefaut = ($this->ToujoursExecuter == 1) ? new PvDeclenchTjrTache() : $this->CreeDeclenchParDefaut() ;
+				array_splice($declenchs, 0, 0, array($declenchDefaut)) ;
 				foreach($declenchs as $i => $declench)
 				{
 					if($declench->DelaiTacheAtteint($this))
@@ -921,6 +1065,10 @@
 			public $EnregEtat = 1 ;
 			public $VerifSurPresenceProc = 0 ;
 			protected $NaturePlateforme = "console" ;
+			public function NatureElementApplication()
+			{
+				return "service_persistant" ;
+			}
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -989,6 +1137,7 @@
 			{
 				$chemFicEtat = $this->ObtientChemFicEtat() ;
 				$fh = fopen($chemFicEtat, "w") ;
+				$this->Etat->TimestmpCapt = date("U") ;
 				fputs($fh, serialize($this->Etat)) ;
 				fclose($fh) ;
 			}
@@ -1006,6 +1155,10 @@
 				return (count($entries) == 1) ;
 			}
 			public function Verifie()
+			{
+				return 1 ;
+			}
+			public function EstServiceDemarre()
 			{
 				$this->DetecteEtat() ;
 				if(! $this->EstDemarre() || ($this->VerifSurPresenceProc == 1 && ! $this->ProcPresent()))

@@ -549,11 +549,11 @@
 					$ctn .= ' class="'.$this->NomClasseCSSSelect.'"' ;
 				if($menu->Tips != '')
 				{
-					$ctn .= ' title="'.htmlentities($menu->Tips).'"' ;
+					$ctn .= ' title="'.htmlspecialchars($menu->Tips).'"' ;
 				}
 				if($menu->FenetreCible != '')
 				{
-					$ctn .= ' target="'.htmlentities($menu->FenetreCible).'"' ;
+					$ctn .= ' target="'.htmlspecialchars($menu->FenetreCible).'"' ;
 				}
 				$ctn .= '>' ;
 				return $ctn ;

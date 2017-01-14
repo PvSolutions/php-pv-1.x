@@ -1045,6 +1045,7 @@
 						}
 						if($adActivated == 0)
 						{
+							// print $requestRow["REQUEST_PASSWORD"].' and '.$requestRow["MEMBER_PASSWORD"].'<br>' ;
 							if($requestRow["REQUEST_PASSWORD"] == $requestRow["MEMBER_PASSWORD"])
 							{
 								$idMember = $requestRow["MEMBER_ID"] ;

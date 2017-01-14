@@ -650,7 +650,6 @@
 		}
 		class PvCommandeInscriptionMembreMS extends PvCommandeAjoutMembreMS
 		{
-			public $MessageSuccesExecution = "Votre inscription a &eacute;t&eacute; prise en compte" ;
 			public function ExecuteInstructions()
 			{
 				parent::ExecuteInstructions() ;
@@ -879,6 +878,7 @@
 				}
 				$sql = "INSERT INTO ".$basedonnees->EscapeTableName($membership->PrivilegeTable)." (".$basedonnees->EscapeFieldName($membership->PrivilegeTable, $membership->ProfilePrivilegeColumn).", ".$basedonnees->EscapeFieldName($membership->PrivilegeTable, $membership->RolePrivilegeColumn).", ".$basedonnees->EscapeFieldName($membership->PrivilegeTable, $membership->EnablePrivilegeColumn).") select ".$basedonnees->EscapeFieldName($membership->ProfileTable, $membership->ProfilePrivilegeForeignKey).", ".$basedonnees->ParamPrefix."roleId, ".$basedonnees->ParamPrefix."roleEnabled from ".$basedonnees->EscapeTableName($membership->ProfileTable) ;
 				$basedonnees->RunSql($sql, array("roleEnabled" => $membership->EnablePrivilegeFalseValue(), "roleId" => $idRole)) ;
+				// print "kk : ".$this->FormulaireDonneesParent->FiltreListeProfilsRole->ValeurBrute ;
 				foreach($this->FormulaireDonneesParent->FiltreListeProfilsRole->ValeurBrute as $i => $valeur)
 				{
 					$basedonnees->UpdateRow(
@@ -1127,67 +1127,39 @@
 		}
 		class PvActCmdRecouvreMPMS extends PvActCmdBase
 		{
-			public $MessageSuccesEnvoiMail = "Le mot de passe a &eacute;t&eacute; envoy& par mail" ;
-			public $MessageSuccesAffiche = "Voici votre nouveau mot de passe : " ;
-			public $MessageErreur = "Invalide Nom d'utilisateur / Email" ;
-			public $EnvoiParMail = 0 ;
-			public $MessageEmail = "" ;
-			protected function GenereNouvMotPasse()
-			{
-				return uniqid() ;
-			}
 			public function Execute()
 			{
 				$this->LieFiltresCibles() ;
-				$membership = & $this->FormulaireDonneesParent->ZoneParent->Membership ;
-				$basedonnees = & $membership->Database ;
-				$sql = "select * from ".$membership->MemberTable.' MEMBER_TABLE where '.$basedonnees->EscapeFieldName('MEMBER_TABLE', $membership->LoginMemberColumn).'='.$basedonnees->ParamPrefix.'Login' ;
-				$params = array('Login' => $this->FiltresCibles[0]->ValeurParametre) ;
-				if($membership->LoginWithEmail == 0)
+				if($this->ScriptParent->ConfirmParUrl == 0)
 				{
-					$sql .= ' and '.$basedonnees->EscapeFieldName('MEMBER_TABLE', $membership->EmailMemberColumn).'='.$basedonnees->ParamPrefix.'Email' ;
-					$params["Email"] = $this->FiltresCibles[1]->ValeurParametre ;
-				}
-				$ligneMembre = $basedonnees->FetchSqlRow($sql, $params) ;
-				if(count($ligneMembre) > 0)
-				{
-					$nouvMotPasse = $this->GenereNouvMotPasse() ;
-					$nouvValeurs = array($membership->PasswordMemberColumn => $nouvMotPasse) ;
-					if($membership->MustChangePasswordMemberColumn != "")
-					{
-						$nouvValeurs[$membership->MustChangePasswordMemberColumn] = $membership->MustChangePasswordMemberTrueValue ;
-					}
-					if($membership->PasswordMemberExpr != "")
-					{
-						$nouvValeurs[$basedonnees->ExprKeyName] = array(
-							$membership->PasswordMemberColumn => $membership->PasswordMemberExpr.'('.$basedonnees->ExprParamPattern.')'
-						) ;
-					}
-					$ok = $basedonnees->UpdateRow(
-						$membership->MemberTable,
-						$nouvValeurs,
-						$membership->IdMemberColumn.' = '.$basedonnees->ParamPrefix.'Id',
-						array('Id' => $ligneMembre[$membership->IdMemberColumn])
-					) ;
+					$ok = $this->ScriptParent->ReinitMotPasse($this->FiltresCibles) ;
 					if($ok)
 					{
-						if($this->EnvoiParMail)
+						if($this->ScriptParent->EnvoiParMail == 1)
 						{
-							$this->FormulaireDonneesParent->CommandeSelectionnee->MessageExecution = $this->MessageSuccesEnvoiMail ;
+							$this->FormulaireDonneesParent->CommandeSelectionnee->MessageExecution = $this->ScriptParent->MessageSuccesEnvoiMail ;
 						}
 						else
 						{
-							$this->FormulaireDonneesParent->CommandeSelectionnee->MessageExecution = $this->MessageSuccesAffiche.' '.$nouvMotPasse ;
+							$this->FormulaireDonneesParent->CommandeSelectionnee->MessageExecution = $this->ScriptParent->MessageSuccesAffiche.' '.$this->ScriptParent->MotPasseGenere ;
 						}
 					}
 					else
 					{
-						$this->FormulaireDonneesParent->CommandeSelectionnee->MessageExecution = $basedonnees->ConnectionException ;
+						$this->FormulaireDonneesParent->CommandeSelectionnee->MessageExecution = $this->ScriptParent->MessageErreur ;
 					}
 				}
 				else
 				{
-					$this->FormulaireDonneesParent->CommandeSelectionnee->MessageExecution = $this->MessageErreur ;
+					$ok = $this->ScriptParent->EnvoiMailDem($this->FiltresCibles) ;
+					if($ok)
+					{
+						$this->FormulaireDonneesParent->CommandeSelectionnee->MessageExecution = $this->ScriptParent->MessageSuccesEnvoiMail ;
+					}
+					else
+					{
+						$this->FormulaireDonneesParent->CommandeSelectionnee->MessageExecution = $this->ScriptParent->MessageErreurEnvoiMail ;
+					}
 				}
 			}
 		}
@@ -1646,7 +1618,8 @@
 					$form->FiltresEdition[$i] = $form->ScriptParent->CreeFiltreHttpPost("filtreLoginMembre") ;
 					$form->FiltresEdition[$i]->NomParametreDonnees = $membership->LoginMemberColumn ;
 				}
-				$form->FiltresEdition[$i]->NomColonneLiee = "" ;
+				$form->FiltresEdition[$i]->NomColonneLiee = $membership->LoginMemberColumn ;
+				$form->FiltresEdition[$i]->NePasLierColonne = 1 ;
 				$form->FiltresEdition[$i]->DeclareComposant("PvZoneEtiquetteHtml") ;
 				$form->FiltresEdition[$i]->Libelle = $membership->LoginMemberLabel ;
 				$form->FiltreLoginMembre = & $form->FiltresEdition[$i] ;

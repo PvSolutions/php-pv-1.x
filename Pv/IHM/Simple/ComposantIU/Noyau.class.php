@@ -16,6 +16,45 @@
 		}
 		define('PV_COMPOSANT_SIMPLE_IU_BASE', 1) ;
 		
+		class PvSrcValsSupplLgnDonnees
+		{
+			public $InclureHtml = 0 ;
+			public $SuffixeHtml = "_html" ;
+			public $InclureUrl = 0 ;
+			public $SuffixeUrl = "_query_string" ;
+			public $LignesDonneesBrutes = null ;
+			public function Applique(& $composant, $ligneDonnees)
+			{
+				$this->LigneDonneesBrutes = $ligneDonnees ;
+				// print_r($ligneDonneesBrutes) ;
+				if($this->InclureHtml)
+				{
+					$ligneDonnees = array_merge(
+						$ligneDonnees,
+						array_apply_suffix(array_map('htmlentities', $this->LigneDonneesBrutes), $this->SuffixeHtml)
+					) ;
+				}
+				if($this->InclureUrl)
+				{
+					$ligneDonnees = array_merge(
+						$ligneDonnees,
+						array_apply_suffix(
+							array_map(
+								'urlencode',$this->LigneDonneesBrutes
+							), $this->SuffixeUrl
+						)
+					) ;
+				}
+				return $ligneDonnees ;
+			}
+		}
+		
+		class PvMsgActionNotificationWeb
+		{
+			public $Contenu ;
+			public $TypeErreur = "" ;
+		}
+		
 		class PvCfgAppelAjaxActionSimple
 		{
 			public $Async = true ;
@@ -158,6 +197,47 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 </html>' ;
 				$this->ZoneParent->TermineRenduImpression() ;
 				exit ;
+			}
+		}
+		class PvActionNotificationWeb extends PvActionBaseZoneWebSimple
+		{
+			protected $Message ;
+			public function & ObtientMessage()
+			{
+				return $this->Message ;
+			}
+			public function PossedeMessage()
+			{
+				return $this->Message->Contenu != "" ;
+			}
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->Message = new PvMsgActionNotificationWeb() ;
+			}
+			protected function ConfirmeMessage($msg, $typeErreur="")
+			{
+				$this->Message->Contenu = $msg ;
+				$this->Message->TypeErreur = $typeErreur ;
+			}
+			public function ConfirmeSucces($msg)
+			{
+				$this->ConfirmeMessage($msg, "") ;
+			}
+			public function RenseigneErreur($msg)
+			{
+				$this->ConfirmeMessage($msg, "erreur") ;
+			}
+			public function ConfirmeErreur($msg)
+			{
+				$this->ConfirmeMessage($msg, "erreur") ;
+			}
+			public function ConfirmeException($msg)
+			{
+				$this->ConfirmeMessage($msg, "exception") ;
+			}
+			public function Execute()
+			{
 			}
 		}
 		class PvActionRenduPageWeb extends PvActionBaseZoneWebSimple
@@ -554,9 +634,11 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			protected function RenduLibelleFiltre(& $filtre)
 			{
 				$ctn = '' ;
+				$ctn .= '<label for="'.$filtre->ObtientIDElementHtmlComposant().'">' ;
 				$ctn .= $this->RenduMarquesFiltre($filtre->PrefixesLibelle) ;
 				$ctn .= $filtre->ObtientLibelle() ;
 				$ctn .= $this->RenduMarquesFiltre($filtre->SuffixesLibelle) ;
+				$ctn .= '</label>' ;
 				return $ctn ;				
 			}
 			public function Execute(& $script, & $composant, $parametres)
@@ -666,7 +748,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 						$ctn .= '<td' ;
 						$ctn .= ' valign="top"' ;
 						$ctn .= '>'.PHP_EOL ;
-						$ctn .= '<label for="'.$filtre->ObtientIDElementHtmlComposant().'">'.$filtre->ObtientLibelle().'</label>'.PHP_EOL ;
+						$ctn .= $this->RenduLibelleFiltre($filtre).PHP_EOL ;
 						$ctn .= '</td>'.PHP_EOL ;
 						$ctn .= '</tr>'.PHP_EOL ;
 					}
@@ -909,29 +991,66 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 		class EncBasePortionRenduFmt
 		{
 			public $Prefixe ;
+			public $AppliquerTout = 0 ;
+			public $NomParams = array() ;
 			public function __construct($prefixe='')
 			{
 				$this->Prefixe = $prefixe;
 			}
-			public function Execute($params=array())
+			public function Execute($params=array(), $elem=array())
 			{
 				return array() ;
 			}
 		}
 		class EncUrlPortionRenduFmt extends EncBasePortionRenduFmt
 		{
-			public function Execute($params=array())
+			public $AppliquerTout = 1 ;
+			public function Execute($params=array(), $elem=array())
 			{
 				return array_map('urlencode', $params) ;
 			}
 		}
+		class EncDateFrPortionRenduFmt extends EncBasePortionRenduFmt
+		{
+			public $AppliquerTout = 0 ;
+			public function Execute($params=array(), $elem=array())
+			{
+				return array_map('date_fr', $params) ;
+			}
+		}
 		class EncHtmlEntPortionRenduFmt extends EncBasePortionRenduFmt
 		{
-			public function Execute($params=array())
+			public $AppliquerTout = 1 ;
+			public function Execute($params=array(), $elem=array())
 			{
 				return array_map('htmlentities', $params) ;
 			}
 		}
+		class EncNonVidePortionRenduFmt extends EncBasePortionRenduFmt
+		{
+			public $AppliquerTout = 0 ;
+			public $Contenu = '${luimeme}' ;
+			public function Execute($params=array(), $elem=array())
+			{
+				$results = array() ;
+				foreach($params as $nom => $val)
+				{
+					if($val == "")
+					{
+						$results[$nom] = "" ;
+					}
+					else
+					{
+						$elem["luimeme"] = $val ;
+						$elem["this"] = $val ;
+						$elem["self"] = $val ;
+						$results[$nom] = _parse_pattern($this->Contenu, $elem) ;
+					}
+				}
+				return $results ;
+			}
+		}
+		
 		class PvPortionRenduFmt extends PvComposantIUBase
 		{
 			public $PrefixeEncUrl = "url_" ;
@@ -946,6 +1065,26 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			protected function RenduVideActif()
 			{
 				return ($this->Contenu == '') ;
+			}
+			public function & InsereEncodeurDateFr($nomParams=array(), $prefixe="date_fr")
+			{
+				$encodeur = new EncDateFrPortionRenduFmt($prefixe) ;
+				$encodeur->NomParams = $nomParams ;
+				$this->InsereEncodeur($encodeur) ;
+				return $encodeur ;
+			}
+			public function & InsereEncodeurNonVide($nomParams=array(), $contenu='${luimeme}', $prefixe="non_vide")
+			{
+				$encodeur = new EncNonVidePortionRenduFmt($prefixe) ;
+				$encodeur->NomParams = $nomParams ;
+				$encodeur->Contenu = $contenu ;
+				$this->InsereEncodeur($encodeur) ;
+				return $encodeur ;
+			}
+			public function & InsereEncodeur($encodeur)
+			{
+				$this->Encodeurs[] = $encodeur ;
+				return $encodeur ;
 			}
 			protected function ObtientEncodeurs()
 			{
@@ -966,7 +1105,9 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				$encodeurs = $this->ObtientEncodeurs() ;
 				foreach($encodeurs as $i => $encodeur)
 				{
-					$params = $encodeur->Execute($this->Params) ;
+					$elem = $this->Params ;
+					$valeurs = ($encodeur->AppliquerTout) ? $elem : array_intersect_key($elem, array_flip($encodeur->NomParams)) ;
+					$params = $encodeur->Execute($valeurs, $elem) ;
 					if(count($params) == 0)
 					{
 						continue ;
@@ -994,6 +1135,208 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				$ctn .= _parse_pattern($this->Contenu, $this->ParamsCalc) ;
 				$ctn .= '</div>' ;
 				return $ctn ;
+			}
+		}
+		
+		class PvComposantIUFiltrable extends PvComposantIUBase
+		{
+			public $FournisseurDonnees ;
+			public $FiltresSelection = array() ;
+			public $SourceValeursSuppl ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->SourceValeursSuppl = new PvSrcValsSupplLgnDonnees() ;
+			}
+			protected function ExtraitValeursLgnDonnees(& $lgn)
+			{
+				if($this->EstNul($this->SourceValeursSuppl))
+				{
+					return $lgn ;
+				}
+				return $this->SourceValeursSuppl->Applique($$this, $lgn) ;
+			}
+			public function & InsereFltSelectRef($nom, & $filtreRef, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreRef($nom, $filtreRef) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectFixe($nom, $valeur, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreFixe($nom, $valeur) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectCookie($nom, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreCookie($nom) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectSession($nom, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreSession($nom) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectMembreConnecte($nom, $nomParamLie='', $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreMembreConnecte($nom, $nomParamLie) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectHttpUpload($nom, $cheminDossierDest="", $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreHttpUpload($nom, $cheminDossierDest) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectHttpGet($nom, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreHttpGet($nom) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectHttpPost($nom, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreHttpPost($nom) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectHttpRequest($nom, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreHttpRequest($nom) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function CalculeElementsRendu()
+			{
+			}
+			public function VerifiePreRequisRendu()
+			{
+				return 1 ;
+			}
+			public function MsgPreRequisRenduNonVerifies()
+			{
+				return "(PRE REQUIS DU RENDU NON VERIFIES)" ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$this->CalculeElementsRendu() ;
+				if($this->VerifiePreRequisRendu())
+				{
+					return $this->RenduDispositifBrutSpec() ;
+				}
+				return $this->MsgPreRequisRenduNonVerifies() ;
+			}
+			public function ObtientFiltresSelection()
+			{
+				return $this->FiltresSelection ;
+			}
+			protected function RenduDispositifBrutSpec()
+			{
+			}
+		}
+		class PvComposantJsFiltrable extends PvComposantIUFiltrable
+		{
+			protected static $SourceIncluse = 0 ;
+			protected function RenduDispositifBrut()
+			{
+				$this->CalculeElementsRendu() ;
+				if($this->VerifiePreRequisRendu())
+				{
+					$ctn = '' ;
+					$ctn .= $this->RenduSourceIncluse() ;
+					$ctn .= $this->RenduDispositifBrutSpec() ;
+					return $ctn ;
+				}
+				return $this->MsgPreRequisRenduNonVerifies() ;
+			}
+			protected function RenduSourceIncluse()
+			{
+				if($this->ObtientValStatique("SourceIncluse") == 1)
+					return "" ;
+				$ctn = $this->RenduSourceBrut() ;
+				$this->AffecteValStatique("SourceIncluse", 1) ;
+				return $ctn ;
+			}
+			protected function RenduSourceBrut()
+			{
+				return "" ;
+			}
+			public function RenduInscritCtnCSS($contenu)
+			{
+				return $this->RenduInscritContenuCSS($contenu) ;
+			}
+			public function RenduInscritContenuCSS($contenu)
+			{
+				$ctn = '' ;
+				$ctn .= '<style type="text/css">'.PHP_EOL .$contenu.PHP_EOL .'</script>' ;
+				return $ctn ;
+			}
+			public function RenduInscritLienCSS($chemFich)
+			{
+				$ctn = '' ;
+				$ctn .= '<link rel="stylesheet" type="text/css" href="'.$chemFich.'">' ;
+				return $ctn ;
+			}
+			public function RenduInscritLienJs($chemFich)
+			{
+				$ctn = '' ;
+				if($this->ZoneParent->InclureCtnJsEntete == 1)
+				{
+					$this->ZoneParent->InscritFichierJs($chemFich) ;
+				}
+				else
+				{
+					$ctn .= '<script type="text/javascript" src="'.htmlspecialchars($chemFich).'"></script>' ;
+				}
+				return $ctn ;
+			}
+			public function RenduInscritContenuJs($contenuJs)
+			{
+				$ctn = '' ;
+				if($this->ZoneParent->InclureCtnJsEntete == 1)
+				{
+					$this->ZoneParent->InscritContenuJs($contenuJs) ;
+				}
+				else
+				{
+					$ctn .= '<script type="text/javascript" src="'.$contenuJs.'"></script>' ;
+				}
+				return $ctn ;
+			}
+			public function RenduInscritCtnJs($contenuJs)
+			{
+				return $this->RenduInscritContenuJs($contenuJs) ;
 			}
 		}
 		
@@ -1205,6 +1548,26 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				}
 				return $encodeurs ;
 			}
+			public function & InsereEncodeurDateFr($nomParams=array())
+			{
+				$encodeur = new EncDateFrPortionRenduFmt() ;
+				$encodeur->NomParams = $nomParams ;
+				$this->InsereEncodeur($encodeur) ;
+				return $encodeur ;
+			}
+			public function & InsereEncodeur($encodeur)
+			{
+				$this->Encodeurs[] = $encodeur ;
+				return $encodeur ;
+			}
+			public function & InsereEncodeurNonVide($nomParams=array(), $contenu='${luimeme}', $prefixe="non_vide")
+			{
+				$encodeur = new EncNonVidePortionRenduFmt($prefixe) ;
+				$encodeur->NomParams = $nomParams ;
+				$encodeur->Contenu = $contenu ;
+				$this->InsereEncodeur($encodeur) ;
+				return $encodeur ;
+			}
 			protected function VideErreur()
 			{
 				$this->ErreurTrouvee = 0 ;
@@ -1250,7 +1613,8 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				$result = $elem ;
 				foreach($encodeurs as $i => $encodeur)
 				{
-					$params = $encodeur->Execute($elem) ;
+					$valeurs = ($encodeur->AppliquerTout) ? $elem : array_intersect_key($elem, array_flip($encodeur->NomParams)) ;
+					$params = $encodeur->Execute($valeurs, $elem) ;
 					if(count($params) == 0)
 					{
 						continue ;
@@ -1675,6 +2039,28 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			}
 			protected function ExecuteInstructions()
 			{
+			}
+		}
+		class PvCommandeActionNotification extends PvCommandeComposantIUBase
+		{
+			public $ActionNotification ;
+			protected function ExecuteInstructions()
+			{
+				if($this->EstNul($this->ActionNotification))
+				{
+					$this->RenseigneErreur("L'action rattach&eacute;e &agrave; la commande est nulle ou n'existe pas.") ;
+					return ;
+				}
+				$this->ActionNotification->Execute() ;
+				$msg = $this->ActionNotification->ObtientMessage() ;
+				if($msg->TypeErreur == "")
+				{
+					$this->ConfirmSucces($msg->Contenu) ;
+				}
+				else
+				{
+					$this->ConfirmErreur($msg->Contenu) ;
+				}
 			}
 		}
 		

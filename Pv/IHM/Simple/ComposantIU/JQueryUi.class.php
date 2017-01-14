@@ -114,6 +114,7 @@ jQuery(function() {
 			}
 			protected function RenduDispositifBrut()
 			{
+				$this->CorrigeIDsElementHtml() ;
 				$ctn = '<div id="'.$this->IDInstanceCalc.'">'.PHP_EOL ;
 				$ctn .= $this->RenduContenuHtml().PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
@@ -181,6 +182,70 @@ jQuery(function() {
 				{
 					$ctn .= $comp->RenduDispositif() ;
 				}
+				return $ctn ;
+			}
+		}
+		
+		class PvOptDatePickerJQueryUi extends PvOptBaseJQueryUi
+		{
+			public $altField = '' ;
+			public $altFormat = 'yy-mm-dd' ;
+			public $gotoCurrent = true ;
+			public $defaultDate = null ;
+			public $dateFormat = 'dd/mm/yy' ;
+			public $dayNames  = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday") ;
+			public $dayNamesMin = array("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa") ;
+			public $dayNamesShort = array("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat") ;
+			public $firstDay = 1 ;
+			public $isRTL = false ;
+			public $minDate = null ;
+			public $buttonImage = null ;
+			public $buttonImageOnly = false ;
+			public $buttonText = "..." ;
+			public $constrainInput = true ;
+			public $maxDate = null ;
+			public $monthNames  = array("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December") ;
+			public $monthNamesShort = array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec") ;
+		}
+		
+		class PvDatePickerJQueryUi extends PvElementFormulaireHtml
+		{
+			public $Opt ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->Opt = new PvOptDatePickerJQueryUi() ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$this->CorrigeIDsElementHtml() ;
+				$this->Opt->altField = "#".$this->IDInstanceCalc ;
+				$ctn = '' ;
+				$ctn .= '<input id="'.$this->IDInstanceCalc.'_DatePicker" type="text" value=""' ;
+				$ctn .= $this->RenduAttrStyleCSS() ;
+				$ctn .= $this->RenduAttrsSupplHtml() ;
+				$ctn .= ' />' ;
+				$ctn .= '<input name="'.$this->NomElementHtml.'"' ;
+				$ctn .= ' id="'.$this->IDInstanceCalc.'"' ;
+				$ctn .= ' type="hidden"' ;
+				$ctn .= ' value="'.htmlspecialchars($this->Valeur).'"' ;
+				$ctn .= ' />'.PHP_EOL ;
+				$ctn .= '<script type="text/javascript">
+jQuery(function() {
+var opt'.$this->IDInstanceCalc.'_DatePicker = '.svc_json_encode($this->Opt).' ;
+jQuery("#'.$this->IDInstanceCalc.'_DatePicker").datepicker(opt'.$this->IDInstanceCalc.'_DatePicker) ;'.PHP_EOL ;
+		if($this->Valeur != "")
+		{
+			$ctn .= 'var selectedDate = jQuery.datepicker.parseDate(opt'.$this->IDInstanceCalc.'_DatePicker.altFormat, '.svc_json_encode($this->Valeur).') ;
+jQuery("#'.$this->IDInstanceCalc.'_DatePicker").datepicker("setDate", selectedDate) ;'.PHP_EOL ;
+		}
+		$ctn .= 'jQuery("#'.$this->IDInstanceCalc.'_DatePicker").change(function() {
+	if(jQuery(this).val() === "") {
+		jQuery("#'.$this->IDInstanceCalc.'").val("") ;
+	}
+}) ;'.PHP_EOL ;
+		$ctn .= '}) ;
+</script>' ;
 				return $ctn ;
 			}
 		}
