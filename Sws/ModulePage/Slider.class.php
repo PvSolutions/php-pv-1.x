@@ -59,6 +59,7 @@
 			public $NomParamTblListSlider = "pIdSlider" ;
 			public $DefColTblListSlider ;
 			protected $PresentDansFluxRSS = 0 ;
+			protected $PresentDansRech = 0 ;
 			public function SqlListeColsSelect(& $bd)
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;
@@ -141,6 +142,7 @@
 			public $DefColTblListTitre ;
 			public $FltFrmElemTitre ;
 			protected $PresentDansFluxRSS = 0 ;
+			protected $PresentDansRech = 0 ;
 			public function SqlListeColsSelect(& $bd)
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;

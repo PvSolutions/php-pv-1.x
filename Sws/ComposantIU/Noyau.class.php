@@ -40,6 +40,9 @@
 		class TableauDonneesBaseSws extends PvTableauDonneesHtml
 		{
 		}
+		class GrilleDonneesBaseSws extends PvGrilleDonneesHtml
+		{
+		}
 		class FormulaireDonneesBaseSws extends PvFormulaireDonneesHtml
 		{
 		}

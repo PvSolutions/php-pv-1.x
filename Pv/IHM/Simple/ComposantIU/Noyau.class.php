@@ -1154,7 +1154,113 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				{
 					return $lgn ;
 				}
-				return $this->SourceValeursSuppl->Applique($$this, $lgn) ;
+				return $this->SourceValeursSuppl->Applique($this, $lgn) ;
+			}
+			public function & CreeFiltreRef($nom, & $filtreRef)
+			{
+				$filtre = new PvFiltreDonneesRef() ;
+				$filtre->Source = & $filtreRef ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreDonnees = $nom ;
+				return $filtre ;
+			}
+			public function & CreeFiltreFixe($nom, $valeur)
+			{
+				$filtre = new PvFiltreDonneesFixe() ;
+				$filtre->NomParametreDonnees = $nom ;
+				$filtre->ValeurParDefaut = $valeur ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				return $filtre ;
+			}
+			public function & CreeFiltreCookie($nom)
+			{
+				$filtre = new PvFiltreDonneesCookie() ;
+				$filtre->NomParametreDonnees = $nom ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				return $filtre ;
+			}
+			public function & CreeFiltreSession($nom)
+			{
+				$filtre = new PvFiltreDonneesSession() ;
+				$filtre->NomParametreDonnees = $nom ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				return $filtre ;
+			}
+			public function & CreeFiltreMembreConnecte($nom, $nomParamLie='')
+			{
+				$filtre = new PvFiltreDonneesMembreConnecte() ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreDonnees = $nom ;
+				$filtre->NomParametreLie = $nomParamLie ;
+				return $filtre ;
+			}
+			public function & CreeFiltreHttpUpload($nom, $cheminDossierDest="")
+			{
+				$filtre = new PvFiltreDonneesHttpUpload() ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreDonnees = $nom ;
+				$filtre->CheminDossier = $cheminDossierDest ;
+				return $filtre ;
+			}
+			public function & CreeFiltreHttpGet($nom)
+			{
+				$filtre = new PvFiltreDonneesHttpGet() ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
+				return $filtre ;
+			}
+			public function & CreeFiltreHttpPost($nom)
+			{
+				$filtre = new PvFiltreDonneesHttpPost() ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
+				return $filtre ;
+			}
+			public function & CreeFiltreHttpRequest($nom)
+			{
+				$filtre = new PvFiltreDonneesHttpRequest() ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
+				return $filtre ;
+			}
+			public function CreeFltRef($nom, & $filtreRef)
+			{
+				return $this->CreeFiltreRef($nom, $filtreRef) ;
+			}
+			public function CreeFltFixe($nom, $valeur)
+			{
+				return $this->CreeFiltreRef($nom, $valeur) ;
+			}
+			public function CreeFltCookie($nom)
+			{
+				return $this->CreeFiltreCookie($nom) ;
+			}
+			public function CreeFltSession($nom)
+			{
+				return $this->CreeFiltreSession($nom) ;
+			}
+			public function CreeFltMembreConnecte($nom, $nomParamLie='')
+			{
+				return $this->CreeFiltreMembreConnecte($nom, $nomParamLie) ;
+			}
+			public function CreeFltHttpUpload($nom, $cheminDossierDest="")
+			{
+				return $this->CreeFiltreHttpUpload($nom, $cheminDossierDest) ;
+			}
+			public function CreeFltHttpGet($nom)
+			{
+				return $this->CreeFiltreHttpGet($nom) ;
+			}
+			public function CreeFltHttpPost($nom)
+			{
+				return $this->CreeFiltreHttpPost($nom) ;
+			}
+			public function CreeFltHttpRequest($nom)
+			{
+				return $this->CreeFiltreHttpRequest($nom) ;
 			}
 			public function & InsereFltSelectRef($nom, & $filtreRef, $exprDonnees='', $nomClsComp='')
 			{
@@ -1268,6 +1374,16 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 		class PvComposantJsFiltrable extends PvComposantIUFiltrable
 		{
 			protected static $SourceIncluse = 0 ;
+			public $CfgInit ;
+			protected function CreeCfgInit()
+			{
+				return new StdClass ;
+			}
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->CfgInit = $this->CreeCfgInit() ;
+			}
 			protected function RenduDispositifBrut()
 			{
 				$this->CalculeElementsRendu() ;
@@ -1299,7 +1415,9 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public function RenduInscritContenuCSS($contenu)
 			{
 				$ctn = '' ;
-				$ctn .= '<style type="text/css">'.PHP_EOL .$contenu.PHP_EOL .'</script>' ;
+				$ctn .= '<style type="text/css">'.PHP_EOL 
+					.$contenu.PHP_EOL 
+					.'</style>' ;
 				return $ctn ;
 			}
 			public function RenduInscritLienCSS($chemFich)
@@ -1311,9 +1429,9 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public function RenduInscritLienJs($chemFich)
 			{
 				$ctn = '' ;
-				if($this->ZoneParent->InclureCtnJsEntete == 1)
+				if($this->ZoneParent->InclureCtnJsEntete == 0)
 				{
-					$this->ZoneParent->InscritFichierJs($chemFich) ;
+					$this->ZoneParent->InscritLienJs($chemFich) ;
 				}
 				else
 				{
@@ -1324,13 +1442,15 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public function RenduInscritContenuJs($contenuJs)
 			{
 				$ctn = '' ;
-				if($this->ZoneParent->InclureCtnJsEntete == 1)
+				if($this->ZoneParent->InclureCtnJsEntete == 0)
 				{
 					$this->ZoneParent->InscritContenuJs($contenuJs) ;
 				}
 				else
 				{
-					$ctn .= '<script type="text/javascript" src="'.$contenuJs.'"></script>' ;
+					$ctn .= '<script type="text/javascript">'.PHP_EOL 
+						.$contenuJs.PHP_EOL
+						.'</script>' ;
 				}
 				return $ctn ;
 			}

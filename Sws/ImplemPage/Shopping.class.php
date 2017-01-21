@@ -73,6 +73,11 @@
 			protected $IdBoutique = 0 ;
 			protected $ConfirmAct = 0 ;
 			protected $EnvoiMailSucces = 0 ;
+			public $FmtDemConfirmEnvoiMail = '<p>&nbsp;</p>
+<p>Voulez-vous confirmer l\'envoi de mail de votre commande par <b>${titre}</b></p>' ;
+			public $FmtSuccesConfirmEnvoiMail = '<p class="Succes">Votre commande a &eacute;t&eacute; envoy&eacute;e avec succ&ecirc;s</p>' ;
+			public $FmtEchecConfirmEnvoiMail = '<p class="Erreur">Erreur survenue lors de l\'envoi de votre commande. Veuillez r&eacute;essayer ult&eacute;rieurement.</p>' ;
+			public $LibelleLienRetour = 'Retour au panier' ;
 			public function Id()
 			{
 				return "email" ;
@@ -93,13 +98,13 @@
 				$this->CompIdentif2->Largeur = "300px" ;
 				$this->FltIdentif3 = $form->InsereFltEditHttpPost("identifiant3", "identifiant3") ;
 				$this->FltIdentif3->Libelle = "Sujet du mail" ;
-				$this->FltIdentif3->ValeurParDefaut = 'Réception commande ${id}' ;
+				$this->FltIdentif3->ValeurParDefaut = 'R&eacute;ception commande ${id}' ;
 				$this->CompIdentif3 = $this->FltIdentif3->ObtientComposant() ;
 				$this->CompIdentif3->Largeur = "350px" ;
 				$this->FltIdentif4 = $form->InsereFltEditHttpPost("identifiant4", "identifiant4") ;
 				$this->FltIdentif4->Libelle = "Corps du mail" ;
 				$this->FltIdentif4->ValeurParDefaut = '<p>Bonjour All,</p>
-<p>Vous venez de recevoir une commande dont voici les détails :</p>
+<p>Vous venez de recevoir une commande dont voici les d&eacute;tails :</p>
 ${details_commande}
 <p>Cdt.</p>' ;
 				$this->CompIdentif4 = $this->FltIdentif4->DeclareComposant("PvCkEditor") ;
@@ -123,7 +128,7 @@ ${details_commande}
 				$sujetMail = _parse_pattern($lgnRglt["identifiant3"], $donneesMail) ;
 				$corpsMail = _parse_pattern($lgnRglt["identifiant4"], $donneesMail) ;
 				$this->EnvoiMailSucces = send_html_mail($lgnRglt["identifiant2"], $sujetMail, $corpsMail, $lgnRglt["identifiant1"]) ;
-				$this->IdBoutique = $lgnCmd["id"] ;
+				$this->IdBoutique = $lgnCmd["id_boutique"] ;
 				// $this->EnvoiMailSucces = 1 ;
 				if($this->EnvoiMailSucces == true)
 				{
@@ -136,9 +141,8 @@ ${details_commande}
 				$ctn = '' ;
 				if($this->ConfirmAct == 0)
 				{
-					$ctn .= '<p>&nbsp;</p>
-<p>Voulez-vous confirmer l\'envoi de mail de votre commande par <b>'.$lgnRglt["titre"].'</b></p>
-<p>
+					$ctn .= _parse_pattern($this->FmtDemConfirmEnvoiMail, $lgnRglt) ;
+					$ctn .= '<p>
 	<a href="'.$implem->ScriptChoixRgltCmd->ObtientUrlParam(array("id" => $lgnRglt["id_boutique"])).'">Annuler</a>
 	&nbsp;&nbsp;&nbsp;&nbsp;
 	<a href="'.$implem->ScriptProcessRgltCmd->ObtientUrlParam(array("id" => $lgnRglt["id"], "confirme_action" => 1)).'">Confirmer</a>
@@ -148,13 +152,13 @@ ${details_commande}
 				{
 					if($this->EnvoiMailSucces)
 					{
-						$ctn .= '<p class="Succes">Votre commande a &eacute;t&eacute; envoy&eacute;e avec succ&ecirc;s</p>' ;
+						$ctn .= _parse_pattern($this->FmtSuccesConfirmEnvoiMail, $lgnRglt) ;
 					}
 					else
 					{
-						$ctn .= '<p class="Erreur">Erreur survenue lors de l\'envoi de votre commande. Veuillez r&eacute;essayer ult&eacute;rieurement.</p>' ;
+						$ctn .= _parse_pattern($this->FmtEchecConfirmEnvoiMail, $lgnRglt) ;
 					}
-					$ctn .= '<p><a href="'.$implem->ScriptPanierMembre->ObtientUrlParam(array("id" => $this->IdBoutique)).'">Retour au panier</a></p>' ;
+					$ctn .= '<p><a href="'.$implem->ScriptPanierMembre->ObtientUrlParam(array("id" => $lgnRglt["id_boutique"])).'">'.$this->LibelleLienRetour.'</a></p>' ;
 				}
 				return $ctn ;
 			}
@@ -336,6 +340,7 @@ ${details_commande}
 			{
 				$comp = $this->CreeEtatPanier() ;
 				$comp->IdBoutique = (in_array($id, $this->IdsBoutiqueConsult)) ? $id : $this->IdPremBoutiqueConsult ;
+				$comp->NomImplemPage = $this->NomElementSyst ;
 				$comp->AdopteScript("etatPanier", $script) ;
 				$comp->ChargeConfig() ;
 				return $comp ;
@@ -370,7 +375,7 @@ where id_commande=:id" ;
 				$ctn = '' ;
 				$totalTTC = 0 ;
 				$ctn = '' ;
-				$ctn .= '<table width="100%" cellspacing="0" cellpadding="4" class="facture">'.PHP_EOL ;
+				$ctn .= '<table width="100%" cellspacing="0" cellpadding="4" class="DetailsCommande">'.PHP_EOL ;
 				$ctn .= '<tr>' ;
 				if($editable == 1)
 				{
@@ -399,8 +404,8 @@ where id_commande=:id" ;
 </tr>'.PHP_EOL ;
 				}
 				$ctn .= '<tr>
-	<td colspan="'.(($editable == 1) ? 4 : 3).'">Total TTC</td>
-	<td align="right">'.$totalTTC.'</td>
+	<th colspan="'.(($editable == 1) ? 4 : 3).'" align="left">Total TTC</th>
+	<th align="right">'.$totalTTC.'</th>
 </tr>'.PHP_EOL ;
 				$ctn .= '</table>' ;
 				return $ctn ;
@@ -733,6 +738,7 @@ on t1.id_boutique = t2.id_boutique" ;
 		}
 		class ScriptChoixRgltCmdShoppingSws extends ScriptEtapeRgltBaseShoppingSws
 		{
+			public $MsgDescChoixRglt = '<p>Veuillez choisir un moyen de paiement</p>' ;
 			public function DetermineEnvironnement()
 			{
 				parent::DetermineEnvironnement() ;
@@ -744,7 +750,7 @@ on t1.id_boutique = t2.id_boutique" ;
 				$bd = $this->ObtientBDSupport() ;
 				$lgns = $bd->FetchSqlRows("select * from ".$bd->EscapeTableName($implem->NomTableRglt)." where id_boutique=:idBoutique", array("idBoutique" => _GET_def("id"))) ;
 				$ctn .= '<br>' ;
-				$ctn .= '<p>Veuillez choisir un moyen de paiement</p>'.PHP_EOL ;
+				$ctn .= $this->MsgDescChoixRglt. PHP_EOL ;
 				foreach($lgns as $i => $lgn)
 				{
 					$ctn .= '<p><a href="'.htmlspecialchars($implem->ScriptProcessRgltCmd->ObtientUrlParam(array("id" => $lgn["id"]))).'">'.$lgn["titre"].'</a></p>'.PHP_EOL ;
@@ -1068,13 +1074,14 @@ on t1.id_boutique = t2.id_boutique" ;
 			}
 		}
 		
-		class CompEtatPanierMembreShoppingSws extends PvComposantIUBase
+		class CompEtatPanierMembreShoppingSws extends ComposantIUBaseSws
 		{
 			public $CheminIcone = "" ;
 			public $LibPanier = "Mon Panier" ;
 			public $LibUnite = "article(s)" ;
 			public $IdBoutique = 0 ;
-			public $MsgCommandeNonTrouvee = "" ;
+			public $HauteurIcone = 14 ;
+			public $MsgCommandeNonTrouvee = "Pas d'article command&eacute;" ;
 			protected function RenduDispositifBrut()
 			{
 				$implem = ImplemPageBaseSws::ObtientImplemPageComp($this) ;
@@ -1083,20 +1090,20 @@ on t1.id_boutique = t2.id_boutique" ;
 				$ctn = '' ;
 				if($idCmd > 0)
 				{
-					$ctn .= '<a class="EtatPanier" id="'.$this->IDInstanceCalc.'" href="'.htmlspecialchars($implem->ScriptPanierMembre->ObtientUrlParam(array("id" => $this->IdBoutique))).'">' ;
 					$total = $bd->FetchSqlValue("select count(0) tt from ".$bd->EscapeTableName($implem->NomTableArticle)." where id_commande=:idCmd", array("idCmd" => $idCmd), "tt", 0) ;
 					if($this->CheminIcone != "")
 					{
-						$ctn .= '<img src="'.$this->CheminIcone.'" width="18" border="0" /> ' ;
+						$ctn .= '<img src="'.$this->CheminIcone.'" height="'.$this->HauteurIcone.'" border="0" /> ' ;
 					}
 					if($this->LibPanier != "")
 					{
 						$ctn .= $this->LibPanier.' : ' ;
 					}
+					$ctn .= '<a class="EtatPanier" id="'.$this->IDInstanceCalc.'" href="'.htmlspecialchars($implem->ScriptPanierMembre->ObtientUrlParam(array("id" => $this->IdBoutique))).'">' ;
 					$ctn .= $total ;
 					if($this->LibUnite != "")
 					{
-						$ctn .= $this->LibUnite ;
+						$ctn .= " ".$this->LibUnite ;
 					}
 					$ctn .= '</a>' ;
 				}

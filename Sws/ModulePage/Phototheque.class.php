@@ -62,6 +62,7 @@
 			public $NomParamTblListPhototheque = "pIdPhototheque" ;
 			public $DefColTblListPhototheque ;
 			protected $PresentDansFluxRSS = 0 ;
+			protected $PresentDansRech = 0 ;
 			public function SqlListeColsSelect(& $bd)
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;

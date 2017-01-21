@@ -229,6 +229,7 @@
 			public $ReplyToMailer ;
 			public $SMTPSecureMailer = "ssl" ;
 			protected $PresentDansFluxRSS = 0 ;
+			protected $PresentDansRech = 0 ;
 			public function CreeSujetJournal(& $lgn)
 			{
 				return 'Newsletter du '.date("d/m/Y") ;

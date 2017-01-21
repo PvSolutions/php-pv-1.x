@@ -35,6 +35,7 @@
 			public $ChemIconModifTblList = "images/icones/modif.png" ;
 			public $ChemIconSupprTblList = "images/icones/suppr.png" ;
 			protected $PresentDansFluxRSS = 0 ;
+			protected $PresentDansRech = 0 ;
 			public function ObtientReqSqlFluxRSS()
 			{
 				$this->DefFluxRSS->ValeurColNatureRendu = "implem" ;
@@ -156,7 +157,7 @@
 			}
 			public static function ObtientImplemPageComp(& $comp)
 			{
-				$systemeSws = $comp->ScriptParent->ObtientSystemeSws() ;
+				$systemeSws = ReferentielSws::$SystemeEnCours ;
 				return $systemeSws->ObtientImplemPageParNom($comp->NomImplemPage) ;
 			}
 			public function RemplitZonePubl(& $zone)

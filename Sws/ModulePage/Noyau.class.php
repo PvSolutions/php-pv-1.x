@@ -35,11 +35,15 @@
 			public $EstIndefini = 0 ;
 			protected $DefFluxRSS ;
 			protected $PresentDansFluxRSS = 1 ;
+			protected $DefRech ;
+			protected $PresentDansRech = 1 ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
 				$this->DefFluxRSS = new DefFluxRSSElemRenduSws() ;
 				$this->DefFluxRSS->Active = $this->PresentDansFluxRSS ;
+				$this->DefRech = new DefRechElemRenduSws() ;
+				$this->DefRech->Active = $this->PresentDansRech ;
 			}
 			public function ObtientVersion()
 			{
@@ -100,7 +104,23 @@
 				$sql .= ' where '.$bd->EscapeVariableName($this->DefFluxRSS->NomColStatutPubl).' = 1' ;
 				return $sql ;
 			}
+			public function ObtientReqSqlRech($motsRech)
+			{
+				if($this->DefRech->Active == 0)
+				{
+					return '' ;
+				}
+				$bd = $this->ObtientBDSupport() ;
+				$sql = 'select '.$this->DefRech->SqlListeCols($this, $bd) ;
+				$sql .= ' from '.$bd->EscapeVariableName($this->DefRech->NomTable) ;
+				$sql .= ' where '.$bd->EscapeVariableName($this->DefRech->NomColStatutPubl).' = 1' ;
+				$sql .= ' and ('.$this->DefRech->SqlCond($this, $bd, $motsRech).')' ;
+				return $sql ;
+			}
 			public function FormatElemLienLgnRSS(& $lgn)
+			{
+			}
+			public function FormatElemLienLgnRech(& $lgn)
 			{
 			}
 			public function RemplitMenuPlanSite(& $menu)
@@ -502,6 +522,109 @@
 				return $sql ;
 			}
 		}
+		class DefRechElemRenduSws
+		{
+			public $Active = 0 ;
+			public $NomTable = "" ;
+			public $NomColsSurlign = array() ;
+			public $NomColId = "id" ;
+			public $NomColTitre = "titre" ;
+			public $NomColDescription = "description" ;
+			public $NomColMotsClesMeta = "" ;
+			public $NomColDescriptionMeta = "" ;
+			public $NomColsExtra = array() ;
+			public $FormatUrl = "" ;
+			public $ValeurColNatureRendu = "base" ;
+			public $ValeurColGroupeRendu ;
+			public $ValeurColElemRendu ;
+			public $NomColStatutPubl = "statut_publication" ;
+			public $NomColDatePubl = "" ;
+			public $NomColHeurePubl = "" ;
+			public function SqlListeCols(& $elemRendu, & $bd)
+			{
+				$sql = '' ;
+				$sql .= "'".$this->ValeurColNatureRendu."' nature_rendu, " ;
+				$sql .= "'".$this->ValeurColGroupeRendu."' groupe_rendu, " ;
+				$sql .= "'".$this->ValeurColElemRendu."' elem_rendu, " ;
+				$sql .= (($this->NomColId != "") ? $bd->EscapeVariableName($this->NomColId) : "''").' id, ' ;
+				if($this->ExprColId == '')
+				{
+					$sql .= (($this->NomColTitre != "") ? $bd->EscapeVariableName($this->NomColTitre) : "''").' titre, ' ;
+				}
+				else
+				{
+					$sql .= $this->ExprColTitre.' titre, ' ;
+				}
+				$nomColsDesc = array() ;
+				if($this->ExprColDescription != '')
+				{
+					$nomColsDesc[] = $this->ExprColDescription ;
+				}
+				elseif($this->NomColDescription != "")
+				{
+					$nomColsDesc[] = $this->NomColDescription ;
+				}
+				if(count($this->NomColsSurlign) > 0)
+				{
+					array_splice($nomColsDesc, count($this->NomColsSurlign), 0, $this->NomColsSurlign) ;
+				}
+				if(count($nomColsDesc) > 0)
+				{
+					$sql .= $bd->SqlConcat($nomColsDesc)." description, " ;
+				}
+				else
+				{
+					$sql .= "'' description, " ;
+				}
+				$sql .= (($this->NomColDatePubl != "") ? $bd->EscapeVariableName($this->NomColDatePubl) : "''").' date_publication, ' ;
+				$sql .= (($this->NomColHeurePubl != "") ? $bd->EscapeVariableName($this->NomColHeurePubl) : "''").' heure_publication, ' ;
+				$sql .= (($this->NomColStatutPubl != "") ? $bd->EscapeVariableName($this->NomColStatutPubl) : "''").' statut_publication, ' ;
+				$sql .= "'' url" ;
+				return $sql ;
+			}
+			public function SqlCond(& $elemRendu, & $bd, & $motsRech)
+			{
+				$cond = "" ;
+				$nomCols = array() ;
+				if($this->NomColTitre != '')
+				{
+					$nomCols[] = $this->NomColTitre ;
+				}
+				if($this->NomColDescription != '')
+				{
+					$nomCols[] = $this->NomColDescription ;
+				}
+				if($this->NomColMotsClesMeta != '')
+				{
+					$nomCols[] = $this->NomColMotsClesMeta ;
+				}
+				if($this->NomColDescriptionMeta != '')
+				{
+					$nomCols[] = $this->NomColDescriptionMeta ;
+				}
+				array_splice($nomCols, count($nomCols), 0, $this->NomColsSurlign) ;
+				$symbolesPonct = array(" ", "\t", "\r", "\n", ";", ",", "?", "/", "!", '$', "*") ;
+				$chainePonct = "'".join("', '", $symbolesPonct)."'" ;
+				foreach($nomCols as $i => $nomCol)
+				{
+					if($i > 0)
+					{
+						$cond .= " or " ;
+					}
+					$cond .= "(" ;
+					foreach($motsRech as $j => $motRech)
+					{
+						if($j > 0)
+						{
+							$cond .= " or " ;
+						}
+						$cond .= $bd->SqlIndexOf('upper('.$bd->EscapeVariableName($nomCol).')', 'upper('.$bd->ParamPrefix."motCle".$j.')').' > 0' ;
+					}
+					$cond .= ")" ;
+				}
+				return $cond ;
+			}
+		}
 		
 		class EntitePageBaseSws extends ElementRenduBaseSws
 		{
@@ -531,6 +654,13 @@
 				$this->DefFluxRSS->ValeurColElemRendu = $this->NomElementModule ;
 				$this->DefFluxRSS->ValeurColNatureRendu = "entite" ;
 				return parent::ObtientReqSqlFluxRSS() ;
+			}
+			public function ObtientReqSqlRech($motsRech)
+			{
+				$this->DefRech->ValeurColGroupeRendu = $this->ModuleParent->NomElementSyst ;
+				$this->DefRech->ValeurColElemRendu = $this->NomElementModule ;
+				$this->DefRech->ValeurColNatureRendu = "entite" ;
+				return parent::ObtientReqSqlRech($motsRech) ;
 			}
 			public function ObtientTitreMenu()
 			{
@@ -1876,7 +2006,33 @@
 				$this->DefFluxRSS->NomTable = $this->NomTable ;
 				return parent::ObtientReqSqlFluxRSS() ;
 			}
+			public function ObtientReqSqlRech($motsRech)
+			{
+				$this->DefRech->NomTable = $this->NomTable ;
+				if($this->AccepterAttrsPubl == 1)
+				{
+					$this->DefRech->NomColDatePubl = $this->NomColDatePubl ;
+					$this->DefRech->NomColHeurePubl = $this->NomColHeurePubl ;
+				}
+				if($this->AccepterTitre == 1)
+				{
+					$this->DefRech->NomColTitre = $this->NomColTitre ;
+				}
+				if($this->AccepterAttrsMeta == 1)
+				{
+					$this->DefRech->NomColDescriptionMeta = $this->NomColDescriptionMeta ;
+					$this->DefRech->NomColMotsClesMeta = $this->NomColMotsClesMeta ;
+				}
+				return parent::ObtientReqSqlRech($motsRech) ;
+			}
 			public function FormatElemLienLgnRSS(& $lgn)
+			{
+				if($this->InclureScriptConsult == 1)
+				{
+					$lgn["url"] = $this->ScriptConsult->ObtientUrlParam(array($this->NomParamId => $lgn["id"])) ;
+				}
+			}
+			public function FormatElemLienLgnRech(& $lgn)
 			{
 				if($this->InclureScriptConsult == 1)
 				{

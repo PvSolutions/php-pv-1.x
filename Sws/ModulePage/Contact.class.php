@@ -84,6 +84,7 @@
 			public $NomParamTblListForm = "pIdForm" ;
 			public $HauteurMaxLogoContact = 60 ;
 			protected $PresentDansFluxRSS = 0 ;
+			protected $PresentDansRech = 0 ;
 			protected function CreeScriptPoster()
 			{
 				return new ScriptPosterContactSws() ;
@@ -339,6 +340,7 @@
 			public $FltFrmElemEmailsContact ;
 			public $LibActiverEnvoi = "Envoyer par mail" ;
 			protected $PresentDansFluxRSS = 0 ;
+			protected $PresentDansRech = 0 ;
 			protected $InclureScriptConsultPlanSite = 1 ;
 			protected $NomColTitreConsultPlanSite = "titre" ;
 			public function SqlListeColsSelect(& $bd)

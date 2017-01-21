@@ -20,6 +20,7 @@
 			public $NomScriptPlanSite = "plan_site" ;
 			public $ScriptAccueil ;
 			public $InclurePlanSite = 1 ;
+			public $InclureRecherche = 1 ;
 			public $FournitFluxRSS = 1 ;
 			protected $PresentDansFluxRSS = 0 ;
 			protected function CreeActionFluxRSS()
@@ -45,16 +46,13 @@
 			public function RemplitZonePublValide(& $zone)
 			{
 				$this->ScriptAccueil = $this->InsereScript($zone->NomScriptParDefaut, $this->CreeScriptAccueil(), $zone) ;
-				/*
-				if($this->InclureRecherche == 1)
-				{
-					$this->ScriptRecherche = $this->InsereScript($this->NomScriptPlanSite, $this->CreeScriptPlanSite(), $zone) ;
-				}
-				*/
 				if($this->InclurePlanSite == 1)
 				{
 					$this->ScriptPlanSite = $this->InsereScript($this->NomScriptPlanSite, $this->CreeScriptPlanSite(), $zone) ;
-					// echo "hds : ".$this->ScriptPlanSite->NomElementZone ;
+				}
+				if($this->InclureRecherche == 1)
+				{
+					$this->ScriptRecherche = $this->InsereScript($this->NomScriptRecherche, $this->CreeScriptRecherche(), $zone) ;
 				}
 			}
 			public function RemplitZoneAdminValide(& $zone)
@@ -72,14 +70,144 @@
 		}
 		class ScriptRechercheBaseSws extends ScriptBaseSws
 		{
+			public $Titre = "Recherche sur le site" ;
+			public $TitreDocument = "Recherche sur le site" ;
+			public $NomParamTermeRech = "terme_rech" ;
+			public $ValeurParamTermeRech = "" ;
+			public $TermesRech = array() ;
+			public $LibelleBoutonSoumettre = "Rechercher" ;
+			protected $TablPrinc ;
+			protected $DefColId ;
+			protected $DefColUrl ;
+			protected $DefColTitre ;
+			protected $DefColDescription ;
 			public function DetermineEnvironnement()
 			{
 				parent::DetermineEnvironnement() ;
+				$this->DetermineResultsRech() ;
 			}
-			protected function DetermineTablRes()
+			protected function TermeRechSoumis()
 			{
+				return $this->ValeurParamTermeRech != "" && count($this->TermesRech) > 0 ;
+			}
+			protected function DetermineResultsRech()
+			{
+				$this->ValeurParamTermeRech = trim(_GET_def($this->NomParamTermeRech)) ;
+				if($this->ValeurParamTermeRech == "")
+				{
+					return ;
+				}
+				$sqls = array() ;
+				$motsCle = array() ;
+				$mdlToken = " \t\r\n,;?!\$/\\'\"" ;
+				$motCle = strtok($this->ValeurParamTermeRech, $mdlToken) ;
+				while($motCle !== false)
+				{
+					if($motCle !== "" && strlen($motCle) >= 4)
+					{
+						$motsCle[] = $motCle ;
+					}
+					$motCle = strtok($mdlToken) ;
+				}
+				$this->TermesRech = $motsCle ;
+				if($this->TermeRechSoumis() == false)
+				{
+					return ;
+				}
+				$systemeSws = & ReferentielSws::$SystemeEnCours ;
+				$bd = & $systemeSws->BDSupport ;
+				$modulePage = $this->ObtientModulePage() ;
+				foreach($systemeSws->ModulesPage as $nomModule => $module)
+				{
+					foreach($module->Entites as $nomEntite => $entite)
+					{
+						$sql = $entite->ObtientReqSqlRech($motsCle) ;
+						if($sql != '')
+						{
+							$sqls[] = $sql.PHP_EOL ;
+						}
+					}
+				}
+				foreach($systemeSws->ImplemsPage as $nomImplem => $implem)
+				{
+					$sql = $implem->ObtientReqSqlRech($motsCle) ;
+					if($sql != '')
+					{
+						$sqls[] = $sql.PHP_EOL ;
+					}
+				}
+				$sqlRech = join(" union ".PHP_EOL, $sqls) ;
+				$this->TablPrinc = $this->CreeTablPrinc() ;
+				$this->TablPrinc->AdopteScript("tablPrinc", $this) ;
+				$this->TablPrinc->ChargeConfig() ;
+				$this->TablPrinc->FournisseurDonnees = $this->CreeFournDonnees() ;
+				$this->TablPrinc->FournisseurDonnees->RequeteSelection = '('.$sqlRech.')' ;
+				$this->TablPrinc->FournisseurDonnees->ParamsSelection = array_apply_prefix($motsCle, "motCle") ;
+				$this->DefColId = $this->TablPrinc->InsereDefColCachee("id") ;
+				$this->DefColTitre = $this->TablPrinc->InsereDefCol("titre") ;
+				$this->DefColDescription = $this->TablPrinc->InsereDefCol("description") ;
+				$this->DefColUrl = $this->TablPrinc->InsereDefCol("url") ;
+				$this->TablPrinc->SourceValeursSuppl = new SrcValsSupplGrilleDonneesRechSws() ;
+				$this->TablPrinc->ContenuLigneModele = '<div><a href="${url}">${titre}</a></div>
+<p>${description_surlign}</p>' ;
+			}
+			protected function RenduBarreRecherche()
+			{
+				$ctn = '' ;
+				$ctn .= '<table class="barre_recherche" align="center" cellspacing="0" cellpadding="2">
+<tr>
+<td>
+<form action="?" method="get">
+<input type="hidden" name="'.htmlspecialchars($this->ZoneParent->NomParamScriptAppele).'" value="'.htmlspecialchars($this->NomElementZone).'" />
+<input type="text" name="'.htmlspecialchars($this->NomParamTermeRech).'" value="'.htmlspecialchars($this->ValeurParamTermeRech).'" />
+<input type="submit" value="'.htmlspecialchars($this->LibelleBoutonSoumettre).'" />
+</form>
+</td>
+</tr>
+</table>' ;
+				return $ctn ;
+			}
+			protected function CreeTablPrinc()
+			{
+				return new GrilleDonneesBaseSws() ;
+			}
+			public function RenduSpecifique()
+			{
+				$ctn = '' ;
+				$ctn .= $this->RenduBarreRecherche() ;
+				if($this->TermeRechSoumis())
+				{
+					$ctn .= $this->TablPrinc->RenduDispositif() ;
+				}
+				return $ctn ;
 			}
 		}
+		class SrcValsSupplGrilleDonneesRechSws extends PvSrcValsSupplGrilleDonnees
+		{
+			public function Applique(& $composant, $ligneDonnees)
+			{
+				$ligneDonnees = parent::Applique($composant, $ligneDonnees) ;
+				$elemRendu = $this->ObtientElemRendu($ligneDonnees) ;
+				$ligneDonnees["url"] = $elemRendu->FormatElemLienLgnRech($ligneDonnees) ;
+				$ligneDonnees["description_surlign"] = strip_tags($ligneDonnees["description"]) ;
+				return $ligneDonnees ;
+			}
+			protected function & ObtientElemRendu(& $ligneDonnees)
+			{
+				$systemeSws = & ReferentielSws::$SystemeEnCours ;
+				$elemRendu = new ElementRenduBaseSws() ;
+				if($ligneDonnees["nature_rendu"] == "entite")
+				{
+					$elemRendu = & $systemeSws->ModulesPage[$ligneDonnees["groupe_rendu"]]->Entites[$ligneDonnees["elem_rendu"]] ;
+				}
+				elseif($ligneDonnees["nature_rendu"] == "implem")
+				{
+					$elemRendu = & $systemeSws->ImplemsPage[$ligneDonnees["elem_rendu"]] ;
+				}
+				return $elemRendu ;
+			}
+		}
+		
 		class ScriptPlanSiteBaseSws extends ScriptBaseSws
 		{
 			protected $BarrePlanSite ;

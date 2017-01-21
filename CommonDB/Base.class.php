@@ -2289,6 +2289,7 @@
 					$stmt = oci_parse($this->Connection, $sql) ;
 					if($stmt !== false)
 					{
+						// $params = $this->SortSqlParam($params) ;
 						// print $sql.' '.print_r($params, true)."\n" ;
 						foreach($params as $n => $v)
 						{
