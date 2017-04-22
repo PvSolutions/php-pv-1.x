@@ -250,6 +250,25 @@
 			{
 				return new FilArianeSws() ;
 			}
+			public function RemplitApplication(& $app)
+			{
+				$this->RemplitApplicationSpec($zone) ;
+				$nomModules = array_keys($this->ModulesPage) ;
+				foreach($nomModules as $i => $nomModule)
+				{
+					$module = & $this->ModulesPage[$nomModule] ;
+					$module->RemplitApplication($zone) ;
+				}
+				$nomImplems = array_keys($this->ImplemsPage) ;
+				foreach($nomImplems as $i => $nomImplem)
+				{
+					$implem = & $this->ImplemsPage[$nomImplem] ;
+					$implem->RemplitApplication($zone) ;
+				}
+			}
+			protected function RemplitApplicationSpec(& $app)
+			{
+			}
 			protected function RemplitZonePublSpec(& $zone)
 			{
 			}

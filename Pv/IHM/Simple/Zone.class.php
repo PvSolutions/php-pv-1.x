@@ -96,6 +96,9 @@
 				return $ctn ;
 			}
 		}
+		class PvDocumentWebHtml extends PvDocumentHtmlSimple
+		{
+		}
 		class PvDocBoiteDialogueWeb extends PvDocumentWebBase
 		{
 			public function RenduEntete(& $zone)
@@ -356,6 +359,11 @@
 			public $RenduExtraHead = '' ;
 			public $InclureJQuery = 0 ;
 			public $CheminJQuery = "js/jquery.min.js" ;
+			public $InclureBootstrap = 0 ;
+			public $CheminJsBootstrap = "js/bootstrap.min.js" ;
+			public $CheminCSSBootstrap = "css/bootstrap.css" ;
+			public $InclureBootstrapTheme = 0 ;
+			public $CheminCSSBootstrapTheme = "js/bootstrap-theme.min.css" ;
 			public $InclureJQueryMigrate = 1 ;
 			public $CheminJQueryMigrate = "js/jquery-migrate.min.js" ;
 			public $InclureJQueryUi = 0 ;
@@ -704,6 +712,17 @@
 			}
 			public function InclutLibrairiesExternes()
 			{
+				if($this->InclureBootstrap)
+				{
+					$ctnJs = new PvLienFichierJs() ;
+					$ctnJs->Src = $this->CheminJsBootstrap ;
+					array_splice($this->ContenusJs, 0, 0, array($ctnJs)) ;
+					$this->InscritLienCSS($this->CheminCSSBootstrap) ;
+					if($this->InclureBootstrapTheme)
+					{
+						$this->InscritLienCSS($this->CheminCSSBootstrapTheme) ;
+					}
+				}
 				if($this->InclureJQueryUi)
 				{
 					$ctnJs = new PvLienFichierJs() ;
@@ -754,18 +773,18 @@
 				if($this->EncodageDocument != '')
 					$ctn .= '<meta charset="'.$this->EncodageDocument.'" />'.PHP_EOL ;
 				$ctn .= '<title>'.$this->ObtientTitreDocument().'</title>'.PHP_EOL ;
-				$ctn .= '<meta name="keywords" value="'.htmlentities($this->ObtientMotsCleMetaDocument()).'" />'.PHP_EOL ;
+				$ctn .= '<meta name="keywords" content="'.htmlentities($this->ObtientMotsCleMetaDocument()).'" />'.PHP_EOL ;
 				$viewport = $this->ObtientViewportMetaDocument() ;
 				if($viewport != '')
 				{
-					$ctn .= '<meta name="viewport" value="'.htmlentities($viewport).'" />'.PHP_EOL ;
+					$ctn .= '<meta name="viewport" content="'.htmlentities($viewport).'" />'.PHP_EOL ;
 				}
 				$auteur = $this->ObtientAuteurMetaDocument() ;
 				if($auteur != '')
 				{
-					$ctn .= '<meta name="author" value="'.htmlentities($auteur).'" />'.PHP_EOL ;
+					$ctn .= '<meta name="author" content="'.htmlentities($auteur).'" />'.PHP_EOL ;
 				}
-				$ctn .= '<meta name="description" value="'.htmlentities($this->ObtientDescMetaDocument()).'" />'.PHP_EOL ;
+				$ctn .= '<meta name="description" content="'.htmlentities($this->ObtientDescMetaDocument()).'" />'.PHP_EOL ;
 				for($i=0; $i<count($this->ContenusCSS); $i++)
 				{
 					$ctnCSS = $this->ContenusCSS[$i] ;
@@ -1002,6 +1021,15 @@
 					$ctn = $ctnJs->RenduDispositif() ;
 				}
 				return $ctn ;
+			}
+			public function TailleImageAjustee($cheminImage, $largeurMax, $hauteurMax)
+			{
+				return $GLOBALS["CommonGDManipulator"]->getAdjustedDimsFromFile($cheminImage, $largeurMax, $hauteurMax) ;
+			}
+			public function RenduImageAjustee($cheminImage, $largeurMax, $hauteurMax, $autresAttrsHtml='')
+			{
+				$dims = $GLOBALS["CommonGDManipulator"]->getAdjustedDimsFromFile($cheminImage, $largeurMax, $hauteurMax) ;
+				return '<img src="'.htmlspecialchars($cheminImage).'" width="'.$largeurMax.'"'.(($autresAttrsHtml != '') ? ' '.$autresAttrsHtml : '').' />' ;
 			}
 		}
 		

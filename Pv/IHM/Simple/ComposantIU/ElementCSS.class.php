@@ -14,10 +14,6 @@
 		{
 			include dirname(__FILE__)."/../FournisseurDonnees.class.php" ;
 		}
-		if(! defined('COMMON_GD_CONTROLS_INCLUDED'))
-		{
-			include dirname(__FILE__)."/../../../../Common/GD.class.php" ;
-		}
 		define('PV_COMPOSANT_SIMPLE_IU_ELEM_CSS', 1) ;
 		
 		class PvCercleProgressCSS extends PvComposantIUBase

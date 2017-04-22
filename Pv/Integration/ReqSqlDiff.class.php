@@ -24,6 +24,7 @@
 			public $Active = 1 ;
 			protected $FltIDFormEditDem ;
 			public $DelaiExpirFich = 1 ;
+			public $DelaiExpirTrt = 180 ;
 			public $TablesCacheUse = array() ;
 			public function Titre()
 			{
@@ -706,6 +707,11 @@
 					$bd->CloseQuery($query) ;
 				}
 				$bd->RunSql("update ".$bd->EscapeTableName($integr->NomTableDemande)." set id_progression=7 where (date_expiration is not null and ".$bd->SqlNow()." > date_expiration) and id_progression=3") ;
+				$rpts = $integr->ObtientRptsBase() ;
+				foreach($rpts as $j => $rpt)
+				{
+					$bd->RunSql("update ".$bd->EscapeTableName($integr->NomTableDemande)." set id_progression=0, date_traitement=null where id_progression in (1, 2) and (date_traitement is not null and ".$bd->SqlAddSeconds("date_traitement", $rpt->DelaiExpirTrt)." < ".$bd->SqlNow().")") ;
+				}
 			}
 			protected function SauveProgress($idDem, $idProgress)
 			{

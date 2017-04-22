@@ -389,6 +389,16 @@
 				$defCol->Formatteur->ValeursChoix = $valsChoix ;
 				return $defCol ;
 			}
+			public function & InsereDefColEditable($nomDonnees, $libelle="", $aliasDonnees="", $nomClsComp="PvZoneTexteHtml")
+			{
+				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
+				$defCol->Formatteur = new PvFormatteurColonneEditable() ;
+				if($nomClsComp != '')
+				{
+					$defCol->Formatteur->DeclareComposant($nomClsComp) ;
+				}
+				return $defCol ;
+			}
 			public function & InsereDefColMonnaie($nomDonnees, $libelle="", $aliasDonnees="")
 			{
 				$defCol = $this->InsereDefColMoney($nomDonnees, $libelle, $aliasDonnees) ;
@@ -405,6 +415,13 @@
 				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
 				$defCol->Formatteur = new PvFormatteurColonneDateFr() ;
 				$defCol->Formatteur->InclureHeure = $inclureHeure ;
+				return $defCol ;
+			}
+			public function & InsereDefColDateTimeFr($nomDonnees, $libelle="")
+			{
+				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
+				$defCol->Formatteur = new PvFormatteurColonneDateFr() ;
+				$defCol->Formatteur->InclureHeure = 1 ;
 				return $defCol ;
 			}
 			public function & InsereDefColHtml($modeleHtml="", $libelle="")
@@ -741,7 +758,7 @@
 					{
 						continue ;
 					}
-					$ctn .= '<input type="hidden" name="'.htmlentities($filtre->ObtientNomComposant()).'" value="'.htmlentities($filtre->Lie()).'" />'.PHP_EOL ;
+					$ctn .= '<input type="hidden" name="'.htmlspecialchars($filtre->ObtientNomComposant()).'" value="'.htmlspecialchars($filtre->Lie()).'" />'.PHP_EOL ;
 				}
 				$ctn .= '<input type="submit" value="Envoyer" />'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
@@ -794,6 +811,19 @@
 	}
 }' ;
 				return $ctn ;
+			}
+			public function PossedeColonneEditable()
+			{
+				$ok = 0 ;
+				foreach($this->DefinitionsColonnes as $i => $defCol)
+				{
+					if($defCol->EstVisible($this->ZoneParent) && $defCol->EstEditable())
+					{
+						$ok = 1 ;
+						break ;
+					}
+				}
+				return $ok ;
 			}
 			public function RenduFiltresNonRenseignes()
 			{
@@ -998,6 +1028,34 @@
 					$parametresRendu = $this->ParametresCommandeSelectionnee() ;
 					if(count($this->ElementsEnCours) > 0)
 					{
+						if($this->PossedeColonneEditable())
+						{
+							$ctnChampsPost = "" ;
+							$nomFiltres = array_keys($this->FiltresSelection) ;
+							$parametresRenduEdit = $this->ParametresCommandeSelectionnee() ;
+							foreach($this->ParamsGetSoumetFormulaire as $j => $n)
+							{
+								if(isset($_GET[$n]))
+									$parametresRenduEdit[$n] = $_GET[$n] ;
+							}
+							foreach($nomFiltres as $i => $nomFiltre)
+							{
+								$filtre = & $this->FiltresSelection[$nomFiltre] ;
+								if($filtre->RenduPossible())
+								{
+									if($filtre->TypeLiaisonParametre == 'post')
+									{
+										$ctnChampsPost .= '<input type="hidden" name="'.htmlspecialchars($filtre->ObtientNomComposant()).'" value="'.htmlspecialchars($filtre->Lie()).'" />'.PHP_EOL ;
+									}
+									elseif($filtre->TypeLiaisonParametre == 'get')
+									{
+										$parametresRenduEdit[$filtre->ObtientNomComposant()] = $filtre->Lie() ;
+									}
+								}
+							}
+							$ctn .= '<form action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= $ctnChampsPost ;
+						}
 						$ctn .= '<table' ;
 						$ctn .= ' class="RangeeDonnees"' ;
 						if($this->Largeur != "")
@@ -1096,7 +1154,6 @@
 								{
 									$ctn .= ' class="'.htmlentities($colonne->NomClasseCSS).'"' ;
 								}
-
 								$ctn .= '>' ;
 								$ctn .= $colonne->FormatteValeur($this, $ligne) ;
 								$ctn .= '</td>'.PHP_EOL ;
@@ -1104,6 +1161,11 @@
 							$ctn .= '</tr>'.PHP_EOL ;
 						}
 						$ctn .= '</table>' ;
+						if($this->PossedeColonneEditable())
+						{
+							$ctn .= PHP_EOL .'<div style="display:none"><input type="submit" /></div>
+</form>' ;
+						}
 					}
 					else
 					{
@@ -1202,6 +1264,7 @@
 			public $EmpilerValeursSiModLigVide = 1 ;
 			public $OrientationValeursEmpilees = "vertical" ;
 			public $AlignVCellule = "middle" ;
+			public $AlignCellule = "" ;
 			public $AccepterTriColonneInvisible = 1 ;
 			public $MaxColonnes = 1 ;
 			public $LargeurBordure = 0 ;
@@ -1304,9 +1367,9 @@
 							}
 							$ctn .= ' class="Contenu '.$classePair.'"' ;
 							$ctn .= ' valign="'.$this->AlignVCellule.'"' ;
-							if($this->SurvolerLigneFocus)
+							if($this->AlignCellule != '')
 							{
-								$ctn .= ' onMouseOver="this.className = this.className + &quot; Survole&quot;;" onMouseOut="this.className = this.className.split(&quot; Survole&quot;).join(&quot; &quot;) ;"' ;
+								$ctn .= ' align="'.$this->AlignCellule.'"' ;
 							}
 							$ctn .= '>'.PHP_EOL ;
 							$ligneDonnees = $ligne ;
@@ -1359,6 +1422,304 @@
 			public $SuffixeUrl = "_query_string" ;
 		}
 		
+		class PvTableauDonneesBootstrap extends PvTableauDonneesHtml
+		{
+			public $ClasseCSSRangee = "table-striped" ;
+			public $ClasseCSSBtnNav = "btn-primary" ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap() ;
+				$this->NavigateurRangees = new PvNavTableauDonneesBootstrap() ;
+			}
+			protected function RenduBlocCommandes()
+			{
+				$ctn = parent::RenduBlocCommandes() ;
+				if($ctn != '')
+				{
+					$ctn = '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL
+						.$ctn.PHP_EOL
+						.'</div></div>' ;
+				}
+				return $ctn ;
+			}
+			protected function RenduRangeeDonnees()
+			{
+				$ctn = '' ;
+				if($this->FiltresSoumis() || ! $this->PossedeFiltresRendus())
+				{
+					$libelleTriAsc = '<span class="text-muted glyphicon glyphicon-menu-up" title="'.htmlspecialchars($this->LibelleTriAsc).'"></span>' ;
+					$libelleTriDesc = '<span class="text-muted glyphicon glyphicon-menu-down" title="'.htmlspecialchars($this->LibelleTriDesc).'"></span>' ;
+					$libelleTriAscSelectionne = '<span class="glyphicon glyphicon-menu-up" title="'.htmlspecialchars($this->LibelleTriAsc).'"></span>' ;
+					$libelleTriDescSelectionne = '<span class="glyphicon glyphicon-menu-down" title="'.htmlspecialchars($this->LibelleTriDesc).'"></span>' ;
+					$parametresRendu = $this->ParametresCommandeSelectionnee() ;
+					if(count($this->ElementsEnCours) > 0)
+					{
+						if($this->PossedeColonneEditable())
+						{
+							$ctnChampsPost = "" ;
+							$nomFiltres = array_keys($this->FiltresSelection) ;
+							$parametresRenduEdit = $this->ParametresCommandeSelectionnee() ;
+							foreach($this->ParamsGetSoumetFormulaire as $j => $n)
+							{
+								if(isset($_GET[$n]))
+									$parametresRenduEdit[$n] = $_GET[$n] ;
+							}
+							foreach($nomFiltres as $i => $nomFiltre)
+							{
+								$filtre = & $this->FiltresSelection[$nomFiltre] ;
+								if($filtre->RenduPossible())
+								{
+									if($filtre->TypeLiaisonParametre == 'post')
+									{
+										$ctnChampsPost .= '<input type="hidden" name="'.htmlspecialchars($filtre->ObtientNomComposant()).'" value="'.htmlspecialchars($filtre->Lie()).'" />'.PHP_EOL ;
+									}
+									elseif($filtre->TypeLiaisonParametre == 'get')
+									{
+										$parametresRenduEdit[$filtre->ObtientNomComposant()] = $filtre->Lie() ;
+									}
+								}
+							}
+							$ctn .= '<form action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= $ctnChampsPost ;
+						}
+						$ctn .= '<div class="panel panel-default"><div class="panel-body">'.PHP_EOL ;
+						$ctn .= '<table' ;
+						$ctn .= ' class="RangeeDonnees table '.$this->ClasseCSSRangee.'"' ;
+						$ctn .= '>'.PHP_EOL ;
+						$ctn .= '<thead>'.PHP_EOL ;
+						$ctn .= '<tr class="Entete">'.PHP_EOL ;
+						foreach($this->DefinitionsColonnes as $i => $colonne)
+						{
+							if(! $colonne->EstVisible($this->ZoneParent))
+								continue ;
+							$triPossible = ($this->TriPossible && $colonne->TriPossible) ;
+							$ctn .= ($triPossible) ? '<td' : '<th' ;
+							if($colonne->Largeur != "")
+							{
+								$ctn .= ' width="'.$colonne->Largeur.'"' ;
+							}
+							if($colonne->AlignEntete != "")
+							{
+								$ctn .= ' align="'.$colonne->AlignEntete.'"' ;
+							}
+							$ctn .= '>' ;
+							if($triPossible)
+							{
+								$ctn .= '<table width="100%" cellspacing="0" cellpadding="2">' ;
+								$ctn .= '<tr>' ;
+								$ctn .= '<th width="*" rowspan="2">'.PHP_EOL ;
+							}
+							$ctn .= $colonne->ObtientLibelle() ;
+							if($triPossible)
+							{
+								$ctn .= '</th>' ;
+								$selectionne = ($this->IndiceColonneTri == $i && $this->SensColonneTri == "asc") ;
+								$paramColAsc = array_merge($parametresRendu, array($this->NomParamSensColonneTri() => "asc", $this->NomParamIndiceColonneTri() => $i, $this->NomParamIndiceDebut() => 0)) ;
+								$ctn .= '<td'.(($selectionne) ? ' class="ColonneTriee"' : '').'>' ;
+								$ctn .= '<a href="javascript:'.$this->AppelJsEnvoiFiltres($paramColAsc).'">'.(($selectionne && $libelleTriAscSelectionne != "") ? $libelleTriAscSelectionne : $libelleTriAsc).'</a>' ;
+								$ctn .= '</td>' ;
+								$ctn .= '</tr>' ;
+								$ctn .= '<tr>' ;
+								$selectionne = ($this->IndiceColonneTri == $i && $this->SensColonneTri == "desc") ;
+								$paramColAsc = array_merge($parametresRendu, array($this->NomParamSensColonneTri() => "desc", $this->NomParamIndiceColonneTri() => $i, $this->NomParamIndiceDebut() => 0)) ;
+								$ctn .= '<td'.(($selectionne) ? ' class="ColonneTriee"' : '').'>' ;
+								$ctn .= '<a href="javascript:'.$this->AppelJsEnvoiFiltres($paramColAsc).'">'.(($selectionne && $libelleTriDescSelectionne != "") ? $libelleTriDescSelectionne : $libelleTriDesc).'</a>' ;
+								$ctn .= '</td>' ;
+								$ctn .= '</tr>' ;
+								$ctn .= '</table>' ;
+							}
+							$ctn .= (($triPossible) ? '</td>' : '</th>').PHP_EOL ;
+						}
+						$ctn .= '</tr>'.PHP_EOL ;
+						$ctn .= '</thead>'.PHP_EOL ;
+						$ctn .= '<tbody>'.PHP_EOL ;
+						foreach($this->ElementsEnCours as $j => $ligne)
+						{
+							$ctn .= '<tr>'.PHP_EOL ;
+							foreach($this->DefinitionsColonnes as $i => $colonne)
+							{
+								if(! $colonne->EstVisible($this->ZoneParent))
+									continue ;
+								$ctn .= '<td' ;
+								if($colonne->AlignElement != "")
+								{
+									$ctn .= ' align="'.$colonne->AlignElement.'"' ;
+								}
+								if($colonne->StyleCSS != '')
+								{
+									$ctn .= ' style="'.htmlentities($colonne->StyleCSS).'"' ;
+								}
+								if($colonne->NomClasseCSS != '')
+								{
+									$ctn .= ' class="'.htmlentities($colonne->NomClasseCSS).'"' ;
+								}
+								$ctn .= '>' ;
+								$ctn .= $colonne->FormatteValeur($this, $ligne) ;
+								$ctn .= '</td>'.PHP_EOL ;
+							}
+							$ctn .= '</tr>'.PHP_EOL ;
+						}
+						$ctn .= '</body>'.PHP_EOL ;
+						$ctn .= '</table>'.PHP_EOL ;
+						$ctn .= '</div></div>' ;
+						if($this->PossedeColonneEditable())
+						{
+							$ctn .= PHP_EOL .'<div style="display:none"><input type="submit" /></div>
+</form>' ;
+						}
+					}
+					else
+					{
+						$ctn .= '<p class="AucunElement">'.$this->MessageAucunElement.'</p>' ;
+					}
+				}
+				else
+				{
+					$ctn .= $this->RenduFiltresNonRenseignes() ;
+				}
+				return $ctn ;
+			}
+		}
+		class PvGrilleDonneesBootstrap extends PvGrilleDonneesHtml
+		{
+			protected function RenduRangeeDonnees()
+			{
+				$ctn = '' ;
+				if($this->FiltresSoumis() || ! $this->PossedeFiltresRendus())
+				{
+					$this->DetecteContenuLigneModeleUse() ;
+					$parametresRendu = $this->ParametresCommandeSelectionnee() ;
+					if(count($this->ElementsEnCours) > 0)
+					{
+						$ctn .= '<table' ;
+						$ctn .= ' class="RangeeDonnees table "' ;
+						if($this->Largeur != "")
+						{
+							$ctn .= ' width="'.$this->Largeur.'"' ;
+						}
+						$ctn .= '>'.PHP_EOL ;
+						$ctn .= '<tr><td><div class="container-fluid">'.PHP_EOL ;
+						$inclureLargCell = 1 ;
+						$colXs = 12 / $this->MaxColonnes ;
+						foreach($this->ElementsEnCours as $j => $ligne)
+						{
+							if($this->MaxColonnes <= 1 || $j % $this->MaxColonnes == 0)
+							{
+								$ctn .= '<div class="row">'.PHP_EOL ;
+							}
+							$ctn .= '<div class="Contenu col-xs-'.$colXs.'"' ;
+							$ctn .= ' align="'.$this->AlignCellule.'"' ;
+							$ctn .= '>'.PHP_EOL ;
+							$ligneDonnees = $ligne ;
+							$ligneDonnees["POSITION"] = $j ;
+							$ligneDonnees["NO"] = $j + 1 ;
+							foreach($this->DefinitionsColonnes as $i => $colonne)
+							{
+								if($colonne->Visible == 0)
+									continue ;
+								$ligneDonnees["VALEUR_COL_".$i] = $colonne->FormatteValeur($this, $ligne) ;
+								if($colonne->NomDonnees != "")
+								{
+									$ligneDonnees["VALEUR_COL_".$colonne->NomDonnees] = $ligneDonnees["VALEUR_COL_".$i] ;
+								}
+							}
+							$ligneDonnees = $this->SourceValeursSuppl->Applique($this, $ligneDonnees) ;
+							$ctn .= _parse_pattern($this->ContenuLigneModeleUse, $ligneDonnees) ;
+							$ctn .= '</div>'.PHP_EOL ;
+							if($this->MaxColonnes <= 1 || $j % $this->MaxColonnes == $this->MaxColonnes - 1)
+							{
+								$ctn .= '</div>'.PHP_EOL ;
+								$inclureLargCell = 0 ;
+							}
+						}
+						if($this->MaxColonnes > 1 && count($this->ElementsEnCours) % $this->MaxColonnes != 0)
+						{
+							$colFusionnees = intval(($this->MaxColonnes - (count($this->ElementsEnCours) % $this->MaxColonnes)) * 12 / $this->MaxColonnes) ;
+							$ctn .= '<div class="col-xs-'.$colFusionnees.'"></div>'.PHP_EOL ;
+							$ctn .= '</div>'.PHP_EOL ;
+						}
+						$ctn .= '</div></td></tr>' ;
+						$ctn .= '</table>' ;
+					}
+					else
+					{
+						$ctn .= '<p class="AucunElement">'.$this->MessageAucunElement.'</p>' ;
+					}
+				}
+				else
+				{
+					$ctn .= $this->RenduFiltresNonRenseignes() ;
+				}
+				return $ctn ;
+			}
+
+		}
+		
+		class PvNavTableauDonneesBootstrap extends PvNavigateurRangeesDonneesBase
+		{
+			public function Execute(& $script, & $composant)
+			{
+				return $this->ExecuteInstructions($script, $composant) ;
+			}
+			protected function ExecuteInstructions(& $script, & $composant)
+			{
+				$ctn = '' ;
+				$classeCSSBtn = $composant->ClasseCSSBtnNav ;
+				$parametresRendu = $composant->ParametresRendu() ;
+				$ctn .= '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL ;
+				$ctn .= '<table class="NavigateurRangees"' ;
+				if($composant->Largeur != '')
+					$ctn .= ' width="'.$composant->Largeur.'"' ;
+				$ctn .= ' cellspacing="0">'.PHP_EOL ;
+				$ctn .= '<tr>'.PHP_EOL ;
+				$ctn .= '<td align="left" width="50%" class="LiensRangee">'.PHP_EOL ;
+				$paramPremiereRangee = array_merge($parametresRendu, array($composant->NomParamIndiceDebut() => 0)) ;
+				$ctn .= '<a class="btn '.$classeCSSBtn.'" href="javascript:'.$composant->AppelJsEnvoiFiltres($paramPremiereRangee).'" title="'.$composant->TitrePremiereRangee.'">'.$composant->LibellePremiereRangee.'</a>'.PHP_EOL ;
+				$ctn .= $composant->SeparateurLiensRangee ;
+				if($composant->RangeeEnCours > 0)
+				{
+					$paramRangeePrecedente = array_merge($parametresRendu, array($composant->NomParamIndiceDebut() => ($composant->RangeeEnCours - 1) * $composant->MaxElements)) ;
+					$ctn .= '<a class="btn '.$classeCSSBtn.'" href="javascript:'.$composant->AppelJsEnvoiFiltres($paramRangeePrecedente).'" title="'.$composant->TitreRangeePrecedente.'">'.$composant->LibelleRangeePrecedente.'</a>'.PHP_EOL ;
+				}
+				else
+				{
+					$ctn .= '<a class="btn '.$classeCSSBtn.'" title="'.$composant->TitreRangeePrecedente.'">'.$composant->LibelleRangeePrecedente.'</a>'.PHP_EOL ;
+				}
+				$ctn .= $composant->SeparateurLiensRangee ;
+				$ctn .= '<input type="text" size="4" onChange="var nb = 0 ; try { nb = parseInt(this.value) ; } catch(ex) { } if (isNaN(nb) == true) { nb = 0 ; } SoumetEnvoiFiltres'.$composant->IDInstanceCalc.'({'.htmlentities(svc_json_encode($composant->NomParamIndiceDebut())).' : (nb - 1) * '.$composant->MaxElements.'}) ;" value="'.($composant->RangeeEnCours + 1).'" style="text-align:center" />'.PHP_EOL ;
+				$ctn .= $composant->SeparateurLiensRangee ;
+				//echo $composant->RangeeEnCours." &lt; ".(intval($composant->TotalElements / $composant->MaxElements) - 1) ;
+				if($composant->RangeeEnCours < intval($composant->TotalElements / $composant->MaxElements))
+				{
+					$paramRangeeSuivante = array_merge($parametresRendu, array($composant->NomParamIndiceDebut() => ($composant->RangeeEnCours + 1) * $composant->MaxElements)) ;
+					$ctn .= '<a class="btn '.$classeCSSBtn.'" href="javascript:'.$composant->AppelJsEnvoiFiltres($paramRangeeSuivante).'" title="'.$composant->TitreRangeeSuivante.'">'.$composant->LibelleRangeeSuivante.'</a>'.PHP_EOL ;
+				}
+				else
+				{
+					$ctn .= '<a class="btn '.$classeCSSBtn.'" class="btn" title="'.$composant->TitreRangeeSuivante.'">'.$composant->LibelleRangeeSuivante.'</a>'.PHP_EOL ;
+				}
+				$paramDerniereRangee = array_merge($parametresRendu, array($composant->NomParamIndiceDebut() => intval($composant->TotalElements / $composant->MaxElements) * $composant->MaxElements)) ;
+				$ctn .= $composant->SeparateurLiensRangee ;
+				$ctn .= '<a class="btn '.$classeCSSBtn.'" href="javascript:'.$composant->AppelJsEnvoiFiltres($paramDerniereRangee).'" title="'.$composant->TitreDerniereRangee.'">'.$composant->LibelleDerniereRangee.'</a>'.PHP_EOL ;
+				$ctn .= '</td>'.PHP_EOL ;
+				$ctn .= '<td align="right" class="InfosRangees" width="*">'.PHP_EOL ;
+				$valeursRangee = array(
+					'IndiceDebut' => $composant->IndiceDebut,
+					'NoDebut' => $composant->IndiceDebut + 1,
+					'IndiceFin' => $composant->IndiceFin,
+					'NoFin' => $composant->IndiceFin,
+					'TotalElements' => $composant->TotalElements,
+				) ;
+				$ctn .= _parse_pattern($composant->FormatInfosRangee, $valeursRangee) ;
+				$ctn .= '</td>'.PHP_EOL ;
+				$ctn .= '</tr>'.PHP_EOL ;
+				$ctn .= '</table>'.PHP_EOL ;
+				$ctn .= '</div></div>' ;
+				return $ctn ;
+				return $ctn ;
+			}
+		}
 		class PvNavTableauDonneesHtml extends PvNavigateurRangeesDonneesBase
 		{
 			public $TotalPremRangees = 3 ;

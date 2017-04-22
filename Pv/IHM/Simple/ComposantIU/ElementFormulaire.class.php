@@ -37,6 +37,13 @@
 				return date_fr($valeur) ;
 			}			
 		}
+		class PvFmtLblDateTimeFr extends PvFmtLblBase
+		{
+			public function Rendu($valeur, & $composant)
+			{
+				return date_time_fr($valeur) ;
+			}			
+		}
 		class PvFmtMonnaie extends PvFmtLblBase
 		{
 			public $MaxDecimals = 3 ;
@@ -105,13 +112,13 @@
 				$ctn = '' ;
 				if($this->EspaceReserve != "")
 				{
-					$ctn .= ' placeholder="'.$this->EspaceReserve.'"' ;
+					$ctn .= ' placeholder="'.htmlspecialchars($this->EspaceReserve).'"' ;
 				}
 				if(count($this->AttrsSupplHtml) > 0)
 				{
 					foreach($this->AttrsSupplHtml as $attr => $val)
 					{
-						$ctn .= ' '.htmlentities($attr).'="'.htmlentities($val).'"' ;
+						$ctn .= ' '.htmlspecialchars($attr).'="'.htmlspecialchars($val).'"' ;
 					}
 				}
 				return $ctn ;
@@ -195,12 +202,12 @@
 				$this->CorrigeIDsElementHtml() ;
 				$ctn = '' ;
 				$styleCSS = '' ;
-				$ctn .= '<input name="'.$this->NomElementHtml.'"' ;
+				$ctn .= '<input name="'.htmlspecialchars($this->NomElementHtml).'"' ;
 				$ctn .= ' id="'.$this->IDInstanceCalc.'"' ;
 				$ctn .= ' type="'.$this->TypeElementFormulaire.'"' ;
 				$ctn .= $this->RenduAttrStyleCSS() ;
 				$ctn .= $this->RenduAttrsSupplHtml() ;
-				$ctn .= ' value="'.htmlentities($this->Valeur).'"' ;
+				$ctn .= ' value="'.htmlspecialchars($this->Valeur).'"' ;
 				$ctn .= ' />' ;
 				return $ctn ;
 			}
@@ -304,7 +311,7 @@
 				{
 					if($this->CheminCoteServeurEditable)
 					{
-						$ctn .= $this->LibelleCoteSrv.' <input type="text" class="EditeurCheminCoteServeur" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlentities(trim($this->Valeur)).'" size="'.$this->TailleEditeurCoteServeur.'" />' ;
+						$ctn .= $this->LibelleCoteSrv.' <input type="text" class="EditeurCheminCoteServeur" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlspecialchars(trim($this->Valeur)).'" size="'.$this->TailleEditeurCoteServeur.'" />' ;
 					}
 					else
 					{
@@ -313,13 +320,13 @@
 				}
 				else
 				{
-					$ctn .= '<input type="hidden" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlentities(trim($this->Valeur)).'" />'.htmlentities($this->Valeur) ;
+					$ctn .= '<input type="hidden" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlspecialchars(trim($this->Valeur)).'" />' ;
 				}
 				if($this->InclureApercu && trim($this->Valeur) != '')
 				{
 					if($this->InclureCheminCoteServeur)
 						$ctn .= '&nbsp;&nbsp;' ;
-					$ctn .= '<a href="'.htmlentities($this->Valeur).'" target="'.$this->CibleApercu.'">'.$this->LibelleApercu.'</a>' ;
+					$ctn .= '<a href="'.htmlspecialchars($this->Valeur).'" target="'.$this->CibleApercu.'">'.$this->LibelleApercu.'</a>' ;
 				}
 				return $ctn ;
 			}
@@ -441,6 +448,7 @@
 				if($this->ChoixMultiple == 0)
 				{
 					$lignes = $this->FournisseurDonnees->RechExacteElements($this->FiltresSelection, $this->NomColonneValeur, $this->Valeur) ;
+					// print_r($this->FournisseurDonnees) ;
 				}
 				else
 				{
@@ -643,6 +651,7 @@
 			public $AlignLibelle = "right" ;
 			public $LargeurOption = "" ;
 			public $CocherAutoPremiereOption = 1 ;
+			protected $CalculerValeurParJs = 1 ;
 			public $SeparateurLibelleOption = "&nbsp;&nbsp;" ;
 			protected function RenduListeElements()
 			{
@@ -688,7 +697,10 @@
 				}
 				$this->FermeRequeteSupport() ;
 				$ctn .= '</table>' ;
-				$ctn .= '<input type="hidden" name="'.$this->NomElementHtml.'" id="'.$this->IDInstanceCalc.'" value="'.htmlentities($this->Valeur).'" />' ;
+				if($this->CalculerValeurParJs == 1)
+				{
+					$ctn .= PHP_EOL .'<input type="hidden" name="'.$this->NomElementHtml.'" id="'.$this->IDInstanceCalc.'" value="'.htmlentities($this->Valeur).'" />' ;
+				}
 				// print_r($this->FournisseurDonnees->BaseDonnees) ;
 				return $ctn ;
 			}
@@ -746,6 +758,7 @@
 		class PvZoneBoiteOptionsCocherHtml extends PvZoneBoiteOptionsRadioHtml
 		{
 			public $ChoixMultiple = 1 ;
+			protected $CalculerValeurParJs = 0 ;
 			protected function InstrsJsSelectElement()
 			{
 				$ctn = '' ;
@@ -1127,6 +1140,11 @@
 			public $LibelleFaux = "" ;
 			public $ValeurVrai = "" ;
 			public $ValeurFaux = "" ;
+			protected function EstValeurSelectionnee($valeur)
+			{
+				// print $this->IDInstanceCalc ;
+				return (in_array($valeur, $this->ValeursSelectionnees, $this->SelectionStricte)) ? 1 : 0 ;
+			}
 			public function ChargeConfig()
 			{
 				parent::ChargeConfig() ;

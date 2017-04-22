@@ -282,8 +282,8 @@
 		class PvFournisseurDonneesBool extends PvFournisseurDonneesDirect
 		{
 			public $NomCleBool = "Bool" ;
-			public $ValeurVrai = 1 ;
-			public $ValeurFaux = 0 ;
+			public $ValeurVrai = "1" ;
+			public $ValeurFaux = "0" ;
 			public $LibelleVrai = "Oui" ;
 			public $LibelleFaux = "Non" ;
 			public $NomAttributValeur = "Valeur" ;

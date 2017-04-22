@@ -285,15 +285,28 @@
 				$NewHeight = $Height ;
 				if($OldHeight / $ScaleWidth <= $Height)
 				{
-					$NewHeight = $OldHeight / $ScaleWidth ;
-					$NewWidth = $OldWidth / $ScaleWidth ;
+					$NewHeight = intval($OldHeight / $ScaleWidth) ;
+					$NewWidth = intval($OldWidth / $ScaleWidth) ;
 				}
 				elseif($OldWidth / $ScaleHeight <= $Width)
 				{
-					$NewWidth = $OldWidth / $ScaleHeight ;
-					$NewHeight = $OldHeight / $ScaleHeight ;
+					$NewWidth = intval($OldWidth / $ScaleHeight) ;
+					$NewHeight = intval($OldHeight / $ScaleHeight) ;
 				}
 				return array($NewWidth, $NewHeight) ;
+			}
+			function getAdjustedDimensionsFromFile($filePath, $width, $height)
+			{
+				$Handle = $this->LoadHandleFromFile($filePath) ;
+				if(!$Handle)
+					return array(0, 0) ;
+				$dims = $this->getAdjustedDimensions($Handle, $width, $height) ;
+				imagedestroy($Handle) ;
+				return $dims ;
+			}
+			function getAdjustedDimsFromFile($filePath, $width, $height)
+			{
+				return $this->getAdjustedDimensionsFromFile($filePath, $width, $height) ;
 			}
 		}
 		

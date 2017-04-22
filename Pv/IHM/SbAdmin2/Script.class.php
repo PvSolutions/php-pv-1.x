@@ -14,6 +14,22 @@
 				$this->RedirigeNonConnecte() ;
 				return $ok ;
 			}
+			public function CreeFormulaireDonnees()
+			{
+				return new PvFormulaireDonneesSbAdmin2() ;
+			}
+			public function CreeTableauDonnees()
+			{
+				return new PvTableauDonneesSbAdmin2() ;
+			}
+			public function CreeFormDonnees()
+			{
+				return new PvFormulaireDonneesSbAdmin2() ;
+			}
+			public function CreeTablDonnees()
+			{
+				return new PvTableauDonneesSbAdmin2() ;
+			}
 			public function DetermineEnvironnement()
 			{
 				$this->DetermineEnvironnementSpec() ;

@@ -23,13 +23,11 @@
 				return 0 ;
 			}
 		}
-		
 		class AbstractSqlColumnDefinition extends AbstractSqlVariableDefinition
 		{
 			public $IsKey = 0 ;
 			public $IsNull = 0 ;
 		}
-		
 		class AbstractSqlTableDefinition extends AbstractSqlVariableDefinition
 		{
 			public $Schema = "" ;
@@ -251,6 +249,7 @@
 			var $AutoSetCharacterEncoding = 0 ;
 			
 			var $MustSetCharacterEncoding = 0 ;
+			var $SetCharacterEncodingOnFetch = 0 ;
 			
 			var $CharacterEncodingFixed = 0 ;
 			
@@ -810,7 +809,7 @@
 			function RunSql($sql, $params=array())
 			{
 				$ok = false ;
-				$this->MustSetCharacterEncoding = 0 ;
+				$this->MustSetCharacterEncoding = 1 ;
 				$res = $this->OpenQuery($sql, $params) ;
 				if($res)
 				{
@@ -861,7 +860,7 @@
 			function FetchSqlRows($sql, $params=array(), $onlyFirst=false)
 			{
 				$rows = null ;
-				$this->MustSetCharacterEncoding = 0 ;
+				$this->MustSetCharacterEncoding = $this->SetCharacterEncodingOnFetch ;
 				$res = $this->OpenQuery($sql, $params) ;
 				if($res !== false)
 				{
@@ -1197,7 +1196,7 @@
 			function DeleteRow($tableName, $where, $whereParams=array())
 			{
 				$ok = 0 ;
-				$this->MustSetCharacterEncoding = 0 ;
+				$this->MustSetCharacterEncoding = 1 ;
 				$sql = 'delete from '.$this->EscapeTableName($tableName).' where '.$where ;
 				$res = $this->OpenQuery($sql, $whereParams) ;
 				if($res !== false)
@@ -1953,7 +1952,7 @@
 			var $VendorMaxVersion = "7" ;
 			function ExecFixCharacterEncoding()
 			{
-				mysqli_set_charset($this->CharacterEncoding, $this->Connection) ;
+				mysqli_set_charset($this->Connection, $this->CharacterEncoding) ;
 			}
 			function EscapeTableName($tableName)
 			{
@@ -2045,6 +2044,7 @@
 				}
 				$this->ClearConnectionException() ;
 				$this->CaptureQuery($sql, $params) ;
+				$this->FixCharacterEncoding() ;
 				$sql = $this->PrepareSql($sql, $params) ;
 				$res = false ;
 				try

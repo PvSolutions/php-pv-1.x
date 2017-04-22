@@ -224,6 +224,7 @@
 			{
 				$sql = parent::SqlListeColsSelect($bd) ;
 				$sql .= ', '.$bd->EscapeVariableName($this->NomColTitre).' titre' ;
+				$sql .= ', total_menus titre' ;
 				return $sql ;
 			}
 			protected function ChargeFrmElem(& $frm)
@@ -252,8 +253,13 @@
 			{
 				parent::ChargeTblList($tbl) ;
 				$bd = $this->ObtientBDSupport() ;
+				$entMenu = & $this->ModuleParent->EntiteMenu ;
+				$tbl->FournisseurDonnees->RequeteSelection = '(select t1.*, count(0) total_menus from '.$bd->EscapeVariableName($this->NomTable).' t1 left join '.$bd->EscapeVariableName($entMenu->NomTable).' t2 on t1.'.$bd->EscapeVariableName($this->NomColId).' = t2.'.$bd->EscapeVariableName($entMenu->NomColIdGroupe).' group by t1.'.$bd->EscapeVariableName($this->NomColId).')' ;
 				$this->DefColTblListTitre = $tbl->InsereDefCol($this->NomColTitre, $this->LibTitre) ;
 				$this->DefColTblListTitre->Largeur = "30%" ;
+				$this->DefColTblTotalMenus = $tbl->InsereDefCol("total_menus", $this->LibTotalMenus) ;
+				$this->DefColTblTotalMenus->AlignElement = "center" ;
+				$this->DefColTblTotalMenus->Largeur = "15%" ;
 				$this->FltTblListTitre = $tbl->InsereFltSelectHttpGet($this->NomParamTblListTitre, $bd->SqlIndexOf('UPPER('.$bd->EscapeVariableName($this->NomColTitre).')', 'UPPER(<self>)').' > 0') ;
 				$this->FltTblListTitre->Libelle = $this->LibTblListTitre ;
 			}
@@ -277,7 +283,7 @@
 		
 		class ScriptMenusGroupeMenuSws extends ScriptSommEntiteTableSws
 		{
-			public $EstScriptSession ;
+			public $EstScriptSession = 1 ;
 			protected $DefColId ;
 			protected $DefColTitre ;
 			public function DetermineEnvironnement()

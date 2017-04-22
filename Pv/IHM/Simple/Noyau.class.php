@@ -140,6 +140,10 @@
 		
 		class PvFormatteurColonneDonnees extends PvObjet
 		{
+			public function EstEditable()
+			{
+				return 0 ;
+			}
 			public function EstAccessible(& $zone, $colonne)
 			{
 				return true ;
@@ -296,6 +300,53 @@
 				return $ctn ;
 			}
 		}
+		
+		class PvFormatteurColonneEditable extends PvFormatteurColonneDonnees
+		{
+			public $NomParametrePost ;
+			protected $NomClasseComposant  ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->Composant = new PvZoneTexteHtml() ;
+				$this->NomParametrePost = "Param_".$this->IDInstanceCalc ;
+			}
+			public function DeclareComposant($nomClasseComposant)
+			{
+				if($nomClasseComposant == "")
+				{
+					return ;
+				}
+				if(! class_exists($nomClasseComposant))
+				{
+					die("Echec creation du composant ".htmlentities($nomClasseComposant)) ;
+				}
+				$this->NomClasseComposant = $nomClasseComposant ;
+			}
+			protected function ChargeComposant(& $composant, & $composantParent)
+			{
+				$composant->AdopteScript("Composant_".$this->IDInstanceCalc, $composantParent->ScriptParent) ;
+				$composant->ChargeConfig() ;
+			}
+			public function EstEditable()
+			{
+				return 1 ;
+			}
+			public function Encode(& $composantParent, $colonne, $ligne)
+			{
+				$filtreSupport = $composantParent->ScriptParent->CreeFiltreHttpPost($this->NomParametrePost."[]") ;
+				$valeur = $ligne[$colonne->NomDonnees] ;
+				$nomClasseComposant = $this->NomClasseComposant ;
+				$composant = new $nomClasseComposant() ;
+				$this->ChargeComposant($composant, $composantParent) ;
+				$composant->Valeur = $valeur ;
+				$composant->NomElementHtml = $this->NomParametrePost."[]" ;
+				$composant->FiltreParent = $filtreSupport ;
+				$ctn = $composant->RenduDispositif() ;
+				$composant->FiltreParent = null ;
+				return $ctn ;
+			}
+		}
 
 		class PvExtracteurValeursDonneesBase
 		{
@@ -424,15 +475,15 @@
 				}
 				return $libelle ;
 			}
-			public function FormatteValeur(& $script, $ligne)
+			public function FormatteValeur(& $composant, $ligne)
 			{
 				if($this->EstNul($this->Formatteur))
 				{
-					return $this->FormatteValeurInt($script, $ligne) ;
+					return $this->FormatteValeurInt($composant, $ligne) ;
 				}
-				return $this->Formatteur->Encode($script, $this, $ligne) ;
+				return $this->Formatteur->Encode($composant, $this, $ligne) ;
 			}
-			protected function FormatteValeurInt(& $script, $ligne)
+			protected function FormatteValeurInt(& $composant, $ligne)
 			{
 				$val = "" ;
 				if($this->NomDonnees != '')
@@ -449,6 +500,15 @@
 			{
 				$resultat = ($this->EncodeHtmlValeur) ? htmlentities($valeur) : $valeur ;
 				return $resultat ;
+			}
+			public function EstEditable()
+			{
+				$ok = 1 ;
+				if($this->EstNul($this->Formatteur))
+				{
+					return 0 ;
+				}
+				return $this->Formatteur->EstEditable() ;
 			}
 		}
 		
@@ -1024,6 +1084,7 @@
 			public $NomEltCoteSrv = "CoteSrv_" ;
 			public $NomClasseComposant = "PvZoneUploadHtml" ;
 			public $LibelleErreurTelecharg = '' ;
+			public $FormatFichierTelech = '' ;
 			public $SourceTelechargement = '' ;
 			public $CodeErreurMauvaiseExt = '501' ;
 			public $LibelleErreurAucunFich = 'Aucun fichier n\'a &eacute;t&eacute; soumis' ;
@@ -1032,6 +1093,7 @@
 			public $LibelleErreurDeplFicTelecharg = 'Le deplacement du fichier sur le serveur a &eacute;chou&eacute;. V&eacute;rifiez que vous avez les droits en ecriture.' ;
 			public $CodeErreurFicSoumisInexist = '503' ;
 			public $ToujoursRenseignerFichier = 0 ;
+			public $NePasInclureSiVide = 0 ;
 			public $LibelleErreurFicSoumisInexist = 'Le fichier soumis n\'existe pas.' ;
 			public function AccepteImgsSeulem()
 			{
@@ -1081,13 +1143,34 @@
 					$this->CheminFichierSrc = $this->InfosTelechargement["tmp_name"] ;
 					$this->CheminFichierClient = $this->InfosTelechargement["name"] ;
 					$infosFichier = pathinfo($this->CheminFichierClient) ;
+					$this->ExtFichierSelect = (isset($infosFichier["extension"])) ? $infosFichier["extension"] : "" ;
 					$this->NomFichierSelect = $infosFichier["basename"] ;
+					if($this->ExtFichierSelect != '')
+					{
+						$this->NomFichierSelect = substr($this->NomFichierSelect, 0, strlen($this->NomFichierSelect) - strlen(".".$infosFichier["extension"])) ;
+					}
 					if($this->NettoyerCaractsFichier == 1)
 					{
 						$ancFich = $this->NomFichierSelect ;
 						$this->NomFichierSelect = $this->NettoieCaractsFichier($this->NomFichierSelect) ;
 					}
-					$this->ExtFichierSelect = (isset($infosFichier["extension"])) ? $infosFichier["extension"] : "" ;
+					if($this->FormatFichierTelech != '')
+					{
+						$this->NomFichierSelect = _parse_pattern(
+							$this->FormatFichierTelech,
+							array(
+								"Cle" => uniqid(),
+								"NombreAleatoire" => rand(0, 10000),
+								"NomFichier" => $this->NomFichierSelect,
+								"Timestamp" => date("U"),
+								"Date" => date("YmdHis")
+							)
+						) ;
+					}
+					if($this->ExtFichierSelect != "")
+					{
+						$this->NomFichierSelect .= '.'.$this->ExtFichierSelect ;
+					}
 				}
 				else
 				{

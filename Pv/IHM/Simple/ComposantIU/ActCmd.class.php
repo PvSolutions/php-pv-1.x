@@ -6,6 +6,10 @@
 		{
 			include dirname(__FILE__)."/Base.class.php" ;
 		}
+		if(! defined('COMMON_GD_CONTROLS_INCLUDED'))
+		{
+			include dirname(__FILE__)."/../../../../Common/GD.class.php" ;
+		}
 		define('PV_COMPOSANT_SIMPLE_IU_ACT_CMD', 1) ;
 		
 		class PvActCmdBase extends PvElementCommandeBase
@@ -172,6 +176,92 @@
 				$this->SujetMessage = _parse_pattern($this->FormatSujetMessage, $valeursFiltres) ;
 				$this->ContenuMessage = $form->DessinateurFiltresEdition->VersionTexte($form, $form->FiltresEdition) ;
 			}
+		}
+		
+		class PvActCmdTailleImageGd extends PvActCmdBase
+		{
+			public $DieSiNonDispo = 0 ;
+			public $TaillesFiltre = array() ;
+			protected $RessourceSupport = false ;
+			public function CreeTailleFlt()
+			{
+				return new PvTailleFiltreImageGd() ;
+			}
+			public function & InsereTailleFlt($nomFiltre, $largeurMax=0, $hauteurMax=0, $operation="")
+			{
+				$tailleFlt = $this->CreeTailleFlt() ;
+				$tailleFlt->NomFiltre = $nomFiltre ;
+				$tailleFlt->LargeurMax = $largeurMax ;
+				$tailleFlt->HauteurMax = $hauteurMax ;
+				$tailleFlt->Operation = $operation ;
+				return $this->InscritTailleFiltre($tailleFlt) ;
+			}
+			public function & InscritTailleFiltre(& $tailleFlt)
+			{
+				$this->TaillesFiltre[$tailleFlt->NomFiltre] = $tailleFlt ;
+				return $tailleFlt ;
+			}
+			public function & InsereTailleFiltre($nomFiltre, $largeurMax=0, $hauteurMax=0, $operation="")
+			{
+				return $this->InsereTailleFlt($nomFiltre, $largeurMax, $hauteurMax, $operation) ;
+			}
+			public function Execute()
+			{
+				if(! function_exists("imagecreate"))
+				{
+					if($this->DieSiNonDispo == 1)
+					{
+						die("<p>La librairie GD n'est pas install&eacute;e, vous ne pouvez pas utiliser la classe ".get_class($this)."</p>") ;
+					}
+				}
+				$nomFiltres = array_keys($this->FormulaireDonneesParent->FiltresEdition) ;
+				// print_r($nomFiltres) ;
+				$args = array_keys($this->TaillesFiltre) ;
+				foreach($nomFiltres as $i => $nomFiltre)
+				{
+					$filtre = & $this->FormulaireDonneesParent->FiltresEdition[$nomFiltre] ;
+					if(in_array($filtre->NomElementScript, $args) || in_array($nomFiltre, $args, true))
+					{
+						if(isset($this->TaillesFiltre[$filtre->NomElementScript]))
+						{
+							$this->AnalyseTailleFiltre($this->TaillesFiltre[$filtre->NomElementScript], $this->FormulaireDonneesParent->FiltresEdition[$nomFiltre]) ;
+						}
+						else
+						{
+							$this->AnalyseTailleFiltre($this->TaillesFiltre[$nomFiltre], $this->FormulaireDonneesParent->FiltresEdition[$nomFiltre]) ;
+						}
+					}
+				}
+			}
+			protected function AnalyseTailleFiltre(& $tailleFlt, & $filtre)
+			{
+				$cheminImage = $filtre->Lie() ;
+				if($cheminImage == '' || (! file_exists($cheminImage) || is_dir($cheminImage)))
+				{
+					// $GLOBALS['CommonGDManipulator']->CopyFile($tailleFlt->CheminEchec, $cheminImage)
+					return false ;
+				}
+				if(filesize($cheminImage) > 1024 * 1024 * 1024)
+				{
+					return false ;
+				}
+				$pathInfo = pathinfo($cheminImage) ;
+				$cheminTemp = $pathInfo["dirname"]. DIRECTORY_SEPARATOR ."~".$pathInfo["basename"] ;
+				$GLOBALS['CommonGDManipulator']->CopyAdjustedFile($cheminImage, $cheminTemp, $tailleFlt->LargeurMax, $tailleFlt->HauteurMax) ;
+				if(file_exists($cheminTemp))
+				{
+					rename($cheminTemp, $cheminImage) ;
+				}
+			}
+		}
+		class PvTailleFiltreImageGd
+		{
+			public $NomFiltre ;
+			public $LargeurMax ;
+			public $HauteurMax ;
+			public $Operation = "" ;
+			public $Obligatoire = 0 ;
+			public $CheminEchec = "images/non_trouve.png" ;
 		}
 		
 	}

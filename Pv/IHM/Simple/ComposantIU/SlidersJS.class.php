@@ -141,7 +141,7 @@ slide'.$this->IDInstanceCalc.'.camera(cfgInit) ;' ;
 				{
 					$ctnMenu = ($this->NomColLibMenu != "" && isset($elem[$this->NomColLibMenu])) ? $elem[$this->NomColLibMenu] : "Slide ".($i + 1) ;
 					$ctn .= '<div class="menu_item" style="display:none; font-size:'.$this->TailleTxtMenu.'; font-weight:bold; color:'.$this->CouleurTxtMenu.'">'.PHP_EOL ;
-					$ctn .= $ctnMenu.PHP_EOL ;
+					$ctn .= htmlentities($ctnMenu).PHP_EOL ;
 					$ctn .= '</div>'.PHP_EOL ;
 				}
 				$ctn .= '</div>' ;

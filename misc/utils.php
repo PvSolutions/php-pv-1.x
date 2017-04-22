@@ -1294,9 +1294,9 @@
 					}
 					return $current_url_dir ;
 				}
-				function update_current_url_params($params=array())
+				function update_current_url_params($params=array(), $encodeValues=1, $forceDecodeParams=0)
 				{
-					return update_url_params(get_current_url(), $params) ;
+					return update_url_params(get_current_url(), $params, $encodeValues, $forceDecodeParams) ;
 				}
 				function update_url_params($url, $params=array(), $encodeValues=1, $forceDecodeParams=0)
 				{

@@ -25,6 +25,7 @@
 			public $RemplZoneMembrePossible = 1 ;
 			public $RemplZonePublPossible = 1 ;
 			public $RemplZoneAdminPossible = 1 ;
+			public $RemplApplicationPossible = 1 ;
 			public $BarreMenu ;
 			public $BarreElemsRendu ;
 			public $ClsCSSLienTblList = "ui-widget" ;
@@ -159,6 +160,17 @@
 			{
 				$systemeSws = ReferentielSws::$SystemeEnCours ;
 				return $systemeSws->ObtientImplemPageParNom($comp->NomImplemPage) ;
+			}
+			public function RemplitApplication(& $app)
+			{
+				if(! $this->RemplApplicationPossible || ! $this->EstAccessible())
+				{
+					return ;
+				}
+				$this->RemplitApplicationValide($zone) ;
+			}
+			protected function RemplitApplicationValide(& $zone)
+			{
 			}
 			public function RemplitZonePubl(& $zone)
 			{

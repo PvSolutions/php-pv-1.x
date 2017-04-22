@@ -685,9 +685,9 @@
 			public $LoginMemberFormatErrorAlias = "" ;
 			public $PasswordMemberFormatErrorLabel = "Le mot de passe a un mauvais format" ;
 			public $PasswordMemberFormatErrorAlias = "" ;
-			public $LastNameMemberFormatErrorLabel = "Le nom doit avoir au moins 4 caract&egrave;res et 255 au maximum" ;
+			public $LastNameMemberFormatErrorLabel = "Le nom doit avoir au moins 2 caract&egrave;res et 255 au maximum" ;
 			public $LastNameMemberFormatErrorAlias = "" ;
-			public $FirstNameMemberFormatErrorLabel = "Le prenom doit avoir au moins 4 caract&egrave;res et 255 au maximum" ;
+			public $FirstNameMemberFormatErrorLabel = "Le prenom doit avoir au moins 2 caract&egrave;res et 255 au maximum" ;
 			public $FirstNameMemberFormatErrorAlias = "" ;
 			public $EmailMemberFormatErrorLabel = "L'adresse email a un mauvais format" ;
 			public $EmailMemberFormatErrorAlias = "" ;

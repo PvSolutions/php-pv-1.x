@@ -81,6 +81,7 @@
 			public $CacherMessageExecution = 0 ;
 			public $ElementsEnCoursEditables = 0 ;
 			public $TotalElementsEditables = 1 ;
+			public $ActCmdTailleImage ;
 			public function & InsereFltEditRef($nom, & $filtreRef, $colLiee='', $nomComp='')
 			{
 				$flt = $this->CreeFiltreRef($nom, $filtreRef) ;
@@ -461,6 +462,26 @@
 				$this->ChargeFiltresEdition() ;
 				$this->ChargeCommandeAnnuler() ;
 				$this->ChargeCommandeExecuter() ;
+				$this->ChargeConfigAuto() ;
+			}
+			protected function ChargeConfigAuto()
+			{
+			}
+			public function & InsereTailleFiltreImageRef(& $filtre, $largeurMax=0, $hauteurMax=0, $operation="")
+			{
+				if($this->InscrireCommandeExecuter == 0 || $this->EstNul($this->CommandeExecuter))
+				{
+					return false ;
+				}
+				return $this->ActCmdTailleImage->InsereTailleFiltre($filtre->NomElementScript, $largeurMax, $hauteurMax, $operation);
+			}
+			public function & InsereTailleFiltreImage($nomFiltre, $largeurMax=0, $hauteurMax=0, $operation="")
+			{
+				if($this->InscrireCommandeExecuter == 0 || $this->EstNul($this->CommandeExecuter))
+				{
+					return false ;
+				}
+				return $this->ActCmdTailleImage->InsereTailleFiltre($nomFiltre, $largeurMax, $hauteurMax, $operation);
 			}
 			protected function ChargeFiltresSelection()
 			{
@@ -737,6 +758,39 @@
 				}
 				return $ctn ;
 			}
+			public function ObtientUrlInitiale()
+			{
+				$filtresSelect = $this->FiltresGlobauxSelection ;
+				if(count($this->FiltresLigneSelection) > 0)
+				{
+					array_splice($filtresSelect, count($filtresSelect), 0, $this->FiltresLigneSelection) ;
+				}
+				$nomFiltres = array_keys($filtresSelect) ;
+				$filtresGets = array($this->ZoneParent->NomParamScriptAppele) ;
+				$nomFiltresGets = array() ;
+				foreach($nomFiltres as $i => $nomFiltre)
+				{
+					if($filtres[$nomFiltre]->TypeLiaisonParametre == "get")
+					{
+						$filtresGets[] = $filtres[$nomFiltre]->ObtientIDElementHtmlComposant() ;
+						$nomFiltresGets[] = $filtres[$nomFiltre]->NomParametreLie ;
+					}
+				}
+				foreach($this->ParamsGetSoumetFormulaire as $n => $v)
+				{
+					$filtresGets[] = $v ;
+				}
+				$params = extract_array_without_keys($_GET, $nomFiltresGets) ;
+				$indexMinUrl = (count($params) > 0) ? 0 : 1 ;
+				$urlFormulaire = remove_url_params(get_current_url()) ;
+				$urlFormulaire .= '?'.http_build_query_string($params) ;
+				$instrDesactivs = '' ;
+				if($this->ForcerDesactCache)
+				{
+					$urlFormulaire .= '&'.urlencode($this->NomParamIdAleat()).'='.htmlspecialchars(rand(0, 999999)) ;
+				}
+				return $urlFormulaire ;
+			}
 			protected function RenduFormulaireFiltreElemEnCours()
 			{
 				$ctn = '' ;
@@ -773,17 +827,27 @@
 				{
 					return $ctn ;
 				}
+				$msgExecution = html_entity_decode($this->CommandeSelectionnee->MessageExecution) ;
+				$liensCmd = $this->CommandeSelectionnee->ObtientLiens() ;
+				if(count($liensCmd) > 0)
+				{
+					foreach($liensCmd as $i => $lienCmd)
+					{
+						$msgExecution .= ' ' ;
+						$msgExecution .= $lienCmd->RenduDispositif($this, $i) ;
+					}
+				}
 				if($this->PopupMessageExecution)
 				{
 					if(! $this->ZoneParent->InclureJQueryUi)
 					{
 						$ctn .= '<script language="javascript">'.PHP_EOL ;
-						$ctn .= 'alert('.@svc_json_encode(html_entity_decode($this->CommandeSelectionnee->MessageExecution)).') ;' ;
+						$ctn .= 'alert('.@svc_json_encode($msgExecution).') ;' ;
 						$ctn .= '</script>'.PHP_EOL ;
 					}
 					else
 					{
-						$ctn .= '<div id="DialogMsg'.$this->IDInstanceCalc.'" class="ui-dialog" align="center">'.$this->CommandeSelectionnee->MessageExecution.'</div>' ;
+						$ctn .= '<div id="DialogMsg'.$this->IDInstanceCalc.'" class="ui-dialog" align="center">'.$msgExecution.'</div>' ;
 						$ctn .= '<script language="javascript">'.PHP_EOL ;
 						$ctn .= 'jQuery(function() {
 	jQuery("#DialogMsg'.$this->IDInstanceCalc.'").dialog({
@@ -801,7 +865,7 @@
 					$classeCSS = ($this->CommandeSelectionnee->StatutExecution == 1) ? "Succes" : "Erreur" ;
 					$ctn .= ' class="'.$classeCSS.'"' ;
 					$ctn .= '>' ;
-					$ctn .= $this->CommandeSelectionnee->MessageExecution ;
+					$ctn .= $msgExecution ;
 					$ctn .= '</div>' ;
 				}
 				return $ctn ;
@@ -873,6 +937,7 @@
 						$this->CommandeExecuter->InscritNouvActCmd($this->ActCmdsCommandeExecuter[$i]) ;
 					}
 				}
+				$this->ActCmdTailleImage = $this->CommandeExecuter->InsereNouvActCmd(new PvActCmdTailleImageGd()) ;
 				if(count($this->CriteresCommandeExecuter) > 0)
 				{
 					foreach($this->CriteresCommandeExecuter as $i => $actCmd)
@@ -939,6 +1004,14 @@
 				$actCmd->Cc = $cc ;
 				$actCmd->Cci = $cci ;
 			}
+			public function RedirigeCmdAnnulerVersUrl($url)
+			{
+				return $this->RedirigeAnnulerVersUrl($url) ;
+			}
+			public function RedirigeCmdAnnulerVersScript($nomScript, $parametres=array())
+			{
+				return $this->RedirigeAnnulerVersScript($nomScript, $parametres) ;
+			}
 			public function RedirigeAnnulerVersUrl($url)
 			{
 				if($this->EstNul($this->CommandeAnnuler))
@@ -948,6 +1021,7 @@
 				}
 				$actCmd = $this->CommandeAnnuler->InsereActCmd("PvActCmdRedirectionHttp", array()) ;
 				$actCmd->Url = $url ;
+				return $actCmd ;
 			}
 			public function RedirigeAnnulerVersScript($nomScript, $parametres=array())
 			{
@@ -963,6 +1037,52 @@
 				$actCmd = $this->CommandeAnnuler->InsereActCmd("PvActCmdRedirectionHttp", array()) ;
 				$actCmd->NomScript = $nomScript ;
 				$actCmd->Parametres = $parametres ;
+				return $actCmd ;
+			}
+			public function RedirigeCmdExecuterVersUrl($url)
+			{
+				return $this->RedirigeExecuterVersUrl($url) ;
+			}
+			public function RedirigeCmdExecuterVersScript($nomScript, $parametres=array())
+			{
+				return $this->RedirigeExecuterVersScript($nomScript, $parametres) ;
+			}
+			public function RedirigeExecuterVersUrl($url)
+			{
+				if($this->EstNul($this->CommandeExecuter))
+				{
+					throw new Exception("La commande 'Executer' n'a pas ete initialisee avant d'assigner une redirection") ;
+					return ;
+				}
+				$actCmd = $this->CommandeExecuter->InsereActCmd("PvActCmdRedirectionHttp", array()) ;
+				$actCmd->Url = $url ;
+				return $actCmd ;
+			}
+			public function RedirigeExecuterVersScript($nomScript, $parametres=array())
+			{
+				if(! $this->InscrireCommandeExecuter)
+				{
+					return ;
+				}
+				if($this->EstNul($this->CommandeExecuter))
+				{
+					throw new Exception("La commande 'Executer' n'a pas ete initialisee avant d'assigner une redirection") ;
+					return ;
+				}
+				$actCmd = $this->CommandeExecuter->InsereActCmd("PvActCmdRedirectionHttp", array()) ;
+				$actCmd->NomScript = $nomScript ;
+				$actCmd->Parametres = $parametres ;
+				return $actCmd ;
+			}
+		}
+		
+		class PvFormulaireDonneesBootstrap extends PvFormulaireDonneesHtml
+		{
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap() ;
 			}
 		}
 		
@@ -986,9 +1106,57 @@
 			public $Editable = 0 ;
 		}
 		
+		class PvLienCommandeFormulaireDonnees
+		{
+			public $Libelle ;
+			public $Url ;
+			public $FenetreCible ;
+			public function __construct($url, $libelle)
+			{
+				$this->Url = $url ;
+				$this->Libelle = $libelle ;
+			}
+			public function RenduDispositif(& $form, $index)
+			{
+				return '<a href="'.htmlspecialchars($this->Url).'"'.(($this->FenetreCible != '') ? ' target="'.$this->FenetreCible.'"' : '').'>'.$this->Libelle.'</a>' ;
+			}
+		}
+		
 		class PvCommandeFormulaireDonnees extends PvCommandeComposantIUBase
 		{
 			public $NecessiteFormulaireDonnees = 1 ;
+			public $Liens = array() ;
+			public $InscrireLienAnnuler = 0 ;
+			public $InscrireLienReprendre = 0 ;
+			public $LibelleLienReprendre = "Reprendre" ;
+			public $LibelleLienAnnuler = "Annuler" ;
+			public $UrlLienAnnuler = "" ;
+			public function ObtientLiens()
+			{
+				$liens = $this->Liens ;
+				$form = & $this->FormulaireDonneesParent ;
+				if($form->InscrireCommandeAnnuler == 1 && $this->InscrireLienAnnuler == 1 && $this->UrlLienAnnuler != '')
+				{
+					$lienAnnul = new PvLienCommandeFormulaireDonnees(
+						$this->UrlLienAnnuler,
+						$this->LibelleLienAnnuler
+					) ;
+					$liens[] = $lienAnnul ;
+				}
+				if($this->InscrireLienReprendre == 1)
+				{
+					$lienReprendre = new PvLienCommandeFormulaireDonnees(
+						$form->ObtientUrlInitiale(),
+						$this->LibelleLienReprendre
+					) ;
+					$liens[] = $lienReprendre ;
+				}
+				return $liens ;
+			}
+			public function InsereLien($titre, $url)
+			{
+				
+			}
 			protected function VerifiePreRequis()
 			{
 				$this->VerifieFichiersUpload($this->FormulaireDonneesParent->FiltresEdition) ;
@@ -1018,7 +1186,7 @@
 		class PvCommandeEditionElementBase extends PvCommandeExecuterBase
 		{
 			public $Mode = 1 ;
-			public function ExecuteInstructions()
+			protected function ExecuteInstructions()
 			{
 				$this->StatutExecution = 0 ;
 				if($this->EstNul($this->FormulaireDonneesParent->FournisseurDonnees))
@@ -1065,7 +1233,7 @@
 				}
 				elseif(! $succes && $this->FormulaireDonneesParent->FournisseurDonnees->BaseDonnees->ConnectionException != "")
 				{
-					// print_r($this->FormulaireDonneesParent->FournisseurDonnees->BaseDonnees) ;
+					/// print_r($this->FormulaireDonneesParent->FournisseurDonnees->BaseDonnees) ;
 					$this->RenseigneErreur("Erreur SQL : ".$this->FormulaireDonneesParent->FournisseurDonnees->BaseDonnees->ConnectionException) ;
 					// $this->FormulaireDonneesParent->AfficheExceptionFournisseurDonnees() ;
 				}
@@ -1073,6 +1241,10 @@
 				{
 					$this->StatutExecution = 1 ;
 					$this->MessageExecution = $this->MessageSuccesExecution ;
+				}
+				if($this->Mode == 3 && $this->StatutExecution == 1)
+				{
+					$this->CacherFormulaireFiltresSiSucces = 1 ;
 				}
 			}
 		}

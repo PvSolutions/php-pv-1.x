@@ -19,7 +19,7 @@
 		class CfgImplemShoppingSws extends CfgBaseApplImplemSws
 		{
 			public $NomColPrix = "prix" ;
-			public $PrixParDefaut = 1000 ;
+			public $PrixParDefaut = 0 ;
 			public $NomColRemise = "remise" ;
 			public $NomColQteDispo = "qte_dispo" ;
 			public $ArticleTjrsDispo = 1 ;
@@ -124,11 +124,20 @@ ${details_commande}
 				$lgnsArticle = $implem->LgnsDetailsCommande($script->IdCommande) ;
 				$donneesMail = $lgnCmd ;
 				$donneesMail["date_commande_fr"] = date_fr($lgnCmd["date_commande"]) ;
-				$donneesMail["details_commande"] = $implem->RenduDetailsCommande($lgnsArticle, 0) ;
+				$donneesMail["details_commande"] = $implem->RenduDetailsCommande($lgnsArticle, $script->FormPrinc) ;
 				$sujetMail = _parse_pattern($lgnRglt["identifiant3"], $donneesMail) ;
 				$corpsMail = _parse_pattern($lgnRglt["identifiant4"], $donneesMail) ;
 				$this->EnvoiMailSucces = send_html_mail($lgnRglt["identifiant2"], $sujetMail, $corpsMail, $lgnRglt["identifiant1"]) ;
 				$this->IdBoutique = $lgnCmd["id_boutique"] ;
+				$bd->RunSql("INSERT INTO rglt_email_shopping (id_commande, id_reglement, email_from, email_to, sujet_mail, corps_mail, envoi_succes) values(:idCommande, :idRglt, :from, :to, :sujet, :corps, :envoiSucces)", array(
+					"idCommande" => $script->IdCommande,
+					"idRglt" => $lgnRglt["id"],
+					"from" => $lgnRglt["identifiant1"],
+					"to" => $lgnRglt["identifiant2"],
+					"sujet" => $sujetMail,
+					"corps" => $corpsMail,
+					"envoiSucces" => ($this->EnvoiMailSucces) ? 1 : 0,
+				)) ;
 				// $this->EnvoiMailSucces = 1 ;
 				if($this->EnvoiMailSucces == true)
 				{
@@ -203,6 +212,7 @@ ${details_commande}
 			public $MsgPanierVide = 'Vous n\'avez pas encore d\'article command&eacute; dans votre panier.' ;
 			public $IdsBoutiqueConsult = array() ;
 			public $IdPremBoutiqueConsult = 0 ;
+			protected $_IdBoutiqueSelect = 0 ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -211,6 +221,10 @@ ${details_commande}
 			protected function InitMoysPaiemt()
 			{
 				$this->InsereMoyPaiemt(new MoyPaiemtEmailShoppingSws()) ;
+			}
+			public function IdBoutiqueSelect()
+			{
+				return $this->_IdBoutiqueSelect ;
 			}
 			public function ExisteMoyPaiemt($id)
 			{
@@ -295,6 +309,10 @@ ${details_commande}
 				$this->ScriptSupprRglt->TitreDocument = $this->TitreScriptSupprRglt ;
 				$this->ScriptSupprRglt->Titre = $this->TitreScriptSupprRglt ;
 			}
+			protected function CreeScriptVersImprCmd()
+			{
+				return new ScriptVersImprCmdShoppingSws() ;
+			}
 			protected function RemplitZonePublValide(& $zone)
 			{
 				$this->ScriptPanierMembre = $this->InscritNouvScript("panier_".$this->NomElementSyst, new ScriptPanierMembreShoppingSws(), $zone) ;
@@ -309,6 +327,7 @@ ${details_commande}
 				$this->ScriptEditExpeditCmd = $this->InscritNouvScript("edit_expedit_cmd_".$this->NomElementSyst, new ScriptEditExpeditCmdShoppingSws(), $zone) ;
 				$this->ScriptEditExpeditCmd->TitreDocument = $this->TitreScriptEditExpeditCmd ;
 				$this->ScriptEditExpeditCmd->Titre = $this->TitreScriptEditExpeditCmd ;
+				$this->ScriptVersImprCmd = $this->InscritNouvScript("vers_impr_cmd_".$this->NomElementSyst, $this->CreeScriptVersImprCmd(), $zone) ;
 			}
 			public function CreeCfgAppl()
 			{
@@ -363,18 +382,53 @@ ${details_commande}
 			public function LgnsDetailsCommande($idCommande)
 			{
 				$bd = $this->ObtientBDSupport() ;
-				$sql = "select t2.*,
+				$sql = "select t1.nom_client, t1.prenom_client, t1.email_client, t1.bp_client, t1.adresse_client, t1.contact_client, t1.extra1_client, t1.extra2_client, t1.extra3_client, t1.extra4_client, t1.client_aussi_dest, t1.nom_dest, t1.prenom_dest, t1.email_dest, t1.bp_dest, t1.adresse_dest, t1.contact_dest, t1.extra1_dest, t1.extra2_dest, t1.extra3_dest, t1.extra4_dest, t2.*,
 	t2.prix * t2.quantite montant
 from ".$bd->EscapeTableName($this->NomTableCommande)." t1
 inner join ".$bd->EscapeTableName($this->NomTableArticle)." t2 on t1.id = t2.id_commande
 where id_commande=:id" ;
 				return $bd->FetchSqlRows($sql, array("id" => $idCommande)) ;
 			}
-			public function RenduDetailsCommande(& $lgnsArticle, $editable)
+			public function RenduDetailsCommande(& $lgnsArticle, & $form)
 			{
 				$ctn = '' ;
 				$totalTTC = 0 ;
 				$ctn = '' ;
+				$editable = $form->Editable ;
+				$inclureEntete = $form->InclureEnteteCommande ;
+				$inclureLienVersImpr = $form->InclureLienImprCommande ;
+				if(count($lgnsArticle) > 0)
+				{
+					$lgnCommande = & $lgnsArticle[0] ;
+					$ctn .= '<h2 align="right">Commande N&deg; '.$lgnCommande["id_commande"].'</h2>'.PHP_EOL ;
+				}
+				if($inclureLienVersImpr == 1)
+				{
+					$ctn .= '<p>&bull; <a href="'.$this->ScriptVersImprCmd->ObtientUrlParam(array("id" => $this->IdBoutiqueSelect())).'" target="_blank">Imprimer</a></p>'.PHP_EOL ;
+				}
+				// print_r($lgnsArticle) ;
+				if($inclureEntete == 1)
+				{
+					$ctn .= '<table width="100%" cellspacing="0" cellpadding="4" class="DetailsCommande">
+<tr>
+<td width="50%" valign="left" valign="top">'.PHP_EOL ;
+					$ctn .= '<h3>Livrer &agrave;</h3>'.PHP_EOL ;
+					$ctn .= '<h4>'.htmlentities($lgnCommande["nom_dest"]).' '.htmlentities($lgnCommande["prenom_dest"]).'</h4>'.PHP_EOL ;
+					$ctn .= '<div>'.htmlentities($lgnCommande["adresse_dest"]).'</div>'.PHP_EOL ;
+					$ctn .= '<div>'.htmlentities($lgnCommande["contact_dest"]).'</div>'.PHP_EOL ;
+					$ctn .= '<div>'.htmlentities($lgnCommande["email_dest"]).'</div>'.PHP_EOL ;
+					$ctn .= '</td>
+<td width="50%" valign="right">'.PHP_EOL ;
+					$ctn .= '<h3>Client factur&eacute;</h3>'.PHP_EOL ;
+					$ctn .= '<h4>'.htmlentities($lgnCommande["nom_client"]).' '.htmlentities($lgnCommande["prenom_client"]).'</h4>'.PHP_EOL ;
+					$ctn .= '<div>'.htmlentities($lgnCommande["adresse_client"]).'</div>'.PHP_EOL ;
+					$ctn .= '<div>'.htmlentities($lgnCommande["contact_client"]).'</div>'.PHP_EOL ;
+					$ctn .= '<div>'.htmlentities($lgnCommande["email_client"]).'</div>'.PHP_EOL ;
+					$ctn .= '</td>
+</tr>
+</table>
+<p>&nbsp;</p>' ;
+				}
 				$ctn .= '<table width="100%" cellspacing="0" cellpadding="4" class="DetailsCommande">'.PHP_EOL ;
 				$ctn .= '<tr>' ;
 				if($editable == 1)
@@ -397,8 +451,8 @@ where id_commande=:id" ;
 					{
 						$ctn .= '<td align="center"><input type="checkbox" name="suppr_'.htmlspecialchars($lgn["id"]).'" value="1" /></td>' ;
 					}
-					$ctn .= '<td>'.$lgn["titre_entite"].'</td>' ;
-					$ctn .= '<td align="right">'.$prix.'</td>' ;
+					$ctn .= '<td>'.htmlentities($lgn["titre_entite"]).'</td>' ;
+					$ctn .= '<td align="right">'.htmlentities($prix).'</td>' ;
 					$ctn .= '<td align="center">'.(($editable == 1) ? '<input type="text" name="qte_'.htmlspecialchars($lgn["id"]).'" value="'.htmlspecialchars($quantite).'" style="width:50px" />' : intval($quantite)).'</td>' ;
 					$ctn .= '<td align="right">'.$montant.'</td>
 </tr>'.PHP_EOL ;
@@ -465,6 +519,7 @@ on t1.id_boutique = t2.id_boutique" ;
 						) ;
 					}
 				}
+				$this->_IdBoutiqueSelect = $idBoutique ;
 				return $idCommande ;
 			}
 		}
@@ -742,6 +797,8 @@ on t1.id_boutique = t2.id_boutique" ;
 			public function DetermineEnvironnement()
 			{
 				parent::DetermineEnvironnement() ;
+				$this->FormPrinc->InclureEnteteCommande = 1 ;
+				$this->FormPrinc->InclureLienImprCommande = 1 ;
 			}
 			protected function RenduBlocRglts()
 			{
@@ -854,7 +911,7 @@ on t1.id_boutique = t2.id_boutique" ;
 			public function RenduSpecifique()
 			{
 				$ctn = '' ;
-				// $ctn .= parent::RenduSpecifique() ;
+				$ctn .= parent::RenduSpecifique() ;
 				if($this->IdCommande > 0)
 				{
 					$ctn .= $this->Form2->RenduDispositif() ;
@@ -862,10 +919,59 @@ on t1.id_boutique = t2.id_boutique" ;
 				return $ctn ;
 			}
 		}
+		class ScriptVersImprCmdShoppingSws extends ScriptEtapeRgltBaseShoppingSws
+		{
+			public $UtiliserCorpsDocZone = 0 ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$this->FormPrinc->InclureEnteteCommande = 1 ;
+				$this->DetermineTitreScript() ;
+			}
+			protected function DetermineTitreScript()
+			{
+				if($this->IdCommande != 0)
+				{
+					// $this->Titre = "Commande N&deg;".$this->IdCommande ;
+					$this->TitreDocument = "Facture N&deg;".$this->IdCommande ;
+					
+				}
+			}
+			protected function RenduEnteteCmd()
+			{
+				$ctn = '' ;
+				return $ctn ;
+			}
+			protected function RenduPiedCmd()
+			{
+				$ctn = '' ;
+				return $ctn ;
+			}
+			public function RenduSpecifique()
+			{
+				$ctn = '' ;
+				$ctn .= '<div class="Imprimable">'.PHP_EOL ;
+				$ctn .= $this->RenduEnteteCmd().PHP_EOL ;
+				$ctn .= parent::RenduSpecifique().PHP_EOL ;
+				$ctn .= $this->RenduPiedCmd().PHP_EOL ;
+				$ctn .= '</div>' ;
+				$ctn .= '<script type="text/javascript">
+	window.onload = function() {
+		window.print() ;
+	} ;
+</script>' ;
+				return $ctn ;
+			}
+		}
 		class ScriptProcessRgltCmdShoppingSws extends ScriptEtapeRgltBaseShoppingSws
 		{
 			protected $LgnRglt ;
 			protected $MoyPaiemtSelect ;
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$this->FormPrinc->InclureEnteteCommande = 1 ;
+			}
 			protected function DetermineIdCommande()
 			{
 				$implem = $this->ObtientImplemPage() ;
@@ -1159,7 +1265,7 @@ on t1.id_boutique = t2.id_boutique" ;
 					$this->CommandeExecuter->InsereNouvCritere(new CritrCodeSecurValideCmtSws()) ;
 				}
 				// Messages
-				$this->CommandeExecuter->MessageSuccesExecution = $implem->MsgSuccesSoumetCmt ;
+				// $this->CommandeExecuter->MessageSuccesExecution = $implem->MsgSuccesSoumetCmt ;
 			}
 			protected function ChargeFiltresSelection()
 			{
@@ -1363,6 +1469,8 @@ on t1.id_boutique = t2.id_boutique" ;
 			public $InclureTotalElements = 0 ;
 			public $FltsSupprArticle = array() ;
 			public $FltsQteArticle = array() ;
+			public $InclureEnteteCommande = 0 ;
+			public $InclureLienImprCommande = 0 ;
 			public $NomClasseCommandeExecuter = "CmdMajPanierMembreShoppingSws" ;
 			public function ChargeConfig()
 			{
@@ -1434,7 +1542,7 @@ on t1.id_boutique = t2.id_boutique" ;
 			{
 				$form = & $composant ;
 				$implem = $script->ObtientImplemPage() ;
-				return  $implem->RenduDetailsCommande($form->LgnsArticle, $form->Editable) ;
+				return  $implem->RenduDetailsCommande($form->LgnsArticle, $form) ;
 			}
 		}
 		

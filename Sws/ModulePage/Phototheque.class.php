@@ -125,6 +125,13 @@
 				$compPhototheque->NomColonneValeur = $this->ModuleParent->EntitePhototheque->NomColId ;
 				$compPhototheque->NomColonneLibelle = $this->ModuleParent->EntitePhototheque->NomColTitre ;
 			}
+			public function DefsFichsJoints()
+			{
+				$fichs = array() ;
+				$fichs[] = $this->CreeDefFichJoint($this->NomColCheminImage, $this->LibCheminImage) ;
+				$fichs[] = $this->CreeDefFichJoint($this->NomColCheminMiniature, $this->LibCheminMiniature) ;
+				return $fichs ;
+			}
 		}
 		class EntitePhotothequeSws extends EntiteTableSws
 		{
@@ -140,6 +147,8 @@
 			public $TitreSupprEntite = "Suppression photot&egrave;que" ;
 			public $TitreListageEntite = "Liste des photot&egrave;ques" ;
 			public $TitreConsultEntite = "D&eacute;tails photot&egrave;que" ;
+			public $TitreVidageEntite = "Vidage des photot&egrave;ques" ;
+			public $TitreImportRep = "Importation Phototh&egrave;que &agrave; partir d'un dossier" ;
 			public $NomEntite = "phototheque" ;
 			public $NomTable = "phototheque" ;
 			public $LibTitre = "Titre" ;
@@ -151,12 +160,23 @@
 			public $NomParamDescription = "description" ;
 			public $NomColDescription = "description" ;
 			public $FltFrmElemDescription ;
+			public $LibelleCmdImportRep = "Importer Repertoire." ;
 			public $NomClasseCmdSuppr = "CmdSupprPhotothequeSws" ;
 			protected $GrilleEnum ;
+			public $LargeurFixeMiniature = "230px" ;
+			protected function CreeScriptImportRep()
+			{
+				return new ScriptImportRepPhotothequeSws() ;
+			}
 			public function ObtientReqSqlFluxRSS()
 			{
 				$this->DefFluxRSS->NomColCheminImage = "" ;
 				return parent::ObtientReqSqlFluxRSS() ;
+			}
+			public function RemplitZoneAdmin(& $zone)
+			{
+				parent::RemplitZoneAdmin($zone) ;
+				$this->ScriptImportRep = $this->InsereScript('importe_rep_'.$this->NomEntite, $this->CreeScriptImportRep(), $zone, $this->ObtientPrivilegesEdit()) ;
 			}
 			protected function PrepareScriptConsult(& $script)
 			{
@@ -207,13 +227,14 @@
 				$bd = $this->ObtientBDSupport() ;
 				$entiteImg = & $this->ModuleParent->EntiteImagePhototheque ;
 				$sql = 'select t11.*, t21.'.$bd->EscapeVariableName($entiteImg->NomColCheminImage).', t21.'.$bd->EscapeVariableName($entiteImg->NomColCheminMiniature).', '.$syst->SqlCheminPubl('t21.'.$bd->EscapeVariableName($entiteImg->NomColCheminMiniature)).' chemin_miniature_publ from (
-select t1.'.$bd->EscapeVariableName($this->NomColId).', t1.'.$bd->EscapeVariableName($this->NomColTitre).', t1.'.$bd->EscapeVariableName($this->NomColStatutPubl).', t1.'.$bd->EscapeVariableName($this->NomColDatePubl).', t1.'.$bd->EscapeVariableName($this->NomColHeurePubl).', max('.$bd->SqlConcat(array('t2.'.$bd->EscapeVariableName($entiteImg->NomColDatePubl), '\' \'', 't2.'.$bd->EscapeVariableName($entiteImg->NomColHeurePubl))).') temps_publ_max_photo, max(t2.'.$bd->EscapeVariableName($entiteImg->NomColId).') id_max_photo from '.$bd->EscapeTableName($this->NomTable).' t1 inner join '.$bd->EscapeTableName($entiteImg->NomTable).' t2 on t1.'.$bd->EscapeVariableName($this->NomColId).' = t2.'.$bd->EscapeVariableName($entiteImg->NomColIdPhototheque).' group by t1.'.$bd->EscapeVariableName($this->NomColId).', t1.'.$bd->EscapeVariableName($this->NomColTitre).'
+select t1.'.$bd->EscapeVariableName($this->NomColId).', t1.'.$bd->EscapeVariableName($this->NomColTitre).', t1.'.$bd->EscapeVariableName($this->NomColStatutPubl).', t1.'.$bd->EscapeVariableName($this->NomColDatePubl).', t1.'.$bd->EscapeVariableName($this->NomColHeurePubl).', max('.$bd->SqlConcat(array('t2.'.$bd->EscapeVariableName($entiteImg->NomColDatePubl), '\' \'', 't2.'.$bd->EscapeVariableName($entiteImg->NomColHeurePubl))).') temps_publ_max_photo, max(t2.'.$bd->EscapeVariableName($entiteImg->NomColId).') id_max_photo from '.$bd->EscapeTableName($this->NomTable).' t1 inner join '.$bd->EscapeTableName($entiteImg->NomTable).' t2 on t1.'.$bd->EscapeVariableName($this->NomColId).' = t2.'.$bd->EscapeVariableName($entiteImg->NomColIdPhototheque).' where t2.'.$bd->EscapeVariableName($entiteImg->NomColStatutPubl).' = 1 group by t1.'.$bd->EscapeVariableName($this->NomColId).', t1.'.$bd->EscapeVariableName($this->NomColTitre).'
 ) t11
 inner join '.$bd->EscapeTableName($entiteImg->NomTable).' t21
 on t11.'.$bd->EscapeVariableName($this->NomColId).' = t21.'.$bd->EscapeVariableName($entiteImg->NomColIdPhototheque).'
-where t11.id_max_photo = t21.'.$bd->EscapeVariableName($entiteImg->NomColId).'' ;
+where t11.temps_publ_max_photo = '.$bd->SqlConcat(array('t21.'.$bd->EscapeVariableName($entiteImg->NomColDatePubl), '\' \'', 't21.'.$bd->EscapeVariableName($entiteImg->NomColHeurePubl))).'
+group by t11.'.$bd->EscapeVariableName($this->NomColId).'' ;
 				$bloc->FournisseurDonnees->RequeteSelection = '('.$sql.')' ;
-				$bloc->ContenuLigneModele = '<div align="center"><a href="?'.urlencode($zone->NomParamScriptAppele).'='.urlencode($this->NomScriptConsult.'_'.$this->NomElementModule).'&id=${id}"><img src="${chemin_miniature_publ}" border="0" /></a></div>
+				$bloc->ContenuLigneModele = '<div align="center"><a href="?'.urlencode($zone->NomParamScriptAppele).'='.urlencode($this->NomScriptConsult.'_'.$this->NomElementModule).'&id=${id}"><img src="${chemin_miniature_publ}"'.(($this->LargeurFixeMiniature != '') ? ' width="'.$this->LargeurFixeMiniature.'"' : '').' border="0" /></a></div>
 <div align="center"><a href="?'.urlencode($zone->NomParamScriptAppele).'='.urlencode($this->NomScriptConsult.'_'.$this->NomElementModule).'&id=${id}">${titre}</a></div>' ;
  			}
 			public function SqlListeColsSelect(& $bd)
@@ -242,6 +263,179 @@ where t11.id_max_photo = t21.'.$bd->EscapeVariableName($entiteImg->NomColId).'' 
 			{
 				parent::ChargeTblList($tabl) ;
 				$this->DefColTblListTitre = $tabl->InsereDefCol($this->NomColTitre, $this->LibTitre) ;
+			}
+			protected function FinalTblList(& $tabl)
+			{
+				parent::FinalTblList($tabl) ;
+				$cmdImportRep = $tabl->InsereCmdRedirectScript("importRep", $this->ScriptImportRep->NomElementZone, $this->LibelleCmdImportRep) ;
+				$cmdImportRep->CheminIcone = "images/icones/import-rep-phototheque.png" ;
+			}
+		}
+		
+		class ScriptImportRepPhotothequeSws extends ScriptAdminBaseSws
+		{
+			protected $FormPrinc ;
+			public $FltChemRep ;
+			public $FltTitreNouvAlb ;
+			public function CheminRelatifRep()
+			{
+				$syst = ReferentielSws::$SystemeEnCours ;
+				$entite = $this->ObtientEntitePage() ;
+				return realpath(dirname($_SERVER["SCRIPT_FILENAME"]).(($syst->CheminAdminVersPubl != "")? "/".$syst->CheminAdminVersPubl : "")) ;
+			}
+			public function DetermineEnvironnement()
+			{
+				parent::DetermineEnvironnement() ;
+				$entite = $this->ObtientEntitePage() ;
+				$entite->PrepareScriptAdmin($this) ;
+				$this->TitreDocument = $entite->TitreImportRep ;
+				$this->Titre = $entite->TitreImportRep ;
+				$this->DetermineFormPrinc() ;
+			}
+			protected function DetermineFormPrinc()
+			{
+				$entite = $this->ObtientEntitePage() ;
+				$this->FormPrinc = new FormulaireDonneesBaseSws() ;
+				$this->FormPrinc->AdopteScript("FormPrinc", $this) ;
+				$this->FormPrinc->InclureElementEnCours = 0 ;
+				$this->FormPrinc->InclureTotalElements = 0 ;
+				$this->FormPrinc->MaxFiltresEditionParLigne = 1 ;
+				$this->FormPrinc->LibelleCommandeExecuter = "Importer" ;
+				$this->FormPrinc->NomClasseCommandeExecuter = "CmdImportRepPhotothequeSws" ;
+				$this->FormPrinc->ChargeConfig() ;
+				$this->FormPrinc->RedirigeAnnulerVersScript($entite->NomScriptListage."_".$entite->NomEntite) ;
+				$this->FltChemRep = $this->FormPrinc->InsereFltEditHttpPost("chemin_rep") ;
+				$this->FltChemRep->Libelle = "Chemin sur le serveur" ;
+				$this->FltChemRep->ObtientComposant()->Largeur = "270px" ;
+				$this->FltTitreNouvAlb = $this->FormPrinc->InsereFltEditHttpPost("titre_nouv_album") ;
+				$this->FltTitreNouvAlb->Libelle = "Titre du nouvel album" ;
+				$this->FltTitreNouvAlb->ObtientComposant()->Largeur = "200px" ;
+				$this->FltGarderImgs = $this->FormPrinc->InsereFltEditHttpPost("garder_nom_imgs") ;
+				$this->FltGarderImgs->Libelle = "Garder le nom des images" ;
+				$this->FltGarderImgs->ValeurParDefaut = 0 ;
+				$this->FltGarderImgs->DeclareComposant("PvZoneSelectBoolhtml") ;
+				/*
+				$this->FltChemRep = $this->FormPrinc->InsereFltEditHttpPost("chemin_rep") ;
+				$this->FltChemRep->Libelle = "Chemin du dossier sur le serveur" ;
+				*/
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				$entite = $this->ObtientEntitePage() ;
+				$ctn .= $entite->RenduAvantCtnSpec($this).PHP_EOL ;
+				$ctn .= parent::RenduDispositifBrut() ;
+				$ctn .= $entite->RenduApresCtnSpec($this).PHP_EOL ;
+				return $ctn ;
+			}
+			public function RenduSpecifique()
+			{
+				$ctn = '' ;
+				$ctn .= '<p class="ui-highlight">Le dossier est relatif &agrave; : <b>'.htmlentities($this->CheminRelatifRep()).'</b></p>'.PHP_EOL ;
+				$ctn .= $this->FormPrinc->RenduDispositif().PHP_EOL ;
+				return $ctn ;
+			}
+		}
+		class CmdImportRepPhotothequeSws extends PvCommandeExecuterBase
+		{
+			protected function ExecuteInstructions()
+			{
+				$nomRep = $this->ScriptParent->FltChemRep->Lie() ;
+				$entite = $this->ScriptParent->ObtientEntitePage() ;
+				$garderNomImgs = $this->ScriptParent->FltGarderImgs->Lie() ;
+				$entiteImg = & $entite->ModuleParent->EntiteImagePhototheque ;
+				$idMembreConnecte = $this->ZoneParent->IdMembreConnecte() ;
+				$syst = & ReferentielSws::$SystemeEnCours ;
+				$cheminRep = $this->ScriptParent->CheminRelatifRep()."/".$entiteImg->CheminTelechargImage."/".$nomRep ;
+				$bd = $this->ScriptParent->ObtientBDSupport() ;
+				if($nomRep == '' || strpos($cheminRep, "..") !== false)
+				{
+					$this->RenseigneErreur("Le chemin du repertoire ne doit pas être vide ou contenir ..") ;
+					return ;
+				}
+				if(! is_dir($cheminRep))
+				{
+					$this->RenseigneErreur("Le repertoire <b>".htmlentities($cheminRep)."</b> n'existe pas") ;
+					return ;
+				}
+				$titreNouvAlb = $this->ScriptParent->FltTitreNouvAlb->Lie() ;
+				if($titreNouvAlb == '')
+				{
+					$this->RenseigneErreur("Veuillez entrer un titre d'album") ;
+					return ;
+				}
+				$idCtrl = uniqid() ;
+				$ok = $bd->InsertRow(
+					$entite->NomTable,
+					array(
+						$entite->NomColTitre => $titreNouvAlb,
+						$entite->NomColIdCtrl => $idCtrl,
+						$entite->NomColDateModif => date("Y-m-d H:i:s"),
+						$entite->NomColStatutPubl => 0,
+						$entite->NomColDatePubl => date("Y-m-d"),
+						$entite->NomColHeurePubl => date("H:i:s"),
+						$entite->NomColIdMembreCreation => $idMembreConnecte,
+						$entite->NomColIdMembreModif => $idMembreConnecte,
+					)
+				) ;
+				if($ok)
+				{
+					$idPhototheque = $bd->FetchSqlValue(
+						"select * from ".$bd->EscapeTableName($entite->NomTable)." where ".$bd->EscapeVariableName($entite->NomColIdCtrl)." = :idCtrl",
+						array("idCtrl" => $idCtrl),
+						$entite->NomColId
+					) ;
+					$totalImages = 0 ;
+					$chemPremImage = "" ;
+					$dh = opendir($cheminRep) ;
+					while(($nomFic = readdir($dh)) !== false)
+					{
+						if($nomFic == '.' || $nomFic == '..')
+						{
+							continue ;
+						}
+						$infoFic = pathinfo($cheminRep."/".$nomFic) ;
+						if(! in_array(strtolower($infoFic["extension"]), array("gif", "png", "jpg", "jpeg", "bmp")))
+						{
+							continue ;
+						}
+						$nomPhoto = (strstr($infoFic["basename"], '.')) ? substr($infoFic["basename"], 0, strrpos($infoFic["basename"], '.')) : $infoFic["basename"] ;
+						$ok1 = $bd->InsertRow(
+							$entiteImg->NomTable,
+							array(
+								$entiteImg->NomColTitre => ($garderNomImgs) ? $nomPhoto : "Photo ".($totalImages + 1),
+								$entiteImg->NomColIdCtrl => $idCtrl,
+								$entiteImg->NomColDateModif => date("Y-m-d H:i:s"),
+								$entiteImg->NomColStatutPubl => 1,
+								$entiteImg->NomColDatePubl => date("Y-m-d"),
+								$entiteImg->NomColHeurePubl => date("H:i:s"),
+								$entiteImg->NomColIdMembreCreation => $idMembreConnecte,
+								$entiteImg->NomColIdMembreModif => $idMembreConnecte,
+								$entiteImg->NomColCheminImage => $syst->CheminAdminVersPubl."/".$entiteImg->CheminTelechargImage."/".$nomRep."/".$infoFic["basename"],
+								$entiteImg->NomColCheminMiniature => $syst->CheminAdminVersPubl."/".$entiteImg->CheminTelechargImage."/".$nomRep."/".$infoFic["basename"],
+								$entiteImg->NomColIdPhototheque => $idPhototheque
+							)
+						) ;
+						if($totalImages == 0)
+						{
+							$chemPremImage = $syst->CheminAdminVersPubl."/".$entiteImg->CheminTelechargImage."/".$nomRep."/".$infoFic["basename"] ;
+						}
+						$totalImages++ ;
+					}
+					closedir($dh) ;
+					if($chemPremImage != "")
+					{
+						$this->ConfirmeSucces("Dossier ".$cheminRep." trait&eacute; (".$totalImages."  t&eacute;l&eacute;charg&eacute;e(s))") ;
+					}
+					else
+					{
+						$this->ConfirmeSucces("Dossier ".$cheminRep." vide (Aucune image trouv&eacute;e)") ;
+					}
+				}
+				else
+				{
+					$this->RenseigneErreur("Erreur SQL lors de la creation de l'album : ".htmlentities($bd->ConnectionException)) ;
+				}
 			}
 		}
 		

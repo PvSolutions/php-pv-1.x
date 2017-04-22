@@ -9,6 +9,7 @@
 			protected function InitDessinateurFiltresEdition()
 			{
 				$this->DessinateurFiltresEdition = new PvDessinFiltresSbAdmin2() ;
+				$this->DessinateurFiltresEdition->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{

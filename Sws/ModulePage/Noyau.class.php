@@ -126,6 +126,17 @@
 			public function RemplitMenuPlanSite(& $menu)
 			{
 			}
+			protected function CreeDefFichJoint($nomCol, $titre)
+			{
+				$defFichJoint = new DefFichJointElemRenduSws() ;
+				$defFichJoint->NomCol = $nomCol ;
+				$defFichJoint->Titre = $titre ;
+				return $defFichJoint ;
+			}
+			public function DefsFichsJoints()
+			{
+				return array() ;
+			}
 		}
 		
 		class ModulePageBaseSws extends ElementRenduBaseSws
@@ -138,6 +149,7 @@
 			public $RemplZoneMembrePossible = 1 ;
 			public $RemplZonePublPossible = 1 ;
 			public $RemplZoneAdminPossible = 1 ;
+			public $RemplApplicationPossible = 1 ;
 			public $MenuRacine ;
 			public $NomActionFluxRSS = "rss" ;
 			public $ActionFluxRSS ;
@@ -256,6 +268,21 @@
 				}
 			}
 			protected function RemplitMenuInt(& $menu)
+			{
+			}
+			public function RemplitApplication(& $app)
+			{
+				if(! $this->RemplApplicationPossible || ! $this->EstAccessible())
+				{
+					return ;
+				}
+				foreach($this->Entites as $nom => & $entite)
+				{
+					$entite->RemplitApplication($app) ;
+				}
+				$this->RemplitApplicationValide($app) ;
+			}
+			protected function RemplitApplicationValide(& $app)
 			{
 			}
 			public function RemplitZonePubl(& $zone)
@@ -739,6 +766,9 @@
 				$this->NomElementModule = $nom ;
 				$this->ModuleParent = & $moduleParent ;
 			}
+			public function RemplitApplication(& $app)
+			{
+			}
 			public function RemplitZonePubl(& $zone)
 			{
 			}
@@ -890,9 +920,17 @@
 			public $ChemIconModifTblList = "images/icones/modif.png" ;
 			public $ChemIconSupprTblList = "images/icones/suppr.png" ;
 			public $ChemIconVidageTblList = "images/icones/vide.png" ;
+			public $ChemIconConsultTblList = "images/icones/consult.png" ;
+			public $ChemIconChgPublOkTblList = "images/icones/publier_ok.png" ;
+			public $ChemIconChgPublKoTblList = "images/icones/publier_ko.png" ;
+			public $ChemIconFichsJointsTblList = "images/icones/fichiers_joints.png" ;
 			public $ClsCSSLienTblList = "ui-widget" ;
 			public $LibConsultTblList = "Consulter" ;
+			public $LibChgPublOkTblList = "Publier" ;
+			public $LibChgPublKoTblList = "Rejeter" ;
+			public $LibFichsJointsTblList = "Fichiers joints" ;
 			public $LibId = "ID" ;
+			public $LibIdMembreModif = "Modifi&eacute; par" ;
 			public $LibDateModif = "Date modif." ;
 			public $LibDatePubl = "Date publication" ;
 			public $LibHeurePubl = "Heure publication" ;
@@ -929,6 +967,7 @@
 			public $ScriptSuppr ;
 			public $NomScriptVidage = "vide" ;
 			public $ScriptVidage ;
+			public $ScriptChgPubl ;
 			public $PrivilegesConsult = array() ;
 			public $PrivilegesEdit = array() ;
 			public $NomParamId = "id" ;
@@ -987,6 +1026,8 @@
 			public $DefColTblListId ;
 			public $DefColTblListDatePubl ;
 			public $DefColTblListDateModif ;
+			public $DefColTblListIdMembreModif ;
+			public $DefColTblListStatutPubl ;
 			public $DefColTblListTitre ;
 			public $DefColTblListActs ;
 			public $CmdAjoutTblList ;
@@ -1174,7 +1215,7 @@
 				$sql = 'select ' ;
 				$sql .= $this->SqlListeColsSelect($bd) ;
 				$sql .= ' from' ;
-				$sql .= $bd->EscapeVariableName($this->TableSelectLgn()) ;
+				$sql .= $bd->EscapeVariableName($this->TableSelectLgn()).' t1' ;
 				$sql .= ' where '.$bd->EscapeVariableName($this->NomColId).' = '.$bd->ParamPrefix.'idEntite' ;
 				return $sql ;
 			}
@@ -1778,8 +1819,12 @@
 			protected function ChargeTblList(& $tbl)
 			{
 				$bd = $this->ObtientBDSupport() ;
+				$membership = & $tbl->ZoneParent->Membership ;
 				// Fournisseur de données
 				$tbl->FournisseurDonnees = $this->ModuleParent->CreeFournDonnees() ;
+				/*
+				$tbl->FournisseurDonnees->RequeteSelection = "(select t1.*, t2.".$bd->EscapeTableName($membership->LoginMemberColumn)." login_membre_modif from ".$bd->EscapeTableName($this->NomTable)." t1 left join ".$bd->EscapeTableName($membership->MemberTable)." t2 on t1.".$bd->EscapeTableName($this->NomColIdMembreModif)." = ".$bd->EscapeTableName($membership->IdMemberColumn).")" ;
+				*/
 				$tbl->FournisseurDonnees->RequeteSelection = $this->NomTable ;
 				$this->DefColTblListId = $tbl->InsereDefCol($this->NomColId, $this->LibId) ;
 				$this->DefColTblListId->Largeur = "5%" ;
@@ -1789,9 +1834,17 @@
 					$this->DefColTblListDatePubl = $tbl->InsereDefCol($this->NomColDatePubl, $this->LibDatePubl, $bd->SqlConcat(array($bd->SqlDateToStrFr($bd->EscapeVariableName($this->NomColDatePubl)), "' '", $bd->EscapeVariableName($this->NomColHeurePubl)))) ;
 					$this->DefColTblListDatePubl->Largeur = "10%" ;
 					$this->DefColTblListDatePubl->AlignElement = "center" ;
+					$this->DefColTblListStatutPubl = $tbl->InsereDefColBool($this->NomColStatutPubl, $this->LibStatutPubl) ;
+					$this->DefColTblListStatutPubl->Largeur = "8%" ;
+					$this->DefColTblListStatutPubl->AlignElement = "center" ;
 					$this->DefColTblListDateModif = $tbl->InsereDefCol($this->NomColDateModif, $this->LibDateModif, $bd->SqlDateToStrFr($bd->EscapeVariableName($this->NomColDateModif), 1)) ;
 					$this->DefColTblListDateModif->Largeur = "10%" ;
 					$this->DefColTblListDateModif->AlignElement = "center" ;
+					/*
+					$this->DefColTblListMembreModif = $tbl->InsereDefCol("login_membre_modif", $this->LibIdMembreModif) ;
+					$this->DefColTblListMembreModif->Largeur = "10%" ;
+					$this->DefColTblListMembreModif->AlignElement = "center" ;
+					*/
 				}
 				if($this->AccepterTitre == 1)
 				{
@@ -1828,12 +1881,62 @@
 				{
 					$this->LienModifTblList = $tabl->InsereIconeAction($this->DefColTblListActs, $this->ScriptModif->ObtientUrlFmt(array($this->NomParamId => '${'.$this->NomColId.'}')), $this->ChemIconModifTblList, $this->LibModifTblList) ;
 					$this->LienModifTblList->ClasseCSS = $this->ClsCSSLienTblList ;
+					if($this->AccepterAttrsPubl == 1)
+					{
+						// Valider une publication
+						$this->LienChgPublOkTblList = $tabl->InsereIconeAction(
+							$this->DefColTblListActs,
+							update_current_url_params(
+								array(
+									"idPubl" => '${'.$this->NomColId.'}',
+									$tabl->ZoneParent->NomParamActionAppelee => $tabl->ScriptParent->ActChgPubl->NomElementZone
+								),
+								0
+							),
+							$this->ChemIconChgPublOkTblList,
+							$this->LibChgPublOkTblList
+						) ;
+						$this->LienChgPublOkTblList->NomDonneesValid = $this->NomColStatutPubl ;
+						$this->LienChgPublOkTblList->ValeurVraiValid = 0 ;
+						// Rejeter une publication
+						// echo "Mmm : ".$this->LibChgPublKoTblList."<br>" ;
+						$this->LienChgPublKoTblList = $tabl->InsereIconeAction(
+							$this->DefColTblListActs,
+							update_current_url_params(
+								array(
+									"idPubl" => '${'.$this->NomColId.'}',
+									$tabl->ZoneParent->NomParamActionAppelee => $tabl->ScriptParent->ActChgPubl->NomElementZone
+								),
+								0
+							),
+							$this->ChemIconChgPublKoTblList,
+							$this->LibChgPublKoTblList
+						) ;
+						$this->LienChgPublKoTblList->NomDonneesValid = $this->NomColStatutPubl ;
+						$this->LienChgPublKoTblList->ValeurVraiValid = 1 ;
+					}
 					$this->LienSupprTblList = $tabl->InsereIconeAction($this->DefColTblListActs, $this->ScriptSuppr->ObtientUrlFmt(array($this->NomParamId => '${'.$this->NomColId.'}')), $this->ChemIconSupprTblList, $this->LibSupprTblList) ;
 					$this->LienSupprTblList->ClasseCSS = $this->ClsCSSLienTblList ;
 					if($this->InclureScriptConsult == 1 && $this->ModuleParent->SystemeParent->ObtientUrlZonePubl($tabl->ZoneParent) != '')
 					{
-						$this->LienConsultTblList = $tabl->InsereLienAction($this->DefColTblListActs, $this->ModuleParent->SystemeParent->ObtientUrlZonePubl($tabl->ZoneParent).'?'.urlencode($tabl->ZoneParent->NomParamScriptAppele).'='.urlencode($this->NomScriptConsult).'_'.urlencode($this->NomEntite).'&'.urlencode($this->NomParamId).'=${'.$this->NomColId.'}', $this->LibConsultTblList, $this->LibConsultTblList) ;
-						$this->LienConsultTblList->FenetreCible = "_blank" ;
+						$this->LienConsultTblList = $tabl->InsereIconeAction($this->DefColTblListActs, $this->ModuleParent->SystemeParent->ObtientUrlZonePubl($tabl->ZoneParent).'?'.urlencode($tabl->ZoneParent->NomParamScriptAppele).'='.urlencode($this->NomScriptConsult).'_'.urlencode($this->NomEntite).'&'.urlencode($this->NomParamId).'=${'.$this->NomColId.'}', $this->ChemIconConsultTblList, $this->LibConsultTblList) ;
+						$this->LienConsultTblList->Cible = "_blank" ;
+						$this->LienConsultTblList->NomDonneesValid = $this->NomColStatutPubl ;
+					}
+					if(count($this->DefsFichsJoints()) > 0)
+					{
+						$this->LienListFichsJoints = $tabl->InsereIconeAction(
+							$this->DefColTblListActs,
+							'javascript:AfficheBoiteDlgCadre_'.$tabl->ScriptParent->IDInstanceCalc.'('.	svc_json_encode(update_current_url_params(
+								array(
+									"idEntite" => '${'.$this->NomColId.'}',
+									$tabl->ZoneParent->NomParamActionAppelee => $tabl->ScriptParent->ActListFichsJoints->NomElementZone
+								),
+								0
+							)).', "450px", 300)',
+							$this->ChemIconFichsJointsTblList,
+							$this->LibFichsJointsTblList
+						) ;
 					}
 					$this->CmdAjoutTblList = new PvCommandeRedirectionHttp() ;
 					$this->CmdAjoutTblList->NomScript = $this->ScriptAjout->NomElementZone ;
@@ -1991,6 +2094,10 @@
 					$result[] = new ColSommaireEntiteSws($this->NomColTitre, $this->LibTitre) ;
 				}
 				return $result ;
+			}
+			public function ColsSommaire()
+			{
+				return $this->NomColsSommaire() ;
 			}
 			public function RenduScriptLst(& $script)
 			{
@@ -2224,12 +2331,15 @@
 					// Icone
 					$this->FltFrmElemIcone = $frm->InsereFltEditHttpUpload($this->NomParamCheminIcone, $this->ModuleParent->SystemeParent->CheminAdminVersPubl."/".$this->CheminTelechargIcones, $this->NomColCheminIcone) ;
 					$this->FltFrmElemIcone->Libelle = $this->LibCheminIcone ;
+					$frm->InsereTailleFiltreImageRef($this->FltFrmElemIcone, 48, 48) ;
 					// Image
 					$this->FltFrmElemImage = $frm->InsereFltEditHttpUpload($this->NomParamCheminImage, $this->ModuleParent->SystemeParent->CheminAdminVersPubl."/".$this->CheminTelechargImages, $this->NomColCheminImage) ;
 					$this->FltFrmElemImage->Libelle = $this->LibCheminImage ;
+					$frm->InsereTailleFiltreImageRef($this->FltFrmElemImage, 800, 450) ;
 					// Bannière
 					$this->FltFrmElemBanniere = $frm->InsereFltEditHttpUpload($this->NomParamCheminBanniere, $this->ModuleParent->SystemeParent->CheminAdminVersPubl."/".$this->CheminTelechargBannieres, $this->NomColCheminBanniere) ;
 					$this->FltFrmElemBanniere->Libelle = $this->LibCheminBanniere ;
+					$frm->InsereTailleFiltreImageRef($this->FltFrmElemBanniere, 1024, 768) ;
 				}
 				if($this->AccepterAttrsMeta == 1)
 				{
@@ -2318,14 +2428,9 @@
 			{
 				return $this->ZoneParent->PossedePrivilege($priv) ;
 			}
-			public function & ObtientEntitePage()
-			{
-				$entite = $this->ScriptParent->ObtientEntitePage() ;
-				return $entite ;
-			}
 			public function & ObtientModulePage()
 			{
-				$module = $this->ScriptParent->ObtientModulePage() ;
+				$module = $this->ModuleParent ;
 				return $module ;
 			}
 			public function NomParamsTexte()
@@ -2369,6 +2474,17 @@
 					
 				}
 				return parent::ObtientReqSqlFluxRSS() ;
+			}
+			public function DefsFichsJoints()
+			{
+				$fichs = array() ;
+				if($this->AccepterAttrsGraphique == 1)
+				{
+					$fichs[] = $this->CreeDefFichJoint($this->NomColCheminIcone, $this->LibCheminIcone) ;
+					$fichs[] = $this->CreeDefFichJoint($this->NomColCheminImage, $this->LibCheminImage) ;
+					$fichs[] = $this->CreeDefFichJoint($this->NomColCheminBanniere, $this->LibCheminBanniere) ;
+				}
+				return $fichs ;
 			}
 		}
 		
@@ -2418,6 +2534,29 @@
 		class ScriptEntiteTableBaseSws extends ScriptBaseSws
 		{
 			public $EstLienSommaire = 0 ;
+			protected function RenduBoiteDlgCadre()
+			{
+				$ctn = '' ;
+				$ctn .= '<div id="BoiteDlgCadre_'.$this->IDInstanceCalc.'" style="display:none"><iframe src="about:blank" style="width:98%; border:0px" frameborder="0"></iframe></div>
+<script type="text/javascript">
+	jQuery(function() {
+		jQuery("#BoiteDlgCadre_'.$this->IDInstanceCalc.'").dialog({ autoOpen: false, modal:true, resizable:false, draggable:false }) ;
+	}) ;
+	function AfficheBoiteDlgCadre_'.$this->IDInstanceCalc.'(url, largeur, hauteur) {
+		var jqBoiteDlg = jQuery("#BoiteDlgCadre_'.$this->IDInstanceCalc.'") ;
+		jqBoiteDlg.find("iframe").css((hauteur - 18) + "px") ;
+		jqBoiteDlg.find("iframe").attr("src", url) ;
+		jqBoiteDlg.dialog("option", "width", largeur) ;
+		jqBoiteDlg.dialog("option", "height", hauteur) ;
+		jqBoiteDlg.dialog("open") ;
+	} ;
+	function FixeTitreBoiteDlgCadre_'.$this->IDInstanceCalc.'(titre) {
+		var jqBoiteDlg = jQuery("#BoiteDlgCadre_'.$this->IDInstanceCalc.'") ;
+		jqBoiteDlg.dialog("option", "title", titre) ;
+	}
+</script>' ;
+				return $ctn ;
+			}
 			public function EstListage()
 			{
 				return 1 ;
@@ -2427,14 +2566,27 @@
 		{
 			public $NecessiteMembreConnecte = 1 ;
 			public $EstScriptSession = 1 ;
+			public $ActChgPubl ;
+			public $ActListFichsJoints ;
 			public function DetermineEnvironnement()
 			{
 				parent::DetermineEnvironnement() ;
+				if($this->EntitePage->AccepterAttrsPubl == 1)
+				{
+					$this->ActChgPubl = $this->InsereActionAvantRendu('change_publication', new ActChgPublEntiteTableSws()) ;
+				}
+				if(count($this->EntitePage->DefsFichsJoints()) > 0)
+				{
+					$this->ActListFichsJoints = $this->InsereActionAvantRendu('liste_fichs_joints', new ActListFichsJointsEntiteSws()) ;
+				}
 				$this->EntitePage->RemplitScriptLst($this) ;
 			}
 			protected function RenduDispositifBrut()
 			{
-				return $this->EntitePage->RenduScriptLst($this) ;
+				$ctn = '' ;
+				$ctn .= $this->RenduBoiteDlgCadre().PHP_EOL ;
+				$ctn .= $this->EntitePage->RenduScriptLst($this) ;
+				return $ctn ;
 			}
 		}
 		class ScriptVueEntiteTableSws extends ScriptEntiteTableBaseSws
@@ -2627,6 +2779,134 @@
 			}
 		}
 		
+		class ActChgPublEntiteTableSws extends PvActionBaseZoneWebSimple
+		{
+			public function Execute()
+			{
+				$this->DetermineActionChgPubl() ;
+			}
+			protected function DetermineActionChgPubl()
+			{
+				$entite = $this->ScriptParent->ObtientEntitePage() ;
+				if($entite->AccepterAttrsPubl == 0)
+				{
+					return ;
+				}
+				$bd = $this->ScriptParent->ObtientBDSupport() ;
+				$id = _GET_def("idPubl") ;
+				if($id == "")
+				{
+					return ;
+				}
+				$idMembreConnecte = $this->ZoneParent->IdMembreConnecte() ;
+				$sql = "update ".$bd->EscapeTableName($entite->NomTable)."
+set ".$bd->EscapeVariableName($entite->NomColStatutPubl)."=case when ".$bd->EscapeVariableName($entite->NomColStatutPubl)." = 0 then 1 else 0 end,
+".$bd->EscapeVariableName($entite->NomColDateModif)." = :dateModif,
+".$bd->EscapeVariableName($entite->NomColIdMembreModif)." = :idMembre
+where ".$bd->EscapeVariableName($entite->NomColId)." = :idEntite" ;
+				$ok = $bd->RunSql(
+					$sql,
+					array(
+						"idEntite" => $id,
+						"idMembre" => $idMembreConnecte,
+						"dateModif" => date("Y-m-d H:i:s"),
+					)
+				) ;
+			}
+		}
+		
+		class DefFichJointElemRenduSws
+		{
+			public $NomCol ;
+			public $Titre ;
+		}
+		class ActListFichsJointsEntiteSws extends PvActionRenduPageWeb
+		{
+			protected $ValeurParamId ;
+			protected $LgnEnCours ;
+			protected $MsgErreur ;
+			public function Execute()
+			{
+				$this->DetermineLgnEnCours() ;
+				parent::Execute() ;
+			}
+			protected function DetermineLgnEnCours()
+			{
+				$script = & $this->ScriptParent ;
+				$entite = $script->ObtientEntitePage() ;
+				$bd = $script->ObtientBDSupport() ;
+				$this->ValeurParamId = _GET_def("idEntite") ;
+				$this->LgnEnCours = $bd->FetchSqlRow(
+					"select * from ".$bd->EscapeVariableName($entite->NomTable)." where ".$bd->EscapeVariableName($entite->NomColId)." = ".$bd->ParamPrefix."idEntite",
+					array("idEntite" => $this->ValeurParamId)
+				) ;
+				if(count($entite->DefsFichsJoints()) == 0)
+				{
+					$this->MsgErreur = "Aucun fichier trouv&eacute;" ;
+					return ;
+				}
+				if(is_array($this->LgnEnCours))
+				{
+					if(count($this->LgnEnCours) == 0)
+					{
+						$this->MsgErreur = "L'information que vous cherchez n'a pas &eacute;t&eacute; trouv&eacute;e" ;
+					}
+				}
+				else
+				{
+					$this->MsgErreur = "Erreur Sql : ".$bd->ConnectionException ;
+				}
+			}
+			protected function PrepareDoc()
+			{
+				parent::PrepareDoc() ;
+				$this->InscritLienCSS($this->ZoneParent->CheminCSSJQueryUi) ;
+				$this->InscritContenuCSS('body, p, div, form, table, td, th {
+	font-size:12px ;
+}') ;
+				$this->InscritLienJs($this->ZoneParent->CheminJQuery) ;
+				$this->InscritLienJs($this->ZoneParent->CheminJQueryMigrate) ;
+				$this->InscritLienJs($this->ZoneParent->CheminJsJQueryUi) ;
+			}
+			protected function RenduCorpsDoc()
+			{
+				$ctn = '' ;
+				$entite = $this->ScriptParent->ObtientEntitePage() ;
+				if($this->MsgErreur != "")
+				{
+					$ctn .= '<p class="ui-widget ui-state-error">'.$this->MsgErreur.'</p>' ;
+				}
+				else
+				{
+					// Fixer le sommaire
+					$titreSommaire = "" ;
+					foreach($entite->ColsSommaire() as $i => $col)
+					{
+						if($i > 0)
+						{
+							$titreSommaire .= " - " ;
+						}
+						$titreSommaire .= htmlentities($this->LgnEnCours[$col->NomCol]) ;
+					}
+					$this->InscritContenuJs('jQuery(function() {
+	window.top.FixeTitreBoiteDlgCadre_'.$this->ScriptParent->IDInstanceCalc.'('.svc_json_encode($titreSommaire).') ;
+}) ;') ;
+					// Rendu des fichiers joints
+					$ctn .= '<table width="100%" class="ui-widget">'.PHP_EOL ;
+					foreach($entite->DefsFichsJoints() as $i => $fichBrut)
+					{
+						$valeurFich = $this->LgnEnCours[$fichBrut->NomCol] ;
+						$ctn .= '<tr>'.PHP_EOL ;
+						$ctn .= '<th class="ui-widget-content">'.$fichBrut->Titre.'</th>'.PHP_EOL ;
+						$ctn .= '<td class="ui-widget-content">'.(($valeurFich != '') ? '<a href="'.htmlspecialchars($valeurFich).'" target="apercu">'.htmlentities($valeurFich).'</a>' : '(Vide)').'</th>'.PHP_EOL ;
+						$ctn .= '</tr>'.PHP_EOL ;
+					}
+					$ctn .= '</table>' ;
+				}
+				return $ctn ;
+			}
+		}
+		
 		class ValeurMetaCalculeeSws
 		{
 			public $MotsCle ;
@@ -2700,6 +2980,8 @@
 		
 		class CmdEditEntiteBaseSws extends PvCommandeEditionElementBase
 		{
+			public $InscrireLienAnnuler = 0 ;
+			public $InscrireLienReprendre = 1 ;
 			public function & ObtientEntitePage()
 			{
 				return $this->ScriptParent->ObtientEntitePage() ;
@@ -2724,6 +3006,15 @@
 				parent::ExecuteInstructions() ;
 				$entite->AppliqueImplemsApresCmd("edit_entite_".$this->Mode, $this) ;
 				$entite->AdaptFltsEdition->AppliqueApresExecution($this, $this->FormulaireDonneesParent, $entite) ;
+				if($this->StatutExecution == 1)
+				{
+					$this->CacherFormulaireFiltresSiSucces = 1 ;
+					if($entite->InclureScriptLst == 1)
+					{
+						$this->InscrireLienAnnuler = 1 ;
+						$this->UrlLienAnnuler = $entite->ScriptListage->ObtientUrl() ;
+					}
+				}
 			}
 		}
 		class CmdAjoutEntiteSws extends CmdEditEntiteBaseSws

@@ -75,6 +75,38 @@
 			{
 				$this->DessinateurFiltresSelection = new PvDessinFiltresSbAdmin2() ;
 			}
+			protected function InitDessinateurBlocCommandes()
+			{
+				$this->DessinateurBlocCommandes = new PvDessinCmdsSbAdmin2() ;
+			}
+			protected function RenduBlocCommandes()
+			{
+				$ctn = '' ;
+				if($this->CacherBlocCommandes || (! $this->FiltresSoumis() && $this->PossedeFiltresRendus()))
+				{
+					return $ctn ;
+				}
+				$commandes = $this->ExtraitCommandesRendu() ;
+				if(count($commandes) == 0)
+				{
+					return '<br>' ;
+				}
+				// $parametres = $this->Filtre
+				if($this->EstNul($this->DessinateurBlocCommandes))
+				{
+					$this->InitDessinateurBlocCommandes() ;
+				}
+				if($this->EstNul($this->DessinateurBlocCommandes))
+				{
+					return "<p>Le dessinateur de filtres n'est pas défini</p>" ;
+				}
+				$ctn .= '<div class="BlocCommandes">'.PHP_EOL ;
+				$ctn .= $this->DessinateurBlocCommandes->Execute($this->ScriptParent, $this, $commandes) ;
+				$ctn .= $this->DeclarationJsActiveCommande().PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '<br>' ;
+				return $ctn ;
+			}
 			protected function RenduFormulaireFiltres()
 			{
 				if($this->CacherFormulaireFiltres)

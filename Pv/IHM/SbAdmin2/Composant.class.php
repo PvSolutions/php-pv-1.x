@@ -38,7 +38,7 @@
 			}
 			public function Execute(& $script, & $composant, $parametres)
 			{
-				$filtres = $parametres ;
+				$filtres = $composant->ExtraitFiltresDeRendu($parametres) ;
 				$ctn = '' ;
 				$nomFiltres = array_keys($filtres) ;
 				$filtreRendus = 0 ;

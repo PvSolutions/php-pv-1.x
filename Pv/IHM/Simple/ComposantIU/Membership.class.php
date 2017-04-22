@@ -597,11 +597,11 @@
 						return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->PasswordMemberFormatErrorLabel) ;
 					}
 				}
-				if(empty($this->FormulaireDonneesParent->FiltreNomMembre->ValeurParametre) || strlen($this->FormulaireDonneesParent->FiltreNomMembre->ValeurParametre) < 4 || strlen($this->FormulaireDonneesParent->FiltreNomMembre->ValeurParametre) > 90)
+				if(empty($this->FormulaireDonneesParent->FiltreNomMembre->ValeurParametre) || strlen($this->FormulaireDonneesParent->FiltreNomMembre->ValeurParametre) < 2 || strlen($this->FormulaireDonneesParent->FiltreNomMembre->ValeurParametre) > 90)
 				{
 					return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->LastNameMemberFormatErrorLabel) ;
 				}
-				if(empty($this->FormulaireDonneesParent->FiltrePrenomMembre->ValeurParametre) || strlen($this->FormulaireDonneesParent->FiltrePrenomMembre->ValeurParametre) < 4 || strlen($this->FormulaireDonneesParent->FiltrePrenomMembre->ValeurParametre) > 255)
+				if(empty($this->FormulaireDonneesParent->FiltrePrenomMembre->ValeurParametre) || strlen($this->FormulaireDonneesParent->FiltrePrenomMembre->ValeurParametre) < 2 || strlen($this->FormulaireDonneesParent->FiltrePrenomMembre->ValeurParametre) > 255)
 				{
 					return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->FirstNameMemberFormatErrorLabel) ;
 				}
@@ -1158,7 +1158,7 @@
 					}
 					else
 					{
-						$this->FormulaireDonneesParent->CommandeSelectionnee->MessageExecution = $this->ScriptParent->MessageErreurEnvoiMail ;
+						$this->FormulaireDonneesParent->CommandeSelectionnee->RenseigneErreur($this->ScriptParent->MessageErreurEnvoiMail) ;
 					}
 				}
 			}

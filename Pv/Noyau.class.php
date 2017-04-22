@@ -40,6 +40,32 @@
 			public $NomClasseInstance = "" ;
 			public $IndiceInstance = 0 ;
 			static $TotalInstances = 0 ;
+			public $AttrsSuppl = array() ;
+			public $EstNul = 0 ;
+			public function ValAttrSuppl($nom, $valeurDefaut=null)
+			{
+				if(isset($this->AttrsSuppl[$nom]))
+				{
+					return $this->AttrsSuppl[$nom] ;
+				}
+				return $valeurDefaut ;
+			}
+			public function AffecteAttrSuppl($nom, $valeur)
+			{
+				$this->AttrsSuppl[$nom] = $valeur ;
+			}
+			public function FixeAttrSuppl($nom, $valeur)
+			{
+				$this->AffecteAttrSuppl($nom, $valeur) ;
+			}
+			public function SupprAttrSuppl($nom, $valeur)
+			{
+				unset($this->AttrsSuppl[$nom]) ;
+			}
+			public function ObtientAttrSuppl($nom, $valeurDefaut=null)
+			{
+				return $this->ValAttrSuppl($nom, $valeurDefaut) ;
+			}
 			public function CreeInstanceGener()
 			{
 				$nomClasse = get_class($this) ;
@@ -131,6 +157,10 @@
 			public function DelaiMaxExec()
 			{
 				return $this->ObtientDelaiMaxExecution() ;
+			}
+			public function ObtientValSuppl($nom, $valeurDefaut=null)
+			{
+				return (isset($this->ValsSuppl[$nom])) ? $this->ValsSuppl[$nom] : $valeurDefaut ;
 			}
 		}
 		class PvNul extends PvObjet
@@ -519,6 +549,7 @@
 		class PvIntegration extends PvObjet
 		{
 			protected $NomIntegration ;
+			public $NomDocumentWeb = "" ;
 			protected $PrivilegesGlobauxScript = array() ;
 			public function EstIndefinie()
 			{
@@ -552,6 +583,10 @@
 				$res->NomIntegrationParent = $this->NomIntegration ;
 				return $res ;
 			}
+			protected function & InsereZone($nom, $ihm, & $app)
+			{
+				return $this->InsereIHM($nom, $ihm, $app) ;
+			}
 			protected function & InsereScript($nom, $script, & $zone, $privs=array())
 			{
 				$res = $zone->InsereScript($this->NomIntegration."_".$nom, $script) ;
@@ -564,6 +599,7 @@
 					array_splice($res->Privileges, count($res->Privileges), 0, $privs) ;
 				}
 				$res->NomIntegrationParent = $this->NomIntegration ;
+				$res->NomDocumentWeb = $this->NomDocumentWeb ;
 				return $res ;
 			}
 			protected function RemplitApplicationSpec(& $app)
@@ -998,12 +1034,47 @@
 			public $Declenchs = array() ;
 			public $DeclenchParDefaut ;
 			public $ToujoursExecuter = 0 ;
+			public $TypeDeclenchParDefaut = "" ;
 			public function NatureElementApplication()
 			{
 				return "tache_programmee" ;
 			}
 			protected function CreeDeclenchParDefaut()
 			{
+				$declench = null ;
+				if($this->TypeDeclenchParDefaut != "")
+				{
+					switch(strtolower($this->TypeDeclenchParDefaut))
+					{
+						case "jour" :
+						case "day" :
+						case "daily" :
+						case "journalier" :
+						{
+							$declench = new PvDeclenchJourTache() ;
+						}
+						break ;
+						case "semaine" :
+						case "hebdo" :
+						case "weekly" :
+						case "week" :
+						{
+							$declench = new PvDeclenchSemaineTache() ;
+						}
+						break ;
+						case "mois" :
+						case "month" :
+						case "monthly" :
+						{
+							$declench = new PvDeclenchMoisTache() ;
+						}
+						break ;
+					}
+				}
+				if($declench != null)
+				{
+					return $declench ;
+				}
 				return new PvDeclenchTacheIndef() ;
 			}
 			public function DelaiAtteint()

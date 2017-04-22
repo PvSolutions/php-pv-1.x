@@ -628,11 +628,12 @@
 <div><b>Login :</b> ${login}</div>
 <div><b>Mot de passe :</b> ${motPasse}</div>
 <p>Cordialement.</p>' ;
-			public $SujetMailDemRecouvr = 'R&eacute;initialisation de mot de passe' ;
+			public $SujetMailDemRecouvr = 'Réinitialisation de mot de passe' ;
 			public $CorpsMailDemRecouvr = '<p>Vous avez demand&eacute; de r&eacute;initialiser votre mot de passe.</p>
 <p>Veuillez cliquer <a href="${url}">ICI</a> pour confirmer.</p>
 <p>Cordialement</p>' ;
 			public $MessageSuccesEnvoiMail = "Les instructions &agrave; suivre pour recup&eacute;rer votre mot de passe vous ont &eacute;t&eacute; envoy&eacute;es par mail" ;
+			public $MessageErreurEnvoiMail = "Impossible d'envoyer un mail de confirmation." ;
 			public $MessageSuccesDansMail = "Votre mot de passe vous a &eacute;t&eacute; envoy&eacute; par mail" ;
 			public $MessageSuccesAffiche = "Voici votre nouveau mot de passe : " ;
 			public $LibelleRetourConnexion = "Retour &agrave; la page de connexion" ;
@@ -645,6 +646,7 @@
 			public $MessageConfirm = "" ;
 			public $MotPasseGenere ;
 			public $MessageExceptionRecouvr ;
+			protected $DemandeConfirm = 0 ;
 			public $LgnMembreRecouvr = array() ;
 			protected function GenereNouvMotPasse()
 			{
@@ -667,7 +669,7 @@
 			protected function ExtraitEmailMembre($ligneMembre)
 			{
 				$membership = & $this->ZoneParent->Membership ;
-				return ($membership->LoginWithEmail == 0) ? $ligneMembre[$membership->LoginMemberColumn] : $ligneMembre[$membership->EmailMemberColumn] ;
+				return ($membership->LoginWithEmail == 1) ? $ligneMembre[$membership->LoginMemberColumn] : $ligneMembre[$membership->EmailMemberColumn] ;
 			}
 			public function ReinitMotPasse(& $filtres)
 			{
@@ -749,7 +751,7 @@
 					$ligneMembre["login"] = $ligneMembre[$membership->LoginMemberColumn] ;
 					$sujetMail = _parse_pattern($this->SujetMailDemRecouvr, $ligneMembre) ;
 					$corpsMail = _parse_pattern($this->CorpsMailDemRecouvr, $ligneMembre) ;
-					// echo $corpsMail ;
+					// echo $email."<br>".$sujetMail."<br>".$corpsMail."<br>".$this->EmailEnvoiRecouvr."<br>" ;
 					$ok = send_html_mail($email, $sujetMail, $corpsMail, $this->EmailEnvoiRecouvr) ;
 				}
 				return $ok ;
@@ -765,6 +767,7 @@
 				{
 					return ;
 				}
+				$this->DemandeConfirm = 1 ;
 				$filtres = array($this->CreeFiltreHttpGet($this->NomParamLogin), $this->CreeFiltreHttpGet($this->NomParamEmail)) ;
 				$ok = $this->ReinitMotPasse($filtres) ;
 				if($ok)
@@ -793,9 +796,9 @@
 				else
 				{
 					$ctn .= parent::RenduSpecifique() ;
-				}
-				$ctn .= '<br />
+					$ctn .= '<br />
 <p><a href="'.$this->ZoneParent->ScriptConnexion->ObtientUrl().'">'.$this->LibelleRetourConnexion.'</a></p>' ;
+				}
 				return $ctn ;
 			}
 		}
