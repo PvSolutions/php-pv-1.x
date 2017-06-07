@@ -49,8 +49,8 @@
 			public $ClsBstBoutonSoumettre = "btn-success" ;
 			public $ClsFaTriAsc = "fa-chevron-up" ;
 			public $ClsFaTriDesc = "fa-chevron-down" ;
-			public $ClsFaTriAscSelectionne = "fa-arrow-circle-up" ;
-			public $ClsFaTriDescSelectionne = "fa-arrow-circle-down" ;
+			public $ClsFaTriAscSelectionne = "fa-chevron-up" ;
+			public $ClsFaTriDescSelectionne = "fa-chevron-down" ;
 			public function CreeLienOuvreBoiteDlgUrl()
 			{
 				return new PvCfgFmtColOuvreBoiteDlgUrl() ;
@@ -162,8 +162,8 @@
 					{
 						$libelleTriAsc = '<i class="fa '.$this->ClsFaTriAsc.'"></i>' ;
 						$libelleTriDesc = '<i class="fa '.$this->ClsFaTriDesc.'"></i>' ;
-						$libelleTriAscSelectionne = '<i class="fa '.$this->ClsFaTriAscSelectionne.'"></i>' ;
-						$libelleTriDescSelectionne = '<i class="fa '.$this->ClsFaTriDescSelectionne.'"></i>' ;
+						$libelleTriAscSelectionne = '<i class="fa '.$this->ClsFaTriAscSelectionne.' text-primary"></i>' ;
+						$libelleTriDescSelectionne = '<i class="fa '.$this->ClsFaTriDescSelectionne.' text-primary"></i>' ;
 					}
 					$parametresRendu = $this->ParametresCommandeSelectionnee() ;
 					if(count($this->ElementsEnCours) > 0)
@@ -225,6 +225,8 @@
 								$ctn .= ' onMouseOver="this.className = this.className + &quot; Survole&quot;;" onMouseOut="this.className = this.className.split(&quot; Survole&quot;).join(&quot; &quot;) ;"' ;
 							}
 							$ctn .= '>'.PHP_EOL ;
+							$ligneDonnees = $ligne ;
+							$ligneDonnees = $this->SourceValeursSuppl->Applique($this, $ligneDonnees) ;
 							foreach($this->DefinitionsColonnes as $i => $colonne)
 							{
 								// print_r($ligne) ;
@@ -245,7 +247,7 @@
 								}
 
 								$ctn .= '>' ;
-								$ctn .= $colonne->FormatteValeur($this, $ligne) ;
+								$ctn .= $colonne->FormatteValeur($this, $ligneDonnees) ;
 								$ctn .= '</td>'.PHP_EOL ;
 							}
 							$ctn .= '</tr>'.PHP_EOL ;

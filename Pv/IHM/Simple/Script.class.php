@@ -47,6 +47,7 @@
 			public $InclureRenduChemin = 1 ;
 			public $ActiverAutoRafraich = 0 ;
 			public $DelaiAutoRafraich = 0 ;
+			public $TagTitre = "div" ;
 			public $ParamsAutoRafraich = array() ;
 			public $Imprimable = 0 ;
 			public $NomActionImprime = "imprimeScript" ;
@@ -195,14 +196,14 @@
 					return '' ;
 				}
 				$ctn = '' ;
-				$ctn .= '<div class="titre">' ;
+				$ctn .= '<'.$this->TagTitre.' class="titre">' ;
 				$ctnIcone = $this->RenduIcone() ;
 				if($ctnIcone != '')
 				{
 					$ctn .= $ctnIcone.'&nbsp;&nbsp;' ;
 				}
 				$ctn .= $this->Titre ;
-				$ctn .= '</div>' ;
+				$ctn .= '</'.$this->TagTitre.'>' ;
 				return $ctn ;
 			}
 			public function ObtientTitreDocument()
@@ -439,6 +440,13 @@
 			public $MessageMembreNonTrouve = "Utilisateur non trouv&eacute;" ;
 			public $MessageMembreNonActif = "Votre compte a &eacute;t&eacute; d&eacute;sactiv&eacute;" ;
 			public $MessageAuthADEchoue = "Echec de l'authentification sur le domaine" ;
+			public $AutoriserUrlsRetour = 0 ;
+			public $ValeurUrlRetour = "" ;
+			public $NomParamUrlRetour = "urlRetour" ;
+			public $ClasseCSSErreur = "" ;
+			public $MessageAccesUrlRetour = "Vous devez vous connecter pour avoir acc&egrave;s &agrave; cette page." ;
+			public $ParamsUrlInscription = array() ;
+			public $ParamsUrlRecouvreMP = array() ;
 			public $MessagesErreurValidation = array() ;
 			protected function DetecteTentativeConnexion()
 			{
@@ -449,6 +457,36 @@
 					$this->ValeurParamPseudo = (isset($_POST[$this->NomParamPseudo])) ? $_POST[$this->NomParamPseudo] : "" ;
 					$this->ValeurParamMotPasse = (isset($_POST[$this->NomParamMotPasse])) ? $_POST[$this->NomParamMotPasse] : "" ;
 				}
+				if($this->AutoriserUrlsRetour == 1)
+				{
+					$this->ValeurUrlRetour = (isset($_GET[$this->NomParamUrlRetour])) ? $_GET[$this->NomParamUrlRetour] : "" ;
+					if($this->ValeurUrlRetour != '' && validate_url_format($this->ValeurUrlRetour) == 0)
+					{
+						$this->ValeurUrlRetour = '' ;
+					}
+				}
+			}
+			protected function UrlSoumetTentativeConnexion()
+			{
+				return $this->ObtientUrl().(($this->AutoriserUrlsRetour == 1) ? '&'.$this->NomParamUrlRetour.'='.urlencode($this->ValeurUrlRetour) : '') ;
+			}
+			protected function RenduMessageErreur()
+			{
+				$ctn = '' ;
+				$msgErreur = '' ;
+				if($this->TentativeConnexionEnCours && $this->TentativeConnexionValidee == 0)
+				{
+					$msgErreur = $this->MessageConnexionEchouee ;
+				}
+				elseif($this->AutoriserUrlsRetour == 1 && $this->ValeurUrlRetour != '')
+				{
+					$msgErreur = $this->MessageAccesUrlRetour ;
+				}
+				if($msgErreur != '')
+				{
+					$ctn .= '<div class="erreur'.(($this->ClasseCSSErreur != '') ? ' '.$this->ClasseCSSErreur : '').'">'.$msgErreur.'</div>'.PHP_EOL ;
+				}
+				return $ctn ;
 			}
 			protected function ValideTentativeConnexion()
 			{
@@ -545,6 +583,10 @@
 			protected function ExtraitUrlConnexionReussie()
 			{
 				$url = '' ;
+				if($this->AutoriserUrlsRetour == 1 && $this->ValeurUrlRetour != "")
+				{
+					return $this->ValeurUrlRetour ;
+				}
 				if($this->NomScriptConnexionReussie != '' && isset($this->ZoneParent->Scripts[$this->NomScriptConnexionReussie]))
 				{
 					$url = $this->ZoneParent->Scripts[$this->NomScriptConnexionReussie]->ObtientUrl() ;
@@ -577,12 +619,9 @@
 			public function RenduSpecifique()
 			{
 				$ctn = '' ;
-				$ctn .= '<form class="user_login_box '.$this->NomClsCSSFormulaireDonnees.'" action="'.$this->ObtientUrl().'" method="post">'.PHP_EOL ;
+				$ctn .= '<form class="user_login_box '.$this->NomClsCSSFormulaireDonnees.'" action="'.$this->UrlSoumetTentativeConnexion().'" method="post">'.PHP_EOL ;
 				$ctn .= '<div align="center">'.PHP_EOL ;
-				if($this->TentativeConnexionEnCours && $this->TentativeConnexionValidee == 0)
-				{
-					$ctn .= '<div class="erreur">'.$this->MessageConnexionEchouee.'</div>'.PHP_EOL ;
-				}
+				$ctn .= $this->RenduMessageErreur() ;
 				$ctn .= $this->RenduTableauParametres().PHP_EOL ;
 				if($this->AfficherBoutonSoumettre)
 				{
@@ -644,6 +683,7 @@
 			public $NomParamEmail = "email" ;
 			public $NomParamConfirm = "confirm" ;
 			public $MessageConfirm = "" ;
+			public $LibelleCmdExecuter = "R&eacute;cup&eacute;rer" ;
 			public $MotPasseGenere ;
 			public $MessageExceptionRecouvr ;
 			protected $DemandeConfirm = 0 ;
@@ -786,6 +826,14 @@
 					$this->MessageConfirm = $this->MessageErreur ;
 				}
 			}
+			protected function ChargeConfigComposantFormulaireDonnees()
+			{
+				if($this->LibelleCmdExecuter != '')
+				{
+					$this->ComposantFormulaireDonnees->LibelleCommandeExecuter = $this->LibelleCmdExecuter ;
+				}
+				parent::ChargeConfigComposantFormulaireDonnees() ;
+			}
 			public function RenduSpecifique()
 			{
 				$ctn = "" ;
@@ -858,6 +906,7 @@
 			public $FltCaptcha ;
 			public $CompCaptcha ;
 			public $NomParamCaptcha = "image_securise" ;
+			public $LibelleFltCaptcha = "Code de s&eacute;curit&eacute;" ;
 			public $IdProfilsAcceptes = array() ;
 			public $LibelleCmdExecuter = "S'inscrire" ;
 			public $IdProfilParDefaut = 1 ;
@@ -880,6 +929,7 @@ Cordialement' ;
 <p>Votre compte a ete bien confirme. Bienvenue sur notre site web.</p>
 Cordialement' ;
 			public $MsgSuccesCmdExecuter = 'Votre inscription a &eacute;t&eacute; prise en compte' ;
+			public $MsgSuccesEnvoiMailConfirm = 'Veuillez v&eacute;rifier votre bo&icirc;te e-mail pour confirmer votre inscription.' ;
 			protected $NomColConfirmMail = "enable_confirm_mail" ;
 			protected $NomColCodeConfirmMail = "code_confirm_mail" ;
 			protected $_FltConfirmMail ;
@@ -896,10 +946,26 @@ Cordialement' ;
 			protected $ValeurDefautAdresseMembre = "" ;
 			protected $ValeurDefautContactMembre = "" ;
 			protected $ConfirmMailSoumis = 0 ;
+			public $AutoriserUrlsRetour = 0 ;
+			public $NomParamUrlRetour = "urlRetour" ;
+			public $ValeurUrlRetour = "" ;
+			public $ConnecterNouveauMembre = 0 ;
 			public function DetermineEnvironnement()
 			{
 				parent::DetermineEnvironnement() ;
+				$this->DetermineUrlRetour() ;
 				$this->DetermineConfirm() ;
+			}
+			protected function DetermineUrlRetour()
+			{
+				if($this->AutoriserUrlsRetour == 1)
+				{
+					$this->ValeurUrlRetour = _GET_def($this->NomParamUrlRetour) ;
+					if($this->ValeurUrlRetour != '' && validate_url_format($this->ValeurUrlRetour) == 0)
+					{
+						$this->ValeurUrlRetour = '' ;
+					}
+				}
 			}
 			protected function DetermineConfirm()
 			{
@@ -940,6 +1006,14 @@ Cordialement' ;
 							$corpsMail = _parse_pattern($this->CorpsMailSuccesConfirm, $this->LgnMembreConfirm) ;
 							$this->MailSuccesConfirmEnvoye = send_html_mail($email, $sujetMail, $corpsMail, $this->EmailEnvoiConfirm) ;
 						}
+						if(($this->AutoriserUrlsRetour== 1 && $this->ValeurUrlRetour != '') || $this->ConnecterNouveauMembre == 1)
+						{
+							$this->AutoConnecteNouveauMembre($this->LgnMembreConfirm[$membership->IdMemberColumn]) ;
+						}
+						if($this->AutoriserUrlsRetour== 1 && $this->ValeurUrlRetour != '')
+						{
+							redirect_to($this->ValeurUrlRetour) ;
+						}
 					}
 					else
 					{
@@ -951,6 +1025,10 @@ Cordialement' ;
 					$this->DemandeConfirmMail = 0 ;
 				}
 			}
+			public function AutoConnecteNouveauMembre($idMembre)
+			{
+				$this->ZoneParent->Membership->LogonMember($idMembre) ;
+			}
 			protected function ChargeConfigComposantFormulaireDonnees()
 			{
 				$form = & $this->ComposantFormulaireDonnees ;
@@ -958,8 +1036,10 @@ Cordialement' ;
 				parent::ChargeConfigComposantFormulaireDonnees() ;
 				if($this->Securiser)
 				{
-					$this->FltCaptcha = $form->InsereFltHttpPost($this->NomParamCaptcha) ;
+					$this->FltCaptcha = $form->InsereFltEditHttpPost($this->NomParamCaptcha) ;
+					$this->FltCaptcha->Libelle = $this->LibelleFltCaptcha ;
 					$this->CompCaptcha = $this->FltCaptcha->DeclareComposant("PvZoneCommonCaptcha") ;
+					$form->CommandeExecuter->InsereNouvCritere(new CritrCodeSecurValideInscriptionWeb()) ;
 				}
 				$fltActiver = & $form->FiltreActiverMembre ;
 				$fltActiver->ValeurParDefaut = ($this->DoitConfirmMail()) ? $membership->EnableMemberFalseValue() : $this->ValeurActiveParDefaut ;
@@ -1013,9 +1093,23 @@ Cordialement' ;
 					$this->_FltConfirmMail = $form->InsereFltEditFixe("confirm_mail", 1, $this->NomColConfirmMail) ;
 					$this->_FltCodeConfirm = $form->InsereFltEditFixe("code_confirm", rand(1000, 9999), $this->NomColCodeConfirmMail) ;
 				}
+				else
+				{
+					if($this->AutoriserUrlsRetour == 1 && $this->ValeurUrlRetour != '')
+					{
+						$form->CommandeExecuter->RedirigeVersUrl($this->ValeurUrlRetour) ;
+					}
+				}
 				$form->CommandeExecuter->Libelle = $this->LibelleCmdExecuter ;
 				$form->CommandeExecuter->MessageSuccesExecution = $this->MsgSuccesCmdExecuter ;
-				$form->RedirigeAnnulerVersScript($this->ZoneParent->NomScriptConnexion) ;
+				if($this->AutoriserUrlsRetour == 1 && $this->ValeurUrlRetour != '')
+				{
+					$form->RedirigeAnnulerVersUrl($this->ValeurUrlRetour) ;
+				}
+				else
+				{
+					$form->RedirigeAnnulerVersScript($this->ZoneParent->NomScriptConnexion) ;
+				}
 			}
 			public function CodeConfirmMail()
 			{
@@ -1049,8 +1143,13 @@ Cordialement' ;
 			protected function RenduMsgConnexion()
 			{
 				$ctn = '' ;
+				$paramsUrlCnx = array() ;
+				if($this->ZoneParent->ScriptConnexion->AutoriserUrlsRetour == 1 && $this->ValeurUrlRetour != '')
+				{
+					$paramsUrlCnx[$this->ZoneParent->ScriptConnexion->NomParamUrlRetour] = $this->ValeurUrlRetour ;
+				}
 				$params = array(
-					'url' => $this->ZoneParent->ScriptConnexion->ObtientUrl(),
+					'url' => $this->ZoneParent->ScriptConnexion->ObtientUrlParam($paramsUrlCnx),
 					'chemin_icone' => $this->ZoneParent->ScriptConnexion->CheminIcone,
 					'titre' => $this->ZoneParent->ScriptConnexion->Titre
 				) ;
@@ -1147,6 +1246,20 @@ Cordialement' ;
 			public $Titre = "Liste des r&ocirc;les" ;
 			public $TitreDocument = "Liste des r&ocirc;les" ;
 			public $NomClasseTableauDonnees = "PvTableauRolesMSHtml" ;
+		}
+		
+		class CritrCodeSecurValideInscriptionWeb extends PvCritereBase
+		{
+			public $MessageErreur = "Le code de s&eacute;curit&eacute; saisi est incorrect" ;
+			public function EstRespecte()
+			{
+				if($this->FormulaireDonneesParent->Editable == 0)
+				{
+					return 1 ;
+				}
+				$ok = $this->ScriptParent->FltCaptcha->Composant->ActionAffichImg->VerifieValeurSoumise($this->ScriptParent->FltCaptcha->Lie()) ;
+				return $ok ;
+			}
 		}
 		
 		class PvFournisseurComposantIUMS

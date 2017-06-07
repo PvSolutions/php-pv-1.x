@@ -28,7 +28,6 @@
 					$ctn .= $ctnJs->RenduDispositif().PHP_EOL ;
 				}
 				return $ctn ;
-				return $ctn ;
 			}
 			protected function RenduDefsCSS(& $zone)
 			{
@@ -59,21 +58,20 @@
 				$ctn .= '<html lang="'.$zone->LangueDocument.'">'.PHP_EOL ;
 				$ctn .= '<head>'.PHP_EOL ;
 				$ctn .= '<title>'.$zone->ObtientTitreDocument().'</title>'.PHP_EOL ;
-				$ctn .= '<meta name="keywords" value="'.htmlentities($zone->ObtientMotsCleMetaDocument()).'" />'.PHP_EOL ;
-				$ctn .= '<meta name="description" value="'.htmlentities($zone->ObtientDescMetaDocument()).'" />'.PHP_EOL ;
+				$ctn .= '<meta name="keywords" value="'.htmlspecialchars($zone->ObtientMotsCleMetaDocument()).'" />'.PHP_EOL ;
+				$ctn .= '<meta name="description" value="'.htmlspecialchars($zone->ObtientDescMetaDocument()).'" />'.PHP_EOL ;
 				if($zone->EncodageDocument != '')
 					$ctn .= '<meta charset="'.$zone->EncodageDocument.'" />'.PHP_EOL ;
 				$viewport = $zone->ObtientViewportMetaDocument() ;
 				if($viewport != '')
 				{
-					$ctn .= '<meta name="viewport" value="'.htmlentities($viewport).'" />'.PHP_EOL ;
+					$ctn .= '<meta name="viewport" value="'.htmlspecialchars($viewport).'" />'.PHP_EOL ;
 				}
 				$auteur = $zone->ObtientAuteurMetaDocument() ;
 				if($auteur != '')
 				{
-					$ctn .= '<meta name="author" value="'.htmlentities($auteur).'" />'.PHP_EOL ;
+					$ctn .= '<meta name="author" value="'.htmlspecialchars($auteur).'" />'.PHP_EOL ;
 				}
-				$ctn .= '<meta name="description" value="'.htmlentities($zone->ObtientDescMetaDocument()).'" />'.PHP_EOL ;
 				if($zone->InclureCtnJsEntete)
 				{
 					$ctn .= $this->RenduDefsJS($zone) ;
@@ -364,6 +362,8 @@
 			public $CheminCSSBootstrap = "css/bootstrap.css" ;
 			public $InclureBootstrapTheme = 0 ;
 			public $CheminCSSBootstrapTheme = "js/bootstrap-theme.min.css" ;
+			public $InclureFontAwesome = 0 ;
+			public $CheminFontAwesome = "css/font-awesome.min.css" ;
 			public $InclureJQueryMigrate = 1 ;
 			public $CheminJQueryMigrate = "js/jquery-migrate.min.js" ;
 			public $InclureJQueryUi = 0 ;
@@ -379,6 +379,7 @@
 			public $ExtIconeCorresp = "png" ;
 			public $InclureRenduChemin = 1 ;
 			public $InclureRenduDescription = 1 ;
+			public $ActionsPrinc = array() ;
 			public $ActionsAvantRendu = array() ;
 			public $ActionsApresRendu = array() ;
 			public $NomParamActionAppelee = "appelleAction" ;
@@ -388,6 +389,7 @@
 			public $ActionsAppelees = array() ;
 			public $AnnulerRendu = 0 ;
 			public $RenduEnCours = 0 ;
+			public $RedirigerVersConnexion = 0 ;
 			public $Habillage = null ;
 			public $ActiverRafraichScript = 1 ;
 			public $LibelleEspaceReserveFiltres = 0 ;
@@ -423,6 +425,23 @@
 				$this->GestTachesWeb = new PvGestTachesWebSimple() ;
 				$this->GestTachesWeb->AdopteZone("gestTaches", $this) ;
 				$this->AdrScriptSession = new PvAdrScriptSessionWeb() ;
+			}
+			public function Execute()
+			{
+				$this->DetecteActionAppelee() ;
+				$this->ExecuteActionPrinc() ;
+				$this->DemarreExecution() ;
+				$this->DetecteScriptsMembership() ;
+				$this->DetecteScriptAppele() ;
+				$this->ExecuteScriptAppele() ;
+				$this->TermineExecution() ;
+			}
+			protected function ExecuteActionPrinc()
+			{
+				if($this->ValeurParamActionAppelee !== false)
+				{
+					$this->ExecuteActionAppelee($this->ActionsPrinc) ;
+				}
 			}
 			protected function ExecuteGestTachesWeb()
 			{
@@ -510,11 +529,15 @@
 				parent::ChargeConfig() ;
 				$this->ChargeGestTachesWeb() ;
 				$this->ChargeDocumentsWeb() ;
+				$this->ChargeActionsPrinc() ;
 				if(class_exists($this->NomClasseHabillage))
 				{
 					$nomClasse = $this->NomClasseHabillage ;
 					$this->Habillage = new $nomClasse() ;
 				}
+			}
+			protected function ChargeActionsPrinc()
+			{
 			}
 			protected function ChargeGestTachesWeb()
 			{
@@ -596,6 +619,11 @@
 			{
 				return ($this->ValeurParamActionAppelee != "") ? 1 : 0 ;
 			}
+			public function & InsereActionPrinc($nomAction, $action)
+			{
+				$this->InscritActionPrinc($nomAction, $action) ;
+				return $action ;
+			}
 			public function InsereActionAvantRendu($nomAction, $action)
 			{
 				$this->InscritActionAvantRendu($nomAction, $action) ;
@@ -605,6 +633,11 @@
 			{
 				$this->InscritActionApresRendu($nomAction, $action) ;
 				return $action ;
+			}
+			public function InscritActionPrinc($nomAction, & $action)
+			{
+				$this->ActionsPrinc[$nomAction] = & $action ;
+				$action->AdopteZone($nomAction, $this) ;
 			}
 			public function InscritActionAvantRendu($nomAction, & $action)
 			{
@@ -628,6 +661,22 @@
 				$script->Titre = $titre ;
 				$script->TitreDocument = $titre ;
 				return $script ;
+			}
+			protected function ExecuteScriptInaccessible(& $script)
+			{
+				if($this->RedirigerVersConnexion == 1)
+				{
+					if($this->InclureScriptsMembership == 1 && ! $this->PossedeMembreConnecte() && $this->ValeurParamScriptAppele != $this->NomScriptConnexion)
+					{
+						$params = array() ;
+						if($this->ScriptConnexion->AutoriserUrlsRetour == 1)
+						{
+							$params[$this->ScriptConnexion->NomParamUrlRetour] = get_current_url() ;
+						}
+						redirect_to($this->ScriptConnexion->ObtientUrlParam($params)) ;
+					}
+				}
+				parent::ExecuteScriptInaccessible($script) ;
 			}
 			protected function ChargeScriptsMSConnecte()
 			{
@@ -723,6 +772,10 @@
 						$this->InscritLienCSS($this->CheminCSSBootstrapTheme) ;
 					}
 				}
+				if($this->InclureFontAwesome)
+				{
+					$this->InscritLienCSS($this->CheminFontAwesome) ;
+				}
 				if($this->InclureJQueryUi)
 				{
 					$ctnJs = new PvLienFichierJs() ;
@@ -773,18 +826,18 @@
 				if($this->EncodageDocument != '')
 					$ctn .= '<meta charset="'.$this->EncodageDocument.'" />'.PHP_EOL ;
 				$ctn .= '<title>'.$this->ObtientTitreDocument().'</title>'.PHP_EOL ;
-				$ctn .= '<meta name="keywords" content="'.htmlentities($this->ObtientMotsCleMetaDocument()).'" />'.PHP_EOL ;
+				$ctn .= '<meta name="keywords" content="'.htmlspecialchars(html_entity_decode($this->ObtientMotsCleMetaDocument())).'" />'.PHP_EOL ;
 				$viewport = $this->ObtientViewportMetaDocument() ;
 				if($viewport != '')
 				{
-					$ctn .= '<meta name="viewport" content="'.htmlentities($viewport).'" />'.PHP_EOL ;
+					$ctn .= '<meta name="viewport" content="'.htmlspecialchars(html_entity_decode($viewport)).'" />'.PHP_EOL ;
 				}
 				$auteur = $this->ObtientAuteurMetaDocument() ;
 				if($auteur != '')
 				{
-					$ctn .= '<meta name="author" content="'.htmlentities($auteur).'" />'.PHP_EOL ;
+					$ctn .= '<meta name="author" content="'.htmlspecialchars(html_entity_decode($auteur)).'" />'.PHP_EOL ;
 				}
-				$ctn .= '<meta name="description" content="'.htmlentities($this->ObtientDescMetaDocument()).'" />'.PHP_EOL ;
+				$ctn .= '<meta name="description" content="'.htmlspecialchars(html_entity_decode($this->ObtientDescMetaDocument())).'" />'.PHP_EOL ;
 				for($i=0; $i<count($this->ContenusCSS); $i++)
 				{
 					$ctnCSS = $this->ContenusCSS[$i] ;
@@ -857,14 +910,12 @@
 					$this->ExecuteScriptInaccessible($script) ;
 					return ;
 				}
-				// print_r(array_keys($this->ActionsAvantRendu)) ;
 				$this->ChargeScriptSession() ;
 				$this->DetermineEnvironnement($script) ;
 				$this->ExecuteRequeteSoumise($script) ;
 				// $script->PrepareRendu() ;
 				$this->ScriptPourRendu = $script ;
 				$this->RenduEnCours = 1 ;
-				$this->DetecteActionAppelee() ;
 				if($this->ValeurParamActionAppelee !== false)
 				{
 					$this->ExecuteActionAppelee($this->ActionsAvantRendu) ;

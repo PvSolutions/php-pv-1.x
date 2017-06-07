@@ -16,6 +16,23 @@
 		}
 		define('PV_COMPOSANT_SIMPLE_IU_BASE', 1) ;
 		
+		class PvLienCommandeFormulaireDonnees
+		{
+			public $Libelle ;
+			public $Url ;
+			public $FenetreCible ;
+			public $ClassesCSS = array() ;
+			public function __construct($url, $libelle)
+			{
+				$this->Url = $url ;
+				$this->Libelle = $libelle ;
+			}
+			public function RenduDispositif(& $form, $index)
+			{
+				return '<a'.((count($this->ClassesCSS) > 0) ? ' class="'.join(' ', $this->ClassesCSS).'"' : '').' href="'.htmlspecialchars($this->Url).'"'.(($this->FenetreCible != '') ? ' target="'.$this->FenetreCible.'"' : '').'>'.$this->Libelle.'</a>' ;
+			}
+		}
+		
 		class PvSrcValsSupplLgnDonnees
 		{
 			public $InclureHtml = 0 ;
@@ -491,7 +508,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 		}
 		class PvActionEnvoiFichierBaseZoneWeb extends PvActionBaseZoneWebSimple
 		{
-			public $UtiliserTypeMime = 1 ;
+			public $UtiliserTypeMime = 0 ;
 			public $UtiliserFichierSource = 1 ;
 			public $UtiliserFichierAttache = 1 ;
 			public $TypeMime = "" ;
@@ -598,6 +615,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 		
 		class PvDessinateurRenduBase
 		{
+			public $FiltresCaches = array() ;
 			public function Execute(& $script, & $composant, $parametres)
 			{
 				return "" ;
@@ -648,7 +666,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			}
 			public function Execute(& $script, & $composant, $parametres)
 			{
-				$filtres = $composant->ExtraitFiltresDeRendu($parametres) ;
+				$filtres = $composant->ExtraitFiltresDeRendu($parametres, $this->FiltresCaches) ;
 				$ctn = '' ;
 				$ctn .= '<table' ;
 				if($this->Largeur != '')
@@ -730,7 +748,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $InclureRenduLibelle = 1 ;
 			public function Execute(& $script, & $composant, $parametres)
 			{
-				$filtres = $parametres ;
+				$filtres = $composant->ExtraitFiltresDeRendu($parametres, $this->FiltresCaches) ;
 				$ctn = '' ;
 				$ctn .= '<table' ;
 				if($this->Largeur != '')
@@ -804,7 +822,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			}
 			public function Execute(& $script, & $composant, $parametres)
 			{
-				$filtres = $composant->ExtraitFiltresDeRendu($parametres) ;
+				$filtres = $composant->ExtraitFiltresDeRendu($parametres, $this->FiltresCaches) ;
 				$ctn = '' ;
 				$ctn .= PvDessinFltsIllustrHtml::RenduStyleGlobal() ;
 				$alignIcone = ($this->AlignIcone == "droite") ? "droite" : "gauche" ;
@@ -857,16 +875,40 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $UtiliserContainerFluid = 1 ;
 			public $InclureRenduLibelle = 1 ;
 			public $EditeurSurligne = 0 ;
-			public $ColSmLibelle = 4 ;
+			public $ColXsLibelle = 4 ;
 			public $MaxFiltresParLigne = 1 ;
-			protected function ObtientColSm($maxFiltres)
+			protected function ObtientColXs($maxFiltres)
 			{
-				return ($this->ColSm != '') ? $this->ColSm :
+				return ($this->ColXs != '') ? $this->ColXs :
 					(($this->ColLd != '') ? $this->ColLd : 
 						(($this->ColMd != '') ? $this->ColMd : 
-							($this->ColXs != '') ? $this->ColXs : intval(12 / $maxFiltres)
+							($this->ColSm != '') ? $this->ColSm : intval(12 / $maxFiltres)
 						)
 					) ;
+			}
+			protected function RenduFiltre(& $filtre, & $composant)
+			{
+				$ctn = '' ;
+				if($composant->Editable)
+				{
+					if($filtre->EstNul($filtre->Composant))
+					{
+						$filtre->DeclareComposant($filtre->NomClasseComposant) ;
+					}
+					if($filtre->EstPasNul($filtre->Composant))
+					{
+						if(! in_array("form-control", $filtre->Composant->ClassesCSS))
+						{
+							$filtre->Composant->ClassesCSS[] = "form-control" ;
+						}
+					}
+					$ctn .= $filtre->Rendu() ;
+				}
+				else
+				{
+					$ctn .= $filtre->Etiquette() ;
+				}
+				return $ctn ;
 			}
 			public function Execute(& $script, & $composant, $parametres)
 			{
@@ -874,13 +916,18 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				{
 					return $this->RenduEditeursSurligne($script, $composant, $parametres) ;
 				}
-				$filtres = $composant->ExtraitFiltresDeRendu($parametres) ;
+				$filtres = $composant->ExtraitFiltresDeRendu($parametres, $this->FiltresCaches) ;
 				$ctn = '' ;
+				$ctn .= '<fieldset>'.PHP_EOL ;
 				$ctn .= '<div' ;
 				$ctn .= ' class="'.(($this->UtiliserContainerFluid) ? 'container-fluid' : 'container').'"' ;
 				$ctn .= '>'.PHP_EOL ;
-				$colSm = $this->ObtientColSm($this->MaxFiltresParLigne) ;
-				$maxColonnes = 12 / $colSm ;
+				if($this->MaxFiltresParLigne <= 0)
+				{
+					$this->MaxFiltresParLigne = 1 ;
+				}
+				$colXs = $this->ObtientColXs($this->MaxFiltresParLigne) ;
+				$maxColonnes = 12 / $colXs ;
 				$nomFiltres = array_keys($filtres) ;
 				$filtreRendus = 0 ;
 				foreach($nomFiltres as $i => $nomFiltre)
@@ -895,14 +942,15 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 					{
 						$ctn .= '<div class="row">'.PHP_EOL ;
 					}
-					$ctn .= '<div class="col-sm-'.$colSm.(($this->ColXs != '') ? ' col-xs-'.$this->ColXs : '').''.(($this->ColMd != '') ? ' col-md-'.$this->ColMd : '').(($this->ColLd != '') ? ' col-ld-'.$this->ColLd : '').'">'.PHP_EOL ;
+					$ctn .= '<div class="col-xs-'.$colXs.(($this->ColSm != '') ? ' col-sm-'.$this->ColSm : '').''.(($this->ColMd != '') ? ' col-md-'.$this->ColMd : '').(($this->ColLd != '') ? ' col-ld-'.$this->ColLd : '').'">'.PHP_EOL ;
+					$ctn .= '<div class="form-group">'.PHP_EOL ;
 					if($this->InclureRenduLibelle)
 					{
 						if($this->EditeurSurligne == 0)
 						{
-							$ctn .= '<div class="container-fluid">'.PHP_EOL .'<div class="row">'.PHP_EOL .'<div class="col-sm-'.$this->ColSmLibelle.'">'.PHP_EOL ;
+							$ctn .= '<div class="container-fluid">'.PHP_EOL .'<div class="row">'.PHP_EOL .'<div class="col-xs-'.$this->ColXsLibelle.'">'.PHP_EOL ;
 							$ctn .= $this->RenduLibelleFiltre($filtre).PHP_EOL ;
-							$ctn .= '</div>'.PHP_EOL .'<div class="col-sm-'.(12 - $this->ColSmLibelle).'">'.PHP_EOL ;
+							$ctn .= '</div>'.PHP_EOL .'<div class="col-xs-'.(12 - $this->ColXsLibelle).'">'.PHP_EOL ;
 						}
 						else
 						{
@@ -921,6 +969,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 							.'</div>'.PHP_EOL ;
 					}
 					$ctn .= '</div>'.PHP_EOL ;
+					$ctn .= '</div>'.PHP_EOL ;
 					$filtreRendus++ ;
 					if($filtreRendus % $maxColonnes == 0)
 					{
@@ -930,10 +979,11 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				if($filtreRendus % $maxColonnes != 0)
 				{
 					$colonnesFusionnees = $maxColonnes - ($filtreRendus % $maxColonnes) ;
-					$ctn .= '<div class="col-sm-'.$colonnesFusionnees.'">&nbsp;</div>'.PHP_EOL ;
+					$ctn .= '<div class="col-xs-'.$colonnesFusionnees.'">&nbsp;</div>'.PHP_EOL ;
 					$ctn .= '</div>'.PHP_EOL ;
 				}
-				$ctn .= '</div>' ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</fieldset>' ;
 				return $ctn ;
 			}
 		}
@@ -1096,6 +1146,13 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			}
 		}
 		
+		class PvDessinRangeeDonneesBase extends PvDessinateurRenduBase
+		{
+		}
+		class PvDessinFormFiltresDonneesBase extends PvDessinateurRenduBase
+		{
+		}
+		
 		class PvNavigateurRangeesDonneesBase
 		{
 			public function Execute(& $script, & $composant)
@@ -1121,7 +1178,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $BaliseInclusionSource = null ;
 			protected function InclutSource()
 			{
-				if($this->ObtientValeurStatique('SourceInclus') == 1)
+				if($this->ObtientValeurStatique('SourceInclus') == 1 || $this->ObtientValeurStatique('CheminSource') == "")
 				{
 					return "" ;
 				}
@@ -1772,13 +1829,13 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				$this->ZoneParent->Habillage->AppliqueSur($this) ;
 				return $this->ZoneParent->Habillage->Rendu ;
 			}
-			public function ExtraitFiltresDeRendu(& $filtres)
+			public function ExtraitFiltresDeRendu(& $filtres, $filtresCaches=array())
 			{
 				$resultats = array() ;
 				foreach($filtres as $i => $filtre)
 				{
 					// print $i.'- '.$filtre->NomParametreLie.' '.$filtre->RenduPossible().'<br />' ;
-					if($filtre->RenduPossible())
+					if($filtre->RenduPossible() && ! in_array($filtre->NomParametreLie, $filtresCaches))
 					{
 						$resultats[$i] = & $filtres[$i] ;
 					}
@@ -1956,6 +2013,43 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $Criteres = array() ;
 			public $Actions = array() ;
 			public $SeparateurCriteresNonRespectes = "<br/>" ;
+			public $Liens = array() ;
+			public $InscrireLienAnnuler = 0 ;
+			public $InscrireLienReprendre = 0 ;
+			public $UrlLienAnnuler = "" ;
+			public $UrlLienReprendre = "" ;
+			public function EstSucces()
+			{
+				return $this->StatutExecution == 1 ;
+			}
+			public function & InsereLien($url, $titre)
+			{
+				$lien = new PvLienCommandeFormulaireDonnees($url, $titre) ;
+				$this->Liens[] = & $lien ;
+				return $lien ;
+			}
+			public function ObtientLiens()
+			{
+				$liens = $this->Liens ;
+				$form = & $this->FormulaireDonneesParent ;
+				if($form->InscrireCommandeAnnuler == 1 && $this->InscrireLienAnnuler == 1 && $this->UrlLienAnnuler != '')
+				{
+					$lienAnnul = new PvLienCommandeFormulaireDonnees(
+						$this->UrlLienAnnuler,
+						$this->LibelleLienAnnuler
+					) ;
+					$liens[] = $lienAnnul ;
+				}
+				if($this->InscrireLienReprendre == 1)
+				{
+					$lienReprendre = new PvLienCommandeFormulaireDonnees(
+						$form->ObtientUrlInitiale(),
+						$this->LibelleLienReprendre
+					) ;
+					$liens[] = $lienReprendre ;
+				}
+				return $liens ;
+			}
 			public function PrepareRendu(& $composant)
 			{
 			}
@@ -2174,7 +2268,10 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				// print_r($this->NomElementFormulaireDonnees." : ".$nomActions) ;
 				if(count($nomActions) > 0)
 				{
-					$this->MessageExecution = $this->MessageSuccesExecution ;
+					if($this->MessageExecution == '')
+					{
+						$this->MessageExecution = $this->MessageSuccesExecution ;
+					}
 					foreach($nomActions as $i => $nomAction)
 					{
 						$action = & $this->Actions[$nomAction] ;

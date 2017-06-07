@@ -384,6 +384,7 @@
 				{
 					$this->MessageExecution = $this->FournisseurDonnees->DerniereException->Message ;
 				}
+				// print_r($this->FournisseurDonnees) ;
 				// $this->AfficheExceptionFournisseurDonnees() ;
 			}
 			protected function CalculeElementsEnCours()
@@ -398,16 +399,22 @@
 				// print_r($this->FournisseurDonnees->BaseDonnees) ;
 				// $this->ElementsEnCours = $this->FournisseurDonnees->SelectElements($this->ExtraitColonnesDonnees($filtresSelection), $filtresSelection) ;
 				// $this->AfficheExceptionFournisseurDonnees() ;
+				// print_r($this->ElementsEnCours) ;
 			}
 			protected function ExtraitColonnesDonnees(& $filtres)
 			{
 				$cols = array() ;
 				foreach($filtres as $i => & $filtre)
 				{
+					if($filtre->NePasLireColonne == 1)
+					{
+						continue ;
+					}
 					$cols[$i] = new PvDefinitionColonneDonnees() ;
 					$cols[$i]->NomDonnees = $filtre->NomColonneLiee ;
 					$cols[$i]->AliasDonnees = $filtre->AliasParametreDonnees ;
 				}
+				// print_r($cols) ;
 				return $cols ;
 			}
 			public function DoitInclureElement()
@@ -510,6 +517,10 @@
 			{
 				return ($this->ValeurParamIdCommande != '') ? 1 : 0 ;
 			}
+			public function SuccesCommandeSelectionnee()
+			{
+				return $this->PossedeCommandeSelectionnee() && $this->CommandeSelectionnee->EstSucces() ;
+			}
 			protected function DetecteCommandeSelectionnee()
 			{
 				if($this->CacherBlocCommandes)
@@ -545,7 +556,7 @@
 				$this->CommandeSelectionneeExec = 0 ;
 				if($this->ValeurParamIdCommande != "" && isset($this->Commandes[$this->ValeurParamIdCommande]))
 				{
-					$this->CommandeSelectionnee = $this->Commandes[$this->ValeurParamIdCommande] ;
+					$this->CommandeSelectionnee = & $this->Commandes[$this->ValeurParamIdCommande] ;
 				}
 				if(! $this->EstNul($this->CommandeSelectionnee))
 				{
@@ -778,7 +789,10 @@
 				}
 				foreach($this->ParamsGetSoumetFormulaire as $n => $v)
 				{
-					$filtresGets[] = $v ;
+					if(! in_array($v, $filtresGet))
+					{
+						$filtresGets[] = $v ;
+					}
 				}
 				$params = extract_array_without_keys($_GET, $nomFiltresGets) ;
 				$indexMinUrl = (count($params) > 0) ? 0 : 1 ;
@@ -828,15 +842,6 @@
 					return $ctn ;
 				}
 				$msgExecution = html_entity_decode($this->CommandeSelectionnee->MessageExecution) ;
-				$liensCmd = $this->CommandeSelectionnee->ObtientLiens() ;
-				if(count($liensCmd) > 0)
-				{
-					foreach($liensCmd as $i => $lienCmd)
-					{
-						$msgExecution .= ' ' ;
-						$msgExecution .= $lienCmd->RenduDispositif($this, $i) ;
-					}
-				}
 				if($this->PopupMessageExecution)
 				{
 					if(! $this->ZoneParent->InclureJQueryUi)
@@ -847,7 +852,7 @@
 					}
 					else
 					{
-						$ctn .= '<div id="DialogMsg'.$this->IDInstanceCalc.'" class="ui-dialog" align="center">'.$msgExecution.'</div>' ;
+						$ctn .= '<div id="DialogMsg'.$this->IDInstanceCalc.'" class="ui-dialog" align="center">'.htmlentities($msgExecution).''.$this->RenduLiensCommandeExecutee().'</div>' ;
 						$ctn .= '<script language="javascript">'.PHP_EOL ;
 						$ctn .= 'jQuery(function() {
 	jQuery("#DialogMsg'.$this->IDInstanceCalc.'").dialog({
@@ -865,10 +870,25 @@
 					$classeCSS = ($this->CommandeSelectionnee->StatutExecution == 1) ? "Succes" : "Erreur" ;
 					$ctn .= ' class="'.$classeCSS.'"' ;
 					$ctn .= '>' ;
-					$ctn .= $msgExecution ;
+					$ctn .= htmlentities($msgExecution) ;
+					$ctn .= $this->RenduLiensCommandeExecutee() ;
 					$ctn .= '</div>' ;
 				}
 				return $ctn ;
+			}
+			protected function RenduLiensCommandeExecutee()
+			{
+				$msgExecution = '' ;
+				$liensCmd = $this->CommandeSelectionnee->ObtientLiens() ;
+				if(count($liensCmd) > 0)
+				{
+					foreach($liensCmd as $i => $lienCmd)
+					{
+						$msgExecution .= ' ' ;
+						$msgExecution .= $lienCmd->RenduDispositif($this, $i) ;
+					}
+				}
+				return $msgExecution ;
 			}
 			public function RemplaceCommandeAnnuler($nomClasse)
 			{
@@ -1084,6 +1104,51 @@
 				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap() ;
 				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap() ;
 			}
+			protected function RenduComposants()
+			{
+				$ctn = '' ;
+				if(count($this->DispositionComposants))
+				{
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					foreach($this->DispositionComposants as $i => $id)
+					{
+						if($i > 0)
+						{
+							$ctn .= PHP_EOL ;
+						}
+						switch($id)
+						{
+							case PvDispositionFormulaireDonnees::BlocEntete :
+							{
+								$ctn .= $this->RenduBlocEntete() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
+							{
+								$ctn .= $this->RenduFormulaireFiltres() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
+							{
+								$ctn .= $this->RenduResultatCommandeExecutee() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::BlocCommandes :
+							{
+								$ctn .= $this->RenduBlocCommandes() ;
+							}
+							break ;
+							default :
+							{
+								$ctn .= $this->RenduAutreComposantSupport($id) ;
+							}
+							break ;
+						}
+					}
+					$ctn .= '</form>' ;
+				}
+				return $ctn ;
+			}
 		}
 		
 		class PvFormulaireAjoutDonneesHtml extends PvFormulaireDonneesHtml
@@ -1106,57 +1171,14 @@
 			public $Editable = 0 ;
 		}
 		
-		class PvLienCommandeFormulaireDonnees
-		{
-			public $Libelle ;
-			public $Url ;
-			public $FenetreCible ;
-			public function __construct($url, $libelle)
-			{
-				$this->Url = $url ;
-				$this->Libelle = $libelle ;
-			}
-			public function RenduDispositif(& $form, $index)
-			{
-				return '<a href="'.htmlspecialchars($this->Url).'"'.(($this->FenetreCible != '') ? ' target="'.$this->FenetreCible.'"' : '').'>'.$this->Libelle.'</a>' ;
-			}
-		}
-		
 		class PvCommandeFormulaireDonnees extends PvCommandeComposantIUBase
 		{
 			public $NecessiteFormulaireDonnees = 1 ;
-			public $Liens = array() ;
 			public $InscrireLienAnnuler = 0 ;
 			public $InscrireLienReprendre = 0 ;
 			public $LibelleLienReprendre = "Reprendre" ;
 			public $LibelleLienAnnuler = "Annuler" ;
 			public $UrlLienAnnuler = "" ;
-			public function ObtientLiens()
-			{
-				$liens = $this->Liens ;
-				$form = & $this->FormulaireDonneesParent ;
-				if($form->InscrireCommandeAnnuler == 1 && $this->InscrireLienAnnuler == 1 && $this->UrlLienAnnuler != '')
-				{
-					$lienAnnul = new PvLienCommandeFormulaireDonnees(
-						$this->UrlLienAnnuler,
-						$this->LibelleLienAnnuler
-					) ;
-					$liens[] = $lienAnnul ;
-				}
-				if($this->InscrireLienReprendre == 1)
-				{
-					$lienReprendre = new PvLienCommandeFormulaireDonnees(
-						$form->ObtientUrlInitiale(),
-						$this->LibelleLienReprendre
-					) ;
-					$liens[] = $lienReprendre ;
-				}
-				return $liens ;
-			}
-			public function InsereLien($titre, $url)
-			{
-				
-			}
 			protected function VerifiePreRequis()
 			{
 				$this->VerifieFichiersUpload($this->FormulaireDonneesParent->FiltresEdition) ;

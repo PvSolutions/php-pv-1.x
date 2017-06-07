@@ -660,14 +660,32 @@
 				{
 					$email = ($membership->LoginWithEmail == 0) ? $form->FiltreEmailMembre->Lie() : $form->FiltreLoginMembre->Lie() ;
 					$params = $form->ExtraitValeursParametre($form->FiltresEdition) ;
-					$params["url"] = $script->ObtientUrlParam(array(
+					$paramsUrlConfirm = array(
 						"login_confirm" => $form->FiltreLoginMembre->Lie(),
 						"email_confirm" => $email,
 						"code_confirm" => $script->CodeConfirmMail(),
-					)) ;
+					) ;
+					if($script->AutoriserUrlsRetour == 1)
+					{
+						$paramsUrlConfirm[$script->NomParamUrlRetour] = $script->ValeurUrlRetour ;
+					}
+					$params["url"] = $script->ObtientUrlParam($paramsUrlConfirm) ;
 					$sujetMail = _parse_pattern($script->SujetMailConfirm, $params) ;
 					$corpsMail = _parse_pattern($script->CorpsMailConfirm, $params) ;
 					send_html_mail($email, $sujetMail, $corpsMail, $script->EmailEnvoiConfirm) ;
+					$this->ConfirmeSucces($script->MsgSuccesEnvoiMailConfirm) ;
+				}
+				elseif($this->StatutExecution == 1)
+				{
+					if($script->ConnecterNouveauMembre == 1 || ($script->AutoriserUrlsRetour== 1 && $script->ValeurUrlRetour != ''))
+					{
+						$row = $membership->FetchMemberRowByLogin($form->FiltreLoginMembre->Lie()) ;
+						$script->AutoConnecteNouveauMembre($row["MEMBER_ID"]) ;
+						if($script->AutoriserUrlsRetour== 1 && $script->ValeurUrlRetour != '')
+						{
+							redirect_to($script->ValeurUrlRetour) ;
+						}
+					}
 				}
 			}
 		}

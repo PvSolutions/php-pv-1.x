@@ -656,7 +656,7 @@
 			}
 			protected function DetermineEnvironnement(& $script)
 			{
-				$script->DetermineEnvironnement($this) ;
+				$script->DetermineEnvironnement() ;
 			}
 			protected function DetecteScriptsMembership()
 			{

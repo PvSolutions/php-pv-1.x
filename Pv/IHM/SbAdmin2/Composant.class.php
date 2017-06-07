@@ -15,7 +15,7 @@
 			protected function RenduFiltre(& $filtre, & $composant)
 			{
 				$ctn = '' ;
-				if($composant->Editable)
+				if($composant->Editable && $filtre->EstEtiquette == 0)
 				{
 					if($filtre->EstNul($filtre->Composant))
 					{
@@ -32,13 +32,13 @@
 				}
 				else
 				{
-					$ctn .= $filtre->Etiquette() ;
+					$ctn .= '<br />'.PHP_EOL .$filtre->Etiquette() ;
 				}
 				return $ctn ;
 			}
 			public function Execute(& $script, & $composant, $parametres)
 			{
-				$filtres = $composant->ExtraitFiltresDeRendu($parametres) ;
+				$filtres = $composant->ExtraitFiltresDeRendu($parametres, $this->FiltresCaches) ;
 				$ctn = '' ;
 				$nomFiltres = array_keys($filtres) ;
 				$filtreRendus = 0 ;
@@ -51,7 +51,8 @@
 				}
 				foreach($nomFiltres as $i => $nomFiltre)
 				{
-					$filtre = $parametres[$i] ;
+					$filtre = $filtres[$nomFiltre] ;
+					// print get_class($filtre) ;
 					if(! $filtre->RenduPossible())
 					{
 						continue ;

@@ -508,6 +508,14 @@
 				}
 				return $TimeAttr[0].":".$TimeAttr[1] ;
 			}
+			function get_age($date)
+			{
+				$birthDate = explode("-", $date) ;
+				$age = (date("md", strtotime($date)) > date("md")
+    ? ((date("Y") - $birthDate[0]) - 1)
+    : (date("Y") - $birthDate[0]));
+				return $age ;
+			}
 			
 			function send_html_mail($to, $subject, $text, $from='', $cc='', $bcc='')
 			{

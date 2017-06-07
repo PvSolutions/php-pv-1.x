@@ -27,6 +27,7 @@
 			public $LibelleMenuAccueil = "Accueil" ;
 			public $SousMenuAccueil ;
 			public $InclureMenuMembership = 1 ;
+			public $InclureIconesMenuNv2 = 0 ;
 			public $LibelleMenuMembership = "Authentification" ;
 			public $SousMenuMembership ;
 			public $SousMenuListeMembres ;
@@ -59,15 +60,21 @@
 					$this->DefClasseFa($this->SousMenuMembership, "fa-lock") ;
 					$this->SousMenuListeMembres = $this->SousMenuMembership->InscritSousMenuScript($this->ZoneParent->NomScriptListeMembres) ;
 					$this->SousMenuListeMembres->Titre = $this->LibelleMenuListeMembres ;
+					$this->DefClasseFa($this->SousMenuListeMembres, "fa-users") ;
 					$this->SousMenuAjoutMembre = $this->SousMenuMembership->InscritSousMenuScript($this->ZoneParent->NomScriptAjoutMembre) ;
 					$this->SousMenuAjoutMembre->Titre = $this->LibelleMenuAjoutMembre ;
+					$this->DefClasseFa($this->SousMenuAjoutMembre, "fa-user-plus") ;
 					$this->SousMenuListeProfils = $this->SousMenuMembership->InscritSousMenuScript($this->ZoneParent->NomScriptListeProfils) ;
 					$this->SousMenuListeProfils->Titre = $this->LibelleMenuListeProfils ;
+					$this->DefClasseFa($this->SousMenuListeProfils, "fa-list") ;
 					$this->SousMenuAjoutProfil = $this->SousMenuMembership->InscritSousMenuScript($this->ZoneParent->NomScriptAjoutProfil) ;
+					$this->DefClasseFa($this->SousMenuAjoutProfil, "fa-plus") ;
 					$this->SousMenuAjoutProfil->Titre = $this->LibelleMenuAjoutProfil ;
 					$this->SousMenuListeRoles = $this->SousMenuMembership->InscritSousMenuScript($this->ZoneParent->NomScriptListeRoles) ;
+					$this->DefClasseFa($this->SousMenuListeRoles, "fa-unlock") ;
 					$this->SousMenuListeRoles->Titre = $this->LibelleMenuListeRoles ;
 					$this->SousMenuAjoutRole = $this->SousMenuMembership->InscritSousMenuScript($this->ZoneParent->NomScriptAjoutRole) ;
+					$this->DefClasseFa($this->SousMenuAjoutRole, "fa-plus") ;
 					$this->SousMenuAjoutRole->Titre = $this->LibelleMenuAjoutRole ;
 				}
 			}
@@ -128,7 +135,8 @@
 			}
 			protected function RenduMenuNv2(& $menu)
 			{
-				return '<a href="'.htmlspecialchars($menu->ObtientUrl()).'"'.(($menu->FenetreCible != '') ? ' target="'.htmlspecialchars($menu->FenetreCible).'"' : '').'>'.$menu->ObtientTitre().'</a>' ;
+				$classeFa = $menu->ObtientValCfgSpec("classe_fa", "fa-bars") ;
+				return '<a href="'.htmlspecialchars($menu->ObtientUrl()).'"'.(($menu->FenetreCible != '') ? ' target="'.htmlspecialchars($menu->FenetreCible).'"' : '').'>'.(($this->InclureIconesMenuNv2 == 1) ? '<i class="fa '.$classeFa.' fa-fw"></i> ' : '').$menu->ObtientTitre().'</a>' ;
 			}
 			public function DefinitClasseFa(& $menu, $classeFa)
 			{

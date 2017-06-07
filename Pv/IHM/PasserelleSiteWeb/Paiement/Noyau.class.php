@@ -1,5 +1,4 @@
 <?php
-
 	
 	if(! defined('PV_NOYAU_PASSERELLE_PAIEMENT'))
 	{
@@ -35,7 +34,13 @@
 				$this->NomElementInterfPaiemt = $nom ;
 				$this->InterfPaiemtParent = & $interf ;
 			}
-			public function Execute(& $transaction)
+			public function ConfirmeSucces(& $transaction)
+			{
+			}
+			public function ConfirmeEchec(& $transaction)
+			{
+			}
+			public function Annule(& $transaction)
 			{
 			}
 		}
@@ -43,6 +48,18 @@
 		class PvCfgTransactPaiement
 		{
 			public $NomSvcAprPaiement ;
+			public $Arg01 ;
+			public $Arg02 ;
+			public $Arg03 ;
+			public $Arg04 ;
+			public $Arg05 ;
+			public $Arg06 ;
+			public $Arg07 ;
+			public $Arg08 ;
+			public $Arg09 ;
+			public $Arg10 ;
+			public $Arg11 ;
+			public $Arg12 ;
 		}
 		
 		class PvTransactPaiementBase
@@ -71,6 +88,10 @@
 			protected $_EtatExecution = null ;
 			protected $_Transaction = null ;
 			protected $_CompteMarchand = null ;
+			public $CheminImage = "images/paiement-base.png" ;
+			public $CheminIcone = "" ;
+			public $Titre = "Ne rien faire" ;
+			public $Description = "" ;
 			protected $TransactionValidee = 0 ;
 			protected $NomParamResultat = "resultat" ;
 			protected $ValeurParamResultat = "" ;
@@ -298,19 +319,19 @@
 			}
 			protected function TransactionEffectuee()
 			{
-				return $this->_Transaction->Id == "termine" || $this->TransactionReussie() || $this->TransactionEchouee() || $this->TransactionAnnulee() ;
+				return $this->_EtatExecution->Id == "termine" || $this->TransactionReussie() || $this->TransactionEchouee() || $this->TransactionAnnulee() ;
 			}
 			protected function TransactionReussie()
 			{
-				return $this->_Transaction->Id == "paiement_reussi" ;
+				return $this->_EtatExecution->Id == "paiement_reussi" ;
 			}
 			protected function TransactionEchouee()
 			{
-				return $this->_Transaction->Id == "paiement_echoue" || $this->_Transaction->Id == "exception_paiement" ;
+				return $this->_EtatExecution->Id == "paiement_echoue" || $this->_EtatExecution->Id == "exception_paiement" ;
 			}
 			protected function TransactionAnnulee()
 			{
-				return $this->_Transaction->Id != "annule" ;
+				return $this->_EtatExecution->Id != "annule" ;
 			}
 			protected function ConfirmeTransactionReussieAuto()
 			{
@@ -318,14 +339,32 @@
 				if($this->_Transaction->Cfg->NomSvcAprPaiement != '' && isset($this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement]))
 				{
 					$svcAprPaiement = & $this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement] ;
-					$svcAprPaiement->Execute($this->_Transaction) ;
+					$svcAprPaiement->ConfirmeSucces($this->_Transaction) ;
 				}
 			}
 			protected function ConfirmeTransactionReussie()
 			{
 			}
+			protected function ConfirmeTransactionEchoueeAuto()
+			{
+				$this->ImporteFichCfgTransition() ;
+				if($this->_Transaction->Cfg->NomSvcAprPaiement != '' && isset($this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement]))
+				{
+					$svcAprPaiement = & $this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement] ;
+					$svcAprPaiement->ConfirmeEchec($this->_Transaction) ;
+				}
+			}
 			protected function ConfirmeTransactionEchouee()
 			{
+			}
+			protected function ConfirmeTransactionAnnuleeAuto()
+			{
+				$this->ImporteFichCfgTransition() ;
+				if($this->_Transaction->Cfg->NomSvcAprPaiement != '' && isset($this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement]))
+				{
+					$svcAprPaiement = & $this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement] ;
+					$svcAprPaiement->Annule($this->_Transaction) ;
+				}
 			}
 			protected function ConfirmeTransactionAnnulee()
 			{

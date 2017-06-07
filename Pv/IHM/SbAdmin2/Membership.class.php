@@ -7,7 +7,8 @@
 		class PvScriptConnexionSbAdmin2 extends PvScriptConnexionWeb
 		{
 			public $NomDocumentWeb = "non_connecte" ;
-			public $MessageRecouvreMP = '<br><p>Mot de passe oubli&eacute; ?<a href="${url}">Cliquez ici</a> pour le r&eacute;cup&eacute;rer</p>' ;
+			public $MessageRecouvreMP = '<br><p>Nouveau ? <a href="${url}">Inscrivez-vous</a></p>' ;
+			public $MessageInscription = '<br><p>Mot de passe oubli&eacute; ? <a href="${url}">Cliquez ici</a> pour le r&eacute;cup&eacute;rer</p>' ;
 			public function RenduSpecifique()
 			{
 				$ctn = '' ;
@@ -24,9 +25,13 @@
 				}
 				$ctn .= '</fieldset>'.PHP_EOL ;
 				$ctn .= '</form>' ;
+				if($this->ZoneParent->AutoriserInscription == 1 && $this->ZoneParent->EstPasNul($this->ZoneParent->ScriptInscription))
+				{
+					$ctn .= _parse_pattern($this->MessageInscription, array("url" => $this->ZoneParent->ScriptRecouvreMP->ObtientUrlParam($this->ParamsUrlInscription))) ;
+				}
 				if($this->ZoneParent->EstPasNul($this->ZoneParent->ScriptRecouvreMP))
 				{
-					$ctn .= _parse_pattern($this->MessageRecouvreMP, array("url" => $this->ZoneParent->ScriptRecouvreMP->ObtientUrl())) ;
+					$ctn .= _parse_pattern($this->MessageRecouvreMP, array("url" => $this->ZoneParent->ScriptRecouvreMP->ObtientUrlParam($this->ParamsUrlRecouvreMP))) ;
 				}
 				return $ctn ;
 			}

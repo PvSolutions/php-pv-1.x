@@ -62,6 +62,8 @@
 			public $CheminCSSBootstrap = "vendor/bootstrap/css/bootstrap.min.css" ;
 			public $CheminCSSMetisMenu = "vendor/metisMenu/metisMenu.min.css" ;
 			public $CheminCSSSbAdmin = "dist/css/sb-admin-2.css" ;
+			public $InclureThemeBootstrap = 0 ;
+			public $CheminThemeBootstrap = "" ;
 			public $CheminCSSFontAwesome = "vendor/font-awesome/css/font-awesome.min.css" ;
 			public $NomClasseScriptRecouvreMP = "PvScriptRecouvreMPSbAdmin2" ;
 			public $NomClasseScriptInscription = "PvScriptInscriptionSbAdmin2" ;

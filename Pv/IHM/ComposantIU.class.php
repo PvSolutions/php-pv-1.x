@@ -172,6 +172,60 @@
 			{
 				return "" ;
 			}
+			protected function RenduLienJs($url)
+			{
+				if($this->EstPasNul($this->ZoneParent) && $this->ZoneParent->InclureCtnJsEntete == 0)
+				{
+					return $this->ZoneParent->InscritLienJs($url) ;
+				}
+				return '<script type="text/javascript" src="'.htmlspecialchars($url).'"></script>' ;
+			}
+			protected function RenduLienJsCmpIE($url, $versionMin=9)
+			{
+				if($this->EstPasNul($this->ZoneParent) && $this->ZoneParent->InclureCtnJsEntete == 0)
+				{
+					return $this->ZoneParent->InscritLienJsCmpIE($url, $versionMin) ;
+				}
+				return '<script type="text/javascript" src="'.htmlspecialchars($url).'"></script>' ;
+			}
+			protected function RenduLienCSS($url)
+			{
+				if($this->EstPasNul($this->ZoneParent) && $this->ZoneParent->InclureCtnJsEntete == 0)
+				{
+					return $this->ZoneParent->InscritLienCSS($url) ;
+				}
+				return '<link rel="stylesheet" type="text/css" href="'.htmlspecialchars($url).'" />' ;
+			}
+			protected function RenduContenuJs($ctn)
+			{
+				if($this->EstPasNul($this->ZoneParent) && $this->ZoneParent->InclureCtnJsEntete == 0)
+				{
+					return $this->ZoneParent->InscritContenuCSS($ctn) ;
+				}
+				return '<script type="text/javascript">
+'.$ctn.'
+</script>' ;
+			}
+			protected function RenduContenuJsCmpIE($ctn, $versionMin=9)
+			{
+				if($this->EstPasNul($this->ZoneParent) && $this->ZoneParent->InclureCtnJsEntete == 0)
+				{
+					return $this->ZoneParent->InscritContenuJsCmpIE($ctn, $versionMin) ;
+				}
+				return '<script type="text/javascript">
+'.$ctn.'
+</script>' ;
+			}
+			protected function RenduContenuCSS($ctn)
+			{
+				if($this->EstPasNul($this->ZoneParent) && $this->ZoneParent->InclureCtnJsEntete == 0)
+				{
+					return $this->ZoneParent->InscritContenuCSS($ctn) ;
+				}
+				return '<style type="text/css">
+'.$ctn.'
+</style>' ;
+			}
 			public function RenduEtiquette()
 			{
 			}

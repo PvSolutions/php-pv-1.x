@@ -82,6 +82,11 @@ jQuery(function() {
 			{
 				$zone->InscritLienJs($zone->CheminJsBootstrap) ;
 				$zone->InscritLienCSS($zone->CheminCSSBootstrap) ;
+				if($zone->InclureThemeBootstrap == 1)
+				{
+					$zone->InscritLienCSS($zone->CheminThemeBootstrap) ;
+				}
+				$zone->InscritLienCSS($zone->CheminCSSFontAwesome) ;
 				$this->RemplitLibrairiesSpec($zone) ;
 				$zone->InscritLienCSS($zone->CheminCSSSbAdmin) ;
 				$zone->InscritContenuJs(
@@ -234,7 +239,6 @@ jQuery(function() {
 			}
 			protected function RemplitLibrairiesSpec(& $zone)
 			{
-				$zone->InscritLienCSS($zone->CheminCSSFontAwesome) ;
 				$zone->InscritLienCSS($zone->CheminCSSMetisMenu) ;
 				$zone->InscritContenuJs($this->CtnJsInitSbAdmin($zone)) ;
 				$zone->InscritLienJs($zone->CheminJsMetisMenu) ;

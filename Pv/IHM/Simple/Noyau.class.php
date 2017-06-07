@@ -140,6 +140,7 @@
 		
 		class PvFormatteurColonneDonnees extends PvObjet
 		{
+			public $ExtracteurValeur ;
 			public function EstEditable()
 			{
 				return 0 ;
@@ -602,15 +603,15 @@
 			public $PrefixesLibelle = array() ;
 			public $SuffixesLibelle = array() ;
 			public $Obligatoire = 0 ;
-			public $ScriptParent = null ;
-			public $ZoneParent = null ;
-			public $ApplicationParent = null ;
+			public $ScriptParent ;
+			public $ZoneParent ;
+			public $ApplicationParent ;
 			public $NomElementScript = "" ;
 			public $NomElementZone = "" ;
 			public $TypeLiaisonParametre = "" ;
 			public $Role = "base" ;
-			public $Liaison = null ;
-			public $Composant = null ;
+			public $Liaison ;
+			public $Composant ;
 			public $Libelle = "" ;
 			public $CheminIcone = "" ;
 			public $NomClasseCSS = "" ;
@@ -635,6 +636,7 @@
 			public $EstEtiquette = 0 ;
 			public $LectureSeule = 0 ;
 			public $NePasLierColonne = 0 ;
+			public $NePasLireColonne = 0 ;
 			public $NePasLierParametre = 0 ;
 			public $NePasIntegrerParametre = 0 ;
 			public $AppliquerCorrecteurValeur = 1 ;
@@ -1095,6 +1097,10 @@
 			public $ToujoursRenseignerFichier = 0 ;
 			public $NePasInclureSiVide = 0 ;
 			public $LibelleErreurFicSoumisInexist = 'Le fichier soumis n\'existe pas.' ;
+			public function AccepteVidsSeulem()
+			{
+				$this->ExtensionsAcceptees = array('mp4', 'avi', 'mpeg', 'flv', 'mkv', '3gp') ;
+			}
 			public function AccepteImgsSeulem()
 			{
 				$this->ExtensionsAcceptees = array('jpg', 'jpeg', 'png', 'gif', 'svg') ;

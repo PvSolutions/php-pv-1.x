@@ -190,6 +190,18 @@
 			{
 				return $this->Active ;
 			}
+			public function CreeFormulaireDonnees()
+			{
+				return $this->IntegrationParent->CreeFormulaireDonnees() ;
+			}
+			public function CreeTableauDonnees()
+			{
+				return $this->IntegrationParent->CreeTableauDonnees() ;
+			}
+			public function CreeGrilleDonnees()
+			{
+				return $this->IntegrationParent->CreeGrilleDonnees() ;
+			}
 			public function CreeFournDonnees()
 			{
 				$fourn = new PvFournisseurDonneesSql() ;
@@ -463,7 +475,7 @@
 			public function InitTablList(& $form)
 			{
 			}
-			public function ChargeTablList(& $form)
+			public function ChargeTablList(& $tabl)
 			{
 			}
 		}
@@ -843,7 +855,7 @@
 						$cols[$nomCol]->DefinitCompRech($cols[$nomCol]->FltSelect) ;
 					}
 				}
-				$this->DefColActsPrinc = $this->TablPrinc->InsereDefColActions($entite->TxtActionUpd->Expr("lib_cmd_actions")) ;
+				$this->DefColActsPrinc = $this->TablPrinc->InsereDefColActions($entite->TxtActionGlobal->Expr("lib_cmd_actions")) ;
 				if($entite->InscrLienUpdDansRead == 1)
 				{
 					$this->LienUpdPrinc = $this->TablPrinc->InsereLienAction($this->DefColActsPrinc, $aspect->ScriptUpd->ObtientUrl().(($paramsCle != '') ? '&'.$paramsCle : ''), $entite->TxtActionUpd->Expr("lib_cmd")) ;
@@ -862,7 +874,8 @@
 			protected function DetermineTablPrinc()
 			{
 				$integr = $this->IntegrationParent() ;
-				$this->TablPrinc = $integr->CreeTableauDonnees() ;
+				$entite = $this->EntiteDonneesParent() ;
+				$this->TablPrinc = $entite->CreeTableauDonnees() ;
 				$this->InitTablPrinc() ;
 				$this->TablPrinc->AdopteScript("tablPrinc", $this) ;
 				$this->TablPrinc->ChargeConfig() ;
@@ -927,7 +940,7 @@
 				$integr = $this->IntegrationParent() ;
 				$entite = $this->EntiteDonneesParent() ;
 				$aspect = $this->AspectDonneesParent() ;
-				$this->FormPrinc = $integr->CreeFormulaireDonnees() ;
+				$this->FormPrinc = $entite->CreeFormulaireDonnees() ;
 				$this->FormPrinc->LibelleCommandeAnnuler = $entite->TxtActionGlobal->Expr("lib_cmd_annul") ;
 				$this->FormPrinc->LibelleCommandeExecuter = $entite->TxtActionGlobal->Expr("lib_cmd_exec") ;
 				$this->InitFormPrincAuto() ;

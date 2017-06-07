@@ -715,9 +715,11 @@
 					return 1 ;
 				}
 				$cheminFichier = realpath($cheminFichierAbsolu.DIRECTORY_SEPARATOR.$this->CheminFichierRelatif) ;
-				// echo $cheminFichier."\n" ;
+				// echo $cheminFichier.' : '.$cheminFichierElementActif."<br>\n" ;
+				
 				// echo get_class($this).' : '.$cheminFichierAbsolu.DIRECTORY_SEPARATOR.$this->CheminFichierRelatif.' hhh<br>' ;
 				$ok = ($this->CorrigeChemin($cheminFichier) == $this->CorrigeChemin($cheminFichierElementActif)) ? 1 : 0 ;
+				// echo $cheminFichier.' : '.$cheminFichierElementActif." = ".$ok."<br>\n" ;
 				return $ok ;
 			}
 			public function ObtientCheminFichierRelatif()

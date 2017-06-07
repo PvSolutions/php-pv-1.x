@@ -65,7 +65,7 @@
 			protected function RestaureTransactionEnCours()
 			{
 				parent::RestaureTransactionEnCours() ;
-				if($this->_Transaction->Id == "termine")
+				if($this->IdEtatExecution() == "termine")
 				{
 					$this->AnalyseTransactionPostee() ;
 				}

@@ -1,20 +1,41 @@
 <?php
 	
-	if(! defined('PV_ZONE_BOOTSTRAP'))
+	if(! defined("PV_ZONE_BOOTSTRAP"))
 	{
-		if(! defined('PV_NOYAU_ZONE_BOOTSTRAP'))
+		if(! defined('PV_MEMBERSHIP_BOOTSTRAP'))
 		{
-			include dirname(__FILE__)."/Zone/Noyau.class.php" ;
+			include dirname(__FILE__)."/Membership.class.php" ;
 		}
-		if(! defined('PV_ZONE_ADMIN1BOOTSTRAP'))
+		define("PV_ZONE_BOOTSTRAP", 1) ;
+		
+		class PvZoneBaseBootstrap extends PvZoneWebSimple
 		{
-			include dirname(__FILE__)."/Zone/Admin1.class.php" ;
+			public $InclureCtnJsEntete = 1 ;
+			public $InclureJQuery = 1 ;
+			public $InclureBootstrap = 1 ;
+			public $RenduExtraHead = '<meta http-equiv="X-UA-Compatible" content="IE=edge">' ;
+			public $ViewportMeta = 'width=device-width, initial-scale=1' ;
+			public $NomClasseScriptRecouvreMP = "PvScriptRecouvreMPBootstrap" ;
+			public $NomClasseScriptInscription = "PvScriptInscriptionBootstrap" ;
+			public $NomClasseScriptDeconnexion = "PvScriptDeconnexionBootstrap" ;
+			public $NomClasseScriptConnexion = "PvScriptConnexionBootstrap" ;
+			public $NomClasseScriptChangeMotPasse = "PvScriptChangeMotPasseBootstrap" ;
+			public $NomClasseScriptDoitChangerMotPasse = "PvScriptDoitChangerMotPasseBootstrap" ;
+			public $NomClasseScriptChangeMPMembre = "PvScriptChangeMPMembreBootstrap" ;
+			public $NomClasseScriptAjoutMembre = "PvScriptAjoutMembreBootstrap" ;
+			public $NomClasseScriptModifMembre = "PvScriptModifMembreBootstrap" ;
+			public $NomClasseScriptModifPrefs = "PvScriptModifPrefsBootstrap" ;
+			public $NomClasseScriptSupprMembre = "PvScriptSupprMembreBootstrap" ;
+			public $NomClasseScriptListeMembres = "PvScriptListeMembresBootstrap" ;
+			public $NomClasseScriptAjoutProfil = "PvScriptAjoutProfilBootstrap" ;
+			public $NomClasseScriptModifProfil = "PvScriptModifProfilBootstrap" ;
+			public $NomClasseScriptSupprProfil = "PvScriptSupprProfilBootstrap" ;
+			public $NomClasseScriptListeProfils = "PvScriptListeProfilsBootstrap" ;
+			public $NomClasseScriptAjoutRole = "PvScriptAjoutRoleBootstrap" ;
+			public $NomClasseScriptModifRole = "PvScriptModifRoleBootstrap" ;
+			public $NomClasseScriptSupprRole = "PvScriptSupprRoleBootstrap" ;
+			public $NomClasseScriptListeRoles = "PvScriptListeRolesBootstrap" ;
 		}
-		if(! defined('PV_ZONE_SB_ADMIN'))
-		{
-			include dirname(__FILE__)."/Zone/SbAdmin.class.php" ;
-		}
-		define('PV_ZONE_BOOTSTRAP', 1) ;
 	}
 	
 ?>

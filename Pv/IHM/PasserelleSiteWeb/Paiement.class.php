@@ -6,6 +6,10 @@
 		{
 			include dirname(__FILE__)."/Paiement/Noyau.class.php" ;
 		}
+		if(! defined("PV_PASSERELLE_PAIEMENT_ASSISTANCE"))
+		{
+			include dirname(__FILE__)."/Paiement/Assistance.class.php" ;
+		}
 		if(! defined("PV_PASSERELLE_PAIEMENT_CINETPAY"))
 		{
 			include dirname(__FILE__)."/Paiement/Cinetpay.class.php" ;

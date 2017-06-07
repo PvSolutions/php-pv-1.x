@@ -337,7 +337,7 @@ html.sb-active #sb-site, .sb-toggle-left, .sb-toggle-right, .sb-open-left, .sb-o
 			}
 		}
 		
-		class PvConfigMaskMoney
+		class PvConfigMaskMoneyJQuery
 		{
 			public $prefix = "" ;
             public $suffix = "" ;
@@ -357,7 +357,7 @@ html.sb-active #sb-site, .sb-toggle-left, .sb-toggle-right, .sb-open-left, .sb-o
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->Config = new PvConfigMaskMoney() ;
+				$this->Config = new PvConfigMaskMoneyJQuery() ;
 			}
 			public function InclutLibSource()
 			{
@@ -415,7 +415,7 @@ html.sb-active #sb-site, .sb-toggle-left, .sb-toggle-right, .sb-open-left, .sb-o
 				return $ctn ;
 			}
 		}
-		class PvConfigPriceFormat
+		class PvConfigPriceFormatJQuery
 		{
 			public $prefix = "" ;
 			public $suffix = "" ;
@@ -441,7 +441,7 @@ html.sb-active #sb-site, .sb-toggle-left, .sb-toggle-right, .sb-open-left, .sb-o
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->Config = new PvConfigPriceFormat() ;
+				$this->Config = new PvConfigPriceFormatJQuery() ;
 			}
 			public function InclutLibSource()
 			{
@@ -520,6 +520,97 @@ jQuery(function () {
 			}
 		}
         
+		class PvConfigMaskIgorEscobarJQuery
+		{
+			public $placeholder = '' ;
+			public $reverse = true ;
+		}
+		class PvMaskIgorEscobarJQuery extends PvZoneInvisibleHtml
+		{
+			public static $SourceIncluse = 0 ;
+			public $CheminJs = "js/jquery.mask.min.js" ;
+			public $Config ;
+			public $Format = '' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->Config = new PvConfigMaskIgorEscobarJQuery() ;
+			}
+			public function InclutLibSource()
+			{
+				$ctn = '' ;
+				if($this->ObtientValeurStatique('SourceIncluse') == 1)
+				{
+					return $ctn ;
+				}
+				$ctn .= $this->ZoneParent->RenduLienJsInclus($this->CheminJs) ;
+				$this->AffecteValeurStatique("SourceIncluse", 1) ;
+				return $ctn ;
+			}
+			protected function PrepareEditeur()
+			{
+				$this->ValeurEditeur = $this->Valeur ;
+			}
+			protected function RenduEditeur()
+			{
+				$ctn = '' ;
+				$this->PrepareEditeur() ;
+				$ctn .= '<input id="Editeur_'.$this->IDInstanceCalc.'"' ;
+				$ctn .= ' value="'.htmlentities($this->ValeurEditeur).'"' ;
+				$ctn .= ' type="text"' ;
+				$ctn .= $this->RenduAttrStyleCSS() ;
+				$ctn .= ' />' ;
+				return $ctn ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				$ctnIncSrc = $this->InclutLibSource() ;
+				if($ctnIncSrc != '')
+				{
+					$ctn .= $ctnIncSrc.PHP_EOL ;
+				}
+				$ctn .= $this->RenduEditeur().PHP_EOL ;
+				$ctn .= parent::RenduDispositifBrut().PHP_EOL ;
+				$ctn .= $this->ZoneParent->RenduContenuJsInclus('jQuery(function () {
+	jQuery("#Editeur_'.$this->IDInstanceCalc.'").mask('.svc_json_encode($this->Format).', '.svc_json_encode($this->Config).')
+		.change(function () {
+			if(jQuery(this).cleanVal() == "")
+			{
+				jQuery("#'.$this->IDInstanceCalc.'").val("") ;
+				return ;
+			}
+			var val = jQuery(this).cleanVal() ;
+			jQuery("#'.$this->IDInstanceCalc.'").val(val) ;
+		}) ;
+}) ;') ;
+				return $ctn ;
+			}
+			public function RenduEtiquette()
+			{
+				$this->PrepareEditeur() ;
+				$ctn = '' ;
+				$ctnIncSrc = $this->InclutLibSource() ;
+				if($ctnIncSrc != '')
+				{
+					$ctn .= $ctnIncSrc.PHP_EOL ;
+				}
+				$ctn .= '<span id="Etiquette_'.$this->IDInstanceCalc.'">'.htmlentities($this->Valeur).'</span>'.PHP_EOL ;
+				$ctn .= $this->ZoneParent->RenduContenuJsInclus('jQuery(function () {
+	jQuery("#Etiquette_'.$this->IDInstanceCalc.'").mask('.svc_json_encode($this->Format).', '.svc_json_encode($this->Config).') ;
+})') ;
+				return $ctn ;
+			}
+		}
+		class PvMaskMoneyIgorEscobarJQuery extends PvMaskIgorEscobarJQuery
+		{
+			public $Format = '000 000 000 000' ;
+			protected function PrepareEditeur()
+			{
+				$this->ValeurEditeur = intval($this->Valeur) ;
+			}
+		}
+		
         class ResultTypeahead
         {
             public $total_pages = 0 ;
@@ -711,7 +802,6 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
 			{
 				parent::AdopteZone($nom, $zone) ;
 				$this->InscritActionAvantRendu("ActSupport_".$this->IDInstanceCalc, $this->ActSupport) ;
-				$this->CfgInst->ajax->url = $this->ActSupport->ObtientUrl() ;
 			}
 			public function ChargeConfig()
 			{
@@ -740,6 +830,16 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
 			protected function CtnJSDeclInst()
 			{
 				$ctn = 'jQuery("#'.$this->IDInstanceCalc.'").select2(cfgInst'.$this->IDInstanceCalc.') ;' ;
+				if($this->Valeur != '')
+				{
+					$ctn .= PHP_EOL . 'jQuery("#'.$this->IDInstanceCalc.'").val('.svc_json_encode($this->Valeur).').trigger("change") ;' ;
+				}
+				return $ctn ;
+			}
+			protected function CtnJSCfgInst()
+			{
+				$this->CfgInst->ajax->url = $this->ActSupport->ObtientUrl() ;
+				$ctn = parent::CtnJSCfgInst().PHP_EOL ;
 				return $ctn ;
 			}
 			protected function RenduSourceBrut()
@@ -756,8 +856,11 @@ return {
 		more: (params.page * '.$this->MaxElemsParPage.') < data.total_count
 	}
 };') ;
-				return '<script type="text/javascript" src="'.$this->CheminFichierJs.'"></script>
-<link rel="stylesheet" type="text/css" href="'.$this->CheminFichierCSS.'">'.PHP_EOL ;
+				$ctn = $this->RenduLienJs($this->CheminFichierJs) ;
+				if($ctn != '') { $ctn .= PHP_EOL ; }
+				$ctn .= $this->RenduContenuJs('jQuery.fn.select2.defaults.set("language", "fr");') ;
+				if($ctn != '') { $ctn .= PHP_EOL ; }
+				return $ctn.'<link rel="stylesheet" type="text/css" href="'.$this->CheminFichierCSS.'">'.PHP_EOL ;
 			}
 		}
 		class PvActSupportSelect2 extends PvActionResultatJSONZoneWeb
