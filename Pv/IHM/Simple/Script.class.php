@@ -43,6 +43,7 @@
 			public $UtiliserCorpsDocZone = 1 ;
 			public $InclureRenduTitre = 1 ;
 			public $InclureRenduDescription = 1 ;
+			public $InclureRenduMessageExecution = 1 ;
 			public $InclureRenduIcone = 1 ;
 			public $InclureRenduChemin = 1 ;
 			public $ActiverAutoRafraich = 0 ;
@@ -217,6 +218,22 @@
 					return '' ;
 				}
 			}
+			public function RenduMessageExecution()
+			{
+				if(! $this->ZoneParent->InclureRenduMessageExecution || ! $this->InclureRenduMessageExecution)
+				{
+					return '' ;
+				}
+				$msg = $this->ZoneParent->RestaureMessageExecutionSession() ;
+				if($msg->NonRenseigne() || $msg->EstVide())
+				{
+					return '' ;
+				}
+				$classeCSSMsgExecSucces = $this->ZoneParent->ClasseCSSMsgExecSucces ;
+				$classeCSSMsgExecErreur = $this->ZoneParent->ClasseCSSMsgExecErreur ;
+				$ctn = '<div class="'.(($msg->Succes()) ? $classeCSSMsgExecSucces : $classeCSSMsgExecErreur).'">'.$msg->Contenu.'</div>' ;
+				return $ctn ;
+			}
 			public function RenduDescription()
 			{
 				if(! $this->ZoneParent->InclureRenduDescription || ! $this->InclureRenduDescription)
@@ -245,6 +262,7 @@
 				$ctn = '' ;
 				$ctn .= $this->RenduChemin().PHP_EOL ;
 				$ctn .= $this->RenduTitre().PHP_EOL ;
+				$ctn .= $this->RenduMessageExecution().PHP_EOL ;
 				$ctn .= $this->RenduDescription().PHP_EOL ;
 				$ctn .= $this->RenduSpecifique() ;
 				return $ctn ;

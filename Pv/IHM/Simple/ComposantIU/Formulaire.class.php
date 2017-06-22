@@ -71,6 +71,8 @@
 			public $CommandeSelectionneeExec = 0 ;
 			public $MsgExecSuccesCommandeExecuter = "" ;
 			public $MsgExecEchecCommandeExecuter = "" ;
+			public $NomScriptExecSuccesCommandeExecuter = "" ;
+			public $ParamsScriptExecSuccesCommandeExecuter = array() ;
 			public $ActCmdsCommandeExecuter = array() ;
 			public $CriteresCommandeExecuter = array() ;
 			public $MsgExecSuccesCommandeAnnuler = "" ;
@@ -950,6 +952,11 @@
 				{
 					$this->CommandeExecuter->MessageSuccesExecution = $this->MsgExecSuccesCommandeExecuter ;
 				}
+				if($this->NomScriptExecSuccesCommandeExecuter != '')
+				{
+					$this->CommandeExecuter->NomScriptExecutionSucces = $this->NomScriptExecSuccesCommandeExecuter ;
+					$this->CommandeExecuter->ParamsScriptExecutionSucces = $this->ParamsScriptExecutionSucces ;
+				}
 				if(count($this->ActCmdsCommandeExecuter) > 0)
 				{
 					foreach($this->ActCmdsCommandeExecuter as $i => $actCmd)
@@ -1179,9 +1186,29 @@
 			public $LibelleLienReprendre = "Reprendre" ;
 			public $LibelleLienAnnuler = "Annuler" ;
 			public $UrlLienAnnuler = "" ;
+			public $NomScriptExecutionSucces = "" ;
+			public $ParamsScriptExecutionSucces = array() ;
 			protected function VerifiePreRequis()
 			{
 				$this->VerifieFichiersUpload($this->FormulaireDonneesParent->FiltresEdition) ;
+			}
+			public function Execute()
+			{
+				parent::Execute() ;
+				$this->RedirigeScriptExecutionSucces() ;
+			}
+			protected function RedirigeScriptExecutionSucces()
+			{
+				if($this->StatutExecution != 1 || $this->NomScriptExecutionSucces == '')
+				{
+					return ;
+				}
+				$script = $this->ZoneParent->Scripts[$this->NomScriptExecutionSucces] ;
+				if($this->EstPasNul($script))
+				{
+					$this->ZoneParent->SauveMessageExecutionSession($this->StatutExecution, $this->MessageExecution, $this->ScriptParent->NomElementZone) ;
+					redirect_to($script->ObtientUrlParam($this->ParamsScriptExecutionSucces)) ;
+				}
 			}
 		}
 		class PvCommandeAnnulerBase extends PvCommandeFormulaireDonnees

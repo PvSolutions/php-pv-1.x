@@ -16,11 +16,29 @@
 		}
 		define('PV_ZONE_SIMPLE_IHM', 1) ;
 		
+		class PvMessageExecutionZoneWeb
+		{
+			public $NomScriptSource ;
+			public $Statut ;
+			public $Contenu ;
+			public function EstVide()
+			{
+				return $this->Contenu == "" ;
+			}
+			public function NonRenseigne()
+			{
+				return $this->Statut === null ;
+			}
+			public function Succes()
+			{
+				return $this->Statut == 1 ;
+			}
+		}
+		
 		class PvDocumentWebBase
 		{
 			protected function RenduDefsJS(& $zone)
 			{
-				$ctn = '' ;
 				$ctn = '' ;
 				for($i=0; $i<count($zone->ContenusJs); $i++)
 				{
@@ -44,6 +62,9 @@
 			}
 			public function RenduEntete(& $zone)
 			{
+				$ctn = '' ;
+				$ctn .= $zone->RenduCtnJsEntete() ;
+				return ;
 			}
 			public function RenduPied(& $zone)
 			{
@@ -51,6 +72,7 @@
 		}
 		class PvDocumentHtmlSimple extends PvDocumentWebBase
 		{
+			public $AttrsBody = array() ;
 			public function RenduEntete(& $zone)
 			{
 				$ctn = '' ;
@@ -79,16 +101,22 @@
 				$ctn .= $this->RenduDefsCSS($zone) ;
 				$ctn .= $zone->RenduExtraHead ;
 				$ctn .= '</head>'.PHP_EOL ;
-				$ctn .= '<body>' ;
+				$ctnAttrsBody = '' ;
+				foreach($this->AttrsBody as $n => $v)
+				{
+					$ctnAttrsBody .= ' '.$n.'="'.htmlspecialchars(html_entity_decode($v)).'"' ;
+				}
+				$ctn .= '<body'.$ctnAttrsBody.'>' ;
 				return $ctn ;
 			}
 			public function RenduPied(& $zone)
 			{
 				$ctn = '' ;
-				if(! $zone->InclureCtnJsEntete)
+				if($zone->InclureCtnJsEntete == 0)
 				{
-					$ctn .= $this->RenduDefsJS($zone) ;
+					$ctn .= $this->RenduDefsJS($zone).PHP_EOL ;
 				}
+				$ctn .= $zone->RenduCtnJsPied($zone) ;
 				$ctn .= '</body>'.PHP_EOL ;
 				$ctn .= '</html>' ;
 				return $ctn ;
@@ -371,9 +399,11 @@
 			public $CheminCSSJQueryUi = "css/jquery-ui.css" ;
 			public $ContenusCSS = array() ;
 			public $ContenusJs = array() ;
+			public $ContenusJsPied = array() ;
 			public $CheminIconeScript = "" ;
 			public $InclureRenduTitre = 1 ;
 			public $InclureRenduIcone = 1 ;
+			public $InclureRenduMessageExecution = 1 ;
 			public $DetectIconeCorresp = 0 ;
 			public $CheminDossierIconeCorresp = "images/icones" ;
 			public $ExtIconeCorresp = "png" ;
@@ -419,6 +449,9 @@
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesMSWeb" ;
 			protected $TacheAppelee ;
 			protected $ScriptExecuteAccessible = false ;
+			public $CleMessageExecutionSession = "PvMessageExecution" ;
+			public $ClasseCSSMsgExecSucces = "Succes" ;
+			public $ClasseCSSMsgExecErreur = "Erreur" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -435,6 +468,24 @@
 				$this->DetecteScriptAppele() ;
 				$this->ExecuteScriptAppele() ;
 				$this->TermineExecution() ;
+			}
+			public function RestaureMessageExecutionSession()
+			{
+				$msg = new PvMessageExecutionZoneWeb() ;
+				if(isset($_SESSION[$this->CleMessageExecutionSession]))
+				{
+					$msg = unserialize($_SESSION[$this->CleMessageExecutionSession]) ;
+					unset($_SESSION[$this->CleMessageExecutionSession]) ;
+				}
+				return $msg ;
+			}
+			public function SauveMessageExecutionSession($statut, $contenu, $nomScript='')
+			{
+				$msg = new PvMessageExecutionZoneWeb() ;
+				$msg->Statut = $statut ;
+				$msg->Contenu = $contenu ;
+				$msg->NomScriptSource = $nomScript ;
+				$_SESSION[$this->CleMessageExecutionSession] = serialize($msg) ;
 			}
 			protected function ExecuteActionPrinc()
 			{
@@ -854,9 +905,20 @@
 			protected function RenduCtnJs()
 			{
 				$ctn = '' ;
+				// print_r($this->ContenusJs) ;
 				for($i=0; $i<count($this->ContenusJs); $i++)
 				{
 					$ctnJs = $this->ContenusJs[$i] ;
+					$ctn .= $ctnJs->RenduDispositif().PHP_EOL ;
+				}
+				return $ctn ;
+			}
+			public function RenduCtnJsPied()
+			{
+				$ctn = '' ;
+				for($i=0; $i<count($this->ContenusJsPied); $i++)
+				{
+					$ctnJs = $this->ContenusJsPied[$i] ;
 					$ctn .= $ctnJs->RenduDispositif().PHP_EOL ;
 				}
 				return $ctn ;
@@ -882,6 +944,7 @@
 				{
 					$ctn .= $this->RenduCtnJs() ;
 				}
+				$ctn .= $this->RenduCtnJsPied() ;
 				$ctn .= '</body>' ;
 				return $ctn ;
 			}
@@ -997,6 +1060,32 @@
 				$ctnJs->Src = $src ;
 				$ctnJs->VersionMin = $versionMin ;
 				$this->ContenusJs[] = $ctnJs ;
+			}
+			public function InscritContenuJsPied($contenu)
+			{
+				$ctnJs = new PvBaliseJs() ;
+				$ctnJs->Definitions = $contenu ;
+				$this->ContenusJsPied[] = $ctnJs ;
+			}
+			public function InscritContenuJsPiedCmpIE($contenu, $versionMin=9)
+			{
+				$ctnJs = new PvBaliseJsCmpIE() ;
+				$ctnJs->Definitions = $contenu ;
+				$ctnJs->VersionMin = $versionMin ;
+				$this->ContenusJsPied[] = $ctnJs ;
+			}
+			public function InscritLienJsPied($src)
+			{
+				$ctnJs = new PvLienFichierJs() ;
+				$ctnJs->Src = $src ;
+				$this->ContenusJsPied[] = $ctnJs ;
+			}
+			public function InscritLienJsPiedCmpIE($src, $versionMin=9)
+			{
+				$ctnJs = new PvLienFichierJsCmpIE() ;
+				$ctnJs->Src = $src ;
+				$ctnJs->VersionMin = $versionMin ;
+				$this->ContenusJsPied[] = $ctnJs ;
 			}
 			public function RenduLienCSS($href)
 			{

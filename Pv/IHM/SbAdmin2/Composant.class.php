@@ -493,7 +493,7 @@
 				}
 				$this->FermeRequeteSupport() ;
 				$ctn .= '</table>' ;
-				$ctn .= '<input type="hidden" name="'.$this->NomElementHtml.'" id="'.$this->IDInstanceCalc.'" value="'.htmlentities($this->Valeur).'" />' ;
+				// $ctn .= '<input type="hidden" name="'.$this->NomElementHtml.'" id="'.$this->IDInstanceCalc.'" value="'.htmlentities($this->Valeur).'" />' ;
 				// print_r($this->FournisseurDonnees->BaseDonnees) ;
 				return $ctn ;
 			}
@@ -543,7 +543,7 @@
 				}
 				$this->FermeRequeteSupport() ;
 				$ctn .= '</table>' ;
-				$ctn .= '<input type="hidden" name="'.$this->NomElementHtml.'" id="'.$this->IDInstanceCalc.'" value="'.htmlentities($this->Valeur).'" />' ;
+				// $ctn .= '<input type="hidden" name="'.$this->NomElementHtml.'" id="'.$this->IDInstanceCalc.'" value="'.htmlentities($this->Valeur).'" />' ;
 				// print_r($this->FournisseurDonnees->BaseDonnees) ;
 				return $ctn ;
 			}

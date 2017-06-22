@@ -787,7 +787,11 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
 			public $ActSupport ;
 			public $Largeur = '200px' ;
 			public $MaxElemsParPage = 30 ;
+			public $SeparateurLibelleEtiqVide = ", " ;
 			public $FiltresSelection = array() ;
+			public $InclureElementHorsLigne = 0 ;
+			public $ValeurElementHorsLigne = "" ;
+			public $LibelleElementHorsLigne = "" ;
 			public function ExtraitFiltresSelection($termeRech)
 			{
 				$filtres = $this->FiltresSelection ;
@@ -830,14 +834,27 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
 			protected function CtnJSDeclInst()
 			{
 				$ctn = 'jQuery("#'.$this->IDInstanceCalc.'").select2(cfgInst'.$this->IDInstanceCalc.') ;' ;
-				if($this->Valeur != '')
-				{
-					$ctn .= PHP_EOL . 'jQuery("#'.$this->IDInstanceCalc.'").val('.svc_json_encode($this->Valeur).').trigger("change") ;' ;
-				}
 				return $ctn ;
 			}
 			protected function CtnJSCfgInst()
 			{
+				$this->CfgInst->placeholder = $this->EspaceReserve ;
+				if($this->Valeur != null)
+				{
+					$lignes = $this->FournisseurDonnees->RechExacteElements($this->FiltresSelection, $this->NomColonneValeur, $this->Valeur) ;
+					if(count($lignes))
+					{
+						$this->CfgInst->placeholder = new PvCfgPlaceholderSelect2() ;
+						$this->CfgInst->placeholder->id = $lignes[0][$this->NomColonneValeur] ;
+						$this->CfgInst->placeholder->text = $lignes[0][$this->NomColonneLibelle] ;
+					}
+				}
+				elseif($this->InclureElementHorsLigne == 1)
+				{
+					$this->CfgInst->placeholder = new PvCfgPlaceholderSelect2() ;
+					$this->CfgInst->placeholder->id = $this->ValeurElementHorsLigne ;
+					$this->CfgInst->placeholder->text = $this->LibelleElementHorsLigne ;
+				}
 				$this->CfgInst->ajax->url = $this->ActSupport->ObtientUrl() ;
 				$ctn = parent::CtnJSCfgInst().PHP_EOL ;
 				return $ctn ;
@@ -861,6 +878,31 @@ return {
 				$ctn .= $this->RenduContenuJs('jQuery.fn.select2.defaults.set("language", "fr");') ;
 				if($ctn != '') { $ctn .= PHP_EOL ; }
 				return $ctn.'<link rel="stylesheet" type="text/css" href="'.$this->CheminFichierCSS.'">'.PHP_EOL ;
+			}
+			public function RenduEtiquette()
+			{
+				if($this->EstNul($this->FournisseurDonnees))
+				{
+					return parent::RenduEtiquette() ;
+				}
+				$lignes = $this->FournisseurDonnees->RechExacteElements($this->FiltresSelection, $this->NomColonneValeur, $this->Valeur) ;
+				$etiquette = '' ;
+				if(count($lignes) > 0)
+				{
+					foreach($lignes as $i => $ligne)
+					{
+						if($etiquette != "")
+						{
+							$etiquette .= $this->SeparateurLibelleEtiqVide ;
+						}
+						$etiquette .= $ligne[$this->NomColonneLibelle] ;
+					}
+				}
+				else
+				{
+					$etiquette = $this->LibelleEtiqVide ;
+				}
+				return $etiquette ;
 			}
 		}
 		class PvActSupportSelect2 extends PvActionResultatJSONZoneWeb
@@ -913,6 +955,11 @@ return {
 			public $data ;
 			public $processResults ;
 			public $cache = true ;
+		}
+		class PvCfgPlaceholderSelect2
+		{
+			public $id ;
+			public $text ;
 		}
 		
 		class PvJQueryLightbox extends PvComposantIUBase

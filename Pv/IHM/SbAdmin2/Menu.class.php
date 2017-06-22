@@ -42,6 +42,7 @@
 			public $LibelleMenuAjoutProfil = "Ajout profil" ;
 			public $LibelleMenuListeRoles = "R&ocirc;les"  ;
 			public $LibelleMenuAjoutRole = "Ajout r&ocirc;le" ;
+			public $ClasseCSSRacine = "navbar-default" ;
 			public function ChargeConfig()
 			{
 				parent::ChargeConfig() ;
@@ -81,7 +82,7 @@
 			protected function RenduMenuRacine(& $menu)
 			{
 				$ctn = '' ;
-				$ctn .= '<div class="navbar-default sidebar" role="navigation">
+				$ctn .= '<div class="'.$this->ClasseCSSRacine.' sidebar" role="navigation">
 <div class="sidebar-nav navbar-collapse">
 <ul class="nav" id="side-menu">'.PHP_EOL ;
 				if($this->InclureBarreRecherche == 1 && $this->NomScriptRecherche != "")

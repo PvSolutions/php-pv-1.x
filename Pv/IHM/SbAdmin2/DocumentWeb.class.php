@@ -145,6 +145,7 @@ jQuery(function() {
 			protected $Navbar1 ;
 			protected $Navbar2 ;
 			protected $Sidebar1 ;
+			public $ClasseCSSNavbar = "navbar-default" ;
 			protected function DetermineComposants(& $zone)
 			{
 				$this->Navbar1 = new PvNavbarStaticTopSbAdmin2() ;
@@ -249,7 +250,7 @@ jQuery(function() {
 				$scriptRendu = & $zone->ScriptPourRendu ;
 				$ctn = $this->RenduEnteteHtmlSimple($zone).PHP_EOL ;
 				$ctn .= '<div id="wrapper">'.PHP_EOL ;
-				$ctn .= '<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">'.PHP_EOL ;
+				$ctn .= '<nav class="navbar '.$this->ClasseCSSNavbar.' navbar-static-top" role="navigation" style="margin-bottom: 0">'.PHP_EOL ;
 				$ctn .= $this->Navbar1->RenduDispositif() ;
 				$ctn .= $this->Navbar2->RenduDispositif() ;
 				$ctn .= $this->Sidebar1->RenduDispositif() ;

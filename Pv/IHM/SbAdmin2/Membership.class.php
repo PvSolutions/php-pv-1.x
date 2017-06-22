@@ -75,8 +75,8 @@
 			public $ClsBstBoutonSoumettre = "btn-success" ;
 			public $ClsFaTriAsc = "fa-chevron-up" ;
 			public $ClsFaTriDesc = "fa-chevron-down" ;
-			public $ClsFaTriAscSelectionne = "fa-arrow-circle-up" ;
-			public $ClsFaTriDescSelectionne = "fa-arrow-circle-down" ;
+			public $ClsFaTriAscSelectionne = "fa-chevron-up" ;
+			public $ClsFaTriDescSelectionne = "fa-chevron-down" ;
 			protected function InitDessinateurFiltresSelection()
 			{
 				$this->DessinateurFiltresSelection = new PvDessinFiltresSbAdmin2() ;
@@ -136,8 +136,8 @@
 					{
 						$libelleTriAsc = '<i class="fa '.$this->ClsFaTriAsc.'"></i>' ;
 						$libelleTriDesc = '<i class="fa '.$this->ClsFaTriDesc.'"></i>' ;
-						$libelleTriAscSelectionne = '<i class="fa '.$this->ClsFaTriAscSelectionne.'"></i>' ;
-						$libelleTriDescSelectionne = '<i class="fa '.$this->ClsFaTriDescSelectionne.'"></i>' ;
+						$libelleTriAscSelectionne = '<i class="fa '.$this->ClsFaTriAscSelectionne.' text-primary"></i>' ;
+						$libelleTriDescSelectionne = '<i class="fa '.$this->ClsFaTriDescSelectionne.' text-primary"></i>' ;
 					}
 					$parametresRendu = $this->ParametresCommandeSelectionnee() ;
 					if(count($this->ElementsEnCours) > 0)
@@ -302,8 +302,8 @@
 			public $ClsBstBoutonSoumettre = "btn-success" ;
 			public $ClsFaTriAsc = "fa-chevron-up" ;
 			public $ClsFaTriDesc = "fa-chevron-down" ;
-			public $ClsFaTriAscSelectionne = "fa-arrow-circle-up" ;
-			public $ClsFaTriDescSelectionne = "fa-arrow-circle-down" ;
+			public $ClsFaTriAscSelectionne = "fa-chevron-up" ;
+			public $ClsFaTriDescSelectionne = "fa-chevron-down" ;
 			protected function InitDessinateurFiltresSelection()
 			{
 				$this->DessinateurFiltresSelection = new PvDessinFiltresSbAdmin2() ;
@@ -363,8 +363,8 @@
 					{
 						$libelleTriAsc = '<i class="fa '.$this->ClsFaTriAsc.'"></i>' ;
 						$libelleTriDesc = '<i class="fa '.$this->ClsFaTriDesc.'"></i>' ;
-						$libelleTriAscSelectionne = '<i class="fa '.$this->ClsFaTriAscSelectionne.'"></i>' ;
-						$libelleTriDescSelectionne = '<i class="fa '.$this->ClsFaTriDescSelectionne.'"></i>' ;
+						$libelleTriAscSelectionne = '<i class="fa '.$this->ClsFaTriAscSelectionne.' text-primary"></i>' ;
+						$libelleTriDescSelectionne = '<i class="fa '.$this->ClsFaTriDescSelectionne.' text-primary"></i>' ;
 					}
 					$parametresRendu = $this->ParametresCommandeSelectionnee() ;
 					if(count($this->ElementsEnCours) > 0)
@@ -529,8 +529,8 @@
 			public $ClsBstBoutonSoumettre = "btn-success" ;
 			public $ClsFaTriAsc = "fa-chevron-up" ;
 			public $ClsFaTriDesc = "fa-chevron-down" ;
-			public $ClsFaTriAscSelectionne = "fa-arrow-circle-up" ;
-			public $ClsFaTriDescSelectionne = "fa-arrow-circle-down" ;
+			public $ClsFaTriAscSelectionne = "fa-chevron-up" ;
+			public $ClsFaTriDescSelectionne = "fa-chevron-down" ;
 			protected function InitDessinateurFiltresSelection()
 			{
 				$this->DessinateurFiltresSelection = new PvDessinFiltresSbAdmin2() ;
@@ -590,8 +590,8 @@
 					{
 						$libelleTriAsc = '<i class="fa '.$this->ClsFaTriAsc.'"></i>' ;
 						$libelleTriDesc = '<i class="fa '.$this->ClsFaTriDesc.'"></i>' ;
-						$libelleTriAscSelectionne = '<i class="fa '.$this->ClsFaTriAscSelectionne.'"></i>' ;
-						$libelleTriDescSelectionne = '<i class="fa '.$this->ClsFaTriDescSelectionne.'"></i>' ;
+						$libelleTriAscSelectionne = '<i class="fa '.$this->ClsFaTriAscSelectionne.' text-primary"></i>' ;
+						$libelleTriDescSelectionne = '<i class="fa '.$this->ClsFaTriDescSelectionne.' text-primary"></i>' ;
 					}
 					$parametresRendu = $this->ParametresCommandeSelectionnee() ;
 					if(count($this->ElementsEnCours) > 0)

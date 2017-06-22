@@ -897,17 +897,20 @@
 				$sql = "INSERT INTO ".$basedonnees->EscapeTableName($membership->PrivilegeTable)." (".$basedonnees->EscapeFieldName($membership->PrivilegeTable, $membership->ProfilePrivilegeColumn).", ".$basedonnees->EscapeFieldName($membership->PrivilegeTable, $membership->RolePrivilegeColumn).", ".$basedonnees->EscapeFieldName($membership->PrivilegeTable, $membership->EnablePrivilegeColumn).") select ".$basedonnees->EscapeFieldName($membership->ProfileTable, $membership->ProfilePrivilegeForeignKey).", ".$basedonnees->ParamPrefix."roleId, ".$basedonnees->ParamPrefix."roleEnabled from ".$basedonnees->EscapeTableName($membership->ProfileTable) ;
 				$basedonnees->RunSql($sql, array("roleEnabled" => $membership->EnablePrivilegeFalseValue(), "roleId" => $idRole)) ;
 				// print "kk : ".$this->FormulaireDonneesParent->FiltreListeProfilsRole->ValeurBrute ;
-				foreach($this->FormulaireDonneesParent->FiltreListeProfilsRole->ValeurBrute as $i => $valeur)
+				if(is_array($this->FormulaireDonneesParent->FiltreListeProfilsRole->ValeurBrute))
 				{
-					$basedonnees->UpdateRow(
-						$membership->PrivilegeTable,
-						array($membership->EnablePrivilegeColumn => $membership->EnablePrivilegeTrueValue),
-						$basedonnees->EscapeFieldName($membership->PrivilegeTable, $membership->RolePrivilegeColumn).'='.$basedonnees->ParamPrefix.'roleId and '.$basedonnees->EscapeFieldName($membership->PrivilegeTable, $membership->ProfilePrivilegeColumn).' = '.$basedonnees->ParamPrefix.'profileId',
-						array(
-							'roleId' => $idRole,
-							'profileId' => $valeur
-						)
-					) ;
+					foreach($this->FormulaireDonneesParent->FiltreListeProfilsRole->ValeurBrute as $i => $valeur)
+					{
+						$basedonnees->UpdateRow(
+							$membership->PrivilegeTable,
+							array($membership->EnablePrivilegeColumn => $membership->EnablePrivilegeTrueValue),
+							$basedonnees->EscapeFieldName($membership->PrivilegeTable, $membership->RolePrivilegeColumn).'='.$basedonnees->ParamPrefix.'roleId and '.$basedonnees->EscapeFieldName($membership->PrivilegeTable, $membership->ProfilePrivilegeColumn).' = '.$basedonnees->ParamPrefix.'profileId',
+							array(
+								'roleId' => $idRole,
+								'profileId' => $valeur
+							)
+						) ;
+					}
 				}
 				// echo $sql.'<br>' ;
 			// exit ;

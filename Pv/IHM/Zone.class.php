@@ -761,6 +761,14 @@
 				}
 				return $this->Membership->MemberLogged->RawData[$nomAttr] ;
 			}
+			public function TitreProfilConnecte()
+			{
+				if(! $this->PossedeMembreConnecte()|| ! isset($this->Membership->MemberLogged->Profile))
+				{
+					return null ;
+				}
+				return $this->Membership->MemberLogged->Profile->Title ;
+			}
 			public function PossedeTousPrivileges()
 			{
 				$ok = 1 ;

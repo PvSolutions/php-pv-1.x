@@ -66,18 +66,16 @@
 				$ctn .= ' type="hidden"' ;
 				$ctn .= ' value="'.htmlspecialchars($this->Valeur).'"' ;
 				$ctn .= ' />' ;
-				$ctn .= '<script language="javascript">
-	jQuery(function() {
-		jQuery("#'.$this->IDInstanceCalc.'_Support").bootstrapSwitch('.svc_json_encode($this->Cfg).') ;
-		jQuery("#'.$this->IDInstanceCalc.'_Support").on("switchChange.bootstrapSwitch", function(event, state) {
-			if(event.type === "switchChange") {
-				var jqEdit = jQuery("#'.$this->IDInstanceCalc.'") ;
-				var editeurSupport = this ;
-				jqEdit.val((editeurSupport.checked) ? '.svc_json_encode($this->ValeurVrai).' : '.svc_json_encode($this->ValeurFaux).') ;
-			}
-		}) ;
+				$ctn .= $this->RenduContenuJs('jQuery(function() {
+	jQuery("#'.$this->IDInstanceCalc.'_Support").bootstrapSwitch('.svc_json_encode($this->Cfg).') ;
+	jQuery("#'.$this->IDInstanceCalc.'_Support").on("switchChange.bootstrapSwitch", function(event, state) {
+		if(event.type === "switchChange") {
+			var jqEdit = jQuery("#'.$this->IDInstanceCalc.'") ;
+			var editeurSupport = this ;
+			jqEdit.val((editeurSupport.checked) ? '.svc_json_encode($this->ValeurVrai).' : '.svc_json_encode($this->ValeurFaux).') ;
+		}
 	}) ;
-</script>' ;
+}) ;') ;
 				return $ctn ;
 			}
 		}

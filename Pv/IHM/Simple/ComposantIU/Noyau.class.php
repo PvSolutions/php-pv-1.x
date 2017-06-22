@@ -82,20 +82,32 @@
 		
 		class PvActionBaseZoneWebSimple extends PvObjet
 		{
-			public $ZoneParent = null ;
+			public $ZoneParent ;
 			public $NomElementZone = "" ;
             /*
              * Script parent
              * 
              * @var PvScriptWebSimple
              */
-			public $ScriptParent = null ;
+			public $ScriptParent ;
 			public $NomElementScript = "" ;
-			public $ComposantIUParent = null ;
+			public $ComposantIUParent ;
 			public $NomElementComposantIU = "" ;
 			public $Params = array() ;
 			public $Privileges = array() ;
 			public $NecessiteMembreConnecte = 0 ;
+			public $ApplicationParent ;
+			public function IdMembreSession()
+			{
+				if($this->ZoneParent->NomClasseMembership == '')
+				{
+					return -1 ;
+				}
+				$classe = $this->ZoneParent->NomClasseMembership ;
+				$membership = new $classe($this->ZoneParent) ;
+				$idSession = $membership->GetSessionValue($membership->SessionMemberKey) ;
+				return $idSession ;
+			}
 			public function EstAccessible()
 			{
 				if(! $this->NecessiteMembreConnecte)
@@ -179,6 +191,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			{
 				$this->ZoneParent = & $zone ;
 				$this->NomElementZone = $nom ;
+				$this->ApplicationParent = & $zone->ApplicationParent ;
 			}
 			public function AdopteScript($nom, & $script)
 			{

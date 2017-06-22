@@ -277,15 +277,17 @@
 		}
 		class PvMenuRedirectHttp extends PvMenuIHMBase
 		{
-			public function DetecteStatutSelection()
+			public function ObtientStatutSelection()
 			{
 				$selectionne = 0 ;
-				if($this->Url != '')
+				if($this->Url == '')
 					return 0 ;
 				$partiesEnCours = parse_url(get_current_url()) ;
 				$url = make_abs_url($this->Url, get_current_url_dir()) ;
 				$partiesDemandees = parse_url($url) ;
-				return ($partiesEnCours == $partiesDemandees) ? 1 : 0 ;
+				$ok = ($partiesEnCours == $partiesDemandees) ? 1 : 0 ;
+				// print "$url : $ok<br>\n\n" ;
+				return $ok ;
 			}
 		}
 		class PvMenuRedirectScript extends PvMenuIHMBase
