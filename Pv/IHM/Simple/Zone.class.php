@@ -378,6 +378,7 @@
 			public $DescriptionMeta ;
 			public $ViewportMeta ;
 			public $AuteurMeta ;
+			public $UrlBase = "" ;
 			public $RenduExtraMeta ;
 			public $ModeCache ;
 			public $ScriptPourRendu ;

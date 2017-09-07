@@ -56,6 +56,14 @@
 				}
 				return 1 ;
 			}
+			public function RenseigneErreur($format, $params=array())
+			{
+				$this->MessageErreur = _parse_pattern(
+					$format,
+					$params
+				) ;
+				return 0 ;
+			}
 			protected function RespecteRegle(& $filtre)
 			{
 				return 1 ;

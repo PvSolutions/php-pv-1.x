@@ -133,6 +133,7 @@ if(! defined("SERVICES_JSON_SLICE"))
 		*                                   bubble up with an error, so all return values
 		*                                   from encode() should be checked with isError()
 		*/
+		public $use = 0 ;
 		function Services_JSON($use = 0)
 		{
 			$this->use = $use;
@@ -441,7 +442,7 @@ if(! defined("SERVICES_JSON_SLICE"))
 			if(Services_JSON::isError($encoded_value)) {
 				return $encoded_value;
 			}
-
+			
 			return $this->encode(strval($name)) . ':' . $encoded_value;
 		}
 

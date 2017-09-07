@@ -7,8 +7,8 @@
 		class PvScriptConnexionSbAdmin2 extends PvScriptConnexionWeb
 		{
 			public $NomDocumentWeb = "non_connecte" ;
-			public $MessageRecouvreMP = '<br><p>Nouveau ? <a href="${url}">Inscrivez-vous</a></p>' ;
-			public $MessageInscription = '<br><p>Mot de passe oubli&eacute; ? <a href="${url}">Cliquez ici</a> pour le r&eacute;cup&eacute;rer</p>' ;
+			public $MessageInscription = '<br><p>Nouveau ? <a href="${url}">Inscrivez-vous</a></p>' ;
+			public $MessageRecouvreMP = '<br><p>Mot de passe oubli&eacute; ? <a href="${url}">Cliquez ici</a> pour le r&eacute;cup&eacute;rer</p>' ;
 			public function RenduSpecifique()
 			{
 				$ctn = '' ;
@@ -27,7 +27,7 @@
 				$ctn .= '</form>' ;
 				if($this->ZoneParent->AutoriserInscription == 1 && $this->ZoneParent->EstPasNul($this->ZoneParent->ScriptInscription))
 				{
-					$ctn .= _parse_pattern($this->MessageInscription, array("url" => $this->ZoneParent->ScriptRecouvreMP->ObtientUrlParam($this->ParamsUrlInscription))) ;
+					$ctn .= _parse_pattern($this->MessageInscription, array("url" => $this->ZoneParent->ScriptInscription->ObtientUrlParam($this->ParamsUrlInscription))) ;
 				}
 				if($this->ZoneParent->EstPasNul($this->ZoneParent->ScriptRecouvreMP))
 				{
@@ -760,9 +760,11 @@
 		}
 		class PvFormulaireInscriptionMembreSbAdmin2 extends PvFormulaireInscriptionMembreMS
 		{
+			public $Largeur = "100%" ;
 			protected function InitDessinateurFiltresEdition()
 			{
 				$this->DessinateurFiltresEdition = new PvDessinFiltresSbAdmin2() ;
+				$this->DessinateurFiltresEdition->MaxFiltresParLigne = 1 ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
@@ -1008,6 +1010,7 @@
 
 		class PvFormulaireRecouvreMPSbAdmin2 extends PvFormulaireRecouvreMPMS
 		{
+			public $Largeur = "100%" ;
 			protected function InitDessinateurFiltresEdition()
 			{
 				$this->DessinateurFiltresEdition = new PvDessinFiltresSbAdmin2() ;
@@ -1025,6 +1028,17 @@
 		class PvScriptInscriptionSbAdmin2 extends PvScriptInscriptionWeb
 		{
 			public $NomClasseFormulaireDonnees = "PvFormulaireInscriptionMembreSbAdmin2" ;
+			protected function RenduMsgConnexion()
+			{
+				return '<br />
+<div class="container-fluid">
+<div class="row">
+<div class="col-xs-12">
+'.parent::RenduMsgConnexion().'
+</div>
+</div>
+</div>' ;
+			}
 		}
 		class PvScriptModifMembreSbAdmin2 extends PvScriptModifMembreMSWeb
 		{

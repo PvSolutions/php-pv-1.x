@@ -35,7 +35,10 @@
 		
 		class PvZoneSbAdmin2 extends PvZoneWebSimple
 		{
+			public $TitreNonConnecte = "" ;
 			public $Titre = "Pv - Sb Admin v2.0" ;
+			public $UtiliserTitreSiNonConnecte = 1 ;
+			public $CouleurTexteSidebars = "" ;
 			public $InclureCtnJsEntete = 0 ;
 			public $InclureJQuery = 1 ;
 			public $InclureRenduTitre = 0 ;
@@ -44,6 +47,7 @@
 			public $InclureRenduDescription = 0 ;
 			public $LargeurDefautBoiteDlgUrl = 600 ;
 			public $HauteurDefautBoiteDlgUrl = 450 ;
+			public $CheminImageArrPlanNonConnecte = "" ;
 			public $RafraichPageSurFermDefautBoiteDlgUrl = true ;
 			public $NomDocumentWebEditMembership = "connecte" ;
 			public $NomClasseMembership = "AkSqlMembership" ;
@@ -85,6 +89,10 @@
 			public $NomClasseScriptModifRole = "PvScriptModifRoleSbAdmin2" ;
 			public $NomClasseScriptSupprRole = "PvScriptSupprRoleSbAdmin2" ;
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesSbAdmin2" ;
+			public function ObtientTitreNonConnecte()
+			{
+				return ($this->TitreNonConnecte != "") ? $this->TitreNonConnecte : (($this->UtiliserTitreSiNonConnecte == 1) ? $this->Titre : '') ;
+			}
 			protected function CreeDocWebNonConnecte()
 			{
 				return new PvDocWebNonConnecteSbAdmin2() ;

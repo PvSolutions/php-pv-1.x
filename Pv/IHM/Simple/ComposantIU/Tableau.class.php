@@ -423,11 +423,17 @@
 				$defCol->Formatteur->InclureHeure = $inclureHeure ;
 				return $defCol ;
 			}
-			public function & InsereDefColDateTimeFr($nomDonnees, $libelle="")
+			public function & InsereDefColDateTimeFr($nomDonnees, $libelle="", $aliasDonnees="")
 			{
 				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
 				$defCol->Formatteur = new PvFormatteurColonneDateFr() ;
 				$defCol->Formatteur->InclureHeure = 1 ;
+				return $defCol ;
+			}
+			public function & InsereDefColDetail($nomDonnees, $libelle="", $aliasDonnees="")
+			{
+				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
+				$defCol->Formatteur = new PvFormatteurColonnePlusDetail() ;
 				return $defCol ;
 			}
 			public function & InsereDefColHtml($modeleHtml="", $libelle="")

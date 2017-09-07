@@ -83,12 +83,11 @@
 			protected function RenduInstJS()
 			{
 				$ctn = '' ;
-				$ctn .= '<script type="text/javascript">
-	jQuery(function() {
+				$ctn .= $this->RenduContenuJs(
+'jQuery(function() {
 '.$this->CtnJSCfgInst().'
 '.$this->CtnJSDeclInst().'
-	}) ;
-</script>' ;
+}) ;') ;
 				return $ctn ;
 			}
 		}
@@ -839,9 +838,10 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
 			protected function CtnJSCfgInst()
 			{
 				$this->CfgInst->placeholder = $this->EspaceReserve ;
-				if($this->Valeur != null)
+				if($this->Valeur != null && ! is_array($this->Valeur) && strpos($this->Valeur, ";") === false)
 				{
-					$lignes = $this->FournisseurDonnees->RechExacteElements($this->FiltresSelection, $this->NomColonneValeur, $this->Valeur) ;
+					$valeurSelect = $this->Valeur ;
+					$lignes = $this->FournisseurDonnees->RechExacteElements($this->FiltresSelection, $this->NomColonneValeur, $valeurSelect) ;
 					if(count($lignes))
 					{
 						$this->CfgInst->placeholder = new PvCfgPlaceholderSelect2() ;
@@ -960,6 +960,43 @@ return {
 		{
 			public $id ;
 			public $text ;
+		}
+		
+		class PvTagsSelect2 extends PvSelect2
+		{
+			protected function RenduEditeurBrut()
+			{
+				$ctn = '' ;
+				$valeurs = explode(";", $this->Valeur) ;
+				$lignes = $this->FournisseurDonnees->RechsExactesElements($this->FiltresSelection, $this->NomColonneValeur, $valeurs) ;
+				$ctn .= '<select name="'.htmlspecialchars($this->NomElementHtml).'[]" id="'.$this->IDInstanceCalc.'"'.$this->RenduAttrStyleCSS().' multiple>'.PHP_EOL ;
+				foreach($lignes as $i => $ligne)
+				{
+					$ctn .= '<option value="'.htmlspecialchars($ligne[$this->NomColonneValeur]).'" selected>'.htmlentities($ligne[$this->NomColonneLibelle]).'</option>'.PHP_EOL ;
+				}
+				/*
+				*/
+				$ctn .= '</select>' ;
+				return $ctn ;
+			}
+			protected function InitFonctsInst()
+			{
+				parent::InitFonctsInst() ;
+				$this->FonctsInst[] = new PvFonctInstJQuery("createTag", array("params"), "if (params.term.indexOf('@') === -1) {
+return null;
+}
+return {
+id: params.term,
+text: params.term
+}") ;
+			}
+			protected function CreeCfgInst()
+			{
+				$cfg = new PvCfgSelect2() ;
+				$cfg->tags = true ;
+				$cfg->tokenSeparators = array(",", ";", " ") ;
+				return $cfg ;
+			}
 		}
 		
 		class PvJQueryLightbox extends PvComposantIUBase

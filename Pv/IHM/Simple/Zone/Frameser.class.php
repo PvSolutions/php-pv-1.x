@@ -11,6 +11,7 @@
 		{
 			public $NomPolice = "tahoma" ;
 			public $TaillePolice = "12px" ;
+			public $TailleGrandTitre = "16px" ;
 			public $CouleurPolice = "#666666" ;
 			public $CouleurArrPlanCorps1 = "#EFF4FA" ;
 			public $CouleurBordureCorps1 = "white" ;
@@ -40,7 +41,7 @@
 			public function ContenuDefCSS()
 			{
 				$ctn = '' ;
-				$ctn .= 'body { background:'.$this->CouleurArrPlanDoc.' ; font-family:'.$this->NomPolice.'; font-size:'.$this->TaillePolice.'; color:'.$this->CouleurPolice.'; }'.PHP_EOL ;
+				$ctn .= 'body { background:'.$this->CouleurArrPlanDoc.' ; font-family:'.$this->NomPolice.'; font-size:'.$this->TaillePolice.'; color:'.$this->CouleurPolice.'; padding:0px; }'.PHP_EOL ;
 				$ctn .= 'a:link, a:visited { color:'.$this->CouleurLiens1.'; }'.PHP_EOL ;
 				$ctn .= '.iu-frameser-entete-1 { background-color:'.$this->CouleurArrPlanEntete1.' ; color:'.$this->CouleurContenuEntete1.' ; font-size:14px; font-weight:bold }'.PHP_EOL ;
 				$ctn .= '.iu-frameser-entete-2 { background-color:'.$this->CouleurArrPlanEntete2.' ; color:'.$this->CouleurContenuEntete2.' ; font-size:14px; font-weight:bold }'.PHP_EOL ;
@@ -58,7 +59,7 @@
 				$ctn .= '.RangeeDonnees tr, .RangeeDonnees td, .RangeeDonnees th, .RangeeDonnees { border:0px ; }'.PHP_EOL ;
 				$ctn .= '.RangeeDonnees .Entete { background-color:'.$this->CouleurArrPlanEntete1.'; color:'.$this->CouleurContenuEntete1.'; }'.PHP_EOL ;
 				$ctn .= '.RangeeDonnees .Pair { background-color:'.$this->CouleurArrPlanCorps1.'; color:'.$this->CouleurContenuCorps1.'; }'.PHP_EOL ;
-				$ctn .= '.RangeeDonnees .Impair { background-color:'.$this->CouleurArrPlanCorps2.'; color:'.$this->CouleurContenuCorps2.';   }'.PHP_EOL ;
+				$ctn .= '.RangeeDonnees .Impair { background-color:'.$this->CouleurArrPlanCorps2.'; color:'.$this->CouleurContenuCorps2.'; }'.PHP_EOL ;
 				$ctn .= '.RangeeDonnees .Survole { background-color:'.$this->CouleurArrPlanSurvole.'; color:'.$this->CouleurContenuSurvole.' ; }'.PHP_EOL ;
 				$ctn .= '.RangeeDonnees { border:1px solid '.$this->CouleurArrPlanCorps3.' ; padding:0px; }' ;
 				return $ctn ;
@@ -76,7 +77,7 @@
 			public $ActVoletNav ;
 			public $BarreMenu1VoletNav ;
 			public $BarreMenu2VoletNav ;
-			public $LargeurVoletNav = "250" ;
+			public $LargeurVoletNav = "25%" ;
 			public $NomCadreNav = "navigation" ;
 			public $NomCadrePrinc = "contenu" ;
 			public $LargeurCadrePrinc = "*" ;
@@ -89,7 +90,11 @@
 			public $NomScriptConfidentialite = "confidentialite" ;
 			public $ScriptSupport ;
 			public $NomScriptSupport = "support" ;
+			public $NomClasseCSSTitre = "header_bar" ;
+			public $NomClasseCSSBarreTitre = "icon" ;
+			public $InclureFontAwesome = 1 ;
 			public $InclureSousMenuAccueil = 1 ;
+			public $AutoriserInscription = 1 ;
 			public $SousMenuAccueil ;
 			public $SousMenuConnexion ;
 			public $SousMenuDeconnexion ;
@@ -103,8 +108,30 @@
 			public $SousMenuConfidentialite ;
 			public $SousMenuSupport ;
 			public $BarreMembreCadrePrinc ;
-			public $NomClasseScriptConnexion = "ScriptConnexionFrameser" ;
-			public $NomClasseScriptDeconnexion = "ScriptDeconnexionFrameser" ;
+			public $BarreMenuHaut1 ;
+			public $BarreMenuBas1 ;
+			public $NomClasseScriptRecouvreMP = "PvScriptRecouvreMPFrameser" ;
+			public $NomClasseScriptInscription = "PvScriptInscriptionFrameser" ;
+			public $NomClasseScriptDeconnexion = "PvScriptDeconnexionFrameser" ;
+			public $NomClasseScriptConnexion = "PvScriptConnexionFrameser" ;
+			public $NomClasseScriptChangeMotPasse = "PvScriptChangeMotPasseFrameser" ;
+			public $NomClasseScriptDoitChangerMotPasse = "PvScriptDoitChangerMotPasseFrameser" ;
+			public $NomClasseScriptChangeMPMembre = "PvScriptChangeMPMembreFrameser" ;
+			public $NomClasseScriptAjoutMembre = "PvScriptAjoutMembreMSFrameser" ;
+			public $NomClasseScriptModifMembre = "PvScriptModifMembreMSFrameser" ;
+			public $NomClasseScriptModifPrefs = "PvScriptModifPrefsFrameser" ;
+			public $NomClasseScriptSupprMembre = "PvScriptSupprMembreMSFrameser" ;
+			public $NomClasseScriptListeMembres = "PvScriptListeMembresMSFrameser" ;
+			public $NomClasseScriptAjoutProfil = "PvScriptAjoutProfilMSFrameser" ;
+			public $NomClasseScriptModifProfil = "PvScriptModifProfilMSFrameser" ;
+			public $NomClasseScriptSupprProfil = "PvScriptSupprProfilMSFrameser" ;
+			public $NomClasseScriptListeProfils = "PvScriptListeProfilsMSFrameser" ;
+			public $NomClasseScriptAjoutRole = "PvScriptAjoutRoleMSFrameser" ;
+			public $NomClasseScriptModifRole = "PvScriptModifRoleMSFrameser" ;
+			public $NomClasseScriptSupprRole = "PvScriptSupprRoleMSFrameser" ;
+			public $NomClasseScriptListeRoles = "PvScriptListeRolesMSFrameser" ;
+			public $InclureIconeFa = 1 ;
+			public $ClasseCSSIconeFaDefaut = "fa-file-o" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -232,6 +259,27 @@
 			protected function ChargeAutresMenus2VoletNav()
 			{
 			}
+			public function ChargeBarreMenuHaut1Membership(& $menuHaut1)
+			{
+				$nomScriptAppele = $this->ValeurParamScriptAppele ;
+				$menuRacine = & $menuHaut1->MenuRacine ;
+				$menuRacine->InscritSousMenuUrl("Membres", "?appelleScript=".urlencode($this->NomScriptListeMembres)) ;
+				$menuRacine->InscritSousMenuUrl("Cr&eacute;er membre", "?appelleScript=".urlencode($this->NomScriptAjoutMembre)) ;
+				$menuRacine->InscritSousMenuUrl("Profils", "?appelleScript=".urlencode($this->NomScriptListeProfils)) ;
+				$menuRacine->InscritSousMenuUrl("Cr&eacute;er profil", "?appelleScript=".urlencode($this->NomScriptAjoutProfil)) ;
+				$menuRacine->InscritSousMenuUrl("R&ocirc;les", "?appelleScript=".urlencode($this->NomScriptListeRoles)) ;
+				$menuRacine->InscritSousMenuUrl("Cr&eacute;er r&ocirc;le", "?appelleScript=".urlencode($this->NomScriptAjoutRole)) ;
+			}
+			public function ChargeBarreMenuHaut1NonConnecte(& $menuHaut1)
+			{
+				$nomScriptAppele = $this->ValeurParamScriptAppele ;
+				$menuRacine = & $menuHaut1->MenuRacine ;
+			}
+			public function ChargeBarreMenuHaut1Connecte(& $menuHaut1)
+			{
+				$nomScriptAppele = $this->ValeurParamScriptAppele ;
+				$menuRacine = & $menuHaut1->MenuRacine ;
+			}
 			protected function DetermineEnvironnement(& $script)
 			{
 				parent::DetermineEnvironnement($script) ;
@@ -243,6 +291,44 @@
 				$this->ChargeAutresMenus1VoletNav() ;
 				$this->ChargeMenusAuto2VoletNav() ;
 				$this->ChargeAutresMenus2VoletNav() ;
+				$this->DetermineBarreMenuHaut1() ;
+				$this->DetermineBarreMenuBas1() ;
+			}
+			protected function CreeBarreMenuHaut1()
+			{
+				return new PvBarreLiensRelatifsFrameser() ;
+			}
+			protected function CreeBarreMenuBas1()
+			{
+				return new PvBarreLiensRelatifsFrameser() ;
+			}
+			protected function DetermineBarreMenuHaut1()
+			{
+				$this->BarreMenuHaut1 = $this->CreeBarreMenuHaut1() ;
+				$this->InitBarreMenuHaut1() ;
+				$this->BarreMenuHaut1->AdopteScript("menuHaut1", $this->ScriptAppele) ;
+				$this->BarreMenuHaut1->ChargeConfig() ;
+				if(method_exists($this->ScriptAppele, "ChargeBarreMenuHaut1"))
+				{
+					$this->ScriptAppele->ChargeBarreMenuHaut1($this->BarreMenuHaut1) ;
+				}
+			}
+			protected function InitBarreMenuHaut1()
+			{
+			}
+			protected function DetermineBarreMenuBas1()
+			{
+				$this->BarreMenuBas1 = $this->CreeBarreMenuBas1() ;
+				$this->InitBarreMenuBas1() ;
+				$this->BarreMenuBas1->AdopteScript("menuBas1", $this->ScriptAppele) ;
+				$this->BarreMenuBas1->ChargeConfig() ;
+				if(method_exists($this->ScriptAppele, "ChargeBarreMenuBas1"))
+				{
+					$this->ScriptAppele->ChargeBarreMenuBas1($this->BarreMenuBas1) ;
+				}
+			}
+			protected function InitBarreMenuBas1()
+			{
 			}
 			public function RenduDocument()
 			{
@@ -261,13 +347,66 @@
 			{
 				$ctn = '' ;
 				$ctn .= parent::RenduEnteteCorpsDocument().PHP_EOL ;
+				$ctn .= '<div class="iu-frameser-espace-travail">'.PHP_EOL ;
 				$ctn .= $this->BarreMembreCadrePrinc->RenduDispositif().PHP_EOL ;
 				$ctn .= '<br />' ;
+				return $ctn ;
+			}
+			protected function RenduBarreMenuHaut1()
+			{
+				$ctn = '' ;
+				$script = & $this->ScriptPourRendu ;
+				$ctn .= '<table width="100%" cellpadding="4" cellspacing="2" class="ui-frameser-barre-titre '.$this->NomClasseCSSBarreTitre.'">'.PHP_EOL ;
+				if($script->InclureRenduTitre && $script->Titre != "")
+				{	
+					$ctn .= '<tr>'.PHP_EOL ;
+					$ctn .= '<td class="iu-frameser-entete-1 '.$this->NomClasseCSSTitre.'">'.PHP_EOL ;
+					$ctnIcone = $script->RenduIcone() ;
+					if($ctnIcone == '' && $this->InclureIconeFa)
+					{
+						$ctnIcone = '<span class="fa '.$script->ValAttrSuppl("icone-fa", $this->ClasseCSSIconeFaDefaut).'"></span>' ;
+					}
+					if($ctnIcone != '')
+					{
+						$ctn .= $ctnIcone."&nbsp;&nbsp;" ;
+					}
+					$ctn .= $script->Titre ;
+					$ctn .= '</td>'.PHP_EOL ;
+					$ctn .= '</tr>'.PHP_EOL ;
+				}
+				$ctn .= '<tr>'.PHP_EOL ;
+				$ctn .= '<td>'.PHP_EOL ;
+				$ctn .= $this->BarreMenuHaut1->RenduDispositif().PHP_EOL ;
+				$ctn .= '</td>'.PHP_EOL ;
+				$ctn .= '</tr>'.PHP_EOL ;
+				$ctn .= '</table>'.PHP_EOL ;
+				$ctn .= '<br />'.PHP_EOL ;
+				$script->InclureRenduTitre = 0 ;
+				return $ctn ;
+			}
+			protected function RenduBarreMenuBas1()
+			{
+				$ctn = '' ;
+				$ctnMenuBas = $this->BarreMenuBas1->RenduDispositif() ;
+				if($ctnMenuBas != '')
+				{
+					$ctn .= '<p>'.$ctnMenuBas.'</p>' ;
+				}
+				return $ctn ;
+			}
+			protected function RenduContenuCorpsDocument()
+			{
+				$this->ScriptPourRendu->PrepareRendu() ;
+				$ctn = '' ;
+				$ctn .= $this->RenduBarreMenuHaut1().PHP_EOL ;
+				$ctn .= $this->ScriptPourRendu->RenduDispositif().PHP_EOL ;
+				$ctn .= $this->RenduBarreMenuBas1() ;
 				return $ctn ;
 			}
 			protected function RenduPiedCorpsDocument()
 			{
 				$ctn = '' ;
+				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= parent::RenduPiedCorpsDocument() ;
 				return $ctn ;
 			}
@@ -279,12 +418,18 @@
 				$ctn .= '<!doctype html>'.PHP_EOL ;
 				$ctn .= '<html>'.PHP_EOL ;
 				$ctn .= $this->RenduEnteteDocument() ;
-				$ctn .= '<frameset cols="'.$this->LargeurVoletNav.','.$this->LargeurCadrePrinc.'">
-	<frame src="'.$this->ActVoletNav->ObtientUrl().'" frameborder=0 bordercolor=black scrolling="no" name="'.$this->NomCadreNav.'">
-	<frame src="'.$this->ScriptParDefaut->ObtientUrl().'" frameborder=0 name="'.$this->NomCadrePrinc.'">
-	<noframes>
-		Mettez a jour votre navigateur pour qu\'il prenne en charge des cadres !!!
-	</noframes>' ;
+				$ctn .= '<body style="height:100%; margin:0px;">'.PHP_EOL ;
+				$ctn .= '<table width="100%" cellspacing=0 cellpadding="0" height="100%">
+<tr>
+<td valign="top" width="'.$this->LargeurVoletNav.'" height="100%" align="center">
+<iframe src="'.$this->ActVoletNav->ObtientUrl().'" frameborder=0 bordercolor=0 scrolling="no" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100vh;" name="'.$this->NomCadreNav.'"></iframe>
+</td>
+<td valign="top" width="*" height="100%">
+<iframe width="100%" src="'.$this->ScriptParDefaut->ObtientUrl().'" frameborder=0 name="'.$this->NomCadrePrinc.'" style="height:100vh">
+</td>
+</tr>
+</table>
+</body>' ;
 				$ctn .= '</html>' ;
 				return $ctn ;
 			}
@@ -296,10 +441,16 @@
 				$ctn = '' ;
 				$ctn .= '<div class="logo">' ;
 				$ctn .= '<div><img src="'.$this->ZoneParent->CheminLogo.'" /></div>' ;
-				$ctn .= '<div>' ;
-				$ctn .= '<i>'.$this->ZoneParent->NiveauDev.'</i> - ' ;
-				$ctn .= $this->ZoneParent->NomPublicateur ;
-				$ctn .= '</div>' ;
+				if($this->NomPublicateur != '')
+				{
+					$ctn .= '<div>' ;
+					if($this->ZoneParent->NiveauDev != '')
+					{
+						$ctn .= '<i>'.$this->ZoneParent->NiveauDev.'</i> - ' ;
+					}
+					$ctn .= $this->ZoneParent->NomPublicateur ;
+					$ctn .= '</div>' ;
+				}
 				$ctn .= '<hr />' ;
 				$ctn .= $this->ZoneParent->BarreMenu1VoletNav->RenduDispositif() ;
 				$ctn .= '<hr />' ;
@@ -317,6 +468,7 @@
 			public $LegendeNonConnecte = "Nouveau ?" ;
 			public $LibelleInscription = "Inscription" ;
 			public $LibelleConnexion = "Connexion" ;
+			public $LibelleRecouvreMP = "Mot de passe oubli&eacute;" ;
 			public $LibelleDeconnexion = "Deconnexion" ;
 			public $LibelleModifInfos = "Param&egrave;tres" ;
 			protected function RenduDispositifBrut()
@@ -327,14 +479,16 @@
 				{
 					if($this->LegendeNonConnecte != "")
 					{
-						$ctn .= $this->LegendeNonConnecte." " ;
-						$ctn .= '<span class="sep">|</span> ' ;
+						$ctn .= $this->LegendeNonConnecte ;
+						$ctn .= ' <span class="sep">|</span> ' ;
 					}
 					if($this->ZoneParent->AutoriserInscription == 1)
 					{
 						$ctn .= '<a href="'.$this->ZoneParent->ScriptInscription->ObtientUrl().'">'.$this->LibelleInscription.'</a>' ;
 						$ctn .= ' &bull; ' ;
 					}
+					$ctn .= '<a href="'.$this->ZoneParent->ScriptRecouvreMP->ObtientUrl().'">'.$this->LibelleRecouvreMP.'</a>' ;
+					$ctn .= ' &bull; ' ;
 					$ctn .= '<a href="'.$this->ZoneParent->ScriptConnexion->ObtientUrl().'">'.$this->LibelleConnexion.'</a>' ;
 				}
 				else
@@ -370,68 +524,15 @@
 		
 		class PvScriptBaseFrameser extends PvScriptWebSimple
 		{
-			public $NomClasseCSSTitre = "header_bar" ;
-			public $NomClasseCSSBarreTitre = "icon" ;
-			public $BarreLiensRelatifs ;
-			public $NomElemBarreLiensRelatifs = "barreLiensRelatifs" ;
-			public function DetermineEnvironnement()
-			{
-				parent::DetermineEnvironnement() ;
-				$this->DetermineBarreLiensRelatifs() ;
-			}
-			protected function CreeBarreLiensRelatifs()
-			{
-				return new PvBarreLiensRelatifsFrameser() ;
-			}
-			protected function InitBarreLiensRelatifs()
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
 			{
 			}
-			protected function ChargeBarreLiensRelatifs()
+			public function ChargeBarreMenuBas1(& $menuBas1)
 			{
-			}
-			protected function DetermineBarreLiensRelatifs()
-			{
-				$this->BarreLiensRelatifs = $this->CreeBarreLiensRelatifs() ;
-				$this->InitBarreLiensRelatifs() ;
-				$this->BarreLiensRelatifs->AdopteScript($this->NomElemBarreLiensRelatifs, $this) ;
-				$this->BarreLiensRelatifs->ChargeConfig() ;
-				$this->ChargeBarreLiensRelatifs() ;
-			}
-			protected function RenduDispositifBrut()
-			{
-				$ctn = '' ;
-				$ctn .= $this->RenduBarreTitre().PHP_EOL ;
-				$ctn .= $this->RenduSpecifique() ;
-				return $ctn ;
-			}
-			protected function RenduBarreTitre()
-			{
-				$ctn = '' ;
-				$ctn .= '<table width="100%" cellpadding="4" cellspacing="2" class="ui-frameser-barre-titre '.$this->NomClasseCSSBarreTitre.'">'.PHP_EOL ;
-				if($this->InclureRenduTitre && $this->Titre != "")
-				{	
-					$ctn .= '<tr>'.PHP_EOL ;
-					$ctn .= '<td class="iu-frameser-entete-1 '.$this->NomClasseCSSTitre.'">'.PHP_EOL ;
-					$ctnIcone = $this->RenduIcone() ;
-					if($ctnIcone != '')
-					{
-						$ctn .= $ctnIcone."&nbsp;&nbsp;" ;
-					}
-					$ctn .= $this->Titre ;
-					$ctn .= '</td>'.PHP_EOL ;
-					$ctn .= '</tr>'.PHP_EOL ;
-				}
-				$ctn .= '<tr>'.PHP_EOL ;
-				$ctn .= '<td>'.PHP_EOL ;
-				$ctn .= $this->BarreLiensRelatifs->RenduDispositif().PHP_EOL ;
-				$ctn .= '</td>'.PHP_EOL ;
-				$ctn .= '</tr>'.PHP_EOL ;
-				$ctn .= '</table>'.PHP_EOL ;
-				$ctn .= '<br />'.PHP_EOL ;
-				return $ctn ;
 			}
 		}
-		class ScriptConnexionFrameser extends PvScriptConnexionWeb
+		
+		class PvScriptConnexionFrameser extends PvScriptConnexionWeb
 		{
 			public $NomScriptConnexionReussie = "" ;
 			public $UrlConnexionReussie = "" ;
@@ -447,8 +548,66 @@
 					exit ;
 				}
 			}
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1NonConnecte($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
 		}
-		class ScriptDeconnexionFrameser extends PvScriptDeconnexionWeb
+		class PvScriptInscriptionFrameser extends PvScriptInscriptionWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1NonConnecte($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptRecouvreMPFrameser extends PvScriptRecouvreMPWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1NonConnecte($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		
+		class PvScriptModifPrefsFrameser extends PvScriptModifPrefsWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Connecte($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptChangeMotPasseFrameser extends PvScriptChangeMotPasseWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Connecte($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptDoitChangerMotPasseFrameser extends PvScriptDoitChangerMotPasseWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Connecte($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptDeconnexionFrameser extends PvScriptDeconnexionWeb
 		{
 			public $NomScriptDeconnexionReussie = "" ;
 			public $UrlDeconnexionReussie = "" ;
@@ -460,6 +619,129 @@
 		window.top.location = "?" ;
 </script>' ;
 				exit ;
+			}
+		}
+		
+		class PvScriptListeMembresMSFrameser extends PvScriptListeMembresMSWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Membership($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptAjoutMembreMSFrameser extends PvScriptAjoutMembreMSWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Membership($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptModifMembreMSFrameser extends PvScriptModifMembreMSWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Membership($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptSupprMembreMSFrameser extends PvScriptSupprMembreMSWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Membership($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		
+		class PvScriptListeProfilsMSFrameser extends PvScriptListeProfilsMSWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Membership($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptAjoutProfilMSFrameser extends PvScriptAjoutProfilMSWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Membership($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptModifProfilMSFrameser extends PvScriptModifProfilMSWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Membership($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptSupprProfilMSFrameser extends PvScriptSupprProfilMSWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Membership($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		
+		class PvScriptListeRolesMSFrameser extends PvScriptListeRolesMSWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Membership($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptAjoutRoleMSFrameser extends PvScriptAjoutRoleMSWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Membership($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptModifRoleMSFrameser extends PvScriptModifRoleMSWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Membership($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
+			}
+		}
+		class PvScriptSupprRoleMSFrameser extends PvScriptSupprRoleMSWeb
+		{
+			public function ChargeBarreMenuHaut1(& $menuHaut1)
+			{
+				$this->ZoneParent->ChargeBarreMenuHaut1Membership($menuHaut1) ;
+			}
+			public function ChargeBarreMenuBas1(& $menuBas1)
+			{
 			}
 		}
 	}

@@ -68,6 +68,7 @@
 			public $IdTransaction ;
 			public $Designation ;
 			public $Montant ;
+			public $Langage ;
 			public $Monnaie ;
 			public $InfosSuppl ;
 			public $ContenuRetourBrut = null ;
@@ -93,12 +94,14 @@
 			public $Titre = "Ne rien faire" ;
 			public $Description = "" ;
 			protected $TransactionValidee = 0 ;
+			protected $DelaiExpirCfgsTransact = 24 ;
 			protected $NomParamResultat = "resultat" ;
 			protected $ValeurParamResultat = "" ;
 			protected $ValeurParamTermine = "paiement_termine" ;
 			protected $ValeurParamAnnule = "paiement_annule" ;
 			protected $EnregistrerTransaction = 0 ;
 			protected $NomTableTransaction = "transaction_paiement" ;
+			protected $MsgPaiementNonFinalise = "Votre paiement a r&eacute;ussi, mais aucune action n'a &eacute;t&eacute; trouv&eacute;e pour le suivi." ;
 			public $CheminRelatifRepTransacts = "." ;
 			public function CheminRepTransacts()
 			{
@@ -146,12 +149,40 @@
 							$ctnFich .= fgets($resFich) ;
 						}
 						fclose($resFich) ;
-						unlink($cheminFich) ;
 					}
 				}
 				if($ctnFich != "")
 				{
 					$this->_Transaction->Cfg = unserialize($ctnFich) ;
+				}
+			}
+			protected function VideCfgsTransactsExpirs()
+			{
+				if(is_dir($this->CheminRepTransacts()))
+				{
+					$dh = opendir($this->CheminRepTransacts()) ;
+					$timestampActuel = date("U") ;
+					if(is_resource($dh))
+					{
+						while(($nomFich = readdir($dh)) !== false)
+						{
+							if($nomFich == '.' || $nomFich == '..')
+							{
+								continue ;
+							}
+							$cheminFich = $this->CheminRepTransacts()."/".$nomFich ;
+							$infoFich = pathinfo($cheminFich) ;
+							if($infoFich["extension"] != "dat")
+							{
+								continue ;
+							}
+							if($timestampActuel > filemtime($cheminFich) + $this->DelaiExpirCfgsTransact * 3600)
+							{
+								unlink($cheminFich) ;
+							}
+						}
+						closedir($dh) ;
+					}
 				}
 			}
 			protected function SauveTransaction()
@@ -275,7 +306,15 @@
 				$this->DetermineResultatPaiement() ;
 				if($this->ValeurParamResultat == $this->ValeurParamTermine)
 				{
+					$this->RestaureTransactionSession() ;
 					$this->DefinitEtatExecution("termine") ;
+				}
+				elseif($this->ValeurParamResultat == $this->ValeurParamAnnule)
+				{
+					$this->RestaureTransactionSession() ;
+					$this->DefinitEtatExecution("annule") ;
+					$this->ConfirmeTransactionAnnuleeAuto() ;
+					$this->ConfirmeTransactionAnnulee() ;
 				}
 			}
 			protected function DetermineTransactionSoumise()
@@ -341,6 +380,11 @@
 					$svcAprPaiement = & $this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement] ;
 					$svcAprPaiement->ConfirmeSucces($this->_Transaction) ;
 				}
+				else
+				{
+					echo '<p style="color:red">'.$this->MsgPaiementNonFinalise.'</p>' ;
+					exit ;
+				}
 			}
 			protected function ConfirmeTransactionReussie()
 			{
@@ -360,6 +404,7 @@
 			protected function ConfirmeTransactionAnnuleeAuto()
 			{
 				$this->ImporteFichCfgTransition() ;
+				// print_r($this->_Transaction->Cfg) ;
 				if($this->_Transaction->Cfg->NomSvcAprPaiement != '' && isset($this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement]))
 				{
 					$svcAprPaiement = & $this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement] ;
@@ -387,8 +432,18 @@
 					exit ;
 				}
 			}
+			protected function SauveTransactionSession()
+			{
+				$_SESSION[$this->NomElementApplication."_id_transaction"] = $this->_Transaction->IdTransaction ;
+			}
+			protected function RestaureTransactionSession()
+			{
+				$this->_Transaction->IdTransaction = $_SESSION[$this->NomElementApplication."_id_transaction"] ;
+				unset($_SESSION[$this->NomElementApplication."_id_transaction"]) ;
+			}
 			public function Execute()
 			{
+				$this->VideCfgsTransactsExpirs() ;
 				$this->RestaureTransactionEnCours() ;
 				if($this->_Transaction->Montant != "")
 				{
@@ -424,6 +479,7 @@
 				$this->PrepareTransaction() ;
 				if($this->_EtatExecution->Id == "verification_ok")
 				{
+					$this->SauveTransactionSession() ;
 					$this->SoumetTransaction() ;
 				}
 				else

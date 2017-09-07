@@ -90,6 +90,9 @@
 			public function RechExacteElements($filtres, $nomColonne, $valeur)
 			{
 			}
+			public function RechsExactesElements($filtres, $nomColonne, $valeurs)
+			{
+			}
 			public function RechDebuteElements($filtres, $nomColonnes, $valeur)
 			{
 			}
@@ -477,8 +480,7 @@
 					{
 						continue ;
 					}
-					$valeur = $filtre->Lie() ;
-					// echo $filtre->ValeurParametre.' hhh' ;
+					$valeur = $filtre->LiePourTraitement() ;
 					if($filtre->NePasInclure())
 					{
 						continue ;
@@ -504,7 +506,7 @@
 					{
 						continue ;
 					}
-					$valeur = $filtre->Lie() ;
+					$valeur = $filtre->LiePourTraitement() ;
 					if($filtre->NePasInclure())
 					{
 						continue ;
@@ -630,6 +632,7 @@
 				{
 					$expression = $this->ExtraitExpressionFiltres($filtres) ;
 					$texteColonnes = $this->ExtraitTexteColonnes($colonnes) ;
+					// print_r($expression) ;
 					$requeteSql = "select count(0) TOTAL from ".$this->ChaineRequeteSelection() ;
 					if(count($expression->Parametres) > 0)
 					{
@@ -795,6 +798,33 @@
 					$requeteSql .= ' where '.$condFiltre ;
 				}
 				$lignes = $this->BaseDonnees->FetchSqlRows($requeteSql, array_merge($expression->Parametres, $this->ParamsSelection, array($nomFiltre => $valeur))) ;
+				return $lignes ;
+			}
+			public function RechsExactesElements($filtres, $nomColonne, $valeurs)
+			{
+				$expression = $this->ExtraitExpressionFiltres($filtres) ;
+				$requeteSql = "select * from ".$this->RequeteSelection." t1" ;
+				$nomFiltre = uniqid('Flt') ;
+				$filtresValeur = array() ;
+				$condFiltre = '' ;
+				foreach($valeurs as $i => $valeur)
+				{
+					if($condFiltre != '')
+					{
+						$condFiltre .= ' or ' ;
+					}
+					$condFiltre .= $this->BaseDonnees->EscapeVariableName($nomColonne).' = '.$this->BaseDonnees->ParamPrefix.$nomFiltre.$i ;
+					$filtresValeur[$nomFiltre.$i] = $valeur ;
+				}
+				if($expression->Texte != "")
+				{
+					$requeteSql .= " where ".$expression->Texte.' and ('.$condFiltre.')' ;
+				}
+				else
+				{
+					$requeteSql .= ' where ('.$condFiltre.')' ;
+				}
+				$lignes = $this->BaseDonnees->FetchSqlRows($requeteSql, array_merge($expression->Parametres, $this->ParamsSelection, $filtresValeur)) ;
 				return $lignes ;
 			}
 		}

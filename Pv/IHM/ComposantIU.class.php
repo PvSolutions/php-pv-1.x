@@ -200,7 +200,7 @@
 			{
 				if($this->EstPasNul($this->ZoneParent) && $this->ZoneParent->InclureCtnJsEntete == 0)
 				{
-					return $this->ZoneParent->InscritContenuCSS($ctn) ;
+					return $this->ZoneParent->InscritContenuJs($ctn) ;
 				}
 				return '<script type="text/javascript">
 '.$ctn.'

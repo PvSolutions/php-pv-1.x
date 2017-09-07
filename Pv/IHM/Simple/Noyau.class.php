@@ -301,6 +301,67 @@
 				return $ctn ;
 			}
 		}
+		class PvFormatteurColonnePlusDetail extends PvFormatteurColonneDonnees
+		{
+			public $MaxCaracteresIntro = 40 ;
+			public $TitreLienDetails = "D&eacute;tails" ;
+			protected $RenduSourceInclus = 0 ;
+			protected $IndexLigne = 0 ;
+			public function Encode(& $script, $colonne, $ligne)
+			{
+				$valeur = '' ;
+				if(isset($ligne[$colonne->NomDonnees]))
+					$valeur = $ligne[$colonne->NomDonnees] ;
+				$valeurIntro = substr($valeur, 0, $this->MaxCaracteresIntro) ;
+				if(strlen($valeurIntro) < strlen($valeur))
+				{
+					$valeurIntro .= "..." ;
+				}
+				$this->IndexLigne++ ;
+				if(strlen($valeur) == strlen($valeurIntro))
+				{
+					return $valeur ;
+				}
+				$rendu = '' ;
+				if($this->RenduSourceInclus == 0)
+				{
+					$rendu .= '<style type="text/css">
+.detail-'.$this->IDInstanceCalc.' {
+padding:2px ;
+position:relative ;
+top:-17px ;
+left:0px ;
+display:none ;
+width:100% ;
+}
+</style>
+<script type="text/javascript">
+Afficheur'.$this->IDInstanceCalc.' = function() {
+var _self = this ;
+this.idsTimeout = {} ;
+this.affiche = function(index) {
+var elem = _self.obtientElemDOM(index) ;
+elem.style.display = "block" ;
+} ;
+this.cache = function(index) {
+var elem = _self.obtientElemDOM(index) ;
+elem.style.display = "none" ;
+} ;
+this.obtientElemDOM = function(index) {
+return document.getElementById("detail'.$this->IDInstanceCalc.'_" + index) ;
+}
+}
+var afficheur'.$this->IDInstanceCalc.' = new Afficheur'.$this->IDInstanceCalc.'() ;
+</script>' ;
+					$this->RenduSourceInclus = 1 ;
+				}
+				$rendu .= '<div>
+<span onmouseover="afficheur'.$this->IDInstanceCalc.'.affiche('.$this->IndexLigne.') ;">'.$valeurIntro.'</span>
+<div id="detail'.$this->IDInstanceCalc.'_'.$this->IndexLigne.'" onmouseout="afficheur'.$this->IDInstanceCalc.'.cache('.$this->IndexLigne.') ;" class="detail-'.$this->IDInstanceCalc.'"><textarea>'.htmlentities($valeur).'</textarea></div>
+</div>' ;
+				return $rendu ;
+			}
+		}
 		
 		class PvFormatteurColonneEditable extends PvFormatteurColonneDonnees
 		{
@@ -425,6 +486,7 @@
 			public $AliasDonnees ;
 			public $Libelle ;
 			public $Formatteur = null ;
+			public $CorrecteurValeur = null ;
 			public $TriPossible = 1 ;
 			public $EncodeHtmlValeur = 1 ;
 			public $ExtracteurValeur = null ;
@@ -478,11 +540,20 @@
 			}
 			public function FormatteValeur(& $composant, $ligne)
 			{
+				$val = null ;
 				if($this->EstNul($this->Formatteur))
 				{
-					return $this->FormatteValeurInt($composant, $ligne) ;
+					$val = $this->FormatteValeurInt($composant, $ligne) ;
 				}
-				return $this->Formatteur->Encode($composant, $this, $ligne) ;
+				else
+				{
+					$val = $this->Formatteur->Encode($composant, $this, $ligne) ;
+				}
+				if($this->EstPasNul($this->CorrecteurValeur))
+				{
+					$val = $this->CorrecteurValeur->AppliquePourColonne($val, $this) ;
+				}
+				return $val ;
 			}
 			protected function FormatteValeurInt(& $composant, $ligne)
 			{
@@ -538,6 +609,18 @@
 			{
 				return $valeur ;
 			}
+			public function AppliquePourRendu($valeur, & $filtre)
+			{
+				return $valeur ;
+			}
+			public function AppliquePourTraitement($valeur, & $filtre)
+			{
+				return $valeur ;
+			}
+			public function AppliquePourColonne($valeur, & $defCol)
+			{
+				return $valeur ;
+			}
 		}
 		class PvCorrecteurValeurEncodeeUtf8 extends PvCorrecteurValeurFiltreBase
 		{
@@ -551,7 +634,7 @@
 			public function Applique($valeur, & $filtre)
 			{
 				// return slugify($valeur) ;
-				$a = array('À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ð', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'ß', 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'Ð', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'N', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'Œ', 'œ', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'Š', 'š', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Ÿ', 'Z', 'z', 'Z', 'z', 'Ž', 'ž', 'z', 'ƒ');
+				$a = array('Ã€', 'Ã', 'Ã‚', 'Ãƒ', 'Ã„', 'Ã…', 'Ã†', 'Ã‡', 'Ãˆ', 'Ã‰', 'ÃŠ', 'Ã‹', 'ÃŒ', 'Ã', 'ÃŽ', 'Ã', 'Ã', 'Ã‘', 'Ã’', 'Ã“', 'Ã”', 'Ã•', 'Ã–', 'Ã˜', 'Ã™', 'Ãš', 'Ã›', 'Ãœ', 'Ã', 'ÃŸ', 'Ã ', 'Ã¡', 'Ã¢', 'Ã£', 'Ã¤', 'Ã¥', 'Ã¦', 'Ã§', 'Ã¨', 'Ã©', 'Ãª', 'Ã«', 'Ã¬', 'Ã­', 'Ã®', 'Ã¯', 'Ã±', 'Ã²', 'Ã³', 'Ã´', 'Ãµ', 'Ã¶', 'Ã¸', 'Ã¹', 'Ãº', 'Ã»', 'Ã¼', 'Ã½', 'Ã¿', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'Ã', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'N', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'Å’', 'Å“', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'Å ', 'Å¡', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Å¸', 'Z', 'z', 'Z', 'z', 'Å½', 'Å¾', 'z', 'Æ’');
 				$b = array('A', 'A', 'A', 'A', 'A', 'A', 'AE', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'D', 'N', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 's', 'a', 'a', 'a', 'a', 'a', 'a', 'ae', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'D', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'N', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'OE', 'oe', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'S', 's', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Y', 'Z', 'z', 'Z', 'z', 'Z', 'z', 'z', 'f');
 				return str_replace($a, $b, $valeur);
 			}
@@ -622,7 +705,7 @@
 			public $NomParametreLie = "" ;
 			public $NomParametreDonnees = "" ;
 			public $AliasParametreDonnees = "" ;
-			public $NomClasseLiaison = null ;
+			public $NomClasseLiaison ;
 			public $ExpressionDonnees = "" ;
 			public $NomColonneLiee = "" ;
 			public $ExpressionColonneLiee = "" ;
@@ -640,8 +723,8 @@
 			public $NePasLierParametre = 0 ;
 			public $NePasIntegrerParametre = 0 ;
 			public $AppliquerCorrecteurValeur = 1 ;
-			public $CorrecteurValeur = null ;
-			public $FormatteurEtiquette = null ;
+			public $CorrecteurValeur ;
+			public $FormatteurEtiquette ;
 			public function ImpressionEnCours()
 			{
 				return $this->EstPasNul($this->ZoneParent) && $this->ZoneParent->ImpressionEnCours() ;
@@ -812,7 +895,7 @@
 				{
 					return "(Composant nul)" ;
 				}
-				$this->Composant->Valeur = $this->Lie() ;
+				$this->Composant->Valeur = $this->LiePourRendu() ;
 				$this->Composant->EspaceReserve = $this->EspaceReserve ;
 				if($this->Composant->EspaceReserve == "" && $this->ZoneParent->LibelleEspaceReserveFiltres == 1)
 				{
@@ -837,7 +920,7 @@
 				{
 					return "(Composant nul)" ;
 				}
-				$this->Composant->Valeur = $this->FormatteurEtiquette->Applique(html_entity_decode($this->Lie()), $this) ;
+				$this->Composant->Valeur = $this->FormatteurEtiquette->Applique($this->LiePourRendu(), $this) ;
 				$this->Composant->FiltreParent = $this ;
 				$ctn = $this->Composant->RenduEtiquette() ;
 				$this->Composant->FiltreParent = null ;
@@ -876,6 +959,24 @@
 			{
 				$valTemp = $this->Lie() ;
 				return $valTemp ;
+			}
+			public function LiePourRendu()
+			{
+				$valeur = $this->Lie() ;
+				if($valeur !== $this->ValeurVide && $this->EstPasNul($this->CorrecteurValeur))
+				{
+					$valeur = $this->CorrecteurValeur->AppliquePourRendu($valeur, $this) ;
+				}
+				return $valeur ;
+			}
+			public function LiePourTraitement()
+			{
+				$valeur = $this->Lie() ;
+				if($valeur !== $this->ValeurVide && $this->EstPasNul($this->CorrecteurValeur))
+				{
+					$valeur = $this->CorrecteurValeur->AppliquePourTraitement($valeur, $this) ;
+				}
+				return $valeur ;
 			}
 		}
 		class PvFiltreDonneesFixe extends PvFiltreDonneesBase

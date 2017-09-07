@@ -2,7 +2,10 @@
 
 	if(! defined("COMMON_DB_INCLUDED"))
 	{
-
+		if(! defined('COMMON_ENCODING_SET_DB_INCLUDED'))
+		{
+			include dirname(__FILE__)."/EncodingSet.class.php" ;
+		}
 		define('COMMON_DB_INCLUDED', 1) ;
 		
 		class AbstractSqlVariableDefinition
@@ -255,6 +258,7 @@
 			
 			var $CharacterEncoding = "utf-8" ;
 			
+			var $EncodingSet ;
 			public function __destruct()
 			{
 				if(! $this->AutoCloseConnection && $this->Connection != false)
@@ -1334,6 +1338,7 @@
 			}
 			public function __construct()
 			{
+				$this->EncodingSet = new DefaultEncodingSetDB() ;
 				$this->RegisterShutdownScript() ;
 				$this->InitConnectionParams() ;
 			}
@@ -1493,13 +1498,10 @@
 			var $StoredProcConnection = false ;
 			function ExecFixCharacterEncoding()
 			{
+				// mysql_query('SET NAMES '.$this->CharacterEncoding, $this->Connection) ;
+				mysql_query('SET CHARACTER SET '.$this->CharacterEncoding, $this->Connection) ;
 				mysql_set_charset($this->CharacterEncoding, $this->Connection) ;
 				/*
-				$ok = mysql_query('SET NAMES '.$this->CharacterEncoding, $this->Connection) ;
-				if(is_resource($ok))
-				{
-					mysql_free_result($ok) ;
-				}
 				*/
 			}
 			function SqlConcat($list)
@@ -1952,7 +1954,12 @@
 			var $VendorMaxVersion = "7" ;
 			function ExecFixCharacterEncoding()
 			{
-				mysqli_set_charset($this->Connection, $this->CharacterEncoding) ;
+				// $ok = mysqli_query('SET NAMES '.$this->CharacterEncoding, $this->Connection) ;
+				if(is_resource($this->Connection))
+				{
+					mysqli_query($this->Connection, 'SET CHARACTER SET '.$this->CharacterEncoding) ;
+					mysqli_set_charset($this->Connection, $this->CharacterEncoding) ;
+				}
 			}
 			function EscapeTableName($tableName)
 			{

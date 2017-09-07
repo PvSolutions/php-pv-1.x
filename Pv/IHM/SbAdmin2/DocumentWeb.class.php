@@ -115,6 +115,26 @@ jQuery(function() {
 			protected function RemplitLibrairiesSpec(& $zone)
 			{
 			}
+			public function RenduTitre(& $zone)
+			{
+				$ctn = '' ;
+				$titre = $zone->ObtientTitreNonConnecte() ;
+				if($titre == '')
+				{
+					return '' ;
+				}
+				return '<h1 align="center">'.$titre.'</h1><br />'.PHP_EOL ;
+			}
+			public function RenduArrPlan(& $zone)
+			{
+				if($zone->CheminImageArrPlanNonConnecte == "")
+				{
+					return "" ;
+				}
+				$ctn = '' ;
+				$ctn .= '<img src="'.$zone->CheminImageArrPlanNonConnecte.'" style="position:absolute; width:100%; height:100%; z-index:-100000; left:0px" border="0" />'.PHP_EOL ;
+				return $ctn ;
+			}
 			public function RenduEntete(& $zone)
 			{
 				$scriptRendu = & $zone->ScriptPourRendu ;
@@ -123,6 +143,8 @@ jQuery(function() {
 <div class="row">
 <div class="col-md-4 col-md-offset-4">
 <div class="login-panel panel panel-default">'.PHP_EOL ;
+				$ctn .= $this->RenduArrPlan($zone) ;
+				$ctn .= $this->RenduTitre($zone) ;
 				$ctn .= '<div class="panel-heading">
 <h3 class="panel-title">'.$scriptRendu->Titre.'</h3>
 </div>'.PHP_EOL ;
@@ -244,6 +266,16 @@ jQuery(function() {
 				$zone->InscritContenuJs($this->CtnJsInitSbAdmin($zone)) ;
 				$zone->InscritLienJs($zone->CheminJsMetisMenu) ;
 				$this->DetermineComposants($zone) ;
+				if($zone->CouleurTexteSidebars != '')
+				{
+					$zone->InscritContenuCSS('.sidebar ul li a
+{
+color:'.$zone->CouleurTexteSidebars.' ;
+}
+.navbar-default .active, .navbar-default a:hover, .sidebar .in a {
+color:'.$zone->CouleurTexteSidebars.' ;
+}') ;
+				}
 			}
 			public function RenduEntete(& $zone)
 			{

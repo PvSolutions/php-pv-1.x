@@ -66,6 +66,20 @@
 		{
 		}
 		
+		class PvBarreMenuPrincGoog extends PvListeMenuHoriz
+		{
+			public $LargeurSousMenu = "" ;
+			protected function RenduSousMenu(& $sousMenu)
+			{
+				$ctn = '' ;
+				$ctn .= $this->RenduTagOuvrLien($sousMenu) ;
+				$ctn .= $this->RenduTitreMenu($sousMenu) ;
+				$ctn .= $this->RenduTagFermLien($sousMenu) ;
+				return $ctn ;
+			}
+		}
+
+		
 		class PvZoneGoog extends PvZoneWebSimple
 		{
 			public $NomLogo = "GooG" ;
@@ -75,9 +89,11 @@
 			public $Couleur1Logo = "#CC0066" ;
 			public $Couleur2Logo = "#336600" ;
 			public $TaillePoliceLogo = "48px" ;
+			public $LargeurEspaceTravail = "90%" ;
 			public $MargeCopyright = "8px" ;
 			public $NomClasseHabillage = null ;
 			public $BarreMenu ;
+			public $UtiliserDocumentWeb = 1 ;
 			public $InclureMenuAccueil = 1 ;
 			public $InclureMenuMembership = 1 ;
 			public $TitreMenuAccueil = "Accueil" ;
@@ -106,7 +122,7 @@
 			}
 			protected function CreeBarreMenu()
 			{
-				return new PvListeMenuHoriz() ;
+				return new PvBarreMenuPrincGoog() ;
 			}
 			protected function ChargeBarreMenu()
 			{
@@ -166,13 +182,17 @@
 				$ctn = parent::RenduEnteteCorpsDocument().PHP_EOL ;
 				$ctn .= $this->RenduBlocLogo().PHP_EOL ;
 				$ctn .= $this->RenduBarreMenu().PHP_EOL ;
-				$ctn .= '<div class="iu-goog-espace-travail">' ;
+				$ctn .= '<table align="center" width="'.$this->LargeurEspaceTravail.'" class="iu-goog-espace-travail">'.PHP_EOL ;
+				$ctn .= '<tr>'.PHP_EOL ;
+				$ctn .= '<td width="100%">'.PHP_EOL ;
 				return $ctn ;
 			}
 			protected function RenduPiedCorpsDocument()
 			{
 				$ctn = '' ;
-				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</td>'.PHP_EOL ;
+				$ctn .= '</tr>'.PHP_EOL ;
+				$ctn .= '</table>'.PHP_EOL ;
 				$ctn .= $this->RenduBlocCopyright().PHP_EOL ;
 				$ctn .= parent::RenduPiedCorpsDocument() ;
 				return $ctn ;

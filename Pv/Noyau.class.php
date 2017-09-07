@@ -10,6 +10,10 @@
 		{
 			include dirname(__FILE__)."/../misc/utils.php" ;
 		}
+		if(! defined('FORCE_ENCODING'))
+		{
+			include dirname(__FILE__)."/../misc/ForceEncoding.class.php" ;
+		}
 		if(! defined('PERS_ZIP_SLICE'))
 		{
 			include dirname(__FILE__)."/../misc/PersZip.class.php" ;
@@ -193,7 +197,7 @@
 			public $CtrlTachesProgs ;
 			public $CtrlServsPersists ;
 			public $ChemRelRegServsPersists ;
-			protected $_ClientsMail = array() ;
+			public $NomsInterfsPaiement = array() ;
 			public function ObtientChemRelRegServsPersists()
 			{
 				return dirname(__FILE__)."/".$this->CheminFichierRelatif."/".$this->ChemRelRegServsPersists ;
@@ -240,6 +244,25 @@
 			}
 			protected function ChargeBasesDonnees()
 			{
+			}
+			public function & InsereInterfPaiement($nom, $interf)
+			{
+				$interf = $this->InsereIHM($nom, $interf) ;
+				$this->NomsInterfsPaiement[] = $nom ;
+				return $interf ;
+			}
+			public function & InterfsPaiement()
+			{
+				$results = array() ;
+				foreach($this->NomsInterfsPaiement as $i => $nom)
+				{
+					$results[$nom] = & $this->IHMs[$nom] ;
+				}
+				return $results ;
+			}
+			public function & ExisteInterfPaiement($nom)
+			{
+				return in_array($nom, $this->NomsInterfsPaiement) ;
 			}
 			public function Traduit($nomExpr, $params=array(), $valParDefaut='', $nomTrad='')
 			{
@@ -350,24 +373,6 @@
 			{
 				$this->BasesDonnees[$nom] = & $bd ;
 				// $this->InscritElement($nom, $bd) ;
-			}
-			public function InscritClientMail($nom, & $client)
-			{
-				$this->_ClientsMail[$nom] = & $client ;
-			}
-			public function InsereClientMail($nom, $client)
-			{
-				$this->InscritClientMail($nom, $client) ;
-				return $client ;
-			}
-			public function & ClientsMail()
-			{
-				return $this->_ClientsMail ;
-			}
-			public function & ClientMailNomme($nom)
-			{
-				$client = (isset($this->_ClientsMail[$nom])) ? $this->_ClientsMail[$nom] : null ;
-				return $client ;
 			}
 			public function EnregIHM(& $ihm)
 			{

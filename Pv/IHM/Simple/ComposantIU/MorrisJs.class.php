@@ -28,14 +28,15 @@
 			{
 				parent::InitConfig() ;
 				$this->CfgInit = new PvCfgChartMorrisJs() ;
+				$this->CfgInit->element = $this->IDInstanceCalc ;
 			}
 			public function RenduSourceBrut()
 			{
 				$ctn = '' ;
 				$ctn .= $this->RenduInscritLienJs($this->CheminFichierJs) ;
 				$ctn .= $this->RenduInscritContenuJs('jQuery(function() {
-	Morris.'.$this->TypeChart.'('.svc_json_encode($this->CfgInit).'") ;
-}') ;
+	Morris.'.$this->TypeChart.'('.svc_json_encode($this->CfgInit).') ;
+}) ;') ;
 				return $ctn ;
 			}
 			public function CalculeElementsRendu()
@@ -45,7 +46,6 @@
 				{
 					return ;
 				}
-				$this->CfgInit->element = $this->IDInstanceCalc ;
 				$fourn = & $this->FournisseurDonnees ;
 				$lgns = $fourn->SelectElements(array(), $this->ObtientFiltresSelection()) ;
 				if(is_array($lgns))

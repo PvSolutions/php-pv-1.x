@@ -6,7 +6,7 @@ Il possède des classes pour :
 *	des serveurs socket
 *	des tâches programmées
 *	des clients de bases de données
-## Usage
+## Exemple d'usage
 * lib/Application.class.php
 ```php
 include dirname(__FILE__)."/../php-pv/Pv/Base.class.php" ;
@@ -94,9 +94,9 @@ include dirname(__FILE__)."/../index.php" ;
 include dirname(__FILE__)."/../index.php" ;
 ```
 Vous pouvez tester les URLs suivantes, avec <url_racine> comme l'URL du dossier :
-http://<url_racine>/index.php
-http://<url_racine>/services/service1.php
-http://<url_racine>/services/tache1.php
+* http://<url_racine>/index.php (Classe MaZone1)
+* http://<url_racine>/services/service1.php (Classe MonServicePersist1)
+* http://<url_racine>/services/tache1.php (Classe MaTacheProg1)
 
 ## Pré-requis 
 * PHP >= 5.1

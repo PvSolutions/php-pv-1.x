@@ -38,7 +38,7 @@
 			var $RequestFilesData = array() ;
 			var $RequestQueryRawEncoding = "1" ;
 			var $RequestHeaders = array() ;
-			var $RequestHeaderData = "" ;
+			var $RequestHeadersData = "" ;
 			var $RequestContentType = "" ;
 			var $RequestCharset = "utf-8" ;
 			var $RequestBoundary = "" ;
@@ -481,35 +481,39 @@
 					}
 				}
 			}
-			function WriteHeadersRequest($headers)
+			function BuildHeadersRequest($headers)
 			{
 				// Send headers
-				$this->RequestHeaderData = "" ;
+				$this->RequestHeadersData = "" ;
 				// Building the page
 				$page = "" ;
 				$page = $this->RequestUrlParts['path'] ;
 				if($this->RequestUrlParts['query'] != "")
 					$page .= '?' . $this->RequestUrlParts['query'] ;
 				if($this->RequestMethod == "POST") {
-					$this->RequestHeaderData .= "POST $page HTTP/1.1\r\n";
+					$this->RequestHeadersData .= "POST $page HTTP/1.1\r\n";
 				}
 				else {
-					$this->RequestHeaderData .= "GET $page HTTP/1.0\r\n"; //HTTP/1.0 is much easier to handle than HTTP/1.1 than GET
+					$this->RequestHeadersData .= "GET $page HTTP/1.0\r\n"; //HTTP/1.0 is much easier to handle than HTTP/1.1 than GET
 				}
 				$headers = array_merge($this->RequestHeaders, $headers) ;
 				foreach($headers as $name => $value)
 				{
-					$this->RequestHeaderData .= $name.": ".$value."\r\n" ;
+					$this->RequestHeadersData .= $name.": ".$value."\r\n" ;
 				}
 				if(count($this->RequestCookies[$this->CookieHost()]))
 				{
 					$cookieList = $this->BuildCookieHeader($this->RequestCookies[$this->CookieHost()], $this->RequestUrlParts["path"]);
 					if($cookieList !== false)
 					{
-						$this->RequestHeaderData .= "Cookie: ".$cookieList."\r\n" ;
+						$this->RequestHeadersData .= "Cookie: ".$cookieList."\r\n" ;
 					}
 				}
-				fputs($this->RequestOutput, $this->RequestHeaderData."\r\n") ;
+			}
+			function WriteHeadersRequest($headers)
+			{
+				$this->BuildHeadersRequest($headers) ;
+				fputs($this->RequestOutput, $this->RequestHeadersData."\r\n") ;
 			}
 			function CalculateRequestContentLength()
 			{
@@ -747,6 +751,42 @@
 				$result = $this->GetUrl($url, $headers, "", $postData) ;
 				$this->AutoSetContentType = $oldContentType ;
 				return $result ;
+			}
+			function GetRequestContents()
+			{
+				$ctn = '' ;
+				if($this->RequestHeadersData != '')
+				{
+					$ctn .= $this->RequestHeadersData."\r\n\r\n" ;
+				}
+				if($this->RequestMethod == "POST")
+				{
+					// Case of the string
+					if($this->RequestPostDataType == "string")
+					{
+						$ctn .= $this->RequestPostData[0] ;
+					}
+					elseif(! $this->RequestFileUploadActivated)
+					{
+						$requestEntryCount = count($this->RequestPostData) ;
+						$requestPostData = "" ;
+						for($i=0; $i <$requestEntryCount; $i++)
+						{
+							$n = $this->RequestPostData[$i][0] ;
+							$v = $this->RequestPostData[$i][1] ;
+							$requestPart = (($i > 0) ? "&" : "").$this->CallRequestUrlEncode($n)."=".$this->CallRequestUrlEncode($v) ;
+							$ctn .= $requestPart ;
+						}
+					}
+				}
+				return $ctn ;
+			}
+			public function GetResponseContents()
+			{
+				$ctn = '' ;
+				$ctn .= $this->ResponseHeadersData."\r\n\r\n" ;
+				$ctn .= $this->ResponseData ;
+				return $ctn ;
 			}
 		}
 	}

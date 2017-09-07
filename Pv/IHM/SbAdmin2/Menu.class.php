@@ -116,6 +116,7 @@
 			{
 				$ctn = '' ;
 				$classeFa = $menu->ObtientValCfgSpec("classe_fa", "fa-bars") ;
+				$estDeroule = $menu->ObtientValCfgSpec("est_deroule") ;
 				$ctn .= '<a href="'.htmlspecialchars($menu->ObtientUrl()).'"'.(($menu->FenetreCible != '') ? ' target="'.htmlspecialchars($menu->FenetreCible).'"' : '').'><i class="fa '.$classeFa.' fa-fw"></i> '.$menu->ObtientTitre() ;
 				$sousMenus = $menu->SousMenusAffichables() ;
 				if(count($sousMenus) > 0)
@@ -125,7 +126,7 @@
 				$ctn .= '</a>' ;
 				if(count($sousMenus) > 0)
 				{
-					$ctn .= PHP_EOL .''.PHP_EOL .'<ul class="nav nav-second-level">'.PHP_EOL ;
+					$ctn .= PHP_EOL .''.PHP_EOL .'<ul class="nav nav-second-level'.(($estDeroule) ? ' in' : '').'">'.PHP_EOL ;
 					foreach($sousMenus as $i => $sousMenu)
 					{
 						$ctn .= '<li>'.PHP_EOL .$this->RenduMenuNv2($sousMenu).PHP_EOL .'</li>'.PHP_EOL ;
@@ -138,6 +139,10 @@
 			{
 				$classeFa = $menu->ObtientValCfgSpec("classe_fa", "fa-bars") ;
 				return '<a href="'.htmlspecialchars($menu->ObtientUrl()).'"'.(($menu->FenetreCible != '') ? ' target="'.htmlspecialchars($menu->FenetreCible).'"' : '').'>'.(($this->InclureIconesMenuNv2 == 1) ? '<i class="fa '.$classeFa.' fa-fw"></i> ' : '').$menu->ObtientTitre().'</a>' ;
+			}
+			public function DerouleMenu(& $menu)
+			{
+				$menu->DefinitValConfigSpec("est_deroule", 1) ;
 			}
 			public function DefinitClasseFa(& $menu, $classeFa)
 			{

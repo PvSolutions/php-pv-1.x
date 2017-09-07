@@ -26,18 +26,30 @@
 			public $ApiKey ;
 			public $SiteId ;
 			public $Version = "V1" ;
+			public $Langage = "fr" ;
 		}
 		
 		class PvInterfacePaiementCinetpay extends PvInterfacePaiementBase
 		{
 			public $Test = 1 ;
+			public $ApiKeyCompteMarchand = "" ;
+			public $SiteIdCompteMarchand = "" ;
+			public $Titre = "Cinetpay" ;
+			public $CheminImage = "images/cinetpay.png" ;
 			public $UrlSignatureTest = "http://api.sandbox.cinetpay.com/v1/?method=getSignatureByPost" ;
 			public $UrlSignatureProd = "https://api.cinetpay.com/v1/?method=getSignatureByPost" ;
 			public $UrlPaiementTest = "http://secure.sandbox.cinetpay.com" ;
 			public $UrlPaiementProd = "https://secure.cinetpay.com" ;
 			public $UrlVerifTest = "http://api.sandbox.cinetpay.com/v1/?method=checkPayStatus" ;
 			public $UrlVerifProd = "https://api.cinetpay.com/v1/?method=checkPayStatus" ;
-			public $MsgSoumetFormPaiement = "Redirection en cours, veuillez patienter..." ;
+			public $TitreSoumetFormPaiement = "CINETPAY, redirection en cours" ;
+			public $MsgSoumetFormPaiement = "Redirection vers le site web de CINETPAY, veuillez patienter..." ;
+			public $EnregistrerTransactCinetpay = 1 ;
+			public $NomTableTransactCinetpay = "transaction_cinetpay" ;
+			public function CreeBdCinetpay()
+			{
+				return new AbstractSqlDB() ;
+			}
 			public function NomFournisseur()
 			{
 				return "cinetpay" ;
@@ -60,7 +72,10 @@
 			}
 			protected function CreeCompteMarchand()
 			{
-				return new PvCompteMarchandCinetpay() ;
+				$compte = new PvCompteMarchandCinetpay() ;
+				$compte->ApiKey = $this->ApiKeyCompteMarchand ;
+				$compte->SiteId = $this->SiteIdCompteMarchand ;
+				return $compte ;
 			}
 			protected function RestaureTransactionEnCours()
 			{
@@ -68,6 +83,16 @@
 				if($this->IdEtatExecution() == "termine")
 				{
 					$this->AnalyseTransactionPostee() ;
+				}
+				elseif($this->IdEtatExecution() == "annule" && $this->EnregistrerTransactCinetpay == 1)
+				{
+					$bd = $this->CreeBdCinetpay() ;
+					$bd->RunSql(
+						"update ".$bd->EscapeTableName($this->NomTableTransactCinetpay)." set date_annule=".$bd->SqlNow().", est_annule=1 where id_transaction=:idTransact",
+						array(
+							"idTransact" => $this->_Transaction->IdTransaction
+						)
+					) ;
 				}
 			}
 			protected function AnalyseTransactionPostee()
@@ -80,51 +105,91 @@
 				$this->_Transaction->Version = $_POST["cpm_version"] ;
 				$this->_Transaction->ConfigPaiement = $_POST["cpm_payment_config"] ;
 				$this->_Transaction->ActionPage = $_POST["cpm_page_action"] ;
-				$this->_Transaction->InfosSuppl = $_POST["cpm_custom"] ;
+				$this->_Transaction->Cfg = @svc_json_decode($_POST["cpm_custom"]) ;
 				$this->_Transaction->MethodePaiement = $_POST["payment_method"] ;
 				$this->_Transaction->Signature = $_POST["signature"] ;
 				$this->_Transaction->Msisdn = $_POST["cel_phone_num"] ;
 				$this->_Transaction->Indicatif = $_POST["cpm_phone_prefixe"] ;
+				if($this->EnregistrerTransactCinetpay == 1)
+				{
+					$bd = $this->CreeBdCinetpay() ;
+					$bd->RunSql(
+						"update ".$bd->EscapeTableName($this->NomTableTransactCinetpay)." set date_retour=".$bd->SqlNow().", ctn_res_retour=".$bd->ParamPrefix."ctnRetour where id_transaction=:idTransact",
+						array(
+							"idTransact" => $this->_Transaction->IdTransaction,
+							"ctnRetour" => http_build_query_string($_POST),
+						)
+					) ;
+				}
 				$httpSess = new HttpSession() ;
-				$result = $httpSess->PostData(
+				$codeErrVerif = "" ;
+				$msgErrVerif = "" ;
+				$resultat = $httpSess->PostData(
 					$this->UrlVerif(),
 					array(
-						"apikey" => $this->_Transaction->ApiKey,
-						"cpm_site_id" => $this->_Transaction->SiteId,
+						"apikey" => $this->_CompteMarchand->ApiKey,
+						"cpm_site_id" => $this->_CompteMarchand->SiteId,
 						"cpm_trans_id" => $this->_Transaction->IdTransaction,
 					)
 				) ;
-				if($result == "")
+				if($resultat == "")
 				{
 					$this->DefinitEtatExecution("exception_paiement", (($httpSess->RequestException != "") ? $httpSess->RequestException : "Contenu vide recu a partir de l'URL de verification de la transaction")) ;
+					$codeErrVerif = -1 ;
+					$msgErrVerif = "EMPTY_CONTENT_RETURNED" ;
 				}
 				else
 				{
-					$resultDecode = svc_json_decode($result) ;
+					$resultDecode = svc_json_decode($resultat) ;
 					$this->_Transaction->ContenuRetourBrut = $resultDecode ;
 					if($resultDecode == null)
 					{
 						$this->DefinitEtatExecution("exception_paiement", "Impossible de decoder le resultat de l'URL de verification de la transaction") ;
+						$codeErrVerif = -2 ;
+						$msgErrVerif = "WRONG_CONTENT_RETURNED" ;
 					}
 					else
 					{
 						if(isset($resultDecode->transaction))
 						{
 							$transaction = & $resultDecode->transaction ;
+							// $this->_Transaction->Cfg = @svc_json_decode($transaction->cpm_custom) ;
 							if($transaction->cpm_result == "00")
 							{
+								$codeErrVerif = 0 ;
+								$msgErrVerif = "" ;
 								$this->DefinitEtatExecution("paiement_reussi") ;
 							}
 							else
 							{
+								$codeErrVerif = $transaction->cpm_result ;
+								$msgErrVerif = $transaction->cpm_error_message ;
 								$this->DefinitEtatExecution("paiement_echoue", $transaction->cpm_result.":".$transaction->cpm_error_message) ;
 							}
 						}
 						else
 						{
+							$codeErrVerif = -4 ;
+							$msgErrVerif = "NO_STATUS_FOUND" ;
 							$this->DefinitEtatExecution("exception_paiement", "Impossible d'obtenir le statut de la transaction a partir de l'URL de verification") ;
 						}
 					}
+				if($this->EnregistrerTransactCinetpay == 1)
+				{
+					$bd = $this->CreeBdCinetpay() ;
+					$bd->RunSql(
+						"update ".$bd->EscapeTableName($this->NomTableTransactCinetpay)." set date_verif=".$bd->SqlNow().", url_verif=".$bd->ParamPrefix."urlVerif, ctn_req_verif=".$bd->ParamPrefix."ctnReqVerif, ctn_res_verif=".$bd->ParamPrefix."ctnResVerif, est_regle=".$bd->ParamPrefix."estRegle, code_err_verif=".$bd->ParamPrefix."codeErrVerif, msg_err_verif=".$bd->ParamPrefix."msgErrVerif where id_transaction=:idTransact",
+						array(
+							"idTransact" => $this->_Transaction->IdTransaction,
+							"urlVerif" => $this->UrlVerif(),
+							"ctnReqVerif" => $httpSess->GetRequestContents(),
+							"ctnResVerif" => $httpSess->GetResponseContents(),
+							"estRegle" => ($codeErrVerif == 0) ? 0 : 1,
+							"codeErrVerif" => $codeErrVerif,
+							"msgErrVerif" => $msgErrVerif,
+						)
+					) ;
+				}
 				}
 			}
 			protected function PrepareTransaction()
@@ -134,8 +199,11 @@
 				{
 					return ;
 				}
+				$valSignature = '' ;
+				$codeErrSignature = '' ;
+				$msgErrSignature = '' ;
 				$httpSess = new HttpSession() ;
-				$result = $httpSess->PostData(
+				$resultat = $httpSess->PostData(
 					$this->UrlSignature(),
 					array(
 						"cpm_amount" => $this->_Transaction->Montant,
@@ -148,21 +216,25 @@
 						"cpm_version" => $this->_CompteMarchand->Version,
 						"cpm_language" => $this->_CompteMarchand->Langage,
 						"cpm_designation" => $this->_Transaction->Designation,
-						"cpm_custom" => $this->_Transaction->InfosSuppl,
-						"apikey" => $this->_Transaction->ApiKey,
+						"cpm_custom" => svc_json_encode($this->_Transaction->Cfg),
+						"apikey" => $this->_CompteMarchand->ApiKey,
 					)
 				) ;
-				if(empty($result))
+				if(empty($resultat))
 				{
 					$this->DefinitEtatExecution("verification_echoue", "Echec sur la signature : ".($httpSess->RequestException != '') ? $httpSess->RequestException : '') ;
+					$codeErrSignature = -1 ;
+					$msgErrSignature = "EMPTY_CONTENT_RETURNED" ;
 					// print_r($this->_StatutVerifTransact) ;
 				}
 				else
 				{
-					$ctnDecode = @svc_json_decode($result) ;
+					$ctnDecode = @svc_json_decode($resultat) ;
 					if($ctnDecode == null)
 					{
 						$this->DefinitEtatExecution("verification_echoue", "Impossible de decoder le contenu JSON de la signature") ;
+						$codeErrSignature = -2 ;
+						$msgErrSignature = "WRONG_CONTENT_RETURNED" ;
 					}
 					else
 					{
@@ -170,19 +242,42 @@
 						{
 							if(isset($ctnDecode->status))
 							{
+								$codeErrSignature = $ctnDecode->status->code ;
+								$msgErrSignature = $ctnDecode->status->message ;
 								$this->DefinitEtatExecution("verification_rejetee", $ctnDecode->status->code." : ".$ctnDecode->status->message) ;
 							}
 							else
 							{
+								$codeErrSignature = -4 ;
+								$msgErrSignature = "NO_STATUS_FOUND" ;
 								$this->DefinitEtatExecution("verification_echoue", "Impossible d'obtenir le statut d'erreur de la signature") ;
 							}
 						}
 						else
 						{
+							$codeErrSignature = 0 ;
+							$valSignature = $ctnDecode ;
 							$this->_Transaction->Signature = $ctnDecode ;
 							$this->ValideVerifTransact() ;
 						}
 					}
+				}
+				if($this->EnregistrerTransactCinetpay == 1)
+				{
+					$bd = $this->CreeBdCinetpay() ;
+					$bd->RunSql(
+						"insert into ".$bd->EscapeTableName($this->NomTableTransactCinetpay)." (id_transaction, date_signature, url_signature, ctn_req_signature, ctn_res_signature, valeur_signature, code_err_signature, msg_err_signature)
+values (".$bd->ParamPrefix."idTransact, ".$bd->SqlNow().", ".$bd->ParamPrefix."urlSignature, ".$bd->ParamPrefix."ctnReqSignature, ".$bd->ParamPrefix."ctnResSignature, ".$bd->ParamPrefix."valSignature, ".$bd->ParamPrefix."codeErrSignature, ".$bd->ParamPrefix."msgErrSignature)",
+						array(
+							"idTransact" => $this->_Transaction->IdTransaction,
+							"urlSignature" => $this->UrlSignature(),
+							"ctnReqSignature" => $httpSess->GetRequestContents(),
+							"ctnResSignature" => $httpSess->GetResponseContents(),
+							"valSignature" => $valSignature,
+							"codeErrSignature" => $codeSignature,
+							"msgErrSignature" => $msgErrSignature,
+						)
+					) ;
 				}
 			}
 			protected function CtnFormSoumetTransaction()
@@ -200,8 +295,8 @@
 				$ctnForm .= '<input type="hidden" name="cpm_version" value="'.htmlspecialchars($this->_CompteMarchand->Version).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="cpm_language" value="'.htmlspecialchars($this->_CompteMarchand->Langage).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="cpm_designation" value="'.htmlspecialchars($this->_Transaction->Designation).'" />'.PHP_EOL ;
-				$ctnForm .= '<input type="hidden" name="cpm_custom" value="'.htmlspecialchars($this->_Transaction->InfosSuppl).'" />'.PHP_EOL ;
-				$ctnForm .= '<input type="hidden" name="apikey" value="'.htmlspecialchars($this->_Transaction->ApiKey).'" />'.PHP_EOL ;
+				$ctnForm .= '<input type="hidden" name="cpm_custom" value="'.htmlspecialchars(svc_json_encode($this->_Transaction->Cfg)).'" />'.PHP_EOL ;
+				$ctnForm .= '<input type="hidden" name="apikey" value="'.htmlspecialchars($this->_CompteMarchand->ApiKey).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="notify_url" value="'.htmlspecialchars($this->UrlPaiementTermine()).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="cancel_url" value="'.htmlspecialchars($this->UrlPaiementAnnule()).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="signature" value="'.htmlspecialchars($this->_Transaction->Signature).'" />'.PHP_EOL ;
@@ -215,7 +310,7 @@
 				$ctn .= '<!doctype html>
 <html>
 <head>
-<title>Passerelle CINETPAY</title>
+<title>'.$this->TitreSoumetFormPaiement.'</title>
 </head>
 <script language="javascript">
 function soumetFormPaiement()

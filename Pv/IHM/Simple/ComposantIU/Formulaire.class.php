@@ -667,7 +667,7 @@
 				$ctn = '' ;
 				if(count($this->DispositionComposants))
 				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" accept-charset="'.$this->ZoneParent->EncodageDocument.'">'.PHP_EOL ;
 					foreach($this->DispositionComposants as $i => $id)
 					{
 						if($i > 0)

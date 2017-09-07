@@ -426,44 +426,44 @@
 				$result = str_replace("\t", " ", $result) ;
 				$result = str_replace("&agrave;", "a", $result) ;
 				$result = str_replace("&acirc;", "a", $result) ;
-				$result = str_replace("à", "a", $result) ;
-				$result = str_replace("â", "a", $result) ;
-				$result = str_replace("ä", "a", $result) ;
+				$result = str_replace("Ã ", "a", $result) ;
+				$result = str_replace("Ã¢", "a", $result) ;
+				$result = str_replace("Ã¤", "a", $result) ;
 				$result = str_replace("&eacute;", "e", $result) ;
 				$result = str_replace("&egrave;", "e", $result) ;
 				$result = str_replace("&ecirc;", "e", $result) ;
 				$result = str_replace("&euml;", "e", $result) ;
-				$result = str_replace("é", "e", $result) ;
-				$result = str_replace("è", "e", $result) ;
-				$result = str_replace("ê", "e", $result) ;
-				$result = str_replace("ë", "e", $result) ;
+				$result = str_replace("Ã©", "e", $result) ;
+				$result = str_replace("Ã¨", "e", $result) ;
+				$result = str_replace("Ãª", "e", $result) ;
+				$result = str_replace("Ã«", "e", $result) ;
 				$result = str_replace("&igrave;", "i", $result) ;
 				$result = str_replace("&icirc;", "i", $result) ;
-				$result = str_replace("ì", "i", $result) ;
-				$result = str_replace("î", "i", $result) ;
-				$result = str_replace("ï", "i", $result) ;
+				$result = str_replace("Ã¬", "i", $result) ;
+				$result = str_replace("Ã®", "i", $result) ;
+				$result = str_replace("Ã¯", "i", $result) ;
 				$result = str_replace("&ograve;", "o", $result) ;
 				$result = str_replace("&ocirc;", "o", $result) ;
-				$result = str_replace("ò", "o", $result) ;
-				$result = str_replace("ô", "o", $result) ;
-				$result = str_replace("ö", "o", $result) ;
+				$result = str_replace("Ã²", "o", $result) ;
+				$result = str_replace("Ã´", "o", $result) ;
+				$result = str_replace("Ã¶", "o", $result) ;
 				$result = str_replace("&ugrave;", "u", $result) ;
 				$result = str_replace("&ucirc;", "u", $result) ;
-				$result = str_replace("ù", "u", $result) ;
-				$result = str_replace("û", "u", $result) ;
-				$result = str_replace("ü", "u", $result) ;
+				$result = str_replace("Ã¹", "u", $result) ;
+				$result = str_replace("Ã»", "u", $result) ;
+				$result = str_replace("Ã¼", "u", $result) ;
 				$result = str_replace("&ccedil;", "c", $result) ;
-				$result = str_replace("ç", "c", $result) ;
-				$result = str_replace("’", "'", $result) ;
+				$result = str_replace("Ã§", "c", $result) ;
+				$result = str_replace("â€™", "'", $result) ;
 				$result = str_replace("`", "'", $result) ;
-				$result = str_replace("µ", "u", $result) ;
-				$result = str_replace("£", "E", $result) ;
+				$result = str_replace("Âµ", "u", $result) ;
+				$result = str_replace("Â£", "E", $result) ;
 				$result = str_replace("$", "", $result) ;
-				$result = str_replace("¤", "o", $result) ;
-				$result = str_replace("°", "o", $result) ;
+				$result = str_replace("Â¤", "o", $result) ;
+				$result = str_replace("Â°", "o", $result) ;
 				$result = str_replace("@", "a", $result) ;
 				$result = str_replace("^", " ", $result) ;
-				$result = str_replace("¨", " ", $result) ;
+				$result = str_replace("Â¨", " ", $result) ;
 				$result = str_replace("&quot;", "'", $result) ;
 				$result = str_replace("&160#;", " ", $result) ;
 				$result = preg_replace("/&[A-Z0-9#]+;/i", "", $result) ;
@@ -523,10 +523,10 @@
 				{
 					$from = ini_get('sendmail_from') ;
 				}
-				// Pour envoyer un mail HTML, l'en-tête Content-type doit être défini
+				// Pour envoyer un mail HTML, l'en-tÃªte Content-type doit Ãªtre dÃ©fini
 				$headers  = 'MIME-Version: 1.0' . "\r\n";
 				$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-				// En-têtes additionnels
+				// En-tÃªtes additionnels
 				// $headers .= 'To: '.$to. "\r\n";
 				$headers .= 'From: '.$from. "\r\n";
 				if($cc != '')
@@ -550,9 +550,9 @@
 				{
 					$from = ini_get('sendmail_from') ;
 				}
-				// Pour envoyer un mail , l'en-tête Content-type doit être défini
+				// Pour envoyer un mail , l'en-tÃªte Content-type doit Ãªtre dÃ©fini
 				$headers = 'Content-type: text/plain; charset=iso-8859-1' . "\r\n";
-				// En-têtes additionnels
+				// En-tÃªtes additionnels
 				// $headers .= 'To: '.$to. "\r\n";
 				$headers .= 'From: '.$from. "\r\n";
 				if($cc != '')
@@ -576,7 +576,7 @@
 				{
 					$from = ini_get('sendmail_from') ;
 				}
-				// En-têtes additionnels
+				// En-tÃªtes additionnels
 				$headers .= '';
 				$headers .= 'To: '.$to. "\r\n";
 				$headers .= 'From: '.$from. "\r\n";
@@ -833,7 +833,7 @@
 					foreach($param_name as $n => $v)
 					{
 						// print $v.'<br />' ;
-						// On a passé n'importe quoi sauf du texte, aie
+						// On a passÃ© n'importe quoi sauf du texte, aie
 						if(! is_string($v) && ! is_numeric($v))
 						{
 							$haystack_temp = null ;
@@ -1082,7 +1082,7 @@
 							break ;
 						case 'person_name' :
 							$var = preg_replace('/[[:space:]][[:space:]]+/', ' ', $var) ;
-							$var = (preg_match('/^([a-z][a-z0-9&;éèçàêîâûïüôöü \']+)$/i', $var, $match)) ? $match[1] : $default_value ;
+							$var = (preg_match('/^([a-z][a-z0-9&;Ã©Ã¨Ã§Ã ÃªÃ®Ã¢Ã»Ã¯Ã¼Ã´Ã¶Ã¼ \']+)$/i', $var, $match)) ? $match[1] : $default_value ;
 							break ;
 						case 'user_name' :
 							$var = (validate_name_user_format($var)) ? $var : $default_value ;
@@ -1271,7 +1271,7 @@
 					}
 					$protocol = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] != "") ? "https" : "http" ;
 					$url = $protocol."://".$_SERVER['SERVER_NAME'] ;
-					if($_SERVER['SERVER_PORT'] != '80')
+					if($_SERVER['SERVER_PORT'] != '80' && $_SERVER['SERVER_PORT'] != '443')
 					{
 						$url .= ':'.$_SERVER['SERVER_PORT'] ;
 					}
@@ -2133,7 +2133,7 @@
 			{
 				$result = protect_quote($text) ;
 				$result = str_replace("'", "&#39;", $result) ;
-				$result = str_replace("é", "&eacute;", $result) ;
+				$result = str_replace("Ã©", "&eacute;", $result) ;
 				return $result ;
 			}
 			function protect_quote($text)
@@ -2243,7 +2243,7 @@
 				{
 					return ;
 				}
-				// Création de l'image
+				// CrÃ©ation de l'image
 				$width = (isset($settings['width'])) ? $settings['width'] : 450 ;
 				$height = (isset($settings['height'])) ? $settings['height'] : 450 ;
 				createimagegd($image, $width, $height) ;
@@ -2253,7 +2253,7 @@
 				// Empty color
 				$empty_color_clean = imagecolorallocate($image, 0xCC, 0xCC, 0xCC);
 				$empty_color_dark = imagecolorallocate($image, 0xDC, 0xDC, 0xDC);		
-				// Arrière plan
+				// ArriÃ¨re plan
 				imagefilledrectangle($image, 0, 0, $width, $height, $white) ;
 				if(! count($colours))
 				{
@@ -2265,7 +2265,7 @@
 					) ;
 				}
 				$colour_index = array() ;			
-				// Création de l'effet 3D
+				// CrÃ©ation de l'effet 3D
 				$vertical_delim = intval($height / 16) ;
 				$top_delim = $height * 3 / 8 ;
 				$left_delim = $width / 2 ;
@@ -2274,7 +2274,7 @@
 				$left_egde = $left_delim ;
 				$arc_width = $width ;
 				$arc_height = $height * 4 / 8 ;
-				// Ecrivons la légende
+				// Ecrivons la lÃ©gende
 				$top_space = 20 ;
 				$left_space = 20 ;
 				$row_end_height = 6 ;
@@ -3107,82 +3107,82 @@
 			}
 			
 		/**
-		  * A function for easily uploading files. This function will automatically generate a new 
-		  *        file name so that files are not overwritten.
-		  * Taken From: http://www.bin-co.com/php/scripts/upload_function/
-		  * Arguments:    $file_id- The name of the input field contianing the file.
-		  *                $folder    - The folder to which the file should be uploaded to - it must be writable. OPTIONAL
-		  *                $types    - A list of comma(,) seperated extensions that can be uploaded. If it is empty, anything goes OPTIONAL
-		  * Returns  : This is somewhat complicated - this function returns an array with two values...
-		  *                The first element is randomly generated filename to which the file was uploaded to.
-		  *                The second element is the status - if the upload failed, it will be 'Error : Cannot upload the file 'name.txt'.' or something like that
+		 Â *Â AÂ functionÂ forÂ easilyÂ uploadingÂ files.Â ThisÂ functionÂ willÂ automaticallyÂ generateÂ aÂ newÂ 
+		 Â *Â Â Â Â Â Â Â Â fileÂ nameÂ soÂ thatÂ filesÂ areÂ notÂ overwritten.
+		 Â *Â TakenÂ From:Â http://www.bin-co.com/php/scripts/upload_function/
+		 Â *Â Arguments:Â Â Â Â $file_id-Â TheÂ nameÂ ofÂ theÂ inputÂ fieldÂ contianingÂ theÂ file.
+		 Â *Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â $folderÂ Â Â Â -Â TheÂ folderÂ toÂ whichÂ theÂ fileÂ shouldÂ beÂ uploadedÂ toÂ -Â itÂ mustÂ beÂ writable.Â OPTIONAL
+		 Â *Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â $typesÂ Â Â Â -Â AÂ listÂ ofÂ comma(,)Â seperatedÂ extensionsÂ thatÂ canÂ beÂ uploaded.Â IfÂ itÂ isÂ empty,Â anythingÂ goesÂ OPTIONAL
+		 Â *Â ReturnsÂ Â :Â ThisÂ isÂ somewhatÂ complicatedÂ -Â thisÂ functionÂ returnsÂ anÂ arrayÂ withÂ twoÂ values...
+		 Â *Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â TheÂ firstÂ elementÂ isÂ randomlyÂ generatedÂ filenameÂ toÂ whichÂ theÂ fileÂ wasÂ uploadedÂ to.
+		 Â *Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â TheÂ secondÂ elementÂ isÂ theÂ statusÂ -Â ifÂ theÂ uploadÂ failed,Â itÂ willÂ beÂ 'ErrorÂ :Â CannotÂ uploadÂ theÂ fileÂ 'name.txt'.'Â orÂ somethingÂ likeÂ that
 		**/
 			function upload_file($file_id, $folder="", $types="")
 			{
 				/*
 				if(! isset($_FILES[$file_id]))
 				{
-					return array('','No file specified') ;
+					returnÂ array('','NoÂ fileÂ specified') ;
 				}
-			    if(! isset($_FILES[$file_id]['name']))
+			Â Â Â Â if(! isset($_FILES[$file_id]['name']))
 				{
-					return array('','No file specified');
+					returnÂ array('','NoÂ fileÂ specified');
 				}
 				*/
 			}
 		/*
-		function upload_file($file_id, $folder="", $types="")
+		functionÂ upload_file($file_id,Â $folder="",Â $types="")
 		{
 			if(! isset($_FILES[$file_id]))
-				return array('','No file specified') ;
-		    if(! isset($_FILES[$file_id]['name']))
-				return array('','No file specified');
+				returnÂ array('','NoÂ fileÂ specified') ;
+		Â Â Â Â if(! isset($_FILES[$file_id]['name']))
+				returnÂ array('','NoÂ fileÂ specified');
 
-		    $file_title = $_FILES[$file_id]['name'];
-		    //Get file extension
-		    $ext_arr = explode("\.",basename($file_title));
-		    $ext = strtolower($ext_arr[count($ext_arr)-1]); //Get the last extension
+		Â Â Â Â $file_titleÂ =Â $_FILES[$file_id]['name'];
+		Â Â Â Â //GetÂ fileÂ extension
+		Â Â Â Â $ext_arrÂ = explode("\.",basename($file_title));
+		Â Â Â Â $extÂ =Â strtolower($ext_arr[count($ext_arr)-1]);Â //GetÂ theÂ lastÂ extension
 
-		    //Not really uniqe - but for all practical reasons, it is
-		    $uniqer = substr(md5(uniqid(rand(),1)),0,5);
-		    $file_name = $uniqer . '_' . $file_title;//Get Unique Name
+		Â Â Â Â //NotÂ reallyÂ uniqeÂ -Â butÂ forÂ allÂ practicalÂ reasons,Â itÂ is
+		Â Â Â Â $uniqerÂ =Â substr(md5(uniqid(rand(),1)),0,5);
+		Â Â Â Â $file_nameÂ =Â $uniqerÂ .Â '_'Â .Â $file_title;//GetÂ UniqueÂ Name
 
-		    $all_types = explode(",",strtolower($types));
-		    if($types) {
-		        if(in_array($ext,$all_types));
-		        else {
-		            $result = "'".$_FILES[$file_id]['name']."' is not a valid file."; //Show error if any.
-		            return array('',$result);
-		        }
-		    }
+		Â Â Â Â $all_typesÂ =Â explode(",",strtolower($types));
+		Â Â Â Â if($types)Â {
+		Â Â Â Â Â Â Â Â if(in_array($ext,$all_types));
+		Â Â Â Â Â Â Â Â elseÂ {
+		Â Â Â Â Â Â Â Â Â Â Â Â $resultÂ =Â "'".$_FILES[$file_id]['name']."'Â isÂ notÂ aÂ validÂ file.";Â //ShowÂ errorÂ ifÂ any.
+		Â Â Â Â Â Â Â Â Â Â Â Â returnÂ array('',$result);
+		Â Â Â Â Â Â Â Â }
+		Â Â Â Â }
 
-		    //Where the file must be uploaded to
-		    if($folder) $folder .= '/';//Add a '/' at the end of the folder
-		    $uploadfile = $folder . $file_name;
+		Â Â Â Â //WhereÂ theÂ fileÂ mustÂ beÂ uploadedÂ to
+		Â Â Â Â if($folder)Â $folderÂ .=Â '/';//AddÂ aÂ '/'Â atÂ theÂ endÂ ofÂ theÂ folder
+		Â Â Â Â $uploadfileÂ =Â $folderÂ .Â $file_name;
 
-		    $result = '';
-		    //Move the file from the stored location to the new location
-		    if (!move_uploaded_file($_FILES[$file_id]['tmp_name'], $uploadfile)) {
-		        $result = "Cannot upload the file '".$_FILES[$file_id]['name']."'"; //Show error if any.
-		        if(!file_exists($folder)) {
-		            $result .= " : Folder don't exist.";
-		        } elseif(! is_writable($folder)) {
-		            $result .= " : Folder not writable.";
-		        } elseif(!is_writable($uploadfile)) {
-		            $result .= " : File not writable.";
-		        }
-		        $file_name = '';
-		        
-		    } else {
-		        if(! $_FILES[$file_id]['size']) { //Check if the file is made
-		            @unlink($uploadfile); //Delete the Empty file
-		            $file_name = '';
-		            $result = "Empty file found - please use a valid file."; //Show the error message
-		        } else {
-		            chmod($uploadfile,0777); //Make it universally writable.
-		        }
-		    }
-		    return array($file_name, $result);
+		Â Â Â Â $resultÂ =Â '';
+		Â Â Â Â //MoveÂ theÂ fileÂ fromÂ theÂ storedÂ locationÂ toÂ theÂ newÂ location
+		Â Â Â Â ifÂ (!move_uploaded_file($_FILES[$file_id]['tmp_name'],Â $uploadfile))Â {
+		Â Â Â Â Â Â Â Â $resultÂ =Â "CannotÂ uploadÂ theÂ fileÂ '".$_FILES[$file_id]['name']."'";Â //ShowÂ errorÂ ifÂ any.
+		Â Â Â Â Â Â Â Â if(!file_exists($folder))Â {
+		Â Â Â Â Â Â Â Â Â Â Â Â $resultÂ .=Â "Â :Â FolderÂ don'tÂ exist.";
+		Â Â Â Â Â Â Â Â }Â elseif(! is_writable($folder))Â {
+		Â Â Â Â Â Â Â Â Â Â Â Â $resultÂ .=Â "Â :Â FolderÂ notÂ writable.";
+		Â Â Â Â Â Â Â Â }Â elseif(!is_writable($uploadfile))Â {
+		Â Â Â Â Â Â Â Â Â Â Â Â $resultÂ .=Â "Â :Â FileÂ notÂ writable.";
+		Â Â Â Â Â Â Â Â }
+		Â Â Â Â Â Â Â Â $file_nameÂ =Â '';
+		Â Â Â Â Â Â Â Â 
+		Â Â Â Â }Â elseÂ {
+		Â Â Â Â Â Â Â Â if(! $_FILES[$file_id]['size'])Â {Â //CheckÂ ifÂ theÂ fileÂ isÂ made
+		Â Â Â Â Â Â Â Â Â Â Â Â @unlink($uploadfile); //DeleteÂ theÂ EmptyÂ file
+		Â Â Â Â Â Â Â Â Â Â Â Â $file_nameÂ =Â '';
+		Â Â Â Â Â Â Â Â Â Â Â Â $resultÂ =Â "EmptyÂ fileÂ foundÂ -Â pleaseÂ useÂ aÂ validÂ file.";Â //ShowÂ theÂ errorÂ message
+		Â Â Â Â Â Â Â Â }Â elseÂ {
+		Â Â Â Â Â Â Â Â Â Â Â Â chmod($uploadfile,0777); //MakeÂ itÂ universallyÂ writable.
+		Â Â Â Â Â Â Â Â }
+		Â Â Â Â }
+		Â Â Â Â returnÂ array($file_name, $result);
 		}
 		*/
 			if(! function_exists('utf8_urldecode'))
