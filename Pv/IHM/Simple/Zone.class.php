@@ -80,19 +80,19 @@
 				$ctn .= '<html lang="'.$zone->LangueDocument.'">'.PHP_EOL ;
 				$ctn .= '<head>'.PHP_EOL ;
 				$ctn .= '<title>'.$zone->ObtientTitreDocument().'</title>'.PHP_EOL ;
-				$ctn .= '<meta name="keywords" value="'.htmlspecialchars($zone->ObtientMotsCleMetaDocument()).'" />'.PHP_EOL ;
-				$ctn .= '<meta name="description" value="'.htmlspecialchars($zone->ObtientDescMetaDocument()).'" />'.PHP_EOL ;
+				$ctn .= '<meta name="keywords" value="'.htmlspecialchars(html_entity_decode($zone->ObtientMotsCleMetaDocument())).'">'.PHP_EOL ;
+				$ctn .= '<meta name="description" value="'.htmlspecialchars(html_entity_decode($zone->ObtientDescMetaDocument())).'">'.PHP_EOL ;
 				if($zone->EncodageDocument != '')
-					$ctn .= '<meta charset="'.$zone->EncodageDocument.'" />'.PHP_EOL ;
+					$ctn .= '<meta charset="'.$zone->EncodageDocument.'">'.PHP_EOL ;
 				$viewport = $zone->ObtientViewportMetaDocument() ;
 				if($viewport != '')
 				{
-					$ctn .= '<meta name="viewport" value="'.htmlspecialchars($viewport).'" />'.PHP_EOL ;
+					$ctn .= '<meta name="viewport" value="'.htmlspecialchars(html_entity_decode($viewport)).'">'.PHP_EOL ;
 				}
 				$auteur = $zone->ObtientAuteurMetaDocument() ;
 				if($auteur != '')
 				{
-					$ctn .= '<meta name="author" value="'.htmlspecialchars($auteur).'" />'.PHP_EOL ;
+					$ctn .= '<meta name="author" value="'.htmlspecialchars(html_entity_decode($auteur)).'">'.PHP_EOL ;
 				}
 				if($zone->InclureCtnJsEntete)
 				{
@@ -184,7 +184,7 @@
 				$tache = & $this->Taches[$nomTache] ;
 				$urlZone = $this->ZoneParent->ObtientUrl() ;
 				$parts = parse_url($urlZone) ;
-				$port = $parts["port"] != '' ? $parts["port"] : 80 ;
+				$port = ($parts["port"] != '') ? $parts["port"] : 80 ;
 				$chaineParams = http_build_query($params) ;
 				if($chaineParams != "")
 				{
@@ -207,7 +207,7 @@
 			public $NomElementGest ;
 			public $GestParent ;
 			protected $Etat ;
-			public $DelaiExecution = 3600 ;
+			public $DelaiExecution = 1 ;
 			protected $TerminerExecution = 0 ;
 			public function InitConfig()
 			{
@@ -257,6 +257,19 @@
 				}
 				return 1 ;
 			}
+			public function InitEtat()
+			{
+				$this->Etat->PID = getmypid() ;
+				$this->Etat->TimestmpDebutSession = date("U") ;
+				$this->Etat->Statut = PvEtatServPersist::ETAT_DEMARRE ;
+				$this->Etat->TimestmpCapt = date("U") ;
+				return $this->SauveEtat() ;
+			}
+			public function ActualiseEtat()
+			{
+				$this->Etat->TimestmpCapt = date("U") ;
+				return $this->SauveEtat() ;
+			}
 			protected function ChargeEtat()
 			{
 				$ctn = $this->ObtientCtnBrutEtat() ;
@@ -303,13 +316,7 @@
 				{
 					return ;
 				}
-				if($this->Etat->Statut != PvEtatServPersist::ETAT_DEMARRE)
-				{
-					$this->Etat->TimestmpDebutSession = date("U") ;
-					$this->Etat->Statut = PvEtatServPersist::ETAT_DEMARRE ;
-				}
-				$this->Etat->TimestmpCapt = date("U") ;
-				$ok = $this->SauveEtat() ;
+				$ok = $this->InitEtat() ;
 				if(! $ok)
 				{
 					return ;
@@ -318,11 +325,26 @@
 				$this->ExecuteInstructions() ;
 				if($this->TerminerExecution)
 				{
-					$this->Etat->Statut = PvEtatServPersist::ETAT_STOPPE ;
-					$this->Etat->TimestmpFinSession = date("U") ;
-					$this->SauveEtat() ;
+					$this->TermineExecution() ;
 				}
 				exit ;
+			}
+			public function TermineExecution()
+			{
+				$this->Etat->PID = 0 ;
+				$this->Etat->Statut = PvEtatServPersist::ETAT_STOPPE ;
+				$this->Etat->TimestmpCapt = date("U") ;
+				$this->Etat->TimestmpFinSession = date("U") ;
+				$this->SauveEtat() ;
+			}
+			public function Arrete()
+			{
+				$processMgr = OsProcessManager::Current() ;
+				if($this->Etat->PID == 0)
+				{
+					return ;
+				}
+				$processMgr->KillProcessList(array($this->Etat->PID)) ;
 			}
 			public function Appelle($params=array())
 			{
@@ -390,7 +412,7 @@
 			public $CheminJsBootstrap = "js/bootstrap.min.js" ;
 			public $CheminCSSBootstrap = "css/bootstrap.css" ;
 			public $InclureBootstrapTheme = 0 ;
-			public $CheminCSSBootstrapTheme = "js/bootstrap-theme.min.css" ;
+			public $CheminCSSBootstrapTheme = "css/bootstrap-theme.min.css" ;
 			public $InclureFontAwesome = 0 ;
 			public $CheminFontAwesome = "css/font-awesome.min.css" ;
 			public $InclureJQueryMigrate = 1 ;
@@ -398,6 +420,8 @@
 			public $InclureJQueryUi = 0 ;
 			public $CheminJsJQueryUi = "js/jquery-ui.min.js" ;
 			public $CheminCSSJQueryUi = "css/jquery-ui.css" ;
+			public $InclureNormalize = 0 ;
+			public $CheminNormalize = "css/normalize.css" ;
 			public $ContenusCSS = array() ;
 			public $ContenusJs = array() ;
 			public $ContenusJsPied = array() ;
@@ -813,6 +837,10 @@
 			}
 			public function InclutLibrairiesExternes()
 			{
+				if($this->InclureNormalize)
+				{
+					$this->InscritLienCSS($this->CheminNormalize) ;
+				}
 				if($this->InclureBootstrap)
 				{
 					$ctnJs = new PvLienFichierJs() ;
@@ -878,18 +906,18 @@
 				if($this->EncodageDocument != '')
 					$ctn .= '<meta charset="'.$this->EncodageDocument.'" />'.PHP_EOL ;
 				$ctn .= '<title>'.$this->ObtientTitreDocument().'</title>'.PHP_EOL ;
-				$ctn .= '<meta name="keywords" content="'.htmlspecialchars(html_entity_decode($this->ObtientMotsCleMetaDocument())).'" />'.PHP_EOL ;
+				$ctn .= '<meta name="keywords" content="'.htmlspecialchars(html_entity_decode($this->ObtientMotsCleMetaDocument())).'">'.PHP_EOL ;
 				$viewport = $this->ObtientViewportMetaDocument() ;
 				if($viewport != '')
 				{
-					$ctn .= '<meta name="viewport" content="'.htmlspecialchars(html_entity_decode($viewport)).'" />'.PHP_EOL ;
+					$ctn .= '<meta name="viewport" content="'.htmlspecialchars(html_entity_decode($viewport)).'">'.PHP_EOL ;
 				}
 				$auteur = $this->ObtientAuteurMetaDocument() ;
 				if($auteur != '')
 				{
-					$ctn .= '<meta name="author" content="'.htmlspecialchars(html_entity_decode($auteur)).'" />'.PHP_EOL ;
+					$ctn .= '<meta name="author" content="'.htmlspecialchars(html_entity_decode($auteur)).'">'.PHP_EOL ;
 				}
-				$ctn .= '<meta name="description" content="'.htmlspecialchars(html_entity_decode($this->ObtientDescMetaDocument())).'" />'.PHP_EOL ;
+				$ctn .= '<meta name="description" content="'.htmlspecialchars(html_entity_decode($this->ObtientDescMetaDocument())).'">'.PHP_EOL ;
 				for($i=0; $i<count($this->ContenusCSS); $i++)
 				{
 					$ctnCSS = $this->ContenusCSS[$i] ;

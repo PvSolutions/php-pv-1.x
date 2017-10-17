@@ -555,7 +555,7 @@
 		
 		class AkSqlMembership extends AkMembershipBase
 		{
-			public $Database = null ;
+			public $Database ;
 			public $IdMemberNotFoundValue = -1 ;
 			public $MemberTable = "membership_member" ;
 			public $EnableMemberColumn = "enabled" ;

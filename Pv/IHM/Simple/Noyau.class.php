@@ -304,7 +304,11 @@
 		class PvFormatteurColonnePlusDetail extends PvFormatteurColonneDonnees
 		{
 			public $MaxCaracteresIntro = 40 ;
-			public $TitreLienDetails = "D&eacute;tails" ;
+			public $HauteurBlocDetail = '225px' ;
+			public $ArrPlBlocDetail = 'white' ;
+			public $CouleurBlocDetail = 'black' ;
+			public $CouleurBordureBlocDetail = '#e8e8e8' ;
+			public $TailleBordureBlocDetail = '4px' ;
 			protected $RenduSourceInclus = 0 ;
 			protected $IndexLigne = 0 ;
 			public function Encode(& $script, $colonne, $ligne)
@@ -327,38 +331,33 @@
 				{
 					$rendu .= '<style type="text/css">
 .detail-'.$this->IDInstanceCalc.' {
-padding:2px ;
-position:relative ;
-top:-17px ;
-left:0px ;
-display:none ;
-width:100% ;
+position: relative;
+display: inline-block;
 }
-</style>
-<script type="text/javascript">
-Afficheur'.$this->IDInstanceCalc.' = function() {
-var _self = this ;
-this.idsTimeout = {} ;
-this.affiche = function(index) {
-var elem = _self.obtientElemDOM(index) ;
-elem.style.display = "block" ;
-} ;
-this.cache = function(index) {
-var elem = _self.obtientElemDOM(index) ;
-elem.style.display = "none" ;
-} ;
-this.obtientElemDOM = function(index) {
-return document.getElementById("detail'.$this->IDInstanceCalc.'_" + index) ;
+.detail-'.$this->IDInstanceCalc.':hover .tooltiptext {
+    visibility: visible;
 }
+.detail-'.$this->IDInstanceCalc.' .tooltiptext {
+visibility: hidden;
+width: 100%;
+overflow: scroll ;
+top: 50%;
+left: 20% ;
+margin-left: -40px;
+background-color: '.$this->ArrPlBlocDetail.';
+padding:8px ;
+border:'.$this->TailleBordureBlocDetail.' solid '.$this->CouleurBordureBlocDetail.' ;
+color: '.$this->CouleurBlocDetail.' ;
+height:'.$this->HauteurBlocDetail.' ;
+text-align: center;
+border-radius: 2px;
+position: absolute;
+z-index: 1;
 }
-var afficheur'.$this->IDInstanceCalc.' = new Afficheur'.$this->IDInstanceCalc.'() ;
-</script>' ;
+</style>' ;
 					$this->RenduSourceInclus = 1 ;
 				}
-				$rendu .= '<div>
-<span onmouseover="afficheur'.$this->IDInstanceCalc.'.affiche('.$this->IndexLigne.') ;">'.$valeurIntro.'</span>
-<div id="detail'.$this->IDInstanceCalc.'_'.$this->IndexLigne.'" onmouseout="afficheur'.$this->IDInstanceCalc.'.cache('.$this->IndexLigne.') ;" class="detail-'.$this->IDInstanceCalc.'"><textarea>'.htmlentities($valeur).'</textarea></div>
-</div>' ;
+				$rendu .= '<div class="detail-'.$this->IDInstanceCalc.'">'.htmlentities($valeurIntro).'<span class="tooltiptext">'.htmlentities($valeur).'</span></div>' ;
 				return $rendu ;
 			}
 		}

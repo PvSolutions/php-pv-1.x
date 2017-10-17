@@ -12,6 +12,7 @@
 			public $FichScss ;
 			public $FichMainTs ;
 			public $ClassePrincTs ;
+			public $TagNav ;
 			public $TagRacineHtml ;
 			public $ImportsSupplModuleTs = array() ;
 			public $ProvidersSupplModuleTs = array() ;
@@ -114,7 +115,7 @@
 			{
 				// AppHtml
 				$this->TagRacineHtml = $this->FichHtml->DefinitTagRacine(new PvTagRacineHtmlIonic()) ;
-				$this->TagRacineHtml->InsereTagFils(new PvTagIonNav()) ;
+				$this->TagNav = $this->TagRacineHtml->InsereTagFils(new PvTagIonNav()) ;
 			}
 			protected function ChargeFichModuleTsAuto()
 			{

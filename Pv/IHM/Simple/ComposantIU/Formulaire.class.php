@@ -41,6 +41,8 @@
 			public $ElementEnCoursTrouve = 0 ;
 			public $CommandeSelectionnee = null ;
 			public $AnnulerCommandeSelectionnee = 0 ;
+			public $ClasseCSSSucces = "Succes" ;
+			public $ClasseCSSErreur = "Erreur" ;
 			public $Titre = "" ;
 			public $AlignTitre = "left" ;
 			public $NomClasseCSS = "" ;
@@ -341,7 +343,7 @@
 				$this->DetecteParametresLocalisation() ;
 				$this->CalculeElementsRendu() ;
 				$this->PrepareRenduPourCmds() ;
-				$this->PrepareLiaisonParametre() ;
+				$this->PrepareLiaisonParametres() ;
 			}
 			public function ReinitParametres()
 			{
@@ -358,7 +360,7 @@
 					$filtre->NePasLierParametre = 1 ;
 				}
 			}
-			protected function PrepareLiaisonParametre()
+			protected function PrepareLiaisonParametres()
 			{
 				if($this->AnnulerLiaisonParametre)
 				{
@@ -869,7 +871,7 @@
 				else
 				{
 					$ctn .= '<div' ;
-					$classeCSS = ($this->CommandeSelectionnee->StatutExecution == 1) ? "Succes" : "Erreur" ;
+					$classeCSS = ($this->CommandeSelectionnee->StatutExecution == 1) ? $this->ClasseCSSSucces : $this->ClasseCSSErreur ;
 					$ctn .= ' class="'.$classeCSS.'"' ;
 					$ctn .= '>' ;
 					$ctn .= htmlentities($msgExecution) ;
@@ -1105,6 +1107,8 @@
 		
 		class PvFormulaireDonneesBootstrap extends PvFormulaireDonneesHtml
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -1221,14 +1225,22 @@
 		class PvCommandeExecuterBase extends PvCommandeFormulaireDonnees
 		{
 			public $CacherFormulaireFiltresSiSucces = 0 ;
+			public $AnnuleLiaisonParametresSiSucces = 0 ;
 			public function Execute()
 			{
 				parent::Execute() ;
-				if($this->StatutExecution == 1 && $this->CacherFormulaireFiltresSiSucces)
+				if($this->StatutExecution == 1)
 				{
-					$this->FormulaireDonneesParent->CacherFormulaireFiltres = 1 ;
-					$this->FormulaireDonneesParent->InclureElementEnCours = 0 ;
-					$this->FormulaireDonneesParent->InclureTotalElements = 0 ;
+					if($this->CacherFormulaireFiltresSiSucces)
+					{
+						$this->FormulaireDonneesParent->CacherFormulaireFiltres = 1 ;
+						$this->FormulaireDonneesParent->InclureElementEnCours = 0 ;
+						$this->FormulaireDonneesParent->InclureTotalElements = 0 ;
+					}
+					elseif($this->AnnuleLiaisonParametresSiSucces)
+					{
+						$this->FormulaireDonneesParent->AnnuleLiaisonParametres() ;
+					}
 				}
 			}
 		}
@@ -1345,6 +1357,75 @@
 				{
 					redirect_to($this->UrlDefaut) ;
 				}
+			}
+		}
+		
+		class PvCommandeAppelDistantBase extends PvCommandeExecuterBase
+		{
+			public $NomZoneAppelDistant ;
+			public $NomMethodeDistante ;
+			public $AppelDistant ;
+			public $ResultDistant ;
+			protected function VerifiePreRequis()
+			{
+				parent::VerifiePreRequis() ;
+				if(! $this->ErreurNonRenseignee())
+				{
+					return ;
+				}
+				if($this->NomZoneAppelDistant == "" || ! isset($this->ZoneParent->ApplicationParent->IHMs[$this->NomZoneAppelDistant]))
+				{
+					$this->RenseigneErreur("Zone d'appels distants inexistante") ;
+				}
+				$this->ZoneAppelDistant = & $this->ZoneParent->ApplicationParent->IHMs[$this->NomZoneAppelDistant] ;
+				$this->ZoneAppelDistant->ChargeConfig() ;
+			}
+			protected function CreeAppelDistant()
+			{
+				$appel = new PvAppelJsonDistant() ;
+				$appel->method = $this->NomMethodeDistante ;
+				$appel->args = $this->ExtraitArgsAppelDistant() ;
+				return $appel ;
+			}
+			protected function ExecuteInstructions()
+			{
+				$this->AppelDistant = $this->CreeAppelDistant() ;
+				$this->ResultDistant = $this->ZoneAppelDistant->TraiteAppel($this->AppelDistant) ;
+				if($this->ResultDistant->Succes())
+				{
+					$this->ConfirmeSucces() ;
+				}
+				else
+				{
+					$msgErreur = '' ;
+					if($this->ResultDistant->erreur->message != '')
+					{
+						$msgErreur .= $this->ResultDistant->erreur->code."#".$this->ResultDistant->erreur->message ;
+					}
+					else
+					{
+						$msgErreur = 'Erreur rencontr&eacute; : #'.$this->ResultDistant->erreur->code ;
+					}
+					$this->RenseigneErreur($msgErreur) ;
+				}
+			}
+		}
+		class PvCommandeEnvoiDirectAppelDistant extends PvCommandeAppelDistantBase
+		{
+			protected function ExtraitArgsAppelDistant()
+			{
+				return $this->FormulaireDonneesParent->ExtraitObjetColonneLiee($this->FormulaireDonneesParent->FiltresEdition) ;
+			}
+		}
+		class PvCommandeEnvoiCompletAppelDistant extends PvCommandeAppelDistantBase
+		{
+			protected function ExtraitArgsAppelDistant()
+			{
+				return array(
+					'filtresGlobauxSelect' => $this->FormulaireDonneesParent->ExtraitObjetColonneLiee($this->FormulaireDonneesParent->FiltresGlobauxSelection),
+					'filtresLgSelect' => $this->FormulaireDonneesParent->ExtraitObjetColonneLiee($this->FormulaireDonneesParent->FiltresLigneSelection),
+					'filtresEdit' => $this->FormulaireDonneesParent->ExtraitObjetColonneLiee($this->FormulaireDonneesParent->FiltresEdition),
+				) ;
 			}
 		}
 		

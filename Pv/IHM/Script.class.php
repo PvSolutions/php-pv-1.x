@@ -24,6 +24,7 @@
 			public $ApplicationParent = null ;
 			public $NomElementZone = "" ;
 			public $NomIntegrationParent = "" ;
+			public $NomZoneAppelDistant = "" ;
 			public $ValeurAppel = "" ;
 			public $CheminIcone = "" ;
 			public $CheminMiniature = "" ;
@@ -53,9 +54,18 @@
 			{
 				$this->ZoneParent->RapporteException($exception) ;
 			}
-			public function IntegrationParent()
+			public function & IntegrationParent()
 			{
 				return $this->ApplicationParent->ObtientIntegration($this->NomIntegrationParent) ;
+			}
+			public function & ZoneAppelDistant()
+			{
+				$ihm = new PvZoneIHMDeBase() ;
+				if($this->NomZoneAppelDistant != '' && isset($this->ApplicationParent->IHMs[$this->NomZoneAppelDistant]))
+				{
+					$ihm = & $this->ApplicationParent->IHMs[$this->NomZoneAppelDistant] ;
+				}
+				return $ihm ;
 			}
 			public function DetermineEnvironnement()
 			{

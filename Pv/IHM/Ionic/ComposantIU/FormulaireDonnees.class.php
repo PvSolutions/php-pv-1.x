@@ -620,7 +620,7 @@ this.afficheMsg("Erreur - Chargement formulaire", (error.toString())) ;
 				{
 					$this->MtdCalculeElemsRendu->CorpsBrut .= $this->CorpsTsCalculeFiltresEdit() ;
 				}
-				$this->PageSrcParent->ContenuTsAccesAutorise = "_self.calcule".$this->IDInstanceCalc.'() ;'.PHP_EOL ;
+				$this->PageSrcParent->ContenuTsAccesAutorise .= "_self.calcule".$this->IDInstanceCalc.'() ;'.PHP_EOL ;
 			}
 			protected function CorpsTsCalculeFiltresEdit()
 			{

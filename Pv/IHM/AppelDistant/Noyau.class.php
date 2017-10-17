@@ -14,6 +14,10 @@
 				$this->ZoneParent = & $zone ;
 				// print get_class($this)." : ".get_class($this->ZoneParent)." kkk<br>" ;
 			}
+			public function & ApplicationParent()
+			{
+				return $this->ZoneParent->ApplicationParent ;
+			}
 		}
 		
 	}

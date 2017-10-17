@@ -755,7 +755,7 @@
 					$exprParamValue = $this->ParamPrefix.$this->NewValuePrefix.$fieldName ;
 					$currentValue = (isset($rowData[$this->ExprKeyName][$fieldName])) ?
 						$rowData[$this->ExprKeyName][$fieldName] : $this->ExprParamPattern ;
-					$currentValue = str_replace($this->ExprParamPattern, $exprParamValue, $currentValue) ;
+					$currentValue = str_ireplace($this->ExprParamPattern, $exprParamValue, $currentValue) ;
 					$where .= $this->EscapeFieldName($tableName, $fieldName).'='.$currentValue ;
 				}
 				return $where ;
@@ -1142,7 +1142,7 @@
 					$exprParamValue = $this->ParamPrefix.$this->NewValuePrefix.$fieldName ;
 					$currentValue = (isset($rowData[$this->ExprKeyName][$fieldName])) ?
 						$rowData[$this->ExprKeyName][$fieldName] : $this->ExprParamPattern ;
-					$currentValue = str_replace($this->ExprParamPattern, $exprParamValue, $currentValue) ;
+					$currentValue = str_ireplace($this->ExprParamPattern, $exprParamValue, $currentValue) ;
 					$res .= $currentValue ;
 				}
 				return $res ;
@@ -1192,7 +1192,7 @@
 					$exprParamValue = $this->ParamPrefix.$this->NewValuePrefix.$fieldName ;
 					$currentValue = (isset($rowData[$this->ExprKeyName][$fieldName])) ?
 						$rowData[$this->ExprKeyName][$fieldName] : $this->ExprParamPattern ;
-					$currentValue = str_replace($this->ExprParamPattern, $exprParamValue, $currentValue) ;
+					$currentValue = str_ireplace($this->ExprParamPattern, $exprParamValue, $currentValue) ;
 					$res .= $this->EscapeFieldName($tableName, $fieldName).'='.$currentValue ;
 				}
 				return $res ;
@@ -2492,7 +2492,7 @@
 						}
 						if(isset($params[$this->ExprKeyName][$name]))
 						{
-							$paramString = str_replace(
+							$paramString = str_ireplace(
 								$this->ExprParamPattern,
 								$this->ParamPrefix.$name,
 								$params[$this->ExprKeyName][$name]

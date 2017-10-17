@@ -16,12 +16,16 @@
 			public $FichTs ;
 			public $FichScss ;
 			public $FichHtml ;
+			public $CacherBoutonPrec = 1 ;
 			protected $_NoInstPageCalc = -1 ;
 			protected $_NomInstPageCalc ;
 			public static $TotalInstPageCalc = 0 ;
 			public $TagHeaderTitle ;
 			public $TagHeaderNavbar ;
+			public $TagHeaderToolbar ;
+			public $InclureHeaderToolbar = 0 ;
 			public $TagHeader ;
+			public $TagToolbar ;
 			public $TagContent ;
 			public $ClasseTs ;
 			public $CompDecoratorTs ;
@@ -110,7 +114,7 @@
 				$this->MembrBarreChargmt = $this->ClasseTs->InsereMembre("barreChargement:any") ;
 				// $this->TagHeaderTitle = $this->TagHeader->InsereTagFils(new TagHeaderTitle()) ;
 				$this->MtdAfficheChargmt = $this->ClasseTs->InsereMethode("afficheChargement", array()) ;
-				$this->MtdAfficheChargmt->CorpsBrut .= 'if(this.barreChargement !== null) {
+				$this->MtdAfficheChargmt->CorpsBrut .= 'if(this.barreChargement !== undefined && this.barreChargement !== null) {
 return ;
 }
 this.barreChargement = this.loadingCtrl.create({
@@ -148,8 +152,16 @@ dlg.present() ;' ;
 				$this->TagContent = $this->FichHtml->TagRacine()->InsereTagFils(new PvTagIonContent()) ;
 				$this->TagContent->DefinitAttr("padding", "padding") ;
 				$this->TagHeaderNavbar = $this->TagHeader->InsereTagFils(new PvTagIonNavbar()) ;
+				if($this->CacherBoutonPrec == 1)
+				{
+					$this->TagHeaderNavbar->DefinitAttr("hideBackButton", "hideBackButton") ;
+				}
 				$this->TagHeaderTitle = $this->TagHeaderNavbar->InsereTagFils(new PvTagIonTitle()) ;
 				$this->TagHeaderTitle->InsereContent($this->Titre) ;
+				if($this->InclureHeaderToolbar == 1)
+				{
+					$this->TagHeaderToolbar = $this->TagHeader->InsereTagFils(new PvTagIonToolbar()) ;
+				}
 			}
 			protected function ChargeFichScssAuto()
 			{
@@ -210,6 +222,18 @@ dlg.present() ;' ;
 				$this->GenereFichierSrc($this->FichTs) ;
 				$this->GenereFichierSrc($this->FichHtml) ;
 				$this->GenereFichierSrc($this->FichScss) ;
+			}
+			public function InsereTagRendu($contenu)
+			{
+				return $this->TagContent->InsereRendu($contenu) ;
+			}
+			public function & InsereMembreTs($contenu, $valeur="", $type="")
+			{
+				return $this->ClasseTs->InsereMembre($contenu, $valeur, $type) ;
+			}
+			public function & InsereMethodeTs($nomMethode, $args=array(), $corpsBrut="")
+			{
+				return $this->ClasseTs->InsereMethode($nomMethode, $args, $corpsBrut) ;
 			}
 		}
 		

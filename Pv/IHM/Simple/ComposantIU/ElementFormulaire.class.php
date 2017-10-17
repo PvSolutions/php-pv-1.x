@@ -147,6 +147,10 @@
 				$ctn .= '</span>' ;
 				return $ctn ;
 			}
+			public function RenduEtiquette()
+			{
+				return htmlentities($this->ObtientLibelle()) ;
+			}
 			public function ObtientLibelle()
 			{
 				$resultat = $this->Libelle ;
@@ -397,6 +401,193 @@
 			public $InclureFoncJs = 1 ;
 			public $SelectionStricte = false ;
 			public $SeparateurLibelleEtiqVide = ", " ;
+			public function & CreeFiltreRef($nom, & $filtreRef)
+			{
+				$filtre = new PvFiltreDonneesRef() ;
+				$filtre->Source = & $filtreRef ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreDonnees = $nom ;
+				return $filtre ;
+			}
+			public function & CreeFiltreFixe($nom, $valeur)
+			{
+				$filtre = new PvFiltreDonneesFixe() ;
+				$filtre->NomParametreDonnees = $nom ;
+				$filtre->ValeurParDefaut = $valeur ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				return $filtre ;
+			}
+			public function & CreeFiltreCookie($nom)
+			{
+				$filtre = new PvFiltreDonneesCookie() ;
+				$filtre->NomParametreDonnees = $nom ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				return $filtre ;
+			}
+			public function & CreeFiltreSession($nom)
+			{
+				$filtre = new PvFiltreDonneesSession() ;
+				$filtre->NomParametreDonnees = $nom ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				return $filtre ;
+			}
+			public function & CreeFiltreMembreConnecte($nom, $nomParamLie='')
+			{
+				$filtre = new PvFiltreDonneesMembreConnecte() ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreDonnees = $nom ;
+				$filtre->NomParametreLie = $nomParamLie ;
+				return $filtre ;
+			}
+			public function & CreeFiltreHttpUpload($nom, $cheminDossierDest="")
+			{
+				$filtre = new PvFiltreDonneesHttpUpload() ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreDonnees = $nom ;
+				$filtre->CheminDossier = $cheminDossierDest ;
+				return $filtre ;
+			}
+			public function & CreeFiltreHttpGet($nom)
+			{
+				$filtre = new PvFiltreDonneesHttpGet() ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
+				return $filtre ;
+			}
+			public function & CreeFiltreHttpPost($nom)
+			{
+				$filtre = new PvFiltreDonneesHttpPost() ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
+				return $filtre ;
+			}
+			public function & CreeFiltreHttpRequest($nom)
+			{
+				$filtre = new PvFiltreDonneesHttpRequest() ;
+				$filtre->AdopteScript($nom, $this->ScriptParent) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
+				return $filtre ;
+			}
+			public function CreeFltRef($nom, & $filtreRef)
+			{
+				return $this->CreeFiltreRef($nom, $filtreRef) ;
+			}
+			public function CreeFltFixe($nom, $valeur)
+			{
+				return $this->CreeFiltreRef($nom, $valeur) ;
+			}
+			public function CreeFltCookie($nom)
+			{
+				return $this->CreeFiltreCookie($nom) ;
+			}
+			public function CreeFltSession($nom)
+			{
+				return $this->CreeFiltreSession($nom) ;
+			}
+			public function CreeFltMembreConnecte($nom, $nomParamLie='')
+			{
+				return $this->CreeFiltreMembreConnecte($nom, $nomParamLie) ;
+			}
+			public function CreeFltHttpUpload($nom, $cheminDossierDest="")
+			{
+				return $this->CreeFiltreHttpUpload($nom, $cheminDossierDest) ;
+			}
+			public function CreeFltHttpGet($nom)
+			{
+				return $this->CreeFiltreHttpGet($nom) ;
+			}
+			public function CreeFltHttpPost($nom)
+			{
+				return $this->CreeFiltreHttpPost($nom) ;
+			}
+			public function CreeFltHttpRequest($nom)
+			{
+				return $this->CreeFiltreHttpRequest($nom) ;
+			}
+			public function & InsereFltSelectRef($nom, & $filtreRef, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreRef($nom, $filtreRef) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectFixe($nom, $valeur, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreFixe($nom, $valeur) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectCookie($nom, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreCookie($nom) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectSession($nom, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreSession($nom) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectMembreConnecte($nom, $nomParamLie='', $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreMembreConnecte($nom, $nomParamLie) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectHttpUpload($nom, $cheminDossierDest="", $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreHttpUpload($nom, $cheminDossierDest) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectHttpGet($nom, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreHttpGet($nom) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectHttpPost($nom, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreHttpPost($nom) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltSelectHttpRequest($nom, $exprDonnees='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreHttpRequest($nom) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
 			protected function RenduFoncJs()
 			{
 				if(! $this->InclureFoncJs || $this->ChoixMultiple == 0)

@@ -519,7 +519,7 @@
 			{
 				$retour = $this->AppelleMethode($this->NomMethodeVerif, array()) ;
 				// print 'Retour : '.print_r($retour, true)."\n" ;
-				$methodes = $this->ObtientMethodes() ;
+				// $methodes = $this->ObtientMethodes() ;
 				if(! is_object($retour))
 					return false ;
 				return $retour->succes() ;

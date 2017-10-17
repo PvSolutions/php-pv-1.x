@@ -29,10 +29,27 @@
 		{
 			public $NomElementInterfPaiemt ;
 			public $InterfPaiemtParent ;
+			public $UrlSucces = "" ;
+			public $UrlEchec = "" ;
+			public function & ApplicationParent()
+			{
+				return $this->InterfPaiemtParent->ApplicationParent ;
+			}
+			protected function DefinitEtatExecution($id, $msg="")
+			{
+				$this->InterfPaiemtParent->DefinitEtatExecution($id, $msg) ;
+			}
+			protected function DefinitEtatExec($id, $msg="")
+			{
+				$this->InterfPaiemtParent->DefinitEtatExec($id, $msg) ;
+			}
 			public function AdopteInterfPaiemt($nom, & $interf)
 			{
 				$this->NomElementInterfPaiemt = $nom ;
 				$this->InterfPaiemtParent = & $interf ;
+			}
+			public function Prepare(& $transaction)
+			{
 			}
 			public function ConfirmeSucces(& $transaction)
 			{
@@ -42,6 +59,38 @@
 			}
 			public function Annule(& $transaction)
 			{
+			}
+			protected function AfficheBoiteDialogue($niveau, $titre, $message)
+			{
+				echo '<!doctype html>
+<html>
+<head>
+<title>'.$titre.'</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style type="text/css">
+.boite-dialogue-0 { border : 1px solid #ea9797 }
+.boite-dialogue-0 th { background-color : #ea9797 }
+.boite-dialogue-1 { border : 1px solid #97c2ea }
+.boite-dialogue-1 th { background-color : #97c2ea }
+.boite-dialogue-2 { border : 1px solid #eadb97 }
+.boite-dialogue-2 th { background-color : #eadb97 }
+</style>
+</head>
+<body align="center" style="background-color:#EDEDED">
+<table class="boite-dialogue-'.$niveau.'" align="center" width ="600" cellspacing=0 cellpadding="4">
+<tr>
+<th>'.$titre.'</th>
+</tr>
+<tr>
+<td>'.$message.'</td>
+</tr>
+<tr>
+<td><a href="'.(($niveau == 1) ? $this->UrlSucces : $this->UrlEchec).'">Terminer</a></td>
+</tr>
+</table>
+</body>
+</html>' ;
+				exit ;
 			}
 		}
 		
@@ -78,6 +127,28 @@
 				$this->IdTransaction = uniqid() ;
 				$this->Cfg = new PvCfgTransactPaiement() ;
 			}
+			public function ImporteParLgn($lgn)
+			{
+				$this->IdDonnees = $lgn["id"] ;
+				$this->IdTransaction = $lgn["id_transaction"] ;
+				$this->Designation = $lgn["designation"] ;
+				$this->Montant = $lgn["montant"] ;
+				$this->Monnaie = $lgn["monnaie"] ;
+				$this->InfosSuppl = $lgn["infos_suppl"] ;
+				$this->ContenuRetourBrut = null ;
+				$this->Cfg = ($lgn["cfg"] != '') ? unserialize($lgn["cfg"]) : new PvCfgTransactPaiement() ;
+			}
+			public function ExporteVersLgn()
+			{
+				return array(
+					"id_transaction" => $this->IdTransaction,
+					"designation" => $this->Designation,
+					"montant" => $this->Montant,
+					"monnaie" => $this->Monnaie,
+					"infos_suppl" => $this->InfosSuppl,
+					"cfg" => ($this->Cfg != null) ? serialize($this->Cfg) : ''
+				) ;
+			}
 		}
 		class PvCompteMarchandBase
 		{
@@ -100,9 +171,12 @@
 			protected $ValeurParamTermine = "paiement_termine" ;
 			protected $ValeurParamAnnule = "paiement_annule" ;
 			protected $EnregistrerTransaction = 0 ;
+			public $UtiliserBdTransactionSoumise = 0 ;
+			protected $NomTableTransactSoumise = "transaction_soumise" ;
 			protected $NomTableTransaction = "transaction_paiement" ;
 			protected $MsgPaiementNonFinalise = "Votre paiement a r&eacute;ussi, mais aucune action n'a &eacute;t&eacute; trouv&eacute;e pour le suivi." ;
 			public $CheminRelatifRepTransacts = "." ;
+			public $AfficherErreurs404 = 0 ;
 			public function CheminRepTransacts()
 			{
 				return realpath(dirname(__FILE__)."/../../../../../".$this->CheminRelatifRepTransacts) ;
@@ -259,11 +333,15 @@
 			{
 				return $this->_Transaction ;
 			}
+			public function IdTransaction()
+			{
+				return $this->_Transaction->IdTransaction ;
+			}
 			public function & CompteMarchand()
 			{
 				return $this->_CompteMarchand ;
 			}
-			protected function DefinitEtatExecution($id, $msgErreur="")
+			public function DefinitEtatExecution($id, $msgErreur="")
 			{
 				$this->_EtatExecution->Id = $id ;
 				$this->_EtatExecution->TimestampCapt = date("U") ;
@@ -273,7 +351,7 @@
 					$this->SauveTransaction() ;
 				}
 			}
-			protected function DefinitEtatExec($id, $msgErreur="")
+			public function DefinitEtatExec($id, $msgErreur="")
 			{
 				$this->DefinitEtatExecution($id, $msgErreur) ;
 			}
@@ -317,7 +395,7 @@
 					$this->ConfirmeTransactionAnnulee() ;
 				}
 			}
-			protected function DetermineTransactionSoumise()
+			protected function ImporteTransactSoumiseSession()
 			{
 				$envoyerErr = 0 ;
 				if(isset($_SESSION[$this->IDInstanceCalc."_Transaction"]))
@@ -329,13 +407,61 @@
 				{
 					$envoyerErr = 1 ;
 				}
+				return $envoyerErr ;
+			}
+			protected function ImporteTransactSoumiseBd()
+			{
+				$envoyerErr = 0 ;
+				$idTransact = _GET_def("idTransactSoumise") ;
+				if($this->UtiliserBdTransactionSoumise == 0 || $idTransact == "")
+				{
+					return 1 ;
+				}
+				$bd = $this->CreeBdTransaction() ;
+				$lgn = $bd->FetchSqlRow("select * from ".$bd->EscapeTableName($this->NomTableTransactSoumise)." where id_transaction=:id", array("id" => $idTransact)) ;
+				if(! is_array($lgn) || count($lgn) == 0)
+				{
+					return 1 ;
+				}
+				$this->_Transaction->ImporteParLgn($lgn) ;
+				$bd->RunSql("delete from ".$bd->EscapeTableName($this->NomTableTransactSoumise)." where id_transaction=:id", array("id" => $idTransact)) ;
+				return 0 ;
+			}
+			protected function ExporteTransactSoumiseSession()
+			{
+				$_SESSION[$this->IDInstanceCalc."_Transaction"] = serialize($this->_Transaction) ;
+			}
+			protected function ExporteTransactSoumiseBd()
+			{
+				$bd = $this->CreeBdTransaction() ;
+				$ok = $bd->RunSql(
+					"insert into ".$bd->EscapeTableName($this->NomTableTransactSoumise)." (id_transaction, nom_interface_paiement, designation, montant, monnaie, infos_suppl, cfg) values (".$bd->ParamPrefix."id_transaction, ".$bd->ParamPrefix."nom_interface_paiement, ".$bd->ParamPrefix."designation, ".$bd->ParamPrefix."montant, ".$bd->ParamPrefix."monnaie, ".$bd->ParamPrefix."infos_suppl, ".$bd->ParamPrefix."cfg)", 
+					array_merge($this->_Transaction->ExporteVersLgn(), array("nom_interface_paiement" => $this->NomElementApplication))
+				) ;
+				return $ok ;
+			}
+			protected function DetermineTransactionSoumise()
+			{
+				$envoyerErr = $this->ImporteTransactSoumiseSession() ;
+				if($envoyerErr == 1)
+				{
+					$envoyerErr = $this->ImporteTransactSoumiseBd() ;
+				}
 				if($this->_Transaction == null)
 				{
 					$envoyerErr = 1 ;
 				}
 				if($envoyerErr)
 				{
-					Header("HTTP/1.0 401 Unauthorized Transaction invalide\r\n") ;
+					if($this->AfficherErreurs404 == 1)
+					{
+						Header("HTTP/1.0 401 Unauthorized Transaction invalide\r\n") ;
+					}
+					else
+					{
+						$this->DefinitEtatExec("transaction_invalide", "Aucune transaction n'a ete soumise pour paiement.") ;
+						$this->AfficheErreurHtml() ;
+					}
 					exit ;
 				}
 				else
@@ -345,10 +471,18 @@
 			}
 			protected function PrepareTransaction()
 			{
+				$nomSvcAprPaiement = $this->_Transaction->Cfg->NomSvcAprPaiement ;
+				if($nomSvcAprPaiement == '' || ! isset($this->_SvcsAprPaiement[$nomSvcAprPaiement]))
+				{
+					$this->DefinitEtatExecution("svc_apr_paiement_inexistant", "Aucune action n'a ete definie pour le suivi du reglement de la transaction") ;
+				}
+				else
+				{
+					$this->_SvcsAprPaiement[$nomSvcAprPaiement]->Prepare($this->_Transaction) ;
+				}
 			}
 			protected function SoumetTransaction()
 			{
-				
 			}
 			protected function TermineTransaction()
 			{
@@ -358,7 +492,7 @@
 			}
 			protected function TransactionEffectuee()
 			{
-				return $this->_EtatExecution->Id == "termine" || $this->TransactionReussie() || $this->TransactionEchouee() || $this->TransactionAnnulee() ;
+				return $this->_EtatExecution->Id == "termine" || $this->TransactionReussie() || $this->TransactionEchouee() ;
 			}
 			protected function TransactionReussie()
 			{
@@ -428,9 +562,32 @@
 			{
 				if($this->_EtatExecution->Id != "paiement_reussi")
 				{
-					Header("HTTP/1.0 401 ".$this->_EtatExecution->Id." ".$this->_EtatExecution->MessageErreur."\r\n") ;
+					if($this->AfficherErreurs404 == 1)
+					{
+						Header("HTTP/1.0 401 Unauthorized ".$this->_EtatExecution->Id." ".$this->_EtatExecution->MessageErreur."\r\n") ;
+					}
+					else
+					{
+						$this->AfficheErreurHtml() ;
+					}
 					exit ;
 				}
+			}
+			protected function AfficheErreurHtml()
+			{
+				echo '<!doctype html>
+<html>
+<head>
+<title>'.$this->Titre.' - Erreur #'.$this->_EtatExecution->Id.'</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body align="center">
+<h3>'.$this->Titre.'</h3>
+<hr />
+<h1>ERREUR #'.$this->_EtatExecution->Id.'</h1>
+<p>'.strtoupper($this->MsgEtatExecution()).'</p>
+</body>
+</html>' ;
 			}
 			protected function SauveTransactionSession()
 			{
@@ -474,7 +631,7 @@
 					$this->TermineTransaction() ;
 					return ;
 				}
-				$this->DefinitEtatExecution("verification_en_cours") ;
+				$this->DefinitEtatExecution("verification_en_cours", "Verification de la conformite du paiement demande") ;
 				$this->DetermineTransactionSoumise() ;
 				$this->PrepareTransaction() ;
 				if($this->_EtatExecution->Id == "verification_ok")
@@ -488,10 +645,32 @@
 					$this->AfficheErreursTransaction() ;
 				}
 			}
+			public function PrepareProcessus()
+			{
+				$ok = true ;
+				if($this->UtiliserBdTransactionSoumise == 1)
+				{
+					$ok = $this->ExporteTransactSoumiseBd() ;
+				}
+				else
+				{
+					$ok = false ;
+				}
+				if(! $ok)
+				{
+					$this->ExporteTransactSoumiseSession() ;
+				}
+				return $ok ;
+			}
 			public function DemarreProcessus()
 			{
-				$_SESSION[$this->IDInstanceCalc."_Transaction"] = serialize($this->_Transaction) ;
-				redirect_to($this->UrlRacine()) ;
+				$this->PrepareProcessus() ;
+				$urlRedirect = $this->UrlRacine() ;
+				if($this->UtiliserBdTransactionSoumise == 1)
+				{
+					$urlRedirect .= '?idTransactSoumise='.urlencode($this->_Transaction->IdTransaction) ;
+				}
+				redirect_to($urlRedirect) ;
 			}
 		}
 	}

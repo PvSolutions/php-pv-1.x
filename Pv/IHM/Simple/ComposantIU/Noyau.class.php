@@ -556,6 +556,10 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				{
 					$this->ExtensionFichierAttache = $infosFich["extension"] ;
 				}
+				if($this->NomFichierAttache == "" && $this->CheminFichierSource != "")
+				{
+					$this->NomFichierAttache = (isset($infosFich["filename"])) ? $infosFich["filename"] : substr($infosFich["basename"], 0, count($infosFich["basename"]) - (($infosFich["extension"] != '') ? strlen($infosFich["extension"]) + 1 : 0)) ;
+				}
 			}
 			public function SupprimeCaractsSpec($valeur)
 			{
@@ -1876,6 +1880,40 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				}
 				return $valeurs ;
 			}
+			public function ExtraitObjetParametre(& $filtres)
+			{
+				$nomFiltres = array_keys($filtres) ;
+				$obj = new StdClass() ;
+				foreach($nomFiltres as $i => $nomFiltre)
+				{
+					$filtre = & $filtres[$nomFiltre] ;
+					$nomProp = $filtre->NomParametreDonnees ;
+					if($nomProp == '')
+					{
+						continue ;
+					}
+					$filtre->Lie() ;
+					$obj->$nomProp = $filtre->ValeurParametre ;
+				}
+				return $obj ;
+			}
+			public function ExtraitObjetColonneLiee(& $filtres)
+			{
+				$nomFiltres = array_keys($filtres) ;
+				$obj = new StdClass() ;
+				foreach($nomFiltres as $i => $nomFiltre)
+				{
+					$filtre = & $filtres[$nomFiltre] ;
+					$nomProp = $filtre->NomColonneLiee ;
+					if($nomProp == '')
+					{
+						continue ;
+					}
+					$filtre->Lie() ;
+					$obj->$nomProp = $filtre->ValeurParametre ;
+				}
+				return $obj ;
+			}
 			public function ObtientFiltre(& $filtres, $nomParamLie)
 			{
 			}
@@ -2088,6 +2126,10 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public function EstSucces()
 			{
 				return $this->StatutExecution == 1 ;
+			}
+			public function ErreurNonRenseignee()
+			{
+				return $this->MessageErreur == "" ;
 			}
 			public function & InsereLien($url, $titre)
 			{

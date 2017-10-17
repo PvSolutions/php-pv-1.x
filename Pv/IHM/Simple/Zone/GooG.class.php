@@ -41,7 +41,9 @@
 				$ctn = '' ;
 				$ctn .= 'body { background:'.$this->CouleurArrPlanDoc.' ; font-family:'.$this->NomPolice.'; font-size:'.$this->TaillePolice.'; color:'.$this->CouleurPolice.'; }'.PHP_EOL ;
 				$ctn .= 'a:link, a:visited { color:'.$this->CouleurLiens1.'; }'.PHP_EOL ;
+				$ctn .= '.iu-goog-bloc-1 { border:1px solid '.$this->CouleurArrPlanEntete1.' }'.PHP_EOL ;
 				$ctn .= '.iu-goog-entete-1 { background-color:'.$this->CouleurArrPlanEntete1.' ; color:'.$this->CouleurContenuEntete1.' ; }'.PHP_EOL ;
+				$ctn .= '.iu-goog-bloc-2 { border:1px solid '.$this->CouleurArrPlanEntete2.' }'.PHP_EOL ;
 				$ctn .= '.iu-goog-entete-2 { background-color:'.$this->CouleurArrPlanEntete2.' ; color:'.$this->CouleurContenuEntete2.' ; }'.PHP_EOL ;
 				$ctn .= '.iu-goog-corps-1 { background-color:'.$this->CouleurArrPlanCorps1.' ; color:'.$this->CouleurContenuCorps1.' ; }'.PHP_EOL ;
 				$ctn .= '.iu-goog-corps-2 { background-color:'.$this->CouleurArrPlanCorps2.' ; color:'.$this->CouleurContenuCorps2.' ; }'.PHP_EOL ;
@@ -68,6 +70,8 @@
 		
 		class PvBarreMenuPrincGoog extends PvListeMenuHoriz
 		{
+			public $SeparateurMenu = " || " ;
+			public $InclureSeparateurMenu = 1 ;
 			public $LargeurSousMenu = "" ;
 			protected function RenduSousMenu(& $sousMenu)
 			{
@@ -79,7 +83,6 @@
 			}
 		}
 
-		
 		class PvZoneGoog extends PvZoneWebSimple
 		{
 			public $NomLogo = "GooG" ;

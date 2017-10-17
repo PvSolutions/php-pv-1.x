@@ -6,16 +6,6 @@
 		
 		class PvScriptWebBaseIonic extends PvScriptWebSimple
 		{
-			public $NomZoneIonic ;
-			public function & ZoneIonic()
-			{
-				$ihm = new PvIHMBaseIonic() ;
-				if($this->NomZoneIonic != '' && isset($this->ApplicationParent->IHMs[$this->NomZoneIonic]))
-				{
-					$ihm = & $this->ApplicationParent->IHMs[$this->NomZoneIonic] ;
-				}
-				return $ihm ;
-			}
 		}
 		
 		class PvScriptTrcListeAppelRecuIonic extends PvScriptWebBaseIonic

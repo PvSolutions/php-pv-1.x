@@ -17,7 +17,7 @@
 				$ctn = '' ;
 				$ctn .= '<div class="container-fluid">'.PHP_EOL ;
 				$ctn .= '<div class="row">'.PHP_EOL ;
-				$ctn .= '<div class="col-xs-offset-4 col-xs-4">'.PHP_EOL ;
+				$ctn .= '<div class="col-xs-4 center-block">'.PHP_EOL ;
 				$ctn .= '<form class="user_login_box '.$this->NomClsCSSFormulaireDonnees.'" action="'.$this->UrlSoumetTentativeConnexion().'" role="form" method="post">'.PHP_EOL ;
 				$ctn .= '<div class="panel panel-default">'.PHP_EOL ;
 				$ctn .= '<div class="panel-body">'.PHP_EOL ;

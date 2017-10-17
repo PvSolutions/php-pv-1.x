@@ -4,7 +4,20 @@
 	{
 		define('PV_METHODE_DISTANTE_NOYAU', 1) ;
 		
-		class PvParamDistant
+		class PvComposantIUIndef extends PvObjet
+		{
+			public $Visible = 1 ;
+			public function AdopteZone($nom, & $zone)
+			{
+			}
+			public function & ZoneParent()
+			{
+				$val = null ;
+				return $val ;
+			}
+		}
+		
+		class PvParamAppelDistant
 		{
 			public $Args ;
 			public function Arg($nom, $valeurDefaut=null)
@@ -49,7 +62,7 @@
 			}
 		}
 		
-		class PvErreurResultDistant
+		class PvErreurResultAppelDistant
 		{
 			public $code = -1 ;
 			public $message = "Non defini" ;
@@ -73,13 +86,13 @@
 				$this->surlignes = $surlignes ;
 			}
 		}
-		class PvResultDistant
+		class PvResultAppelDistant
 		{
 			public $erreur ;
 			public $valeur ;
 			public function  __construct()
 			{
-				$this->erreur = new PvErreurResultDistant() ;
+				$this->erreur = new PvErreurResultAppelDistant() ;
 			}
 			public function RenseigneErreur($code, $msg='', $alias='', $params=array(), $surlignes=array())
 			{
@@ -99,13 +112,21 @@
 			{
 				return $this->erreur->code !== 0 ;
 			}
+			public function ErreurDefinie()
+			{
+				return $this->ErreurTrouvee() && ($this->erreur->code !== -1 || $this->erreur->alias !== "undefined") ;
+			}
 			public function Succes()
 			{
 				return $this->erreur->code === 0 ;
 			}
+			public function EstSucces()
+			{
+				return $this->Succes() ;
+			}
 		}
 		
-		class PvMethodeDistanteNoyau extends PvElemZone
+		class PvMethodeDistanteBase extends PvElemZoneAppelDistant
 		{
 			protected $_Param ;
 			protected $_Result ;
@@ -122,11 +143,11 @@
 			}
 			protected function CreeParam()
 			{
-				return new PvParamDistant() ;
+				return new PvParamAppelDistant() ;
 			}
 			protected function CreeResult()
 			{
-				return new PvResultDistant() ;
+				return new PvResultAppelDistant() ;
 			}
 			public function AdopteComposantIU($nom, & $composantIU)
 			{
@@ -226,6 +247,14 @@
 			{
 				$this->_Result->RenseigneErreur($code, $msg, $alias, $params, $surlignes) ;
 			}
+			public function ErreurTrouvee()
+			{
+				return $this->_Result->ErreurTrouvee() ;
+			}
+			public function ErreurDefinie()
+			{
+				return $this->_Result->ErreurDefinie() ;
+			}
 			public function ObtientUrl($params=array())
 			{
 			}
@@ -234,7 +263,7 @@
 			}
 		}
 		
-		class PvMtdDistNonTrouvee extends PvMethodeDistanteNoyau
+		class PvMtdDistNonTrouvee extends PvMethodeDistanteBase
 		{
 			protected function ExecuteInstructions()
 			{
@@ -242,20 +271,98 @@
 			}
 		}
 		
-		class PvMtdDistFormDonnees extends PvMethodeDistanteNoyau
+		class PvMtdDistFormDonnees extends PvMethodeDistanteBase
 		{
 			public function PrepareExecution()
 			{
 				$this->ComposantIUParent->LieTousLesFiltres() ;
 			}
 		}
-		class PvMtdDistTablDonnees extends PvMethodeDistanteNoyau
+		class PvMtdDistTablDonnees extends PvMethodeDistanteBase
 		{
 			public function PrepareExecution()
 			{
 				$this->ComposantIUParent->LieTousLesFiltres() ;
 			}
 		}
+		
+		class PvArgsDistPrepareProcessPaiement
+		{
+			public $nomInterfPaie ;
+			public $nomSvcAprPaie ;
+			public $designation ;
+			public $montant ;
+			public $monnaie ;
+			public $argTransact01 ;
+			public $argTransact02 ;
+			public $argTransact03 ;
+			public $argTransact04 ;
+			public $argTransact05 ;
+			public $argTransact06 ;
+			public $argTransact07 ;
+			public $argTransact08 ;
+			public function __construct(& $mtd)
+			{
+				$this->nomInterfPaie = $mtd->ArgParam("nomInterfPaie") ;
+				$this->nomSvcAprPaie = $mtd->ArgParam("nomSvcAprPaie") ;
+				$this->designation = $mtd->ArgParam("designation") ;
+				$this->montant = $mtd->ArgParam("montant") ;
+				$this->monnaie = $mtd->ArgParam("monnaie", $mtd->MonnaieParDefaut) ;
+				$this->argTransact01 = $mtd->ArgParam("arg_transact_01") ;
+				$this->argTransact02 = $mtd->ArgParam("arg_transact_02") ;
+				$this->argTransact03 = $mtd->ArgParam("arg_transact_03") ;
+				$this->argTransact04 = $mtd->ArgParam("arg_transact_04") ;
+				$this->argTransact05 = $mtd->ArgParam("arg_transact_05") ;
+				$this->argTransact06 = $mtd->ArgParam("arg_transact_06") ;
+				$this->argTransact07 = $mtd->ArgParam("arg_transact_07") ;
+				$this->argTransact08 = $mtd->ArgParam("arg_transact_08") ;
+			}
+		}
+		class PvMtdDistPrepareProcessPaiement extends PvMethodeDistanteBase
+		{
+			public $MonnaieParDefaut = "XOF" ;
+			public $ArgsPrepareProcess ;
+			protected function ValidePreparationProcess()
+			{
+			}
+			protected function ExecuteInstructions()
+			{
+				$app = $this->ApplicationParent() ;
+				$this->ArgsPrepareProcess = new PvArgsDistPrepareProcessPaiement($this) ;
+				if(! $app->ExisteInterfPaiement($this->ArgsPrepareProcess->nomInterfPaie))
+				{
+					$this->RenseigneErreur(-2, "Interface de paiement inexistante") ;
+					return ;
+				}
+				if($montant === 0)
+				{
+					$this->RenseigneErreur(1, "Le montant de la transaction doit etre superieur a 0") ;
+					return ;
+				}
+				$this->ValidePreparationProcess() ;
+				if($this->ErreurDefinie())
+				{
+					return ;
+				}
+				$interfPaiement = $app->InterfPaiement($this->ArgsPrepareProcess->nomInterfPaie) ;
+				$transaction = $interfPaiement->Transaction() ;
+				$transaction->Montant = $this->ArgsPrepareProcess->montant ;
+				$transaction->Monnaie = $this->ArgsPrepareProcess->monnaie ;
+				$transaction->Designation = $this->ArgsPrepareProcess->designation ;
+				$transaction->Cfg->NomSvcAprPaiement = $this->ArgsPrepareProcess->nomSvcAprPaie ;
+				$transaction->Cfg->Arg01 = $this->ArgsPrepareProcess->argTransact01 ;
+				$transaction->Cfg->Arg02 = $this->ArgsPrepareProcess->argTransact02 ;
+				$transaction->Cfg->Arg03 = $this->ArgsPrepareProcess->argTransact03 ;
+				$transaction->Cfg->Arg04 = $this->ArgsPrepareProcess->argTransact04 ;
+				$transaction->Cfg->Arg05 = $this->ArgsPrepareProcess->argTransact05 ;
+				$transaction->Cfg->Arg06 = $this->ArgsPrepareProcess->argTransact06 ;
+				$transaction->Cfg->Arg07 = $this->ArgsPrepareProcess->argTransact07 ;
+				$transaction->Cfg->Arg08 = $this->ArgsPrepareProcess->argTransact08 ;
+				$interfPaiement->PrepareProcessus() ;
+				$this->ConfirmeSucces($interfPaiement->ObtientUrl()."?idTransactSoumise=".urlencode( $interfPaiement->IdTransaction())) ;
+			}
+		}
+		
 	}
 	
 ?>

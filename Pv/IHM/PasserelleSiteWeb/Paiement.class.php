@@ -14,6 +14,14 @@
 		{
 			include dirname(__FILE__)."/Paiement/Cinetpay.class.php" ;
 		}
+		if(! defined("PV_PASSERELLE_PAIEMENT_COINPAYMENTS"))
+		{
+			include dirname(__FILE__)."/Paiement/CoinPayments.class.php" ;
+		}
+		if(! defined("PV_PASSERELLE_PAIEMENT_PAYPAL"))
+		{
+			include dirname(__FILE__)."/Paiement/Paypal.class.php" ;
+		}
 		define('PV_BASE_INTERFACE_PAIEMENT', 1) ;
 	}
 

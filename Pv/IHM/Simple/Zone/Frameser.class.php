@@ -13,22 +13,22 @@
 			public $TaillePolice = "12px" ;
 			public $TailleGrandTitre = "16px" ;
 			public $CouleurPolice = "#666666" ;
-			public $CouleurArrPlanCorps1 = "#EFF4FA" ;
+			public $CouleurArrPlanCorps1 = "#ffffff" ;
 			public $CouleurBordureCorps1 = "white" ;
 			public $CouleurContenuCorps1 = "black" ;
-			public $CouleurArrPlanCorps2 = "#d2ddea" ;
+			public $CouleurArrPlanCorps2 = "#eaeaea" ;
 			public $CouleurBordureCorps2 = "black" ;
 			public $CouleurContenuCorps2 = "black" ;
-			public $CouleurArrPlanCorps3 = "#b2d0ef" ;
+			public $CouleurArrPlanCorps3 = "#cbcbcb" ;
 			public $CouleurBordureCorps3 = "white" ;
 			public $CouleurContenuCorps3 = "#7d7e7f" ;
 			public $CouleurArrPlanSurvole = "#dedede" ;
 			public $CouleurContenuSurvole = "#030303" ;
 			public $CouleurContenuGrdTitre = "#040404" ;
 			public $TailleContenuGrdTitre = "16px" ;
-			public $CouleurArrPlanEntete1 = "#3963ff" ;
+			public $CouleurArrPlanEntete1 = "#cbcbcb" ;
 			public $CouleurArrPlanEntete2 = "#b5dc10" ;
-			public $CouleurContenuEntete1 = "white" ;
+			public $CouleurContenuEntete1 = "black" ;
 			public $CouleurContenuEntete2 = "white" ;
 			public $CouleurArrPlanDoc = "white" ;
 			public $CouleurLiens1 = "#3963ff" ;
@@ -418,14 +418,14 @@
 				$ctn .= '<!doctype html>'.PHP_EOL ;
 				$ctn .= '<html>'.PHP_EOL ;
 				$ctn .= $this->RenduEnteteDocument() ;
-				$ctn .= '<body style="height:100%; margin:0px;">'.PHP_EOL ;
+				$ctn .= '<body style="height:100%; margin:0px; padding:0px ; overflow:hidden;overflow-x:hidden;overflow-y:hidden;">'.PHP_EOL ;
 				$ctn .= '<table width="100%" cellspacing=0 cellpadding="0" height="100%">
 <tr>
 <td valign="top" width="'.$this->LargeurVoletNav.'" height="100%" align="center">
 <iframe src="'.$this->ActVoletNav->ObtientUrl().'" frameborder=0 bordercolor=0 scrolling="no" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100vh;" name="'.$this->NomCadreNav.'"></iframe>
 </td>
 <td valign="top" width="*" height="100%">
-<iframe width="100%" src="'.$this->ScriptParDefaut->ObtientUrl().'" frameborder=0 name="'.$this->NomCadrePrinc.'" style="height:100vh">
+<iframe width="100%" src="'.$this->ScriptParDefaut->ObtientUrl().'" frameborder="0" name="'.$this->NomCadrePrinc.'" style="height:100vh;">
 </td>
 </tr>
 </table>

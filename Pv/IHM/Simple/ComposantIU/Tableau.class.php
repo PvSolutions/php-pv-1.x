@@ -688,6 +688,7 @@
 						$this->IndiceDebut = intval($this->IndiceDebut / $this->MaxElements) * $this->MaxElements ;
 						$this->ElementsEnCoursBruts = $this->FournisseurDonnees->RangeeElements($defCols, $this->FiltresSelection, $this->IndiceDebut, $this->MaxElements, $this->IndiceColonneTri, $this->SensColonneTri) ;
 						// echo "Sql : ".$this->FournisseurDonnees->BaseDonnees->LastSqlText ;
+						// print_r($this->FournisseurDonnees) ;
 						if($this->FournisseurDonnees->ExceptionTrouvee())
 						{
 							$this->TotalElements = 0 ;

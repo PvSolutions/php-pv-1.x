@@ -198,6 +198,8 @@
 			public $CtrlServsPersists ;
 			public $ChemRelRegServsPersists ;
 			public $NomsInterfsPaiement = array() ;
+			public $UrlRacine ;
+			public $CheminDossierRacine ;
 			public function ObtientChemRelRegServsPersists()
 			{
 				return dirname(__FILE__)."/".$this->CheminFichierRelatif."/".$this->ChemRelRegServsPersists ;
@@ -259,6 +261,15 @@
 					$results[$nom] = & $this->IHMs[$nom] ;
 				}
 				return $results ;
+			}
+			public function & InterfPaiement($nom)
+			{
+				$result = null ;
+				if(! in_array($nom, array_keys($this->NomsInterfsPaiement)))
+				{
+					return $result ;
+				}
+				return $this->IHMs[$nom] ;
 			}
 			public function & ExisteInterfPaiement($nom)
 			{
@@ -430,6 +441,10 @@
 					}
 				}
 			}
+			public function EnModeConsole()
+			{
+				return (php_sapi_name() == "cli" || (isset($_SERVER["argv"]) && isset($_SERVER["argv"][0]) && ! isset($_SERVER["SCRIPT_FILENAME"]))) ;
+			}
 			protected function DetecteCheminFichierElementActif()
 			{
 				$this->CheminFichierAbsolu = dirname(__FILE__) ;
@@ -443,7 +458,7 @@
 					$this->CheminFichierElementActif = $this->CheminFichierElementActifFixe ;
 					return ;
 				}
-				if(php_sapi_name() == "cli")
+				if($this->EnModeConsole())
 				{
 					$this->CheminFichierElementActif = $_SERVER["argv"][0] ;
 				}

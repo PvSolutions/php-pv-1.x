@@ -1064,7 +1064,7 @@ sensColonneTri : this.sensColonneTri'.$this->IDInstanceCalc.'
 		class PvActionTsTablDonneesIonic extends PvActionBaseTablDonneesIonic
 		{
 			public $ContenuTs ;
-			public function CorpsBrutTs()
+			public function CorpsBrutTs(& $tabl)
 			{
 				return $this->ContenuTs ;
 			}

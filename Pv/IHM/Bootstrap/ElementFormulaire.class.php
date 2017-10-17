@@ -205,6 +205,43 @@ jQuery(".spinner .btn:last-of-type").on("click", function() {
 				return $ctn ;
 			}
 		}
+		
+		class PvBootstrapSelectPicker extends PvZoneSelectHtml
+		{
+			public $CheminFichierJs = "js/bootstrap-select.min.js" ;
+			public $CheminFichierCSS = "css/bootstrap-select.min.css" ;
+			public static $SourceIncluse = 0 ;
+			protected function RenduInclutSources()
+			{
+				if(PvBootstrapSelectPicker::$SourceIncluse == 1)
+				{
+					return "" ;
+				}
+				$ctn = '' ;
+				$ctn .= $this->RenduLienJs($this->CheminFichierJs) ;
+				$ctn .= $this->RenduLienCSS($this->CheminFichierCSS) ;
+				PvBootstrapSelectPicker::$SourceIncluse = 1 ;
+				return $ctn ;
+			}
+			protected function RenduDispositifBrut()
+			{
+				$ctn = '' ;
+				if(! in_array("selectpicker", $this->ClassesCSS))
+				{
+					$this->ClassesCSS[] = "selectpicker" ;
+					// $this->ClassesCSS[] = "show-tick" ;
+				}
+				$ctn .= $this->RenduInclutSources() ;
+				$ctn .= parent::RenduDispositifBrut() ;
+				return $ctn ;
+			}
+		}
+		class PvSelectPicker extends PvBootstrapSelectPicker
+		{
+		}
+		class PvBootstrapSelect extends PvBootstrapSelectPicker
+		{
+		}
 	}
 	
 ?>
