@@ -607,12 +607,12 @@
 			{
 				parent::PrepareRendu() ;
 				$this->ExecuteCommandeSelectionnee() ;
-				if(! in_array($this->NomParamFiltresSoumis(), $this->ParamsGetSoumetFormulaire))
+				if(! in_array($this->NomParamFiltresSoumis(), $this->ChampsGetSoumetFormulaire))
 				{
-					$this->ParamsGetSoumetFormulaire[] = $this->NomParamFiltresSoumis() ;
+					$this->ChampsGetSoumetFormulaire[] = $this->NomParamFiltresSoumis() ;
 					if($this->EstPasNul($this->CommandeSelectionnee) && $this->CommandeSelectionnee->InclureEnvoiFiltres())
 					{
-						$this->ParamsGetSoumetFormulaire[] = $this->NomParamCommandeSelectionnee() ;
+						$this->ChampsGetSoumetFormulaire[] = $this->NomParamCommandeSelectionnee() ;
 					}
 				}
 				if(! $this->FiltresSoumis() && $this->PossedeFiltresRendus())
@@ -1649,7 +1649,64 @@
 		}
 		class PvGrilleDonneesBootstrap extends PvGrilleDonneesHtml
 		{
+			public $ClasseCSSRangee = "table-striped" ;
+			public $ClasseCSSCellule = "" ;
+			public $ClasseCSSBtnNav = "btn-primary" ;
+			public $ClsBstBoutonSoumettre = "btn-success" ;
+			public $ClsBstFormFiltresSelect = "col-xs-6" ;
 			public $SautLigneSansCommande = 0 ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap() ;
+				$this->NavigateurRangees = new PvNavTableauDonneesBootstrap() ;
+			}
+			protected function RenduFormulaireFiltres()
+			{
+				if($this->CacherFormulaireFiltres)
+					return '' ;
+				if($this->EstNul($this->DessinateurFiltresSelection))
+				{
+					$this->InitDessinateurFiltresSelection() ;
+				}
+				// print_r(get_class($this->DessinateurFiltresSelection)) ;
+				if($this->EstNul($this->DessinateurFiltresSelection))
+				{
+					return "<p>Le dessinateur de filtres n'est pas d&eacute;fini</p>" ;
+				}
+				$ctn = "" ;
+				if(! $this->PossedeFiltresRendus())
+				{
+					return '' ;
+				}
+				$this->DessinateurFiltresSelection->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
+				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;" role="form">'.PHP_EOL ;
+				$ctn .= '<div class="panel panel-default">'.PHP_EOL ;
+				if($this->TitreFormulaireFiltres != '')
+				{
+					$ctn .= '<div class="panel-heading" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
+					$ctn .= $this->TitreFormulaireFiltres ;
+					$ctn .= '</div>'.PHP_EOL ;
+				}
+				$ctn .= '<div class="panel-body">'.PHP_EOL ;
+				$ctn .= '<div class="container-fluid">'.PHP_EOL ;
+				$ctn .= '<div class="row">'.PHP_EOL ;
+				$ctn .= '<div class="'.$this->ClsBstFormFiltresSelect.'">'.PHP_EOL ;
+				$ctn .= $this->DessinateurFiltresSelection->Execute($this->ScriptParent, $this, $this->FiltresSelection) ;
+				$ctn .= '<input type="hidden" name="'.$this->NomParamFiltresSoumis().'" id="'.$this->NomParamFiltresSoumis().'" value="1" />'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '<div class="panel-footer">'.PHP_EOL ;
+				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</form>'.PHP_EOL ;
+				$ctn .= $this->DeclarationSoumetFormulaireFiltres($this->FiltresSelection) ;
+				return $ctn ;
+			}
 			protected function RenduRangeeDonnees()
 			{
 				$ctn = '' ;
@@ -1660,13 +1717,13 @@
 					if(count($this->ElementsEnCours) > 0)
 					{
 						$ctn .= '<table' ;
-						$ctn .= ' class="RangeeDonnees table "' ;
+						$ctn .= ' class="RangeeDonnees"' ;
 						if($this->Largeur != "")
 						{
 							$ctn .= ' width="'.$this->Largeur.'"' ;
 						}
 						$ctn .= '>'.PHP_EOL ;
-						$ctn .= '<tr><td><div class="container-fluid">'.PHP_EOL ;
+						$ctn .= '<tr><td'.(($this->AlignVCellule != '') ? ' valign="'.$this->AlignVCellule.'"' : '').'><div class="container-fluid">'.PHP_EOL ;
 						$inclureLargCell = 1 ;
 						$colXs = 12 / $this->MaxColonnes ;
 						foreach($this->ElementsEnCours as $j => $ligne)
@@ -1675,7 +1732,7 @@
 							{
 								$ctn .= '<div class="row">'.PHP_EOL ;
 							}
-							$ctn .= '<div class="Contenu col-xs-'.$colXs.'"' ;
+							$ctn .= '<div class="Contenu col-xs-'.$colXs.''.(($this->ClasseCSSCellule != '') ? ' '.$this->ClasseCSSCellule : '').'"' ;
 							$ctn .= ' align="'.$this->AlignCellule.'"' ;
 							$ctn .= '>'.PHP_EOL ;
 							$ligneDonnees = $ligne ;
@@ -1924,7 +1981,7 @@
 					{
 						echo $this->SeparateurColonnes ;
 					}
-					echo $libelle ;
+					echo html_entity_decode($libelle) ;
 				}
 				echo $this->SeparateurLignes ;
 			}
@@ -1936,7 +1993,7 @@
 					{
 						echo $this->SeparateurColonnes ;
 					}
-					echo $this->ExprAvantValeur.$valeur.$this->ExprApresValeur ;
+					echo $this->ExprAvantValeur.html_entity_decode($valeur).$this->ExprApresValeur ;
 				}
 				echo $this->SeparateurLignes ;
 			}

@@ -814,7 +814,7 @@
 			{
 				$ok = false ;
 				$this->MustSetCharacterEncoding = 1 ;
-				$res = $this->OpenQuery($sql, $params) ;
+				$res = $this->OpenQuery($sql, $this->EncodeParams($params)) ;
 				if($res)
 				{
 					$ok = true ;
@@ -861,11 +861,20 @@
 				}
 				return $res ;
 			}
+			function EncodeParams($params=array())
+			{
+				$results = array() ;
+				foreach($params as $name => $value)
+				{
+					$results[$name] = $this->EncodeParamValue($value) ;
+				}
+				return $results ;
+			}
 			function FetchSqlRows($sql, $params=array(), $onlyFirst=false)
 			{
 				$rows = null ;
 				$this->MustSetCharacterEncoding = $this->SetCharacterEncodingOnFetch ;
-				$res = $this->OpenQuery($sql, $params) ;
+				$res = $this->OpenQuery($sql, $this->EncodeParams($params)) ;
 				if($res !== false)
 				{
 					$rows = array() ;
@@ -953,7 +962,7 @@
 				$ok = 0 ;
 				$this->StoredProcUseCursor = 0 ;
 				$this->MustSetCharacterEncoding = 1 ;
-				$res = $this->OpenStoredProc($procName, $params) ;
+				$res = $this->OpenStoredProc($procName, $this->EncodeParams($params)) ;
 				if($res !== false)
 				{
 					$ok = 1 ;
@@ -965,7 +974,7 @@
 			{
 				$rows = null ;
 				$this->StoredProcUseCursor = 1 ;
-				$res = $this->OpenStoredProc($procName, $params) ;
+				$res = $this->OpenStoredProc($procName, $this->EncodeParams($params)) ;
 				if($res !== false)
 				{
 					$rows = array() ;
@@ -989,7 +998,7 @@
 					die($entityClassName." ne peut pas être utilisé comme classe d'entité") ;
 				}
 				$this->StoredProcUseCursor = 1 ;
-				$res = $this->OpenStoredProc($procName, $params) ;
+				$res = $this->OpenStoredProc($procName, $this->EncodeParams($params)) ;
 				if($res !== false)
 				{
 					$entities = array() ;
@@ -1095,7 +1104,7 @@
 						// print_r($newRowData) ;
 						$this->MustSetCharacterEncoding = 1 ;
 						$sql = 'insert into '.$this->EscapeTableName($tableName).' ('.$insertFieldList.') values ('.$insertValueList.')' ;
-						$res = $this->OpenQuery($sql, $this->RemoveExprKeyEntry($newRowData)) ;
+						$res = $this->OpenQuery($sql, $this->EncodeParams($this->RemoveExprKeyEntry($newRowData))) ;
 						if($res !== false)
 						{
 							$this->CloseQuery($res) ;
@@ -1160,7 +1169,7 @@
 					{
 						$sql = 'update '.$this->EscapeTableName($tableName).' set '.$updateList.' where '.$where ;
 						$this->MustSetCharacterEncoding = 1 ;
-						$res = $this->OpenQuery($sql, $this->RemoveExprKeyEntry(array_merge($newRowData, $whereParams))) ;
+						$res = $this->OpenQuery($sql, $this->EncodeParams($this->RemoveExprKeyEntry(array_merge($newRowData, $whereParams)))) ;
 						if($res !== false)
 						{
 							$this->CloseQuery($res) ;
@@ -1202,7 +1211,7 @@
 				$ok = 0 ;
 				$this->MustSetCharacterEncoding = 1 ;
 				$sql = 'delete from '.$this->EscapeTableName($tableName).' where '.$where ;
-				$res = $this->OpenQuery($sql, $whereParams) ;
+				$res = $this->OpenQuery($sql, $this->EncodeParams($whereParams)) ;
 				if($res !== false)
 				{
 					$this->CloseQuery($res) ;
@@ -1330,6 +1339,26 @@
 			}
 			function SqlToString($expression)
 			{
+			}
+			public function EncodeHtmlEntity($value)
+			{
+				return htmlentities($value) ;
+			}
+			public function EncodeHtmlAttr($value)
+			{
+				return htmlspecialchars($value) ;
+			}
+			public function EncodeUrl($value)
+			{
+				return urlencode($value) ;
+			}
+			public function DecodeRowValue($value)
+			{
+				return $value ;
+			}
+			public function EncodeParamValue($value)
+			{
+				return $value ;
 			}
 			protected function CaptureQuery($sql, $params=array())
 			{
@@ -1863,6 +1892,10 @@
 				try
 				{
 					$row = mysql_fetch_assoc($res) ;
+					if(is_array($row))
+					{
+						$row = array_map(array(& $this, "DecodeRowValue"), $row) ;
+					}
 				}
 				catch(Exception $ex)
 				{
@@ -2078,6 +2111,10 @@
 				try
 				{
 					$row = mysqli_fetch_assoc($res) ;
+					if(is_array($row))
+					{
+						$row = array_map(array(& $this, "DecodeRowValue"), $row) ;
+					}
 				}
 				catch(Exception $ex)
 				{
@@ -2389,6 +2426,10 @@
 				try
 				{
 					$row = oci_fetch_array($res, OCI_ASSOC + OCI_RETURN_NULLS + OCI_RETURN_LOBS) ;
+					if(is_array($row))
+					{
+						$row = array_map(array(& $this, "DecodeRowValue"), $row) ;
+					}
 				}
 				catch(Exception $ex)
 				{
@@ -2845,7 +2886,7 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 				$row = false;
 				try
 				{
-					$row = sqlsrv_fetch_assoc($res) ;
+					$row = sqlsrv_fetch_array($res, SQLSRV_FETCH_ASSOC) ;
 				}
 				catch(Exception $ex)
 				{

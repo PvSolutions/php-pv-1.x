@@ -1135,7 +1135,7 @@
 				return $this->Database->FetchSqlRow(
 					$this->SqlFetchMemberRowByLogin($memberId),
 					array(
-						"MemberId" => $memberId
+						"MemberLogin" => $memberId
 					)
 				) ;
 			}

@@ -68,8 +68,9 @@
 					}
 					else
 					{
-						$this->DefinitEtatExecution("paiement_echoue") ;
+						$this->DefinitEtatExecution("paiement_echoue", $bd->ConnectionException) ;
 					}
+					// print_r($this->_EtatExecution) ;
 					unset($_SESSION["paiement_assistance_en_cours"]) ;
 				}
 				else

@@ -680,10 +680,16 @@
 					if($script->ConnecterNouveauMembre == 1 || ($script->AutoriserUrlsRetour== 1 && $script->ValeurUrlRetour != ''))
 					{
 						$row = $membership->FetchMemberRowByLogin($form->FiltreLoginMembre->Lie()) ;
+						//print_r($membership->Database) ;
+						// exit ;
 						$script->AutoConnecteNouveauMembre($row["MEMBER_ID"]) ;
 						if($script->AutoriserUrlsRetour== 1 && $script->ValeurUrlRetour != '')
 						{
 							redirect_to($script->ValeurUrlRetour) ;
+						}
+						else
+						{
+							redirect_to($script->UrlAutoConnexionMembre) ;
 						}
 					}
 				}

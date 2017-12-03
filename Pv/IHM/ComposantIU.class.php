@@ -8,6 +8,12 @@
 		}
 		define('PV_COMPOSANT_IU', 1) ;
 		
+		class PvInfoRenduElementAccessible
+		{
+			public $Index = -1 ;
+			public $TimestampDebut = 0 ;
+		}
+		
 		class PvElementAccessible extends PvObjet
 		{
 			public $UrlsReferantsSurs = array() ;
@@ -20,6 +26,83 @@
 			public $Privileges = array() ;
 			public $MessageMalRefere = "<p>Ce composant n'est pas bien refere. Il ne peut etre affiche</p>" ;
 			public $MessageInaccessible = "<p>Vous n'avez pas les droits necessaires pour afficher ce composant.</p>" ;
+			public $MaxRendus = 0 ;
+			public $MessageMaxRendusAtteint = "<p>Vous avez atteint le maximum de rendus autoris&eacute;s</p>" ;
+			public $DelaiExpirRendu = 300 ;
+			public $InfosRendu = array() ;
+			protected function RestaureInfosRendu()
+			{
+				if(! in_array($_SESSION[$this->IDInstanceCalc."_InfosRendu"], $_SESSION))
+				{
+					$this->InfosRendu = array() ;
+					return ;
+				}
+				$this->InfosRendu = unserialize($_SESSION[$this->IDInstanceCalc."_InfosRendu"]) ;
+			}
+			protected function SauveInfosRendu()
+			{
+				$_SESSION[$this->IDInstanceCalc."_InfosRendu"] = serialize($this->InfosRendu) ;
+			}
+			protected function InsereInfoRenduEnCours()
+			{
+				if($this->MaxRendus == 0)
+				{
+					return ;
+				}
+				$info = new PvInfoRenduElementAccessible() ;
+				$info->TimestampDebut = date("U") ;
+				$info->Index = count($this->InfosRendu) ;
+				$this->InfosRendu[] = & $info ;
+			}
+			protected function RetireInfoRenduEnCours()
+			{
+				if($this->MaxRendus == 0)
+				{
+					return ;
+				}
+				array_splice($this->InfosRendu, $info->Index, 1) ;
+			}
+			protected function VideRendusExpires()
+			{
+				$indexes = array() ;
+				foreach($this->InfosRendu as $i => $info)
+				{
+					if($info->TimestampDebut + $this->DelaiExpirRendu <= date("U"))
+					{
+						$indexes[] = $i ;
+					}
+				}
+				if(count($indexes) > 0)
+				{
+					$infosRendu = $this->InfosRendu ;
+					$this->InfosRendu = array() ;
+					foreach($infosRendu as $i => $info)
+					{
+						if(in_array($i, $indexes))
+						{
+							continue ;
+						}
+						$info->Index = count($this->InfosRendu) ;
+						$this->InfosRendu[] = $info ;
+					}
+				}
+			}
+			public function MaxRendusAtteint()
+			{
+				if($this->MaxRendus <= 0)
+				{
+					return 0 ;
+				}
+				$ok = 0 ;
+				$this->RestaureInfosRendu() ;
+				$this->VideRendusExpires() ;
+				if(count($this->InfosRendu) > $this->MaxRendus)
+				{
+					$ok = 1 ;
+				}
+				$this->SauveInfosRendu() ;
+				return $ok ;
+			}
 			public function ImpressionEnCours()
 			{
 				return $this->EstPasNul($this->ZoneParent) && $this->ZoneParent->ImpressionEnCours() ;
@@ -161,8 +244,14 @@
 				{
 					return $ctn ;
 				}
+				if($this->MaxRendusAtteint())
+				{
+					return $this->MessageMaxRendusAtteint ;
+				}
 				$this->TraduitMessages() ;
+				$this->InsereInfoRenduEnCours() ;
 				$ctn .= $this->RenduDispositifBrut() ;
+				$this->RetireInfoRenduEnCours() ;
 				return $ctn ;
 			}
 			protected function TraduitMessages()
@@ -382,6 +471,7 @@
 			public $NomParamIdCommande = "Commande" ;
 			public $ValeurParamIdCommande = "" ;
 			public $ParamsGetSoumetFormulaire = array() ;
+			public $ChampsGetSoumetFormulaire = array() ;
 			public $DesactBtnsApresSoumiss = 1 ;
 			public $ForcerDesactCache = 0 ;
 			public $SuffixeParamIdAleat = "id_aleat" ;
@@ -419,13 +509,18 @@
 				$nomFiltres = array_keys($filtres) ;
 				$filtresGets = array() ;
 				$nomFiltresGets = array() ;
+				$filtresGetsEdit = array() ;
 				foreach($nomFiltres as $i => $nomFiltre)
 				{
 					if($filtres[$nomFiltre]->TypeLiaisonParametre == "get")
 					{
-						$filtresGets[] = $filtres[$nomFiltre]->ObtientIDElementHtmlComposant() ;
+						$filtresGetsEdit[] = $filtres[$nomFiltre]->ObtientIDElementHtmlComposant() ;
 						$nomFiltresGets[] = $filtres[$nomFiltre]->NomParametreLie ;
 					}
+				}
+				foreach($this->ChampsGetSoumetFormulaire as $n => $v)
+				{
+					$filtresGetsEdit[] = $v ;
 				}
 				foreach($this->ParamsGetSoumetFormulaire as $n => $v)
 				{
@@ -433,10 +528,25 @@
 				}
 				$params = extract_array_without_keys($_GET, $nomFiltresGets) ;
 				// print_r($nomFiltresGets) ;
+				$filtresGets = array_unique($filtresGets) ;
 				$indexMinUrl = (count($params) > 0) ? 0 : 1 ;
 				$urlFormulaire = remove_url_params(get_current_url()) ;
 				$urlFormulaire .= '?'.http_build_query_string($params) ;
 				$instrDesactivs = '' ;
+				if($this->DesactBtnsApresSoumiss)
+				{
+					$instrDesactivs = '		for(var i=0; i<form.elements.length; i++)
+		{
+			var elem = form.elements[i] ;
+			if(elem.type == "submit")
+			{
+				if(elem.disabled != undefined)
+					elem.disabled = "disabled" ;
+				else
+					elem.setAttribute("disabled", "disabled") ;
+			}
+		}'.PHP_EOL ;
+				}
 				if($this->ForcerDesactCache)
 				{
 					$urlFormulaire .= '&'.urlencode($this->NomParamIdAleat()).'='.htmlspecialchars(rand(0, 999999)) ;
@@ -446,8 +556,8 @@
 	{
 		var urlFormulaire = "'.$urlFormulaire.'" ;
 		///JJJ
-		var parametresGet = '.json_encode($filtresGets).' ;
-		if(parametresGet != undefined)
+		var parametresGet = '.json_encode($filtresGetsEdit).' ;
+		if(parametresGet != undefined )
 		{
 			for(var i=0; i<parametresGet.length; i++)
 			{
@@ -467,46 +577,10 @@
 				}
 				urlFormulaire += encodeURIComponent(nomParam) + "=" + encodeURIComponent(valeurParam) ;
 			}
-		}'.(($this->DesactBtnsApresSoumiss) ? PHP_EOL ."\t\t".'ChangeStatutBtns'.$this->IDInstanceCalc.'(form, false)' : '').'
-		form.action = urlFormulaire ;
-		if(VerifFormulaire'.$this->IDInstanceCalc.'(form))
-		{
-			return true ;
 		}
-		else
-		{
-			'.(($this->DesactBtnsApresSoumiss) ? PHP_EOL ."\t\t".'ChangeStatutBtns'.$this->IDInstanceCalc.'(form, true)' : '').'
-			return false ;
-		}
-	}
-	function VerifFormulaire'.$this->IDInstanceCalc.'(form)
-	{
-		var nomCommande = "" ;
-		if(document.getElementsByName("'.$this->IDInstanceCalc.'_Commande").length > 0)
-			nomCommande = document.getElementsByName("'.$this->IDInstanceCalc.'_Commande")[0].value ;
-		var OK = true ;'.(($this->InstrsJSAvantSoumetForm != '') ? PHP_EOL  .$this->InstrsJSAvantSoumetForm : '').'
-		return OK ;
-	}
-	function ChangeStatutBtns'.$this->IDInstanceCalc.'(form, statut)
-	{
-		for(var i=0; i<form.elements.length; i++)
-		{
-			var elem = form.elements[i] ;
-			if(elem.type == "submit")
-			{
-				if(statut == false)
-				{
-					if(elem.disabled != undefined)
-						elem.disabled = "disabled" ;
-					else
-						elem.setAttribute("disabled", "disabled") ;
-				}
-				else
-				{
-					elem.removeAttribute("disabled") ;
-				}
-			}
-		}
+		// alert(urlFormulaire) ;
+'.$instrDesactivs.'		form.action = urlFormulaire ;
+		return true ;
 	}
 </script>' ;
 				return $ctn ;

@@ -354,6 +354,47 @@
 			{
 			}
 		}
+		class PvTacheWebCtrlTachesProgs extends PvTacheWebBaseSimple
+		{
+			public $DelaiTransition = 0 ;
+			public $Message = "Verification des taches programmees terminee" ;
+			protected function ExecuteInstructions()
+			{
+				$nomTaches = array_keys($this->ApplicationParent->TachesProgs) ;
+				foreach($nomTaches as $i => $nomTache)
+				{
+					$tacheProg = & $this->ApplicationParent->TachesProgs[$nomTache] ;
+					$tacheProg->LanceProcessus() ;
+					if($this->DelaiTransition > 0)
+					{
+						sleep($this->DelaiTransition) ;
+					}
+				}
+				echo $this->Message."\n" ;
+			}
+		}
+		class PvTacheWebCtrlServsPersists extends PvTacheWebBaseSimple
+		{
+			public $DelaiTransition = 0 ;
+			public $Message = "Verification des services persistants terminee" ;
+			protected function ExecuteInstructions()
+			{
+				$nomServsPersists = array_keys($this->ApplicationParent->ServsPersists) ;
+				foreach($nomServsPersists as $i => $nomServPersist)
+				{
+					$servPersist = & $this->ApplicationParent->ServsPersists[$nomServPersist] ;
+					if(! $servPersist->EstServiceDemarre() || ! $servPersist->Verifie())
+					{
+						$servPersist->DemarreService() ;
+						if($this->DelaiTransition > 0)
+						{
+							sleep($this->DelaiTransition) ;
+						}
+					}
+				}
+				echo $this->Message."\n" ;
+			}
+		}
 		
 		class PvAdrScriptSessionWeb
 		{
@@ -984,6 +1025,10 @@
 				$ctn .= $this->RenduContenuCorpsDocument().PHP_EOL ;
 				$ctn .= $this->RenduPiedCorpsDocument() ;
 				return $ctn ;
+			}
+			public function DemarreTachesWeb()
+			{
+				$this->GestTachesWeb->Execute() ;
 			}
 			public function ExecuteScript(& $script)
 			{

@@ -968,6 +968,7 @@ Cordialement' ;
 			public $NomParamUrlRetour = "urlRetour" ;
 			public $ValeurUrlRetour = "" ;
 			public $ConnecterNouveauMembre = 0 ;
+			public $UrlAutoConnexionMembre = "?" ;
 			public function DetermineEnvironnement()
 			{
 				parent::DetermineEnvironnement() ;

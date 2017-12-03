@@ -191,6 +191,10 @@
 				}
 				return $etiquette ;
 			}
+			public function RenduEtiquette()
+			{
+				return $this->RenduDispositifBrut() ;
+			}
 			protected function RenduDispositifBrut()
 			{
 				$this->CalculeLibelle() ;

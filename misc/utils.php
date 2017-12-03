@@ -3302,6 +3302,10 @@
 			function array_extract_value_for_keys($haystack, $keys)
 			{
 				$result = array() ;
+				if(count($haystack) == 0 || count($keys) == 0)
+				{
+					return $result ;
+				}
 				foreach($keys as $i => $key)
 				{
 					if(isset($haystack[$key]))

@@ -252,7 +252,7 @@ class ForceEncoding {
       }
       return $text;
     } elseif(is_string($text)) {
-      return static::utf8_decode($text, $option);
+      return ForceEncoding::utf8_decode($text, $option);
     } else {
       return $text;
     }
@@ -277,9 +277,9 @@ class ForceEncoding {
     $last = "";
     while($last <> $text){
       $last = $text;
-      $text = self::toUTF8(static::utf8_decode($text, $option));
+      $text = self::toUTF8(ForceEncoding::utf8_decode($text, $option));
     }
-    $text = self::toUTF8(static::utf8_decode($text, $option));
+    $text = self::toUTF8(ForceEncoding::utf8_decode($text, $option));
     return $text;
   }
 

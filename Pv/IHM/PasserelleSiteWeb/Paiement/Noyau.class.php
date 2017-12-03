@@ -31,6 +31,7 @@
 			public $InterfPaiemtParent ;
 			public $UrlSucces = "" ;
 			public $UrlEchec = "" ;
+			public $LargeurBoiteDialogue = "600" ;
 			public function & ApplicationParent()
 			{
 				return $this->InterfPaiemtParent->ApplicationParent ;
@@ -60,7 +61,7 @@
 			public function Annule(& $transaction)
 			{
 			}
-			protected function AfficheBoiteDialogue($niveau, $titre, $message)
+			protected function AfficheBoiteDialogue($niveau, $titre, $message="")
 			{
 				echo '<!doctype html>
 <html>
@@ -77,7 +78,7 @@
 </style>
 </head>
 <body align="center" style="background-color:#EDEDED">
-<table class="boite-dialogue-'.$niveau.'" align="center" width ="600" cellspacing=0 cellpadding="4">
+<table class="boite-dialogue-'.$niveau.'" align="center" width ="'.$this->LargeurBoiteDialogue.'" cellspacing=0 cellpadding="4">
 <tr>
 <th>'.$titre.'</th>
 </tr>
@@ -85,7 +86,7 @@
 <td>'.$message.'</td>
 </tr>
 <tr>
-<td><a href="'.(($niveau == 1) ? $this->UrlSucces : $this->UrlEchec).'">Terminer</a></td>
+<td align="center"><a href="'.(($niveau == 1) ? $this->UrlSucces : $this->UrlEchec).'">Terminer</a></td>
 </tr>
 </table>
 </body>
@@ -617,11 +618,13 @@
 						}
 						else
 						{
+							$this->ConfirmeTransactionEchoueeAuto() ;
 							$this->ConfirmeTransactionEchouee() ;
 						}
 					}
 					elseif($this->TransactionAnnulee())
 					{
+						$this->ConfirmeTransactionAnnuleeAuto() ;
 						$this->ConfirmeTransactionAnnulee() ;
 					}
 					else
@@ -673,6 +676,7 @@
 				redirect_to($urlRedirect) ;
 			}
 		}
+		
 	}
-	
+
 ?>

@@ -791,6 +791,7 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
 			public $InclureElementHorsLigne = 0 ;
 			public $ValeurElementHorsLigne = "" ;
 			public $LibelleElementHorsLigne = "" ;
+			public $RechercheParDebut = 1 ;
 			public function ExtraitFiltresSelection($termeRech)
 			{
 				$filtres = $this->FiltresSelection ;
@@ -921,7 +922,14 @@ return {
 				$this->TermeRech = (isset($_GET["q"])) ? $_GET["q"] : '' ;
 				$filtres = $comp->ExtraitFiltresSelection($this->TermeRech) ;
 				// $this->Resultat->total_count = $fourn->CompteElements(array(), $filtres) ;
-				$this->Resultat->items = $fourn->RechDebuteElements($filtres, array($comp->NomColonneLibelle, $comp->NomColonneValeur), $this->TermeRech) ;
+				if($this->RechercheParDebut == 1)
+				{
+					$this->Resultat->items = $fourn->RechDebuteElements($filtres, array($comp->NomColonneLibelle, $comp->NomColonneValeur), $this->TermeRech) ;
+				}
+				else
+				{
+					$this->Resultat->items = $fourn->RechPartielleElements($filtres, array($comp->NomColonneLibelle, $comp->NomColonneValeur), $this->TermeRech) ;
+				}
 				$this->Resultat->total_count = count($this->Resultat->items) ;
 				// print_r($fourn) ;
 			}

@@ -283,9 +283,9 @@
 			protected function DetermineEnvironnement(& $script)
 			{
 				parent::DetermineEnvironnement($script) ;
-				$this->DetermineCompsRendu() ;
+				$this->DetermineCompsRendu($script) ;
 			}
-			protected function DetermineCompsRendu()
+			protected function DetermineCompsRendu(& $script)
 			{
 				$this->ChargeMenusAuto1VoletNav() ;
 				$this->ChargeAutresMenus1VoletNav() ;

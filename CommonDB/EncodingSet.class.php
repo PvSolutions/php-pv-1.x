@@ -23,6 +23,15 @@
 			{
 				return $value ;
 			}
+			public function EncodeHtmlEntity($value)
+			{
+			}
+			public function EncodeHtmlAttr($value)
+			{
+			}
+			public function EncodeUrl($value)
+			{
+			}
 			public function ReleaseRunQuery(& $db)
 			{
 			}

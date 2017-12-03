@@ -468,9 +468,12 @@ where id_commande=:id" ;
 			{
 				$bd = $this->ObtientBDSupport() ;
 				$lgns = $bd->FetchSqlRows("select id from ".$bd->EscapeTableName($this->NomTableBoutique)." where statut_publication=1") ;
-				foreach($lgns as $i => $lgn)
+				if(is_array($lgns))
 				{
-					$this->IdsBoutiqueConsult[] = $lgn["id"] ;
+					foreach($lgns as $i => $lgn)
+					{
+						$this->IdsBoutiqueConsult[] = $lgn["id"] ;
+					}
 				}
 				$this->IdPremBoutiqueConsult = (count($this->IdsBoutiqueConsult) > 0) ? $this->IdsBoutiqueConsult[0] : 0 ;
 			}

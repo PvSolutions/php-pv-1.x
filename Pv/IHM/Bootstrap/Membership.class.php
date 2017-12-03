@@ -11,13 +11,14 @@
 			public $ColXsLibelle = 5 ;
 			public $TagTitre = 'h3' ;
 			public $InclureIcones = 0 ;
+			public $ClasseCSSCadre = "col-xs-4" ;
 			public $ClasseCSSErreur = 'alert alert-danger alert-dismissable' ;
 			public function RenduSpecifique()
 			{
 				$ctn = '' ;
 				$ctn .= '<div class="container-fluid">'.PHP_EOL ;
 				$ctn .= '<div class="row">'.PHP_EOL ;
-				$ctn .= '<div class="col-xs-4 center-block">'.PHP_EOL ;
+				$ctn .= '<div class="'.$this->ClasseCSSCadre.' center-block">'.PHP_EOL ;
 				$ctn .= '<form class="user_login_box '.$this->NomClsCSSFormulaireDonnees.'" action="'.$this->UrlSoumetTentativeConnexion().'" role="form" method="post">'.PHP_EOL ;
 				$ctn .= '<div class="panel panel-default">'.PHP_EOL ;
 				$ctn .= '<div class="panel-body">'.PHP_EOL ;
@@ -61,7 +62,6 @@
 </div>
 </div>
 </div>
-</div>
 <div class="form-group">
 <div class="container-fluid">
 <div class="row">
@@ -72,7 +72,6 @@
 <i class="glyphicon glyphicon-lock"></i>
 </span>' : '').'<input class="form-control" name="'.$this->NomParamMotPasse.'" type="password" value="" />
 '.(($this->InclureIcones) ? '</div>' : '').'</div>
-</div>
 </div>
 </div>
 </div>' ;

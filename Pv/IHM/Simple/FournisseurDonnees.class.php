@@ -93,8 +93,23 @@
 			public function RechsExactesElements($filtres, $nomColonne, $valeurs)
 			{
 			}
+			public function RechPartielleElements($filtres, $nomColonnes, $valeur)
+			{
+			}
 			public function RechDebuteElements($filtres, $nomColonnes, $valeur)
 			{
+			}
+			public function EncodeEntiteHtml($valeur)
+			{
+				return htmlentities($valeur) ;
+			}
+			public function EncodeAttrHtml($valeur)
+			{
+				return htmlspecialchars($valeur) ;
+			}
+			public function EncodeUrl($valeur)
+			{
+				return urlencode($valeur) ;
 			}
 		}
 		class PvFournisseurDonneesNatif extends PvFournisseurDonneesBase
@@ -744,6 +759,45 @@
 					return false ;
 				return $this->BaseDonnees->CloseQuery($requete->RessourceSupport) ;
 			}
+			public function RechPartielleElements($filtres, $nomColonnes, $valeur)
+			{
+				$valeur = strtoupper($valeur) ;
+				$expression = $this->ExtraitExpressionFiltres($filtres) ;
+				$requeteSql = "select * from ".$this->RequeteSelection." t1" ;
+				if($expression->Texte != '')
+				{
+					$requeteSql .= " where ".$expression->Texte ;
+				}
+				$filtresExtra = array() ;
+				if($valeur != '')
+				{
+					$exprDebute = '' ;
+					foreach($nomColonnes as $i => $nomColonne)
+					{
+						$nomFiltre = uniqid('Flt').$i ;
+						$condFiltre = $this->BaseDonnees->SqlIndexOf('UPPER('.$this->BaseDonnees->EscapeVariableName($nomColonne).')', $this->BaseDonnees->ParamPrefix.$nomFiltre).' >= 1' ;
+						$filtresExtra[$nomFiltre] = $valeur ;
+						if($i > 0)
+						{
+							$exprDebute .= " or " ;
+						}
+						$exprDebute .= $condFiltre ;
+					}
+				}
+				if($expression->Texte != '')
+				{
+					$requeteSql .= ' and ('.$exprDebute.')' ;
+				}
+				else
+				{
+					$requeteSql .= ' where ('.$exprDebute.')' ;
+				}
+				// print $requeteSql."\n" ;
+				$params = array_merge($expression->Parametres, $this->ParamsSelection, $filtresExtra) ;
+				// print_r($params) ;
+				$lignes = $this->BaseDonnees->FetchSqlRows($requeteSql, $params) ;
+				return $lignes ;
+			}
 			public function RechDebuteElements($filtres, $nomColonnes, $valeur)
 			{
 				$valeur = strtoupper($valeur) ;
@@ -826,6 +880,30 @@
 				}
 				$lignes = $this->BaseDonnees->FetchSqlRows($requeteSql, array_merge($expression->Parametres, $this->ParamsSelection, $filtresValeur)) ;
 				return $lignes ;
+			}
+			public function EncodeEntiteHtml($valeur)
+			{
+				if($this->EstNul($this->BaseDonnees))
+				{
+					return parent::EncodeEntiteHtml($valeur) ;
+				}
+				return $this->BaseDonnees->EncodeHtmlEntity($valeur) ;
+			}
+			public function EncodeAttrHtml($valeur)
+			{
+				if($this->EstNul($this->BaseDonnees))
+				{
+					return parent::EncodeAttrHtml($valeur) ;
+				}
+				return $this->BaseDonnees->EncodeHtmlAttr($valeur) ;
+			}
+			public function EncodeUrl($valeur)
+			{
+				if($this->EstNul($this->BaseDonnees))
+				{
+					return parent::EncodeUrl($valeur) ;
+				}
+				return $this->BaseDonnees->EncodeUrl($valeur) ;
 			}
 		}
 	

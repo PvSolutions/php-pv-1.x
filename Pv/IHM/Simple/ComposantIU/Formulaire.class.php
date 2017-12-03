@@ -49,6 +49,7 @@
 			public $NomClasseCSSTitre = "titre" ;
 			public $NomClasseCSSDescription = "description" ;
 			public $Description = "" ;
+			public $MessageException ;
 			public $InscrireCommandeExecuter = 1 ;
 			public $InscrireCommandeAnnuler = 1 ;
 			public $NomClasseCommandeExecuter = "PvCommandeExecuterBase" ;
@@ -398,7 +399,7 @@
 				$this->ElementsEnCours = $this->FournisseurDonnees->SelectElements($this->ExtraitColonnesDonnees($this->FiltresEdition), $filtresSelection) ;
 				if($this->FournisseurDonnees->ExceptionTrouvee())
 				{
-					$this->MessageExecution = $this->FournisseurDonnees->DerniereException->Message ;
+					$this->MessageException = $this->FournisseurDonnees->MessageException() ;
 				}
 				// print_r($this->FournisseurDonnees->BaseDonnees) ;
 				// $this->ElementsEnCours = $this->FournisseurDonnees->SelectElements($this->ExtraitColonnesDonnees($filtresSelection), $filtresSelection) ;
@@ -521,6 +522,18 @@
 			{
 				return ($this->ValeurParamIdCommande != '') ? 1 : 0 ;
 			}
+			public function NomCommandeSelectionnee()
+			{
+				return $this->ValeurParamIdCommande ;
+			}
+			public function CommandeExecuterSelectionnee()
+			{
+				return $this->ValeurParamIdCommande == $this->NomCommandeExecuter ;
+			}
+			public function CommandeAnnulerSelectionnee()
+			{
+				return $this->ValeurParamIdCommande == $this->NomCommandeAnnuler ;
+			}
 			public function SuccesCommandeSelectionnee()
 			{
 				return $this->PossedeCommandeSelectionnee() && $this->CommandeSelectionnee->EstSucces() ;
@@ -591,9 +604,16 @@
 				$this->PrepareRendu() ;
 				$ctn = '<div id="'.$this->IDInstanceCalc.'">'.PHP_EOL ;
 				$ctn .= $this->AppliqueHabillage().PHP_EOL ;
-				$ctn .= $this->ContenuAvantRendu ;
-				$ctn .= $this->RenduComposants().PHP_EOL ;
-				$ctn .= $this->ContenuApresRendu ;
+				if($this->MessageException == null)
+				{
+					$ctn .= $this->ContenuAvantRendu ;
+					$ctn .= $this->RenduComposants().PHP_EOL ;
+					$ctn .= $this->ContenuApresRendu ;
+				}
+				else
+				{
+					$ctn .= $this->RenduMessageException() ;
+				}
 				$ctn .= '</div>' ;
 				return $ctn ;
 			}
@@ -709,6 +729,10 @@
 				}
 				return $ctn ;
 			}
+			protected function RenduMessageException()
+			{
+				return '<div class="'.$this->ClasseCSSErreur.'">'.$this->MessageException.'</div>' ;
+			}
 			protected function RenduAutreComposantSupport($id)
 			{
 			}
@@ -791,6 +815,13 @@
 						$nomFiltresGets[] = $filtres[$nomFiltre]->NomParametreLie ;
 					}
 				}
+				foreach($this->ChampsGetSoumetFormulaire as $n => $v)
+				{
+					if(! in_array($v, $filtresGet))
+					{
+						$filtresGets[] = $v ;
+					}
+				}
 				foreach($this->ParamsGetSoumetFormulaire as $n => $v)
 				{
 					if(! in_array($v, $filtresGet))
@@ -802,7 +833,6 @@
 				$indexMinUrl = (count($params) > 0) ? 0 : 1 ;
 				$urlFormulaire = remove_url_params(get_current_url()) ;
 				$urlFormulaire .= '?'.http_build_query_string($params) ;
-				$instrDesactivs = '' ;
 				if($this->ForcerDesactCache)
 				{
 					$urlFormulaire .= '&'.urlencode($this->NomParamIdAleat()).'='.htmlspecialchars(rand(0, 999999)) ;

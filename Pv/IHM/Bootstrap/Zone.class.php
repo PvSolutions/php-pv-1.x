@@ -35,6 +35,26 @@
 			public $NomClasseScriptModifRole = "PvScriptModifRoleBootstrap" ;
 			public $NomClasseScriptSupprRole = "PvScriptSupprRoleBootstrap" ;
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesBootstrap" ;
+			public $InclureHelpers = 1 ;
+			public function InclutLibrairiesExternes()
+			{
+				parent::InclutLibrairiesExternes() ;
+				if($this->InclureHelpers == 1)
+				{
+					$this->InscritContenuJS($this->ContenuJsHelper()) ;
+				}
+			}
+			protected function ContenuJsHelper()
+			{
+				$ctn = '' ;
+				$ctn .= 'jQuery(function() {
+jQuery(\'.pull-down\').each(function() {
+  var $this = jQuery(this);
+  $this.css(\'margin-top\', $this.parent().height() - $this.height()) ;
+});
+}) ;' ;
+				return $ctn ;
+			}
 		}
 	}
 	
