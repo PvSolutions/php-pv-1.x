@@ -25,6 +25,7 @@
 			protected static $SourceIncluse = 0 ;
 			protected function RenduSourceIncluse()
 			{
+				$nomClasse = get_class($this) ;
 				if($this->ObtientValStatique("SourceIncluse") == 1)
 					return "" ;
 				$ctn = $this->RenduSourceBrut() ;
@@ -119,6 +120,7 @@
 			public $CasseInsensibleImg = 1 ;
 			public $NomActionAffichImg ;
 			public $ActionAffichImg ;
+			public $NomParamsAction = array() ;
 			public function AdopteZone($nom, & $zone)
 			{
 				parent::AdopteZone($nom, $zone) ;
@@ -128,6 +130,10 @@
 			}
 			protected function RenduDispositifBrut()
 			{
+				if(count($this->NomParamsAction) > 0)
+				{
+					$this->ActionAffichImg->Params = array_extract_value_for_keys($_GET, $this->NomParamsAction) ;
+				}
 				$ctn = '' ;
 				$ctn .= '<table cellspacing="0" cellpadding="0"><tr><td>' ;
 				$ctn .= parent::RenduDispositifBrut() ;
@@ -140,6 +146,9 @@
 			{
 				return $this->ActionAffichImg->VerifieValeurSoumise($texte) ;
 			}
+		}
+		class PvZoneCaptcha extends PvZoneCommonCaptcha
+		{
 		}
 		
 		class PvNoteBloc extends PvEditeurHtmlBase
@@ -291,14 +300,15 @@
         
         class PvDatePick extends PvEditeurHtmlBase
         {
-            public $CheminFichierJs = "js/ts_picker.js" ;
+			protected static $SourceIncluse = 0 ;
+            public static $CheminFichierJs = "js/ts_picker.js" ;
             public $CheminRepImgs = "images" ;
             public $DescriptifPopup = 'Afficher le calendrier' ;
             public $LibellesMois = array() ;
             public $LibellesJour = array() ;
             protected function RenduSourceIncluse() {
                 $ctn = '' ;
-				$ctn .= $this->ZoneParent->RenduLienJsInclus($this->CheminFichierJs) ;
+				$ctn .= $this->ZoneParent->RenduLienJsInclus(PvDatePick::$CheminFichierJs) ;
                 $ctn .= $this->ZoneParent->RenduContenuJsInclus('ts_picker_arr_months = '.  svc_json_encode($this->LibellesMois).' ;
 ts_picker_week_days = '.  svc_json_encode($this->LibellesMois)) ;
                 return $ctn ;
@@ -453,6 +463,47 @@ ts_picker_week_days = '.  svc_json_encode($this->LibellesMois)) ;
 				return $ctn ;
 			}
 		}
+		
+		class PvDatetimePickerRainForest extends PvEditeurHtmlBase
+		{
+			protected static $SourceIncluse = 0 ;
+            public static $CheminFichierJs = "js/datetimepicker_css.js" ;
+            public $CheminRepImgs = "images" ;
+            public $DescriptifPopup = 'Afficher le calendrier' ;
+			public $FormatDatePHP = "d-m-Y H:i:s" ;
+			public $FormatDateJs = "ddMMyyyy" ;
+            protected function RenduSourceIncluse()
+			{
+                $ctn = '' ;
+				$ctn .= $this->ZoneParent->RenduLienJsInclus(PvDatetimePickerRainForest::$CheminFichierJs) ;
+				$ctn .= $this->ZoneParent->RenduContenuJsInclus('function fixeValeur'.$this->IDInstanceCalc.'() {
+document.getElementById("'.$this->IDInstanceCalc.'").value = Cal.Year + "-" + Cal.Month + "-" + Cal.Date + " " + Cal.Hours + "-" + Cal.Minutes + "-" + Cal.Seconds ;
+}') ;
+                return $ctn ;
+            }
+            protected function RenduEditeurBrut()
+			{
+                $ctn = '' ;
+				if($this->Valeur == "")
+				{
+					$this->Valeur = date($this->FormatDatePHP) ;
+				}
+				else
+				{
+					$this->Valeur = date($this->FormatDatePHP, strtotime($this->Valeur)) ;
+				}
+                $ctn .= '<input type="text" id="'.$this->IDInstanceCalc.'_Support" value="'.htmlspecialchars($this->Valeur).'" onchange="fixeValeur'.$this->IDInstanceCalc.'()" />' ;
+                $ctn .= '<input type="hidden" id="'.$this->IDInstanceCalc.'" name="'.htmlspecialchars($this->NomElementHtml).'" value="'.htmlspecialchars($this->Valeur).'" />' ;
+                $ctn .= '
+<a href="javascript:NewCssCal(\''.$this->IDInstanceCalc.'_Support\',\''.$this->FormatDateJs.'\', \'dropdown\', true, \'24\', true)"><img src="'.$this->CheminRepImgs.'/cal.gif" border="0" alt="'.htmlspecialchars($this->DescriptifPopup).'"></a>' ;
+                return $ctn ;
+            }
+		}
+		
+		class PvDatePickerRainForest extends PvDatetimePickerRainForest
+		{
+		}
+	
 	}
 	
 ?>

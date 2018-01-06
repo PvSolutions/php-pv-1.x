@@ -2200,6 +2200,7 @@
 			public $StoredProcQueryActive = false ;
 			public $StoredProcCursor = false ;
 			public $StoredProcQuery = false ;
+			public $OracleCharacterSet = "AL32UTF8" ;
 			public function ImportConfigFromNode(& $node)
 			{
 				parent::ImportConfigFromNode($node) ;
@@ -2271,7 +2272,7 @@
 						{
 							$tnsName .= '('.$n.' = '.$v.')'."\n" ;
 						}
-							$tnsName .= '(CONNECT_DATA =
+						$tnsName .= '(CONNECT_DATA =
 ('.$serviceName.' = '.$schema.')'."\n" ;
 						foreach($this->TnsConnectDataParams as $n => $v)
 						{
@@ -2305,9 +2306,14 @@
 					$user = (isset($this->ConnectionParams["user"])) ? $this->ConnectionParams["user"] : "root" ;
 					$password = (isset($this->ConnectionParams["password"])) ? $this->ConnectionParams["password"] : "" ;
 					$this->LastConnectionString = $user.":".$password."@".$tnsName."\n" ;
-					$this->Connection = oci_connect($user, $password, $tnsName) ;
-					// echo "mmm" ;
-					// print_r($this->Connection) ;
+					if($this->OracleCharacterSet == '')
+					{
+						$this->Connection = oci_connect($user, $password, $tnsName) ;
+					}
+					else
+					{
+						$this->Connection = oci_connect($user, $password, $tnsName, $this->OracleCharacterSet) ;
+					}
 					if(! $this->Connection)
 					{
 						$res = 0 ;
@@ -2769,6 +2775,7 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 		class SqlSrvDB extends AbstractSqlDB
 		{
 			var $VendorName = "SQLSERVER" ;
+			var $LoginTimeout = 0 ;
 			function ExecFixCharacterEncoding()
 			{
 				sqlsrv_set_charset($this->Connection, $this->CharacterEncoding) ;
@@ -2807,7 +2814,16 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 					$user = (isset($this->ConnectionParams["user"])) ? $this->ConnectionParams["user"] : "root" ;
 					$password = (isset($this->ConnectionParams["password"])) ? $this->ConnectionParams["password"] : "" ;
 					$schema = (isset($this->ConnectionParams["schema"])) ? $this->ConnectionParams["schema"] : "" ;
-					$this->Connection = sqlsrv_connect($server, array("Database" => $schema, "UID" => $user, "PWD" => $password)) ;
+					$connectionInfo = array("Database" => $schema, "UID" => $user, "PWD" => $password) ;
+					if($this->AutoSetCharacterEncoding && $this->CharacterEncoding != '')
+					{
+						$connectionInfo["CharacterSet"] = strtoupper($this->CharacterEncoding) ;
+					}
+					if($this->LoginTimeout > 0)
+					{
+						$connectionInfo["LoginTimeout"] = $this->LoginTimeout ;
+					}
+					$this->Connection = sqlsrv_connect($server, $connectionInfo) ;
 					if(! $this->Connection)
 					{
 						$res = 0 ;

@@ -145,6 +145,10 @@
 			public $NomClasseScriptModifRole = "" ;
 			public $NomClasseScriptSupprRole = "" ;
 			public $NomClasseScriptListeRoles = "" ;
+			public $NomClasseScriptAjoutServeurAD = "" ;
+			public $NomClasseScriptModifServeurAD = "" ;
+			public $NomClasseScriptSupprServeurAD = "" ;
+			public $NomClasseScriptListeServeursAD = "" ;
 			public $NomScriptConnexion = "connexion" ;
 			public $NomScriptInscription = "inscription" ;
 			public $AutoriserInscription = 0 ;
@@ -167,6 +171,10 @@
 			public $NomScriptModifRole = "modifRole" ;
 			public $NomScriptSupprRole = "supprRole" ;
 			public $NomScriptListeRoles = "listeRoles" ;
+			public $NomScriptAjoutServeurAD = "ajoutServeurAD" ;
+			public $NomScriptModifServeurAD = "modifServeurAD" ;
+			public $NomScriptSupprServeurAD = "supprServeurAD" ;
+			public $NomScriptListeServeursAD = "listeServeursAD" ;
 			public $ScriptDeconnexion = null ;
 			public $ScriptInscription = null ;
 			public $ScriptConnexion = null ;
@@ -187,6 +195,10 @@
 			public $ScriptModifRole = null ;
 			public $ScriptSupprRole = null ;
 			public $ScriptListeRoles = null ;
+			public $ScriptAjoutServeurAD = null ;
+			public $ScriptModifServeurAD = null ;
+			public $ScriptSupprServeurAD = null ;
+			public $ScriptListeServeursAD = null ;
 			public $PrivilegesExceptions = array() ;
 			public $PrivilegesPassePartout = array() ;
 			public $ExceptionsToujoursVisibles = 0 ;
@@ -336,7 +348,11 @@
 			}
 			public function MembreDoitChangerMP()
 			{
-				return ($this->EstPasNul($this->Membership->MemberLogged) && $this->Membership->MemberLogged->MustChangePassword == $this->Membership->MustChangePasswordMemberTrueValue) ;
+				return ($this->MembreAuthentifieParAD() == 0 && $this->EstPasNul($this->Membership->MemberLogged) && $this->Membership->MemberLogged->MustChangePassword == $this->Membership->MustChangePasswordMemberTrueValue) ;
+			}
+			public function MembreAuthentifieParAD()
+			{
+				return ($this->AttrMembreConnecte("MEMBER_AD_ACTIVATED") == 1) ;
 			}
 			protected function ChargeScriptsMSConnecte()
 			{
@@ -367,11 +383,14 @@
 					$this->ScriptChangeMPMembre = new $nomClasse() ;
 					$this->InscritScript($this->NomScriptChangeMPMembre, $this->ScriptChangeMPMembre) ;
 				}
-				if(class_exists($this->NomClasseScriptChangeMotPasse))
+				if($this->MembreAuthentifieParAD() == 0)
 				{
-					$nomClasse = $this->NomClasseScriptChangeMotPasse ;
-					$this->ScriptChangeMotPasse = new $nomClasse() ;
-					$this->InscritScript($this->NomScriptChangeMotPasse, $this->ScriptChangeMotPasse) ;
+					if(class_exists($this->NomClasseScriptChangeMotPasse))
+					{
+						$nomClasse = $this->NomClasseScriptChangeMotPasse ;
+						$this->ScriptChangeMotPasse = new $nomClasse() ;
+						$this->InscritScript($this->NomScriptChangeMotPasse, $this->ScriptChangeMotPasse) ;
+					}
 				}
 				if(class_exists($this->NomClasseScriptAjoutMembre))
 				{
@@ -474,6 +493,41 @@
 					$this->ScriptListeRoles->DeclarePrivileges($this->PrivilegesEditMembership) ;
 					$this->InscritScript($this->NomScriptListeRoles, $this->ScriptListeRoles) ;
 					$this->NomScriptsEditMembership[] = $this->NomScriptListeRoles ;
+				}
+				if($this->Membership->ADServerMemberColumn != '')
+				{
+					if(class_exists($this->NomClasseScriptAjoutServeurAD))
+					{
+						$nomClasse = $this->NomClasseScriptAjoutServeurAD ;
+						$this->ScriptAjoutServeurAD = new $nomClasse() ;
+						$this->ScriptAjoutServeurAD->DeclarePrivileges($this->PrivilegesEditMembership) ;
+						$this->InscritScript($this->NomScriptAjoutServeurAD, $this->ScriptAjoutServeurAD) ;
+						$this->NomScriptsEditMembership[] = $this->NomScriptAjoutServeurAD ;
+					}
+					if(class_exists($this->NomClasseScriptModifServeurAD))
+					{
+						$nomClasse = $this->NomClasseScriptModifServeurAD ;
+						$this->ScriptModifServeurAD = new $nomClasse() ;
+						$this->ScriptModifServeurAD->DeclarePrivileges($this->PrivilegesEditMembership) ;
+						$this->InscritScript($this->NomScriptModifServeurAD, $this->ScriptModifServeurAD) ;
+						$this->NomScriptsEditMembership[] = $this->NomScriptModifServeurAD ;
+					}
+					if(class_exists($this->NomClasseScriptSupprServeurAD))
+					{
+						$nomClasse = $this->NomClasseScriptSupprServeurAD ;
+						$this->ScriptSupprServeurAD = new $nomClasse() ;
+						$this->ScriptSupprServeurAD->DeclarePrivileges($this->PrivilegesEditMembership) ;
+						$this->InscritScript($this->NomScriptSupprServeurAD, $this->ScriptSupprServeurAD) ;
+						$this->NomScriptsEditMembership[] = $this->NomScriptSupprServeurAD ;
+					}
+					if(class_exists($this->NomClasseScriptListeServeursAD))
+					{
+						$nomClasse = $this->NomClasseScriptListeServeursAD ;
+						$this->ScriptListeServeursAD = new $nomClasse() ;
+						$this->ScriptListeServeursAD->DeclarePrivileges($this->PrivilegesEditMembership) ;
+						$this->InscritScript($this->NomScriptListeServeursAD, $this->ScriptListeServeursAD) ;
+						$this->NomScriptsEditMembership[] = $this->NomScriptListeServeursAD ;
+					}
 				}
 			}
 			public function ChargeConfig()

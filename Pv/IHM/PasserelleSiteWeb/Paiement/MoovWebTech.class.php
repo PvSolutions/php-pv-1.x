@@ -30,7 +30,7 @@
 			public $EtatSessionRglt = "" ;
 			public $UserCompteMarchand ;
 			public $PasswordCompteMarchand ;
-			public $DelaiVerifStatut = 5 ;
+			public $DelaiVerifStatut = 30 ;
 			public $UrlApi = "https://floozapi.webtechci.com/interface/api.php" ;
 			protected function CreeBdAppels()
 			{

@@ -219,13 +219,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public function Execute()
 			{
 				$this->ZoneParent->DemarreRenduImpression() ;
-				echo $this->ZoneParent->RenduEnteteDocument() ;
-				echo '<body onload="window.print() ;">' ;
-				echo $this->ZoneParent->ScriptPourRendu->RenduDispositif() ;
-				echo $this->ZoneParent->RenduPiedDocument() ;
-				echo '</body>
-</html>' ;
-				$this->ZoneParent->TermineRenduImpression() ;
+				echo $this->ZoneParent->RenduDocument() ;
 				exit ;
 			}
 		}

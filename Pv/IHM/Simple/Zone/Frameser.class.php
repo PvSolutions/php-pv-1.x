@@ -95,6 +95,7 @@
 			public $InclureFontAwesome = 1 ;
 			public $InclureSousMenuAccueil = 1 ;
 			public $AutoriserInscription = 1 ;
+			public $AutoriserModifPrefs = 1 ;
 			public $SousMenuAccueil ;
 			public $SousMenuConnexion ;
 			public $SousMenuDeconnexion ;
@@ -495,8 +496,11 @@
 				{
 					$ctn .= htmlentities($this->ZoneParent->Membership->MemberLogged->Login) ;
 					$ctn .= '<span class="sep">|</span> ' ;
-					$ctn .= '<a href="'.$this->ZoneParent->ScriptModifMembre->ObtientUrl().'">'.$this->LibelleModifInfos.'</a>' ;
-					$ctn .= ' &bull; ' ;
+					if($this->ZoneParent->AutoriserModifPrefs == 1)
+					{
+						$ctn .= '<a href="'.$this->ZoneParent->ScriptModifPrefs->ObtientUrl().'">'.$this->LibelleModifInfos.'</a>' ;
+						$ctn .= ' &bull; ' ;
+					}
 					$ctn .= '<a href="'.$this->ZoneParent->ScriptDeconnexion->ObtientUrl().'">'.$this->LibelleDeconnexion.'</a>' ;
 				}
 				$ctn .= '</div>' ;

@@ -427,6 +427,7 @@
 		
 		class PvZoneWebSimple extends PvZoneWeb
 		{
+			public $TagTitre = "div" ;
 			public $TypeDocument ;
 			public $AdrScriptSession ;
 			public $DocumentsWeb = array() ;
@@ -513,6 +514,10 @@
 			public $NomClasseScriptModifRole = "PvScriptModifRoleMSWeb" ;
 			public $NomClasseScriptSupprRole = "PvScriptSupprRoleMSWeb" ;
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesMSWeb" ;
+			public $NomClasseScriptAjoutServeurAD = "PvScriptAjoutServeurADWeb" ;
+			public $NomClasseScriptModifServeurAD = "PvScriptModifServeurADWeb" ;
+			public $NomClasseScriptSupprServeurAD = "PvScriptSupprServeurADWeb" ;
+			public $NomClasseScriptListeServeursAD = "PvScriptListeServeursADWeb" ;
 			protected $TacheAppelee ;
 			protected $ScriptExecuteAccessible = false ;
 			public $CleMessageExecutionSession = "PvMessageExecution" ;
@@ -842,17 +847,22 @@
 					{
 						$ctn .= $this->RenduDebutCorpsDocument().PHP_EOL ;
 						$ctn .= $this->RenduContenuCorpsDocument().PHP_EOL ;
-						$ctn .= $this->RenduDebutCorpsDocument().PHP_EOL ;
+						$ctn .= $this->RenduFinCorpsDocument().PHP_EOL ;
 					}
 					$ctn .= $this->RenduPiedDocument().PHP_EOL ;
 					$ctn .= '</html>' ;
 				}
 				$ctn .= $this->RenduAutoRafraich() ;
+				$ctn .= $this->RenduBoiteImpression() ;
 				return $ctn ;
 			}
 			public function RenduAutoRafraich()
 			{
 				$ctn = '' ;
+				if($this->PourImpression == 1)
+				{
+					return '' ;
+				}
 				if($this->ActiverRafraichScript && ($this->ScriptPourRendu->DoitAutoRafraich()))
 				{
 					$ctn .= '<script type="text/javascript">
@@ -862,6 +872,18 @@
 	window.setTimeout("execAutoRafraich()", '.intval($this->ScriptPourRendu->DelaiAutoRafraich).' * 1000) ;
 </script>'.PHP_EOL ;
 				}
+				return $ctn ;
+			}
+			protected function RenduBoiteImpression()
+			{
+				$ctn = '' ;
+				if($this->PourImpression == 0)
+				{
+					return '' ;
+				}
+					$ctn .= '<script type="text/javascript">
+	window.print() ;
+</script>'.PHP_EOL ;
 				return $ctn ;
 			}
 			protected function RenduDebutCorpsDocument()

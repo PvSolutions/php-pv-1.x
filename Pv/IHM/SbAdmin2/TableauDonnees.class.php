@@ -255,7 +255,7 @@
 						$ctn .= '</tbody>'.PHP_EOL ;
 						$ctn .= '</table>' ;
 					}
-					else
+					elseif($this->AlerterAucunElement == 1)
 					{
 						$ctn .= '<p class="AucunElement">'.$this->MessageAucunElement.'</p>' ;
 					}

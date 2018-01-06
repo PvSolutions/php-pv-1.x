@@ -48,7 +48,7 @@
 			public $InclureRenduChemin = 1 ;
 			public $ActiverAutoRafraich = 0 ;
 			public $DelaiAutoRafraich = 0 ;
-			public $TagTitre = "div" ;
+			public $TagTitre = "" ;
 			public $ParamsAutoRafraich = array() ;
 			public $Imprimable = 0 ;
 			public $NomActionImprime = "imprimeScript" ;
@@ -192,19 +192,28 @@
 			}
 			public function RenduTitre()
 			{
+				$tagTitre = $this->ZoneParent->TagTitre ;
+				if($this->TagTitre != '')
+				{
+					$tagTitre = $this->TagTitre ;
+				}
+				if($tagTitre == '')
+				{
+					$tagTitre = 'div' ;
+				}
 				if(! $this->ZoneParent->InclureRenduTitre || ! $this->InclureRenduTitre)
 				{
 					return '' ;
 				}
 				$ctn = '' ;
-				$ctn .= '<'.$this->TagTitre.' class="titre">' ;
+				$ctn .= '<'.$tagTitre.' class="titre">' ;
 				$ctnIcone = $this->RenduIcone() ;
 				if($ctnIcone != '')
 				{
 					$ctn .= $ctnIcone.'&nbsp;&nbsp;' ;
 				}
 				$ctn .= $this->Titre ;
-				$ctn .= '</'.$this->TagTitre.'>' ;
+				$ctn .= '</'.$tagTitre.'>' ;
 				return $ctn ;
 			}
 			public function ObtientTitreDocument()
@@ -416,7 +425,8 @@
 					{
 						$this->ChargeConfigComposantTableauDonnees() ;
 					}
-					return $this->ComposantTableauDonnees->RenduDispositif() ;
+					$ctn = $this->ComposantTableauDonnees->RenduDispositif() ;
+					return $ctn ;
 				}
 				else
 				{
@@ -453,11 +463,13 @@
 			public $LibelleBoutonSoumettre = "Se connecter" ;
 			public $MessageConnexionEchouee = "" ;
 			public $MessageErreurValidation = "Nom d'utilisateur / Mot de passe invalide." ;
+			public $MessageExceptionValidation = "Une Erreur inconnue est survenue." ;
 			public $UtiliserMessageExplicite = 1 ;
 			public $MessageMotPasseIncorrect = "Le mot de passe est incorrect" ;
 			public $MessageMembreNonTrouve = "Utilisateur non trouv&eacute;" ;
 			public $MessageMembreNonActif = "Votre compte a &eacute;t&eacute; d&eacute;sactiv&eacute;" ;
-			public $MessageAuthADEchoue = "Echec de l'authentification sur le domaine" ;
+			public $MessageAuthADEchoue = "Echec de l'authentification sur le serveur Active Directory" ;
+			public $MessageAuthServeurADInaccessible = "Le serveur Active Directory est indisponible" ;
 			public $AutoriserUrlsRetour = 0 ;
 			public $ValeurUrlRetour = "" ;
 			public $NomParamUrlRetour = "urlRetour" ;
@@ -569,9 +581,14 @@
 								$this->MessageConnexionEchouee = $this->MessageAuthADEchoue ;
 							}
 							break ;
-							case AkSqlMembership::VALIDATE_ERROR_AD_AUTH_FAILED :
+							case AkSqlMembership::VALIDATE_ERROR_AD_SERVER_CONNECT_ERROR :
 							{
-								$this->MessageConnexionEchouee = $this->MessageAuthADEchoue ;
+								$this->MessageConnexionEchouee = $this->MessageAuthServeurADInaccessible ;
+							}
+							break ;
+							case AkSqlMembership::VALIDATE_ERROR_AD_PASSWORD_EMPTY :
+							{
+								$this->MessageConnexionEchouee = $this->MessageMotPasseIncorrect ;
 							}
 							break ;
 							default :
@@ -579,6 +596,10 @@
 								if(isset($this->MessagesErreurValidation[$this->ZoneParent->Membership->LastValidateError]))
 								{
 									$this->MessageConnexionEchouee = $this->MessagesErreurValidation[$this->ZoneParent->Membership->LastValidateError] ;
+								}
+								else
+								{
+									$this->MessageConnexionEchouee = $this->MessageExceptionValidation ;
 								}
 							}
 							break ;
@@ -1265,6 +1286,147 @@ Cordialement' ;
 			public $Titre = "Liste des r&ocirc;les" ;
 			public $TitreDocument = "Liste des r&ocirc;les" ;
 			public $NomClasseTableauDonnees = "PvTableauRolesMSHtml" ;
+		}
+		
+		class PvScriptListeServeursADWeb extends PvScriptTableauDonneesSimple
+		{
+			public $TitreDocument = "Liste des serveurs Active Directory" ;
+			public $Titre = "Liste des serveurs Active Directory" ;
+			protected function ChargeConfigComposantTableauDonnees()
+			{
+				parent::ChargeConfigComposantTableauDonnees() ;
+				$tabl = & $this->ComposantTableauDonnees ;
+				$membership = & $this->ZoneParent->Membership ;
+				$bd = & $membership->Database ;
+				$this->DefColId = $tabl->InsereDefColCachee($membership->IdADServerColumn) ;
+				$this->DefColHote = $tabl->InsereDefCol($membership->HostADServerColumn, $membership->HostADServerLabel) ;
+				$this->DefColPort = $tabl->InsereDefCol($membership->PortADServerColumn, $membership->PortADServerLabel) ;
+				$this->DefColDomaine = $tabl->InsereDefCol($membership->DomainADServerColumn, $membership->DomainADServerLabel) ;
+				$this->DefColDn = $tabl->InsereDefCol($membership->DnADServerColumn, $membership->DnADServerLabel) ;
+				$tabl->FournisseurDonnees = new PvFournisseurDonneesSql() ;
+				$tabl->FournisseurDonnees->BaseDonnees = $membership->Database ;
+				$tabl->FournisseurDonnees->RequeteSelection = $bd->EscapeTableName($membership->ADServerTable) ;
+			}
+		}
+		
+		class PvScriptEditServeurADWeb extends PvFormulaireWebDonneesSimple
+		{
+			public $FltId ;
+			public $FltHote ;
+			public $FltPort ;
+			public $FltDomaine ;
+			public $FltUserProtoV3 ;
+			public $FltSuivreReferants ;
+			public $MessageErreurDejaEnregistre = "Le serveur Active Directory avec les m&ecirc;mes param&egrave;tres existe d&eacute;j&agrave;" ;
+			protected function InitComposantFormulaireDonnees()
+			{
+				parent::InitComposantFormulaireDonnees() ;
+			}
+			protected function ChargeConfigComposantFormulaireDonnees()
+			{
+				parent::ChargeConfigComposantFormulaireDonnees() ;
+				$membership = & $this->ZoneParent->Membership ;
+				$remplCfgMembership = & $this->ZoneParent->RemplisseurConfigMembership ;
+				$bd = & $membership->Database ;
+				$form = & $this->ComposantFormulaireDonnees ;
+				$this->FltId = $form->InsereFltSelectHttpGet("id", $bd->EscapeTableName($membership->IdADServerColumn).' = <self>') ;
+				$this->FltHote = $form->InsereFltEditHttpPost("hote", $membership->HostADServerColumn) ;
+				$this->FltHote->Libelle = $membership->HostADServerLabel ;
+				$this->FltPort = $form->InsereFltEditHttpPost("port", $membership->PortADServerColumn) ;
+				$this->FltPort->Libelle = $membership->PortADServerLabel ;
+				$this->FltDomaine = $form->InsereFltEditHttpPost("domaine", $membership->DomainADServerColumn) ;
+				$this->FltDomaine->Libelle = $membership->DnADServerLabel ;
+				$this->FltDn = $form->InsereFltEditHttpPost("dn", $membership->DnADServerColumn) ;
+				$this->FltDn->Libelle = $membership->DnADServerLabel ;
+				$this->FltUserProtoV3 = $form->InsereFltEditHttpPost("user_proto_v3", $membership->UseProtocolV3ADServerColumn) ;
+				$this->FltUserProtoV3->Libelle = $membership->UseProtocolV3ADServerLabel ;
+				$this->FltUserProtoV3->DeclareComposant("PvZoneSelectBoolHtml") ;
+				$this->FltSuivreReferants = $form->InsereFltEditHttpPost("suivre_referants", $membership->FollowReferralsADServerColumn) ;
+				$this->FltSuivreReferants->Libelle = $membership->FollowReferralsADServerLabel ;
+				$this->FltSuivreReferants->DeclareComposant("PvZoneSelectBoolHtml") ;
+				$form->FournisseurDonnees = new PvFournisseurDonneesSql() ;
+				$form->FournisseurDonnees->BaseDonnees = & $membership->Database ;
+				$form->FournisseurDonnees->RequeteSelection = $bd->EscapeTableName($membership->ADServerTable) ;
+				$form->FournisseurDonnees->TableEdition = $membership->ADServerTable ;
+				$form->CommandeExecuter->InsereCritereNonVide(array("hote", "port", "dn")) ;
+				$form->CommandeExecuter->InsereNouvCritere(new PvCritereEditServeurADWeb()) ;
+				$form->RedirigeAnnulerVersScript($this->ZoneParent->NomScriptListeServeursAD) ;
+			}
+		}
+		class PvScriptAjoutServeurADWeb extends PvScriptEditServeurADWeb
+		{
+			public $TitreDocument = "Ajout serveur Active Directory" ;
+			public $Titre = "Ajout serveur Active Directory" ;
+			protected function InitComposantFormulaireDonnees()
+			{
+				parent::InitComposantFormulaireDonnees() ;
+				$form = & $this->ComposantFormulaireDonnees ;
+				$form->InclureElementEnCours = 0 ;
+				$form->InclureTotalElements = 0 ;
+				$form->LibelleCommandeExecuter = "Ajouter" ;
+				$form->NomClasseCommandeExecuter = "PvCommandeAjoutElement" ;
+			}
+		}
+		class PvScriptModifServeurADWeb extends PvScriptEditServeurADWeb
+		{
+			public $TitreDocument = "Modification serveur Active Directory" ;
+			public $Titre = "Modification serveur Active Directory" ;
+			protected function InitComposantFormulaireDonnees()
+			{
+				parent::InitComposantFormulaireDonnees() ;
+				$form = & $this->ComposantFormulaireDonnees ;
+				$form->InclureElementEnCours = 1 ;
+				$form->InclureTotalElements = 1 ;
+				$form->LibelleCommandeExecuter = "Modifier" ;
+				$form->NomClasseCommandeExecuter = "PvCommandeModifElement" ;
+			}
+		}
+		class PvScriptSupprServeurADWeb extends PvScriptEditServeurADWeb
+		{
+			public $TitreDocument = "Suppression serveur Active Directory" ;
+			public $Titre = "Suppression serveur Active Directory" ;
+			protected function InitComposantFormulaireDonnees()
+			{
+				parent::InitComposantFormulaireDonnees() ;
+				$form = & $this->ComposantFormulaireDonnees ;
+				$form->InclureElementEnCours = 1 ;
+				$form->InclureTotalElements = 1 ;
+				$form->LibelleCommandeExecuter = "Supprimer" ;
+				$form->Editable = 0 ;
+				$form->NomClasseCommandeExecuter = "PvCommandeSupprElement" ;
+			}
+		}
+		class PvCritereEditServeurADWeb extends PvCritereBase
+		{
+			public function EstRespecte()
+			{
+				$form = & $this->FormulaireDonneesParent ;
+				if($form->InclureElementEnCours == 0)
+				{
+					return 1 ;
+				}
+				$script = $form->ScriptParent ;
+				$bd = $form->FournisseurDonnees->BaseDonnees ;
+				$membership = $form->ZoneParent->Membership ;
+				$lgnSimilaire = $bd->FetchSqlRow(
+					"select * from ".$bd->EscapeTableName($membership->ADServerTable)." where ".$bd->EscapeTableName($membership->ADServerTable, $membership->HostADServerColumn)." = ".$bd->ParamPrefix."hote and ".$bd->EscapeTableName($membership->ADServerTable, $membership->DomainADServerColumn)." = ".$bd->ParamPrefix."domaine",
+					array(
+						"domaine" => $script->FltDomaine->Lie(),
+						"hote" => $script->FltHote->Lie(),
+					)
+				) ;
+				if(! is_array($lgnSimilaire))
+				{
+					$this->MessageErreur = "Erreur SQL : ".$bd->ConnectionException ;
+					return 0 ;
+				}
+				if(count($lgnSimilaire) > 0)
+				{
+					$this->MessageErreur = $script->MessageErreurDejaEnregistre ;
+					return 0 ;
+				}
+				return 1 ;
+			}
 		}
 		
 		class CritrCodeSecurValideInscriptionWeb extends PvCritereBase

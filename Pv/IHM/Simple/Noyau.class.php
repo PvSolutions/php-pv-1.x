@@ -226,6 +226,14 @@
 				return $valeur ;
 			}
 		}
+		class PvFormatteurColonneFixe extends PvFormatteurColonneDonnees
+		{
+			public $ValeurParDefaut = "" ;
+			public function Encode(& $script, $colonne, $ligne)
+			{
+				return htmlentities($this->ValeurParDefaut) ;
+			}
+		}
 		class PvFormatteurColonneMonnaie extends PvFormatteurColonneDonnees
 		{
 			public $MaxDecimals = 3 ;

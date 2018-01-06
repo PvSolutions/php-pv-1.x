@@ -1217,6 +1217,60 @@ jQuery("'.$this->SelecteurJQuery.'").vegas('.svc_json_encode($this->CfgInst).') 
 				return $ctn ;
 			}
 		}
+		
+		class PvDatetimePickerJQuery extends PvEditeurHtmlBase
+		{
+			public static $CheminFichierJs = "js/jquery.datetimepicker.js" ;
+			public static $CheminFichierCSS = "css/jquery.datetimepicker.css" ;
+			public $FormatDatePHP = "d/m/Y H:i:s" ;
+			public $FormatDateJs = "d/m/Y H:i:s" ;
+			protected function RenduSourceBrut()
+			{
+				$ctn = '' ;
+				$ctn .= $this->RenduLienJs(PvDatetimePickerJQuery::$CheminFichierJs) ;
+				if($ctn != '') { $ctn .= PHP_EOL ; }
+				/*
+				$ctn .= $this->RenduContenuJs('jQuery.fn.select2.defaults.set("language", "fr");') ;
+				if($ctn != '') { $ctn .= PHP_EOL ; }
+				*/
+				return $ctn.'<link rel="stylesheet" type="text/css" href="'.PvDatetimePickerJQuery::$CheminFichierCSS.'">'.PHP_EOL ;
+			}
+			protected function RenduEditeurBrut()
+			{
+				$ctn = '' ;
+				$valeurSelect = "" ;
+				if($this->Valeur != "")
+				{
+					$timestmp = strtotime($this->Valeur) ;
+					if($timestmp != 0)
+					{
+						$valeurSelect = date($this->FormatDatePHP, $timestmp) ;
+					}
+				}
+				$ctn .= '<input type="text" id="'.$this->IDInstanceCalc.'_support" value="'.htmlspecialchars($valeurSelect).'" />'.PHP_EOL ;
+				$ctn .= '<input type="hidden" id="'.$this->IDInstanceCalc.'" name="'.$this->NomElementHtml.'" value="'.htmlspecialchars($this->Valeur).'" />'.PHP_EOL ;
+				$ctn .= $this->RenduContenuJs('jQuery(function() {
+jQuery("#'.$this->IDInstanceCalc.'_support").datetimepicker({
+value:'.(($valeurSelect != '') ? svc_json_encode($valeurSelect) : "''").',
+format: "'.$this->FormatDateJs.'",
+onChangeDateTime: function(dp, $input) {
+if(dp == null)
+{
+document.getElementById("'.$this->IDInstanceCalc.'").value = "" ;
+return ;
+}
+var dayLabel = dp.getDate() < 10 ? "0" + dp.getDate() : dp.getDate() ;
+var monthLabel = dp.getMonth() < 10 ? "0" + dp.getMonth() : dp.getMonth() ;
+var hourLabel = dp.getHours() < 10 ? "0" + dp.getHours() : dp.getHours() ;
+var minuteLabel = dp.getMinutes() < 10 ? "0" + dp.getMinutes() : dp.getMinutes() ;
+var secondLabel = dp.getSeconds() < 10 ? "0" + dp.getSeconds() : dp.getSeconds() ;
+document.getElementById("'.$this->IDInstanceCalc.'").value = dp.getFullYear() + "-" + monthLabel + "-" + dayLabel + " " + hourLabel + ":" + minuteLabel + ":" + secondLabel ;
+}
+}) ;
+}) ;') ;
+				return $ctn ;
+			}
+		}
 	}
 	
 ?>

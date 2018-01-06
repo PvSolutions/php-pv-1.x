@@ -86,17 +86,46 @@
 			public function ObtientValeurStatique($nomPropriete, $valeurDefaut=false)
 			{
 				$valeur = $valeurDefaut ;
-				try { eval('$valeur = '.get_class($this).'::$'.$nomPropriete.' ;') ; } catch(Exception $ex) {} ;
+				$nomClasse = get_class($this) ;
+				try
+				{
+					eval('if(isset('.$nomClasse.'::$'.$nomPropriete.'))
+					{
+						$valeur = '.$nomClasse.'::$'.$nomPropriete.' ;
+					}') ;
+				}
+				catch(Exception $ex)
+				{
+				}
 				return $valeur ;
 			}
 			public function AffecteValeurStatique($nomPropriete, $valeur)
 			{
-				try { eval(get_class($this).'::$'.$nomPropriete.' = $valeur ;') ; } catch(Exception $ex) {}
+				$nomClasse = get_class($this) ;
+				try
+				{
+					eval('if(isset('.$nomClasse.'::$'.$nomPropriete.'))
+					{
+						'.$nomClasse.'::$'.$nomPropriete.' = $valeur ;
+					}') ;
+				}
+				catch(Exception $ex)
+				{
+				}
 				return $valeur ;
 			}
 			public function __construct()
 			{
+				$this->InitConfigStatique() ;
 				$this->InitConfig() ;
+			}
+			protected function InitConfigStatique()
+			{
+				$classe = get_class($this) ;
+				eval('if(! isset('.$classe.'::$TotalInstances))
+				{
+					'.$classe.'::$TotalInstances = 0 ;
+				}') ;
 			}
 			protected function InitConfig()
 			{

@@ -438,8 +438,14 @@
 					$ctn .= '<li><a href="'.$this->ZoneParent->ScriptModifPrefs->ObtientUrl().'"><i class="fa fa-user fa-fw"></i> '.$this->LibelleLienModifPrefs.'</a>
 </li>'.PHP_EOL ;
 				}
-				$ctn .= '<li><a href="'.$this->ZoneParent->ScriptChangeMotPasse->ObtientUrl().'"><i class="fa fa-gear fa-fw"></i> '.$this->LibelleLienChangerMotPasse.'</a></li>'.PHP_EOL ;
-				$ctn .= '<li class="divider"></li>'.PHP_EOL ;
+				if($this->ZoneParent->MembreAuthentifieParAD() == 0)
+				{
+					$ctn .= '<li><a href="'.$this->ZoneParent->ScriptChangeMotPasse->ObtientUrl().'"><i class="fa fa-gear fa-fw"></i> '.$this->LibelleLienChangerMotPasse.'</a></li>'.PHP_EOL ;
+				}
+				if($this->ZoneParent->AutoriserModifPrefs || $this->ZoneParent->MembreAuthentifieParAD() == 0)
+				{
+					$ctn .= '<li class="divider"></li>'.PHP_EOL ;
+				}
 				$ctn .= '<li><a href="'.$this->ZoneParent->ScriptDeconnexion->ObtientUrl().'"><i class="fa fa-sign-out fa-fw"></i> '.$this->LibelleLienDeconnexion.'</a></li>'.PHP_EOL ;
 				$ctn .= '</ul>
 </li>

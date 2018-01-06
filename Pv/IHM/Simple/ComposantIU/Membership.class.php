@@ -128,7 +128,7 @@
 			public $FiltreAdresseMembre ;
 			public $FiltreNomMembre ;
 			public $FiltrePrenomMembre ;
-			public $FiltreActiverADMembre ;
+			public $FiltreAuthentifierADMembre ;
 			public $FiltreActiverMembre ;
 			public $FiltreProfilMembre ;
 			public $NomClasseCommandeExecuter = "PvCommandeAjoutMembreMS" ;
@@ -173,7 +173,7 @@
 			public $FiltreAdresseMembre ;
 			public $FiltreNomMembre ;
 			public $FiltrePrenomMembre ;
-			public $FiltreActiverADMembre ;
+			public $FiltreAuthentifierADMembre ;
 			public $FiltreActiverMembre ;
 			public $FiltreProfilMembre ;
 			public $NomClasseCommandeExecuter = "PvCommandeModifMembreMS" ;
@@ -229,7 +229,7 @@
 			public $FiltreAdresseMembre ;
 			public $FiltreNomMembre ;
 			public $FiltrePrenomMembre ;
-			public $FiltreActiverADMembre ;
+			public $FiltreAuthentifierADMembre ;
 			public $FiltreActiverMembre ;
 			public $FiltreProfilMembre ;
 			public $RemplisseurConfigMembership = null ;
@@ -588,13 +588,24 @@
 				}
 				if($this->Mode == 1)
 				{
-					if(empty($this->FormulaireDonneesParent->FiltreMotPasseMembre->ValeurParametre) || strlen($this->FormulaireDonneesParent->FiltreMotPasseMembre->ValeurParametre) < 4 || strlen($this->FormulaireDonneesParent->FiltreMotPasseMembre->ValeurParametre) > 30)
+					$authentifierParAD = 0 ;
+					if($membership->ADActivatedMemberColumn != '')
 					{
-						return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->PasswordMemberFormatErrorLabel) ;
+						if($form->FiltreAuthentifierADMembre->Lie() == 1)
+						{
+							$authentifierParAD = 1 ;
+						}
 					}
-					if(! $this->ValideFormatMotPasse($this->FormulaireDonneesParent->FiltreMotPasseMembre->ValeurParametre))
+					if($authentifierParAD == 0)
 					{
-						return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->PasswordMemberFormatErrorLabel) ;
+						if(empty($this->FormulaireDonneesParent->FiltreMotPasseMembre->ValeurParametre) || strlen($this->FormulaireDonneesParent->FiltreMotPasseMembre->ValeurParametre) < 4 || strlen($this->FormulaireDonneesParent->FiltreMotPasseMembre->ValeurParametre) > 30)
+						{
+							return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->PasswordMemberFormatErrorLabel) ;
+						}
+						if(! $this->ValideFormatMotPasse($this->FormulaireDonneesParent->FiltreMotPasseMembre->ValeurParametre))
+						{
+							return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->PasswordMemberFormatErrorLabel) ;
+						}
 					}
 				}
 				if(empty($this->FormulaireDonneesParent->FiltreNomMembre->ValeurParametre) || strlen($this->FormulaireDonneesParent->FiltreNomMembre->ValeurParametre) < 2 || strlen($this->FormulaireDonneesParent->FiltreNomMembre->ValeurParametre) > 90)
@@ -640,7 +651,40 @@
 				{
 					return ;
 				}
+				if($this->InterditModifsSysteme())
+				{
+					return ;
+				}
 				parent::ExecuteInstructions() ;
+			}
+			protected function InterditModifsSysteme()
+			{
+				$form = & $this->FormulaireDonneesParent ;
+				if($form->InclureElementEnCours == 0)
+				{
+					return 1 ;
+				}
+				$idMembre = $form->FiltreIdMembreEnCours->Lie() ;
+				$membership = & $this->ZoneParent->Membership ;
+				$bd = & $membership->Database ;
+				if($this->Mode == 2)
+				{
+					if(in_array($idMembre, array($membership->RootMemberId, $membership->GuestMemberId)))
+					{
+						$lgnMembre = $membership->FetchMemberRow($idMembre) ;
+						if($lgnMembre["MEMBER_PROFILE"] != $form->FiltreProfilMembre->Lie())
+						{
+							$this->RenseigneErreur("Vous ne pouvez pas changer le profil d'un compte ROOT ou INVITE") ;
+							return 1 ;
+						}
+					}
+					if($idMembre == $membership->RootMemberId && $form->FiltreActiverMembre->Lie() == 0)
+					{
+						$this->RenseigneErreur("Vous ne pouvez pas desactiver le compte ROOT") ;
+						return 1 ;
+					}
+				}
+				return 1 ;
 			}
 		}
 		class PvCommandeAjoutMembreMS extends PvCommandeEditionMembreMSBase
@@ -706,7 +750,15 @@
 			public $MessageSuccesExecution = "Le membre a &eacute;t&eacute; supprim&eacute; avec succ&egrave;s" ;
 			public function ExecuteInstructions()
 			{
-				$membership = $this->FormulaireDonneesParent->ZoneParent->Membership ;
+				$form = & $this->FormulaireDonneesParent ;
+				$idMembre = $form->FiltreIdMembreEnCours->Lie() ;
+				$membership = & $this->ZoneParent->Membership ;
+				$bd = & $membership->Database ;
+				if($idMembre == $membership->RootMemberId)
+				{
+					$this->RenseigneErreur("Vous ne pouvez pas desactiver le compte ROOT") ;
+					return ;
+				}
 				if($membership->DisableMemberOnDelete)
 				{
 					$this->FormulaireDonneesParent->LieFiltresSelection() ;
@@ -1550,12 +1602,13 @@
 				if($membership->ADActivatedMemberColumn != "")
 				{
 					$i++ ;
-					$form->FiltresEdition[$i] = $form->ScriptParent->CreeFiltreHttpPost("filtreActiverADMembre") ;
-					$form->FiltresEdition[$i]->DeclareComposant("PvZoneBoiteOptionsRadioHtml") ;
+					$form->FiltresEdition[$i] = $form->ScriptParent->CreeFiltreHttpPost("filtreAuthentifierADMembre") ;
+					$form->FiltresEdition[$i]->DeclareComposant("PvZoneSelectBoolHtml") ;
 					$form->FiltresEdition[$i]->NomColonneLiee = $membership->ADActivatedMemberColumn ;
 					$form->FiltresEdition[$i]->NomParametreDonnees = $membership->ADActivatedMemberColumn ;
 					$form->FiltresEdition[$i]->Libelle = $membership->ADActivatedMemberLabel ;
-					$form->FiltreActiverADMembre = & $form->FiltresEdition[$i] ;
+					$form->FiltresEdition[$i]->ValeurParDefaut = $membership->ADActivatedMemberTrueValue ;
+					$form->FiltreAuthentifierADMembre = & $form->FiltresEdition[$i] ;
 				}
 				if($membership->EnableMemberColumn != "")
 				{
@@ -1572,6 +1625,21 @@
 					$form->FiltresEdition[$i]->Composant->FournisseurDonnees->ValeurVrai = $membership->EnableMemberTrueValue ;
 					$form->FiltresEdition[$i]->ValeurParDefaut = $membership->EnableMemberTrueValue ;
 					$form->FiltreActiverMembre = & $form->FiltresEdition[$i] ;
+				}
+				if($membership->ADServerMemberColumn != "")
+				{
+					$i++ ;
+					$form->FiltresEdition[$i] = $form->ScriptParent->CreeFiltreHttpPost("filtreADServerMembre") ;
+					$form->FiltresEdition[$i]->DeclareComposant("PvZoneBoiteSelectHtml") ;
+					$form->FiltresEdition[$i]->NomColonneLiee = $membership->ADServerMemberColumn ;
+					$form->FiltresEdition[$i]->NomParametreDonnees = $membership->ADServerMemberColumn ;
+					$form->FiltresEdition[$i]->Libelle = $membership->ADServerMemberLabel ;
+					$form->FiltresEdition[$i]->Composant->FournisseurDonnees = new PvFournisseurDonneesSql() ;
+					$form->FiltresEdition[$i]->Composant->FournisseurDonnees->BaseDonnees = $membership->Database ;
+					$form->FiltresEdition[$i]->Composant->FournisseurDonnees->RequeteSelection = $membership->Database->EscapeTableName($membership->ADServerTable) ;
+					$form->FiltresEdition[$i]->Composant->NomColonneValeur = $membership->IdADServerColumn ;
+					$form->FiltresEdition[$i]->Composant->NomColonneLibelle = $membership->HostADServerColumn ;
+					$form->FiltreServeurADMembre = & $form->FiltresEdition[$i] ;
 				}
 				$i++ ;
 				$form->FiltresEdition[$i] = $form->ScriptParent->CreeFiltreHttpPost("filtreProfilMembre") ;
@@ -1811,6 +1879,10 @@
 				
 				$table->DefinitionColonneProfil = $table->InsereDefCol("PROFILE_TITLE", $membership->ProfileMemberLabel) ;
 				$table->DefinitionColonneEnable = $table->InsereDefColBool("MEMBER_ENABLE", $membership->EnableMemberLabel) ;
+				if($membership->ADActivatedMemberColumn != "")
+				{
+					$table->InsereDefColCachee("MEMBER_AD_ACTIVATED") ;
+				}
 			}
 			public function RemplitDefinitionColActionsTableauMembre(& $table)
 			{
@@ -1841,6 +1913,11 @@
 					$lienModif->FormatIdOnglet = 'change_mp_membre_${MEMBER_ID}' ;
 					$lienModif->FormatTitreOnglet = 'Changer mot de passe de ${MEMBER_LOGIN}' ;
 					$lienModif->FormatLibelle = "Changer mot de passe" ;
+					if($membership->ADActivatedMemberColumn != '')
+					{
+						$lienModif->NomDonneesValid = "MEMBER_AD_ACTIVATED" ;
+						$lienModif->ValeurVraiValid = 0 ;
+					}
 					$lienModif->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptChangeMPMembre).'&idMembre=${MEMBER_ID}' ;
 					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienModif ;
 				}

@@ -52,6 +52,7 @@
 			public $MessageException ;
 			public $InscrireCommandeExecuter = 1 ;
 			public $InscrireCommandeAnnuler = 1 ;
+			public $EncoderCaracteresZone = 1 ;
 			public $NomClasseCommandeExecuter = "PvCommandeExecuterBase" ;
 			public $NomClasseCommandeAnnuler = "PvCommandeAnnulerBase" ;
 			public $NomCommandeExecuter = "executer" ;

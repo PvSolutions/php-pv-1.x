@@ -47,6 +47,7 @@
 			public $TotalElements = 0 ;
 			public $TotalRangees = 0 ;
 			public $IndiceColonneTriSelect = -1 ;
+			public $MaxFiltresSelectionParLigne = 2 ;
 			public $IndiceColonneTri = 0 ;
 			public $NePasTrier = 0 ;
 			public $SensColonneTri = "" ;
@@ -434,6 +435,13 @@
 			{
 				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
 				$defCol->Formatteur = new PvFormatteurColonnePlusDetail() ;
+				return $defCol ;
+			}
+			public function & InsereDefColFixe($valeur, $libelle="")
+			{
+				$defCol = $this->InsereDefCol("", $libelle, "") ;
+				$defCol->Formatteur = new PvFormatteurColonneFixe() ;
+				$defCol->Formatteur->ValeurParDefaut = $valeur ;
 				return $defCol ;
 			}
 			public function & InsereDefColHtml($modeleHtml="", $libelle="")
@@ -1182,7 +1190,7 @@
 </form>' ;
 						}
 					}
-					else
+					elseif($this->AlerterAucunElement == 1)
 					{
 						$ctn .= '<p class="AucunElement">'.$this->MessageAucunElement.'</p>' ;
 					}
@@ -1265,6 +1273,10 @@
 			protected function InitDessinateurFiltresSelection()
 			{
 				$this->DessinateurFiltresSelection = new PvDessinateurRenduHtmlFiltresDonnees() ;
+				if($this->MaxFiltresSelectionParLigne > 0)
+				{
+					$this->DessinateurFiltresSelection->MaxFiltresParLigne = $this->MaxFiltresSelectionParLigne ;
+				}
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
@@ -1417,7 +1429,7 @@
 						}
 						$ctn .= '</table>' ;
 					}
-					else
+					elseif($this->AlerterAucunElement == 1)
 					{
 						$ctn .= '<p class="AucunElement">'.$this->MessageAucunElement.'</p>' ;
 					}
@@ -1469,7 +1481,6 @@
 				{
 					return '' ;
 				}
-				$this->DessinateurFiltresSelection->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
 				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;" role="form">'.PHP_EOL ;
 				$ctn .= '<div class="panel panel-default">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
@@ -1680,7 +1691,6 @@
 				{
 					return '' ;
 				}
-				$this->DessinateurFiltresSelection->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
 				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;" role="form">'.PHP_EOL ;
 				$ctn .= '<div class="panel panel-default">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
@@ -1766,7 +1776,7 @@
 						$ctn .= '</div></td></tr>' ;
 						$ctn .= '</table>' ;
 					}
-					else
+					elseif($this->AlerterAucunElement == 1)
 					{
 						$ctn .= '<p class="AucunElement">'.$this->MessageAucunElement.'</p>' ;
 					}

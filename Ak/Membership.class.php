@@ -593,15 +593,11 @@
 			public $ContactMemberLabel = "Contacts" ;
 			public $ADActivatedMemberColumn = "" ;
 			public $ADActivatedMemberAlias = "" ;
-			public $ADActivatedMemberLabel = "Authentifier par Active Directory" ;
+			public $ADActivatedMemberLabel = "Authentifier par AD" ;
 			public $ADActivatedMemberTrueValue = "1" ;
-			public $ADUserMemberColumn = '' ;
-			public $ADUserMemberAlias = '' ;
-			public $ADUserMemberLabel = 'Session sur Active Directory' ;
-			public $ADDomainMemberDefaultValue = '' ;
-			public $ADDomainMemberColumn = '' ;
-			public $ADDomainMemberAlias = '' ;
-			public $ADDomainMemberLabel = 'Domaine sur Active Directory' ;
+			public $ADServerMemberColumn = '' ;
+			public $ADServerMemberAlias = '' ;
+			public $ADServerMemberLabel = 'Serveur Active Directory' ;
 			public $EnableMemberAlias = "" ;
 			public $EnableMemberLabel = "Activer" ;
 			public $EnableMemberTrueValue = "1" ;
@@ -609,6 +605,30 @@
 			public $MustChangePasswordMemberAlias = "" ;
 			public $MustChangePasswordMemberLabel = "Doit changer le mot de passe" ;
 			public $MustChangePasswordMemberTrueValue = "1" ;
+			public $ADServerTable = 'membership_ad_server' ;
+			public $IdADServerColumn = 'id' ;
+			public $IdADServerAlias = '' ;
+			public $IdADServerLabel = 'ID' ;
+			public $HostADServerColumn = 'host' ;
+			public $HostADServerAlias = '' ;
+			public $HostADServerLabel = 'Hote' ;
+			public $PortADServerColumn = 'port' ;
+			public $PortADServerAlias = '' ;
+			public $PortADServerLabel = 'Port' ;
+			public $DomainADServerColumn = 'domain' ;
+			public $DomainADServerAlias = '' ;
+			public $DomainADServerLabel = 'Domaine' ;
+			public $DnADServerColumn = 'dn' ;
+			public $DnADServerAlias = '' ;
+			public $DnADServerLabel = 'DN' ;
+			public $UseProtocolV3ADServerColumn = 'use_protocol_v3' ;
+			public $UseProtocolV3ADServerAlias = '' ;
+			public $UseProtocolV3ADServerLabel = 'Utiliser le protocole V3' ;
+			public $UseProtocolV3ADServerDefaultValue = 1 ;
+			public $FollowReferralsADServerColumn = 'follow_referrals' ;
+			public $FollowReferralsADServerAlias = '' ;
+			public $FollowReferralsADServerLabel = 'Suivre les redirections de connexion' ;
+			public $FollowReferralsADServerDefaultValue = 1 ;
 			public $DisableMemberOnDelete = 1 ;
 			public $DisableRoleOnDelete = 1 ;
 			public $DisableProfileOnDelete = 1 ;
@@ -635,7 +655,7 @@
 			public $EnableProfileTrueValue = "1" ;
 			public $EnableProfileLabel = "Activer" ;
 			public $RoleListProfileLabel = "Roles" ;
-			public $RoleListProfileAlias = "Roles" ;
+			public $RoleListProfileAlias = "roles" ;
 			public $PrivilegeTable = "membership_privilege" ;
 			public $IdPrivilegeInsertExpr = "" ;
 			public $IdPrivilegeIgnoreUpdate = 1 ;
@@ -710,11 +730,16 @@
 			public $TriggerInsertRoleRow = 1 ;
 			public $TriggerDeleteRoleRow = 1 ;
 			public $LastValidateError = '' ;
+			protected $LdapConn = false ;
 			const VALIDATE_ERROR_NONE = "" ;
 			const VALIDATE_ERROR_MEMBER_NOT_FOUND = "member_not_found" ;
 			const VALIDATE_ERROR_MEMBER_NOT_ENABLED = "member_not_enabled" ;
 			const VALIDATE_ERROR_PASSWORD_INCORRECT = "password_incorrect" ;
 			const VALIDATE_ERROR_AD_AUTH_FAILED = "ad_auth_failed" ;
+			const VALIDATE_ERROR_AD_SERVER_CONNECT_ERROR = "ad_auth_connect_error" ;
+			const VALIDATE_ERROR_AD_PASSWORD_EMPTY = "ad_password_empty" ;
+			const VALIDATE_ERROR_AD_SERVER_NOT_FOUND = "ad_server_not_found" ;
+			const VALIDATE_ERROR_AD_SERVER_DISABLED = "ad_server_disabled" ;
 			const VALIDATE_ERROR_OTHER = "member_connection_impossible" ;
 			public function FetchSimilarRole($idRoleExclude, $nameRole='', $titleRole='')
 			{
@@ -828,21 +853,13 @@
 				{
 					$sql .= ', 0 MEMBER_MUST_CHANGE_PASSWORD' ;
 				}
-				if($this->ADUserMemberColumn != '')
+				if($this->ADServerMemberColumn != '')
 				{
-					$sql .= ', '.$this->Database->EscapeFieldName("MEMBER_TABLE", $this->ADUserMemberColumn).' MEMBER_AD_USER' ;
+					$sql .= ', '.$this->Database->EscapeFieldName("MEMBER_TABLE", $this->ADServerMemberColumn).' MEMBER_AD_SERVER' ;
 				}
 				else
 				{
-					$sql .= ', \'\' MEMBER_AD_USER' ;
-				}
-				if($this->ADDomainMemberColumn != '')
-				{
-					$sql .= ', '.$this->Database->EscapeFieldName("MEMBER_TABLE", $this->ADDomainMemberColumn).' MEMBER_AD_DOMAIN' ;
-				}
-				else
-				{
-					$sql .= ', \''.$this->ADDomainMemberDefaultValue.'\' MEMBER_AD_DOMAIN' ;
+					$sql .= ', \'\' MEMBER_AD_SERVER' ;
 				}
 				if($this->LockMemberEnabled && $this->LockedMemberColumn != '')
 				{
@@ -1065,6 +1082,27 @@
 						}
 						else
 						{
+							$db = & $this->Database ;
+							$adServerRow = $this->Database->FetchSqlRow("select * from ".$db->EscapeTableName($this->ADServerTable)." where ".$db->EscapeFieldName($this->ADServerTable, $this->IdADServerColumn)." = :id", array("id" => $requestRow["MEMBER_AD_SERVER"])) ;
+							if(is_array($adServerRow))
+							{
+								if(count($adServerRow) > 0)
+								{
+									$ok = $this->ValidateADAuthentification($login, $password, $adServerRow) ;
+									if($ok)
+									{
+										$idMember = $requestRow["MEMBER_ID"] ;
+									}
+								}
+								else
+								{
+									$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_AD_SERVER_NOT_FOUND ;
+								}
+							}
+							else
+							{
+								$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_AD_SERVER_NOT_FOUND ;
+							}
 						}
 					}
 					else
@@ -1077,6 +1115,55 @@
 					$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_MEMBER_NOT_FOUND ;
 				}
 				return $idMember ;
+			}
+			protected function ValidateADAuthentification($login, $password, & $adServerRow)
+			{
+				$user = $login ;
+				if($adServerRow[$this->DomainADServerColumn] != "")
+				{
+					$user = $login.'@'.$adServerRow[$this->DomainADServerColumn] ;
+				}
+				$password = trim($password) ;
+				if(empty($password))
+				{
+					$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_AD_PASSWORD_EMPTY ;
+					$this->CloseLdapConn() ;
+					return 0 ;
+				}
+				$this->LdapConn = ldap_connect($adServerRow[$this->HostADServerColumn], $adServerRow[$this->PortADServerColumn]) ;
+				if(! is_resource($this->LdapConn))
+				{
+					$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_AD_SERVER_CONNECT_ERROR ;
+					return 0 ;
+				}
+				if($adServerRow[$this->UseProtocolV3ADServerColumn] == 1 && ! ldap_set_option($this->LdapConn, LDAP_OPT_PROTOCOL_VERSION, 3))
+				{
+					$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_AD_SERVER_CONNECT_ERROR ;
+					$this->CloseLdapConn() ;
+					return 0 ;
+				}
+				if($adServerRow[$this->FollowReferralsADServerColumn] == 1 && ! ldap_set_option($this->LdapConn, LDAP_OPT_REFERRALS, 0))
+				{
+					$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_AD_SERVER_CONNECT_ERROR ;
+					$this->CloseLdapConn() ;
+					return 0 ;
+				}
+				$success = @ldap_bind($this->LdapConn, $user, $password);
+				if(! $success)
+				{
+					$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_AD_AUTH_FAILED ;
+					$this->CloseLdapConn() ;
+					return 0 ;
+				}
+				$this->CloseLdapConn() ;
+				return ($success) ? 1 : 0 ;
+			}
+			public function CloseLdapConn()
+			{
+				if(is_resource($this->LdapConn))
+				{
+					ldap_unbind($this->LdapConn) ;
+				}
 			}
 			public function UpdateTotalRetry($memberId)
 			{

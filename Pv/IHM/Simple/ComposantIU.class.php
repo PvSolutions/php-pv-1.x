@@ -70,6 +70,10 @@
 		{
 			include dirname(__FILE__)."/ComposantIU/JQueryUi.class.php" ;
 		}
+		if(! defined('PV_COMPOSANT1_SITE_WEB'))
+		{
+			include dirname(__FILE__)."/ComposantIU/SiteWeb1.class.php" ;
+		}
 		define('PV_COMPOSANT_IU_SIMPLE', 1) ;
 		
 	}

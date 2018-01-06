@@ -242,6 +242,75 @@ jQuery(".spinner .btn:last-of-type").on("click", function() {
 		class PvBootstrapSelect extends PvBootstrapSelectPicker
 		{
 		}
+		
+		class PvBootstrapDatetimePicker extends PvEditeurHtmlBase
+		{
+			protected static $SourceIncluse = 0 ;
+			public static $CheminFichierCSS = "css/bootstrap-datetimepicker.min.css" ;
+			public static $CheminFichierJs = "js/bootstrap-datetimepicker.min.js" ;
+			public static $CheminFichierTradJs = "js/bootstrap-datetimepicker.fr.js" ;
+			public $FormatDateJs = "dd/mm/yyyy hh:ii:ss" ;
+			public $FormatDatePHP = "d/m/Y H:i:s" ;
+			public $TailleZone = 16 ;
+			public $ClasseCSSVideDate = "glyphicon glyphicon-remove" ;
+			public $ClasseCSSDropdown = "glyphicon glyphicon-th" ;
+			protected function RenduSourceBrut()
+			{
+				$ctn = '' ;
+				$ctn .= $this->RenduLienJs(PvBootstrapDatetimePicker::$CheminFichierJs) ;
+				if($ctn != '')
+				{
+					$ctn .= PHP_EOL ;
+				}
+				$ctn .= $this->RenduLienJs(PvBootstrapDatetimePicker::$CheminFichierTradJs) ;
+				if($ctn != '')
+				{
+					$ctn .= PHP_EOL ;
+				}
+				$ctn .= $this->RenduLienCSS(PvBootstrapDatetimePicker::$CheminFichierCSS) ;
+				$ctn .= PHP_EOL ;
+				return $ctn ;
+			}
+			protected function RenduEditeurBrut()
+			{
+				$ctn = '' ;
+				$valeurFmt = date($this->FormatDatePHP) ;
+				$valeurSelect = date("Y-m-d H:i:s") ;
+				$valeurBrute = date("Y-m-d\\TH:i:s\\Z") ;
+				if($this->Valeur != '')
+				{
+					$timestmp = strtotime($this->Valeur) ;
+					if($timestmp != false)
+					{
+						$valeurFmt = date($this->FormatDatePHP, $timestmp) ;
+						$valeurSelect = date("Y-m-d H:i:s", $timestmp) ;
+					}
+				}
+				$ctn .= '<input type="text" id="'.$this->IDInstanceCalc.'_support" value="'.htmlspecialchars($valeurFmt).'" readonly />
+<input type="hidden" id="'.$this->IDInstanceCalc.'" name="'.$this->NomElementHtml.'" value="'.htmlspecialchars($valeurSelect).'" />' ;
+				$ctn .= $this->RenduContenuJs('jQuery(function() {
+var cfgInst = {
+    format: "'.$this->FormatDateJs.'"
+} ;
+jQuery("#'.$this->IDInstanceCalc.'_support").datetimepicker(cfgInst).on("changeDate", function(evt) {
+var dateSelect = evt.date ;
+if(dateSelect == null)
+{
+document.getElementById("'.$this->IDInstanceCalc.'").value = "" ;
+return ;
+}
+var dayLabel = dateSelect.getDate() < 10 ? "0" + dateSelect.getDate() : dateSelect.getDate() ;
+var monthLabel = dateSelect.getMonth() + 1 < 10 ? "0" + (dateSelect.getMonth() + 1).toString() : dateSelect.getMonth() + 1 ;
+var hourLabel = dateSelect.getHours() < 10 ? "0" + dateSelect.getHours() : dateSelect.getHours() ;
+var minuteLabel = dateSelect.getMinutes() < 10 ? "0" + dateSelect.getMinutes() : dateSelect.getMinutes() ;
+var secondLabel = dateSelect.getSeconds() < 10 ? "0" + dateSelect.getSeconds() : dateSelect.getSeconds() ;
+document.getElementById("'.$this->IDInstanceCalc.'").value = dateSelect.getFullYear() + "-" + monthLabel + "-" + dayLabel + " " + hourLabel + ":" + minuteLabel + ":" + secondLabel ;
+console.log(document.getElementById("'.$this->IDInstanceCalc.'").value) ;
+}) ;
+}) ;') ;
+				return $ctn ;
+			}
+		}
 	}
 	
 ?>
