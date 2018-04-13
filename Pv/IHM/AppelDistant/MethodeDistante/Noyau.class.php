@@ -4,7 +4,7 @@
 	{
 		define('PV_METHODE_DISTANTE_NOYAU', 1) ;
 		
-		class PvComposantIUIndef extends PvObjet
+		class PvComposantIUIndefAppelDistant extends PvObjet
 		{
 			public $Visible = 1 ;
 			public function AdopteZone($nom, & $zone)
@@ -136,10 +136,18 @@
 			public $ElemFormParent ;
 			public $DefColParent ;
 			public $MessageSuccesExecution = "L'action a &eacute;t&eacute; execut&eacute;e avec succ&egrave;s" ;
+			public $StructRequete ;
+			public $StructReponse ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->ComposantIUParent = new PvComposantIUIndef() ;
+				$this->ComposantIUParent = new PvComposantIUIndefAppelDistant() ;
+				$this->StructRequete = new PvStructMsgAppelDistant() ;
+				$this->StructReponse = new PvStructMsgAppelDistant() ;
+				$this->DefinitStructMessages() ;
+			}
+			protected function DefinitStructMessages()
+			{
 			}
 			protected function CreeParam()
 			{

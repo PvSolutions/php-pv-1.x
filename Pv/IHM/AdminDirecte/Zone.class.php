@@ -45,6 +45,7 @@
 			public $InclureScriptsMembership = 1 ;
 			public $ImageArrierePlanDocument = "images/bg-document.png" ;
 			public $EtirerImageArrierePlanDocument = 1 ;
+			public $CheminJsDialogExtend = "js/jquery.dialogextend.min.js" ;
 			public $CheminJsSuperfish = "js/superfish.min.js" ;
 			public $CheminCSSSuperfish = "css/superfish.css" ;
 			public $CouleurArrierePlanDocument = "black" ;
@@ -143,6 +144,10 @@
 				$this->InclureJQuery = 1 ;
 				$this->InclureJQueryUi = 1 ;
 				parent::InclutLibrairiesExternes() ;
+				if($this->CheminJsDialogExtend != '')
+				{
+					$this->InscritLienJS($this->CheminJsDialogExtend) ;
+				}
 				if($this->TypeRendu == PvZoneWebAdminDirecteTypeRendu::ParDefaut)
 				{
 					$this->InscritLienJs($this->CheminJsSuperfish) ;
@@ -362,6 +367,7 @@ jQuery(function() {
 			{
 				$ctn = '' ;
 				$ctn .= '
+var autoRafraich = '.($this->ActiverRafraichScript && ($this->ScriptPourRendu->DoitAutoRafraich()) ? 'true' : 'false').' ;
 function htmlEncode(value){
   return jQuery(\'<div/>\').text(value).html();
 }
@@ -384,6 +390,7 @@ var optionsOuvreFenetreDefaut = {
 	OuvrirEnMemeTemps : true,
 	FermerSurEchap : false,
 	NomClasseFenetre : "",
+	BoutonReduire : false,
 	BoutonFermer : true,
 	LibelleFermer : "Fermer",
 	BoutonConfimer : null,
@@ -413,6 +420,9 @@ function ouvreFenetre(idFenetre, icone, titre, contenu, options)
 		fenetreExistante.remove() ;
 		fenetreExistante = jQuery("#" + idFenetre) ;
 	}
+	if(autoRafraich) {
+		annulAutoRafraich() ;
+	}
 	if(fenetreExistante.length == 0)
 	{
 		titreFenetre = titre ;
@@ -424,6 +434,25 @@ function ouvreFenetre(idFenetre, icone, titre, contenu, options)
 		var blocFenetre = jQuery(contenuDiv) ;
 		objBarreFenetre.append(blocFenetre) ;
 		blocFenetre.dialog(optionsJQueryUiDialog) ;
+		if(options.BoutonReduire == true)
+		{
+			blocFenetre.dialogExtend({
+				maximizable : (options.Redimensionnable) ? true : false,
+				collapsable : (options.Redimensionnable) ? true : false,
+				dblclick : (options.Redimensionnable) ? true : false,
+				minimizable : true,
+				minimize : function(evt, dlg){
+					if(autoRafraich) {
+						annulAutoRafraich() ;
+					}
+				},
+				restore : function(evt, dlg){
+					if(autoRafraich) {
+						execAutoRafraich() ;
+					}
+				}
+			}) ;
+		}
 	}
 	else
 	{
@@ -489,12 +518,16 @@ function extraitOptionsJQueryUiDialog(optionsSource)
 			click: funcExecuter
 		}) ;
 	}
-	if(optionsCompletes.UrlOnglActifSurFerm != "")
-	{
-		options.close = function(event, ui) {
+	options.close = function(event, ui) {
+		if(optionsCompletes.UrlOnglActifSurFerm != "") {
 			rafraichitUrlOngletActif(optionsCompletes.UrlOnglActifSurFerm) ;
 		}
-	}
+		else {
+			if(autoRafraich) {
+				demarreAutoRafraich() ;
+			}
+		}
+	} ;
 	return options ;
 }
 function fermeFenetreActive()

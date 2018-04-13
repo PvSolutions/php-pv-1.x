@@ -169,6 +169,22 @@
 				$this->FiltresEdition[] = & $flt ;
 				return $flt ;
 			}
+			public function & InsereFltEditCaptcha($nom, $nomCmd="", $nomClsComp="PvZoneCaptcha")
+			{
+				$flt = $this->InsereFltEditHttpPost($nom) ;
+				$comp = $flt->DeclareComposant($nomClsComp) ;
+				if($nomClsCmd == '' && $this->InscrireCommandeExecuter == 1)
+				{
+					$critr = $this->CommandeExecuter->InsereNouvCritere(new PvCritereValideCaptcha()) ;
+					$critr->FltCaptchaParent = & $flt ;
+				}
+				elseif(isset($this->Commandes[$nomCmd]))
+				{
+					$critr = $this->Commandes[$nomCmd]->InsereNouvCritere(new PvCritereValideCaptcha()) ;
+					$critr->FltCaptchaParent = & $flt ;
+				}
+				return $flt ;
+			}
 			public function & InsereFltLgSelectRef($nom, & $filtreRef, $exprDonnees='', $nomComp='')
 			{
 				$flt = $this->CreeFiltreRef($nom, $filtreRef) ;
@@ -925,6 +941,17 @@
 				}
 				return $msgExecution ;
 			}
+			protected function CtnJsActualiseFormulaireFiltres()
+			{
+				$ctn = '' ;
+				$ctn .= 'var elem = document.getElementById("'.$this->IDInstanceCalc.'") ;
+if(elem !== null) {
+var form = elem.getElementsByTagName("form")[0] ;
+SoumetFormulaire'.$this->IDInstanceCalc.'(form) ;
+form.submit() ;
+}' ;
+				return $ctn ;
+			}
 			public function RemplaceCommandeAnnuler($nomClasse)
 			{
 				$this->NomClasseCommandeAnnuler = $nomClasse ;
@@ -1219,7 +1246,7 @@
 			public $InscrireLienAnnuler = 0 ;
 			public $InscrireLienReprendre = 0 ;
 			public $LibelleLienReprendre = "Reprendre" ;
-			public $LibelleLienAnnuler = "Annuler" ;
+			public $LibelleLienAnnuler = "Retour" ;
 			public $UrlLienAnnuler = "" ;
 			public $NomScriptExecutionSucces = "" ;
 			public $ParamsScriptExecutionSucces = array() ;
@@ -1331,8 +1358,7 @@
 				}
 				else
 				{
-					$this->StatutExecution = 1 ;
-					$this->MessageExecution = $this->MessageSuccesExecution ;
+					$this->ConfirmeSucces() ;
 				}
 				if($this->Mode == 3 && $this->StatutExecution == 1)
 				{
@@ -1352,45 +1378,7 @@
 		{
 			public $Mode = 3 ;
 		}
-		class PvCommandeRedirectScriptSession extends PvCommandeAnnulerBase
-		{
-			public $UrlDefaut = '' ;
-			protected function ExecuteInstructions()
-			{
-				$adr = & $this->ZoneParent->AdrScriptSession ;
-				$ctn = '' ;
-				if($adr->ChaineGet != '')
-				{
-					$ctn .= '<!doctype html>
-<html>
-<head><title>Redirection en cours...</title></head>
-<body>
-<form style="display:none" id="FormRetour" action="'.htmlspecialchars($adr->ChaineGet).'" method="post">' ;
-					foreach($adr->DonneesPost as $nom => $valeur)
-					{
-						if(is_array($valeur))
-						{
-							$valeur = join(",", $valeur) ;
-						}
-						$ctn .= '<input type="hidden" name="'.htmlspecialchars($nom).'" value="'.htmlspecialchars($valeur).'" />' ;
-						
-					}
-					$ctn .= '<input type="submit" value="envoyer" /></form>
-<script language="javascript">
-	document.getElementById("FormRetour").submit() ;
-</script>
-</body>
-</html>' ;
-					echo $ctn ;
-					exit ;
-				}
-				elseif($this->UrlDefaut != '')
-				{
-					redirect_to($this->UrlDefaut) ;
-				}
-			}
-		}
-		
+			
 		class PvCommandeAppelDistantBase extends PvCommandeExecuterBase
 		{
 			public $NomZoneAppelDistant ;

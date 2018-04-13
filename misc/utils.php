@@ -525,7 +525,7 @@
 				}
 				// Pour envoyer un mail HTML, l'en-tête Content-type doit être défini
 				$headers  = 'MIME-Version: 1.0' . "\r\n";
-				$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+				$headers .= 'Content-type: text/html; charset=utf-8' . "\r\n";
 				// En-têtes additionnels
 				// $headers .= 'To: '.$to. "\r\n";
 				$headers .= 'From: '.$from. "\r\n";
@@ -3505,6 +3505,30 @@
 				return trim(strtolower($x));
 			}
 		}
+	
+		if(! function_exists("get_client_ip_server"))
+		{
+			function get_client_ip_server()
+			{
+				$ipaddress = '';
+				if ($_SERVER['HTTP_CLIENT_IP'])
+					$ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+				else if($_SERVER['HTTP_X_FORWARDED_FOR'])
+					$ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+				else if($_SERVER['HTTP_X_FORWARDED'])
+					$ipaddress = $_SERVER['HTTP_X_FORWARDED'];
+				else if($_SERVER['HTTP_FORWARDED_FOR'])
+					$ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
+				else if($_SERVER['HTTP_FORWARDED'])
+					$ipaddress = $_SERVER['HTTP_FORWARDED'];
+				else if($_SERVER['REMOTE_ADDR'])
+					$ipaddress = $_SERVER['REMOTE_ADDR'];
+				else
+					$ipaddress = 'UNKNOWN';
+				return $ipaddress;
+			}
+		}
+		
 	}
 	
 ?>

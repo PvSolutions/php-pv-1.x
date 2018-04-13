@@ -224,6 +224,7 @@
 				$this->OuvreFlux() ;
 				if($this->ErreurOuvr->Trouve())
 				{
+					echo $this->ErreurOuvr->No."# ".$this->ErreurOuvr->Contenu."\n" ;
 					return ;
 				}
 				$this->PrepareReception() ;
@@ -442,6 +443,10 @@
 				$this->RetourAppel->codeErreur = $code ;
 				$this->RetourAppel->message = $msg ;
 				$this->RetourAppel->resultat = $resultat ;
+			}
+			protected function RenseigneErreur($code, $msg, $resultat=null)
+			{
+				return $this->SignaleErreur($code, $msg, $resultat) ;
 			}
 		}
 		class PvMethodeSocketTest extends PvMethodeSocketBase

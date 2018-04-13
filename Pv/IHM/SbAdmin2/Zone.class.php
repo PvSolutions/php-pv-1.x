@@ -54,8 +54,8 @@
 			public $InclureScriptsMembership = 1 ;
 			public $UtiliserDocumentWeb = 1 ;
 			public $EncodageDocument = "utf-8" ;
-			public $RenduExtraHead = '<meta http-equiv="X-UA-Compatible" content="IE=edge">' ;
-			public $ViewportMeta = 'width=device-width, initial-scale=1' ;
+			public $Metas = array("X-UA-Compatible" => "IE=edge") ;
+			public $ViewportMeta = 'width=device-width, initial-scale=1, user-scalable=no' ;
 			public $CheminJQuery = "vendor/jquery/jquery.min.js" ;
 			public $CheminJQueryMigrate = "vendor/jquery/jquery-migrate.min.js" ;
 			public $CheminJsBootstrap = "vendor/bootstrap/js/bootstrap.min.js" ;
@@ -67,6 +67,7 @@
 			public $CheminCSSMetisMenu = "vendor/metisMenu/metisMenu.min.css" ;
 			public $CheminCSSSbAdmin = "dist/css/sb-admin-2.css" ;
 			public $InclureThemeBootstrap = 0 ;
+			public $HauteurBoiteDlgDefaut = '100px' ;
 			public $CheminThemeBootstrap = "" ;
 			public $CheminCSSFontAwesome = "vendor/font-awesome/css/font-awesome.min.css" ;
 			public $NomClasseScriptRecouvreMP = "PvScriptRecouvreMPSbAdmin2" ;

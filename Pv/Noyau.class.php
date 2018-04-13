@@ -227,6 +227,7 @@
 			public $CtrlServsPersists ;
 			public $ChemRelRegServsPersists ;
 			public $NomsInterfsPaiement = array() ;
+			public $NomZoneRenduInterfPaiement ;
 			public $UrlRacine ;
 			public $CheminDossierRacine ;
 			public function ObtientChemRelRegServsPersists()
@@ -474,6 +475,18 @@
 			{
 				return (php_sapi_name() == "cli" || (isset($_SERVER["argv"]) && isset($_SERVER["argv"][0]) && ! isset($_SERVER["SCRIPT_FILENAME"]))) ;
 			}
+			public function ContenuRequeteHttp()
+			{
+				$ctn = '' ;
+				$ctn .= $_SERVER["REQUEST_METHOD"]." ".$_SERVER["SERVER_PROTOCOL"]." ".$_SERVER["REQUEST_URI"].$_SERVER["QUERY_STRING"]."\r\n" ;
+				$entetes = apache_request_headers() ;
+				foreach($entetes as $nom => $valeur)
+				{
+					$ctn .= $nom." : ".$valeur."\r\n" ;
+				}
+				$ctn .= "\r\n".file_get_contents("php://input") ;
+				return $ctn ;
+			}
 			protected function DetecteCheminFichierElementActif()
 			{
 				$this->CheminFichierAbsolu = dirname(__FILE__) ;
@@ -588,10 +601,49 @@
 				}
 				return $cmd ;
 			}
+			public static function TelechargeCmd($adresse, $args=array(), $valeurPost='', $async=1)
+			{
+				$proc = new OsProcessPipe() ;
+				$cmd = $adresse ;
+				if(is_array($args) && count($args) > 0)
+				{
+					$cmd .= PvApplication::EncodeArgsShell($args) ;
+				}
+				$result = false ;
+				if($proc->Open($cmd))
+				{
+					if($valeurPost != '')
+					{
+						$proc->Write($valeurPost) ;
+					}
+					$result = false ;
+					if($async)
+					{
+						$proc->Close() ;
+						return true ;
+					}
+					$error = $proc->GetError() ;
+					if($error == '')
+					{
+						$ctn = $proc->ReadUntilEOF() ;
+					}
+					$proc->Close() ;
+				}
+				return $result ;
+			}
 			public static function ObtientOS()
 			{
 				$os = (PHP_OS == "WINNT" || PHP_OS == "WIN32") ? 'Windows' : 'Linux' ;
 				return $os ;
+			}
+			public function & ZoneRenduInterfPaiement()
+			{
+				$zoneWeb = new PvZoneWebSimple() ;
+				if($this->NomZoneRenduInterfPaiement != '' && isset($this->IHMs[$this->NomZoneRenduInterfPaiement]))
+				{
+					$zoneWeb = & $this->IHMs[$this->NomZoneRenduInterfPaiement] ;
+				}
+				return $zoneWeb ;
 			}
 		}
 		

@@ -392,7 +392,7 @@
 		class EncGraphiquesPortionRenduFmt extends EncBasePortionRenduFmt
 		{
 			public $EntiteParent ;
-			public function Execute($params=array())
+			public function Execute($params=array(), $elem=array())
 			{
 				if($this->EntiteParent == null)
 					return array() ;

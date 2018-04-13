@@ -153,12 +153,13 @@ jQuery(function() {
 			}
 			public function RenduPied(& $zone)
 			{
+				$ctn = '' ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>
 </div>
 </div>
 </div>'.PHP_EOL ;
-				$ctn = $this->RenduPiedHtmlSimple($zone).PHP_EOL ;
+				$ctn .= $this->RenduPiedHtmlSimple($zone).PHP_EOL ;
 				return $ctn ;
 			}
 		}
@@ -297,8 +298,10 @@ color:'.$zone->CouleurTexteSidebars.' ;
 			}
 			public function RenduPied(& $zone)
 			{
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn = $this->RenduPiedHtmlSimple($zone).PHP_EOL ;
+				$ctn = '' ;
+				$ctn .= '</div>
+</div>'.PHP_EOL ;
+				$ctn .= $this->RenduPiedHtmlSimple($zone).PHP_EOL ;
 				return $ctn ;
 			}
 		}

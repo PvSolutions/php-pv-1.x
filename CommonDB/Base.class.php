@@ -2004,7 +2004,8 @@
 			}
 			function EscapeRowValue($rowValue)
 			{
-				return "'".mysqli_escape_string($this->Connection, $rowValue)."'" ;
+				$cnx = (is_object($this->StoredProcConnection)) ? $this->StoredProcConnection : $this->Connection ;
+				return "'".mysqli_escape_string($cnx, $rowValue)."'" ;
 			}
 			function OpenCnx()
 			{
@@ -2070,11 +2071,77 @@
 			}
 			function ConnectionErrString()
 			{
-				return mysqli_error($this->Connection) ;
+				return mysqli_error((is_object($this->StoredProcConnection)) ? $this->StoredProcConnection : $this->Connection) ;
 			}
 			function SetConnectionExceptionFromCnx()
 			{
 				return $this->SetConnectionException($this->ConnectionErrString()) ;
+			}
+			function OpenStoredProcCnx()
+			{
+				$res = 0 ;
+				try
+				{
+					$server = (isset($this->ConnectionParams["server"])) ? $this->ConnectionParams["server"] : "localhost" ;
+					$user = (isset($this->ConnectionParams["user"])) ? $this->ConnectionParams["user"] : "root" ;
+					$password = (isset($this->ConnectionParams["password"])) ? $this->ConnectionParams["password"] : "" ;
+					$this->StoredProcConnection = mysqli_connect($server, $user, $password) ;
+					if(! $this->StoredProcConnection)
+					{
+						$res = 0 ;
+						$this->SetConnectionException(mysqli_error($this->StoredProcConnection)) ;
+					}
+					else
+					{
+						$schema = (isset($this->ConnectionParams["schema"])) ? $this->ConnectionParams["schema"] : "" ;
+						$OK = mysqli_select_db($this->StoredProcConnection, $schema) ;
+						if($OK === false)
+						{
+							$this->SetConnectionExceptionFromCnx() ;
+							$res = 0 ;
+						}
+						else
+						{
+							$res = 1 ;
+						}
+					}
+				}
+				catch(Exception $ex)
+				{
+					$this->SetStoredProcConnectionException($ex->getMessage()) ;
+				}
+				return $res ;
+			}
+			function & OpenStoredProc($procName, $params=array())
+			{
+				$this->StoredProcQuery = false ;
+				if(! $this->OpenStoredProcCnx())
+				{
+					return $this->StoredProcQuery ;
+				}
+				try
+				{
+					$this->StoredProcQuery = mysqli_query($this->StoredProcConnection, $this->CallStoredProcSql($procName, $params)) ;
+				}
+				catch(Exception $ex)
+				{
+				}
+				if($this->StoredProcQuery == false)
+				{
+					$this->SetConnectionException(mysqli_error($this->StoredProcConnection)) ;
+				}
+				return $this->StoredProcQuery ;
+			}
+			function CloseStoredProc(& $res)
+			{
+				if($this->StoredProcQuery !== false)
+				{
+					mysqli_free_result($this->StoredProcQuery) ;
+					$this->StoredProcQuery = false ;
+				}
+				mysqli_close($this->StoredProcConnection) ;
+				$this->StoredProcConnection = false ;
+				return 1 ;
 			}
 			function & OpenQuery($sql, $params=array())
 			{
@@ -2778,7 +2845,6 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 			var $LoginTimeout = 0 ;
 			function ExecFixCharacterEncoding()
 			{
-				sqlsrv_set_charset($this->Connection, $this->CharacterEncoding) ;
 			}
 			function EscapeTableName($tableName)
 			{
@@ -2878,6 +2944,7 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 				$this->CaptureQuery($sql, $params) ;
 				$this->FixCharacterEncoding() ;
 				$sql = $this->PrepareSql($sql, $params) ;
+				// print_r($sql) ;
 				$res = false ;
 				try
 				{
@@ -2885,7 +2952,7 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 					$exceptionMsg = "" ;
 					if(! $res)
 					{
-						$exceptionMsg = sqlsrv_errors($this->Connection) ;
+						$exceptionMsg = sqlsrv_errors(SQLSRV_ERR_ALL) ;
 						$this->SetConnectionException($exceptionMsg) ;
 						$res = false ;
 					}

@@ -68,7 +68,7 @@
 				// echo $line ;
 				return $line ;
 			}
-			public function ReadHandleUntil(&$readHandle, $limit)
+			public function ReadHandleUntil(&$readHandle, $limit="")
 			{
 				$res = "" ;
 				$this->LastLimitFound = false ;
@@ -98,6 +98,10 @@
 			public function ReadUntil($limit)
 			{
 				return $this->ReadHandleUntil($this->Pipes[self::OutputNo], $limit) ;
+			}
+			public function ReadError()
+			{
+				return $this->ReadHandleUntil($this->Pipes[self::ErrNo], "") ;
 			}
 			public function GetError()
 			{

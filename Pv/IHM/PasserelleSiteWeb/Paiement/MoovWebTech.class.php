@@ -368,6 +368,25 @@ font-size:12px ;
 				$ctn .= $this->RenduPiedDocument() ;
 				return $ctn ;
 			}
+			public function RemplitTablTraces(& $tabl)
+			{
+				$this->FltIdTransact = $tabl->InsereFltSelectHttpGet("id_transact", "id_transact = <self>") ;
+				$this->FltIdTransact->Libelle = "ID transaction" ;
+				$this->DefColId = $tabl->InsereDefColCachee("id") ;
+				$this->DefColDateCrea = $tabl->InsereDefColDatetimeFr("date_creation", "Date cr&eacute;ation") ;
+				$this->DefColDateEnvoi = $tabl->InsereDefCol("date_envoi_demande", "Date demande") ;
+				$this->DefColSuccesEnvoi = $tabl->InsereDefColUrl("succes_envoi_demande", "Demande OK") ;
+				$this->DefColUrlStatut = $tabl->InsereDefCol("date_retour_statut", "Date statut") ;
+				$this->DefColSuccesStatut = $tabl->InsereDefColUrl("valeur_retour_statut", "Valeur statut") ;
+				$this->DefColSuccesStatut = $tabl->InsereDefColUrl("message_retour_statut", "Message") ;
+			}
+			public function LgnTraceAppel($idTransact)
+			{
+				$ctn = '' ;
+				$bd = $this->CreeBdAppels() ;
+				$lgn = $bd->FetchSqlRow("select * from ".$bd->EscapeTableName($this->NomTableTransactMoov)." where id_transaction=".$bd->ParamPrefix."idTransact", array("idTransact" => $idTransact)) ;
+				return $lgn ;
+			}
 		}
 	}
 	

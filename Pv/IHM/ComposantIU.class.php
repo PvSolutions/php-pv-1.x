@@ -504,6 +504,12 @@
 			{
 				return $this->IDInstanceCalc."_".$this->SuffixeParamIdAleat ;
 			}
+			protected function CtnJsActualiseFormulaireFiltres()
+			{
+				$ctn = '' ;
+				$ctn .= 'ActualiseFormulaire'.$this->IDInstanceCalc.'()' ;
+				return $ctn ;
+			}
 			protected function DeclarationSoumetFormulaireFiltres($filtres)
 			{
 				$nomFiltres = array_keys($filtres) ;
@@ -581,6 +587,10 @@
 		// alert(urlFormulaire) ;
 '.$instrDesactivs.'		form.action = urlFormulaire ;
 		return true ;
+	}
+	function ActualiseFormulaire'.$this->IDInstanceCalc.'()
+	{
+'.$this->CtnJsActualiseFormulaireFiltres().'
 	}
 </script>' ;
 				return $ctn ;

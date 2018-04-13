@@ -834,23 +834,30 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
 			protected function CtnJSDeclInst()
 			{
 				$ctn = 'jQuery("#'.$this->IDInstanceCalc.'").select2(cfgInst'.$this->IDInstanceCalc.') ;' ;
-				return $ctn ;
-			}
-			protected function CtnJSCfgInst()
-			{
-				$this->CfgInst->placeholder = $this->EspaceReserve ;
 				if($this->Valeur != null && ! is_array($this->Valeur) && strpos($this->Valeur, ";") === false)
 				{
 					$valeurSelect = $this->Valeur ;
 					$lignes = $this->FournisseurDonnees->RechExacteElements($this->FiltresSelection, $this->NomColonneValeur, $valeurSelect) ;
 					if(count($lignes))
 					{
-						$this->CfgInst->placeholder = new PvCfgPlaceholderSelect2() ;
-						$this->CfgInst->placeholder->id = $lignes[0][$this->NomColonneValeur] ;
-						$this->CfgInst->placeholder->text = $lignes[0][$this->NomColonneLibelle] ;
+						$ctn .= PHP_EOL .'var noeudSelect2 = jQuery("#'.$this->IDInstanceCalc.'") ;
+var dataDefaut = {id : '.svc_json_encode($lignes[0][$this->NomColonneValeur]).', text : '.svc_json_encode($lignes[0][$this->NomColonneLibelle]).'} ;
+var option = new Option(dataDefaut.text, dataDefaut.id, true, true);
+noeudSelect2.append(option).trigger("change");
+noeudSelect2.trigger({
+type: "select2:select",
+params: {
+data: dataDefaut
+}
+});' ;
 					}
 				}
-				elseif($this->InclureElementHorsLigne == 1)
+				return $ctn ;
+			}
+			protected function CtnJSCfgInst()
+			{
+				$this->CfgInst->placeholder = $this->EspaceReserve ;
+				if($this->InclureElementHorsLigne == 1)
 				{
 					$this->CfgInst->placeholder = new PvCfgPlaceholderSelect2() ;
 					$this->CfgInst->placeholder->id = $this->ValeurElementHorsLigne ;

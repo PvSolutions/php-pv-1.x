@@ -79,21 +79,9 @@
 				$ctn .= '<!doctype html>'.PHP_EOL ;
 				$ctn .= '<html lang="'.$zone->LangueDocument.'">'.PHP_EOL ;
 				$ctn .= '<head>'.PHP_EOL ;
+				$ctn .= $zone->RenduLienFavicon() ;
+				$ctn .= $zone->RenduMetasDocument() ;
 				$ctn .= '<title>'.$zone->ObtientTitreDocument().'</title>'.PHP_EOL ;
-				$ctn .= '<meta name="keywords" value="'.htmlspecialchars(html_entity_decode($zone->ObtientMotsCleMetaDocument())).'">'.PHP_EOL ;
-				$ctn .= '<meta name="description" value="'.htmlspecialchars(html_entity_decode($zone->ObtientDescMetaDocument())).'">'.PHP_EOL ;
-				if($zone->EncodageDocument != '')
-					$ctn .= '<meta charset="'.$zone->EncodageDocument.'">'.PHP_EOL ;
-				$viewport = $zone->ObtientViewportMetaDocument() ;
-				if($viewport != '')
-				{
-					$ctn .= '<meta name="viewport" value="'.htmlspecialchars(html_entity_decode($viewport)).'">'.PHP_EOL ;
-				}
-				$auteur = $zone->ObtientAuteurMetaDocument() ;
-				if($auteur != '')
-				{
-					$ctn .= '<meta name="author" value="'.htmlspecialchars(html_entity_decode($auteur)).'">'.PHP_EOL ;
-				}
 				if($zone->InclureCtnJsEntete)
 				{
 					$ctn .= $this->RenduDefsJS($zone) ;
@@ -435,6 +423,7 @@
 			public $UtiliserDocumentWeb = 0 ;
 			public $DocumentWebSelect = null ;
 			public $DefinitionTypeDocument ;
+			public $CheminFavicon ;
 			public $LangueDocument = "fr" ;
 			public $EncodageDocument = "iso-8859-1" ;
 			public $TitreDocument ;
@@ -443,7 +432,6 @@
 			public $ViewportMeta ;
 			public $AuteurMeta ;
 			public $UrlBase = "" ;
-			public $RenduExtraMeta ;
 			public $ModeCache ;
 			public $ScriptPourRendu ;
 			public $InclureCtnJsEntete = 1 ;
@@ -523,6 +511,9 @@
 			public $CleMessageExecutionSession = "PvMessageExecution" ;
 			public $ClasseCSSMsgExecSucces = "Succes" ;
 			public $ClasseCSSMsgExecErreur = "Erreur" ;
+			public $InscrireActRedirectScriptSession = 1 ;
+			public $Metas = array() ;
+			public $ActionRedirScriptSession ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -652,6 +643,10 @@
 				$this->ChargeGestTachesWeb() ;
 				$this->ChargeDocumentsWeb() ;
 				$this->ChargeActionsPrinc() ;
+				if($this->InscrireActRedirectScriptSession == 1)
+				{
+					$this->ActionRedirScriptSession = $this->InsereActionAvantRendu("redirectScriptSession", new PvActionRedirScriptSession()) ;
+				}
 				if(class_exists($this->NomClasseHabillage))
 				{
 					$nomClasse = $this->NomClasseHabillage ;
@@ -822,6 +817,29 @@
 			{
 				return ($this->UtiliserDocumentWeb && count($this->DocumentsWeb) > 0) ;
 			}
+			public function RenduMetasDocument()
+			{
+				$ctn = '' ;
+				if($this->EncodageDocument != '')
+					$ctn .= '<meta charset="'.$this->EncodageDocument.'" />'.PHP_EOL ;
+				$viewport = $this->ObtientViewportMetaDocument() ;
+				if($viewport != '')
+				{
+					$ctn .= '<meta name="viewport" content="'.htmlspecialchars(html_entity_decode($viewport)).'">'.PHP_EOL ;
+				}
+				$auteur = $this->ObtientAuteurMetaDocument() ;
+				if($auteur != '')
+				{
+					$ctn .= '<meta name="author" content="'.htmlspecialchars(html_entity_decode($auteur)).'">'.PHP_EOL ;
+				}
+				$ctn .= '<meta name="description" content="'.htmlspecialchars(html_entity_decode($this->ObtientDescMetaDocument())).'">'.PHP_EOL ;
+				$ctn .= '<meta name="keywords" content="'.htmlspecialchars(html_entity_decode($this->ObtientMotsCleMetaDocument())).'">'.PHP_EOL ;
+				foreach($this->Metas as $nom => $contenu)
+				{
+					$ctn .= '<meta name="'.$nom.'" content="'.htmlspecialchars(html_entity_decode($contenu)).'">'.PHP_EOL ;
+				}
+				return $ctn ;
+			}
 			public function RenduDocument()
 			{
 				$ctn = '' ;
@@ -866,10 +884,38 @@
 				if($this->ActiverRafraichScript && ($this->ScriptPourRendu->DoitAutoRafraich()))
 				{
 					$ctn .= '<script type="text/javascript">
+	var idAutoRafraich = 0 ;
 	function execAutoRafraich() {
 		window.location = '.json_encode($this->ScriptPourRendu->ObtientUrlParam($this->ScriptPourRendu->ParamsAutoRafraich)).' ;
 	}
-	window.setTimeout("execAutoRafraich()", '.intval($this->ScriptPourRendu->DelaiAutoRafraich).' * 1000) ;
+	function annulAutoRafraich() {
+		clearTimeout(idAutoRafraich) ;
+		idAutoRafraich = 0 ;
+	}
+	function demarreAutoRafraich() {
+		idAutoRafraich = window.setTimeout("execAutoRafraich()", '.intval($this->ScriptPourRendu->DelaiAutoRafraich).' * 1000) ;
+	}
+	demarreAutoRafraich() ;
+	if(window.onblur) {
+		oldWindowBlur = window.onblur ;
+		window.onblur = function() {
+			if(oldWindowBlur)
+			{
+				oldWindowBlur() ;
+			}
+			annulAutoRafraich() ;
+		}
+	}
+	if(window.onfocus) {
+		oldWindowFocus = window.onfocus ;
+		window.onfocus = function() {
+			if(oldWindowFocus)
+			{
+				oldWindowFocus() ;
+			}
+			execAutoRafraich() ;
+		}
+	}
 </script>'.PHP_EOL ;
 				}
 				return $ctn ;
@@ -961,26 +1007,34 @@
 			{
 				return ($this->ScriptPourRendu->DescriptionMeta != "") ? $this->ScriptPourRendu->DescriptionMeta : $this->DescriptionMeta ;
 			}
+			public function RenduLienFavicon()
+			{
+				$ctn = '' ;
+				if($this->CheminFavicon == '')
+				{
+					return '' ;
+				}
+				$infosFich = pathinfo($this->CheminFavicon) ;
+				if($infosFich["extension"] != "ico")
+				{
+					$extMime = ($infosFich["extension"] == 'jpg') ? 'jpeg' : $infosFich["extension"] ;
+					$ctn .= '<link rel="icon" type="image/'.$extMime.'" href="'.$this->CheminFavicon.'">' ;
+				}
+				else
+				{
+					$ctn .= '<link rel="icon" href="'.$this->CheminFavicon.'">' ;
+				}
+				$ctn .= PHP_EOL ;
+				return $ctn ;
+			}
 			public function RenduEnteteDocument()
 			{
 				$this->InclutLibrairiesExternes() ;
 				$ctn = '' ;
 				$ctn .= '<head>'.PHP_EOL ;
-				if($this->EncodageDocument != '')
-					$ctn .= '<meta charset="'.$this->EncodageDocument.'" />'.PHP_EOL ;
+				$ctn .= $this->RenduLienFavicon() ;
+				$ctn .= $this->RenduMetasDocument() ;
 				$ctn .= '<title>'.$this->ObtientTitreDocument().'</title>'.PHP_EOL ;
-				$ctn .= '<meta name="keywords" content="'.htmlspecialchars(html_entity_decode($this->ObtientMotsCleMetaDocument())).'">'.PHP_EOL ;
-				$viewport = $this->ObtientViewportMetaDocument() ;
-				if($viewport != '')
-				{
-					$ctn .= '<meta name="viewport" content="'.htmlspecialchars(html_entity_decode($viewport)).'">'.PHP_EOL ;
-				}
-				$auteur = $this->ObtientAuteurMetaDocument() ;
-				if($auteur != '')
-				{
-					$ctn .= '<meta name="author" content="'.htmlspecialchars(html_entity_decode($auteur)).'">'.PHP_EOL ;
-				}
-				$ctn .= '<meta name="description" content="'.htmlspecialchars(html_entity_decode($this->ObtientDescMetaDocument())).'">'.PHP_EOL ;
 				for($i=0; $i<count($this->ContenusCSS); $i++)
 				{
 					$ctnCSS = $this->ContenusCSS[$i] ;
@@ -993,6 +1047,14 @@
 				$ctn .= $this->RenduExtraHead ;
 				$ctn .= '</head>' ;
 				return $ctn ;
+			}
+			public function UrlRedirScriptSession($urlDefaut='')
+			{
+				if($this->InscrireActRedirectScriptSession == 0)
+				{
+					return '' ;
+				}
+				return $this->ActionRedirScriptSession->ObtientUrl($urlDefaut) ;
 			}
 			protected function RenduCtnJs()
 			{
@@ -1266,6 +1328,40 @@
 			{
 				$dims = $GLOBALS["CommonGDManipulator"]->getAdjustedDimsFromFile($cheminImage, $largeurMax, $hauteurMax) ;
 				return '<img src="'.htmlspecialchars($cheminImage).'" width="'.$largeurMax.'"'.(($autresAttrsHtml != '') ? ' '.$autresAttrsHtml : '').' />' ;
+			}
+			public function RenduRedirectScriptSession($urlDefaut = '')
+			{
+				$adr = & $this->AdrScriptSession ;
+				$ctn = '' ;
+				if($adr->ChaineGet != '')
+				{
+					$ctn .= '<!doctype html>
+<html>
+<head><title>Redirection en cours...</title></head>
+<body>
+<form style="display:none" id="FormRetour" action="'.htmlspecialchars($adr->ChaineGet).'" method="post">' ;
+					foreach($adr->DonneesPost as $nom => $valeur)
+					{
+						if(is_array($valeur))
+						{
+							$valeur = join(",", $valeur) ;
+						}
+						$ctn .= '<input type="hidden" name="'.htmlspecialchars($nom).'" value="'.htmlspecialchars($valeur).'" />' ;
+						
+					}
+					$ctn .= '<input type="submit" value="envoyer" /></form>
+<script language="javascript">
+	document.getElementById("FormRetour").submit() ;
+</script>
+</body>
+</html>' ;
+					echo $ctn ;
+					exit ;
+				}
+				elseif($urlDefaut != '')
+				{
+					redirect_to($urlDefaut) ;
+				}
 			}
 		}
 		

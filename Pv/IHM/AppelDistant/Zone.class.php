@@ -6,26 +6,54 @@
 		{
 			include dirname(__FILE__)."/Noyau.class.php" ;
 		}
+		if(! defined('PV_PROTOCOLE_APPEL_DISTANT'))
+		{
+			include dirname(__FILE__)."/Protocole.class.php" ;
+		}
 		if(! defined('PV_METHODE_DISTANTE'))
 		{
 			include dirname(__FILE__)."/MethodeDistante.class.php" ;
 		}
 		define('PV_ZONE_APPEL_DISTANT_BASE', 1) ;
 		
-		class PvAppelJsonDistant
-		{
-			public $method ;
-			public $args ;
-		}
-		
 		class PvAppelRecuDistant
 		{
 			public $IdDonnees ;
 			public $Id ;
+			public $Entetes = array() ;
+			public $EntetesContentType = array() ;
 			public $Origine ;
 			public $Adresse ;
 			public $Contenu ;
 			public $Resultat ;
+			public function DefinitEntetes($entetes)
+			{
+				$this->Entetes = $entetes ;
+				$this->CalculeEntetesSpec() ;
+			}
+			protected function CalculeEntetesSpec()
+			{
+				if(isset($this->Entetes["Content-Type"]))
+				{
+					$attrsContentType = explode(";", $this->Entetes["Content-Type"]) ;
+					$this->Entetes["Content-Type"] = $attrsContentType[0] ;
+					array_splice($attrsContentType, 0, 1) ;
+					$this->EntetesContentType = array() ;
+					foreach($attrsContentType as $i => $attrSpec)
+					{
+						$attrs = explode("=", $attrSpec, 2) ;
+						$this->EntetesContentType[strtolower($attrs[0])] = $attrs[1] ;
+					}
+				}
+			}
+			public function ValeurEntete($nom, $valeurParDefaut=null)
+			{
+				return (isset($this->Entetes[$nom])) ? $this->Entetes[$nom] : $valeurParDefaut ;
+			}
+			public function ValeurEnteteContentType($nom, $valeurParDefaut=null)
+			{
+				return (isset($this->EntetesContentType[$nom])) ? $this->EntetesContentType[$nom] : $valeurParDefaut ;
+			}
 		}
 		
 		class PvEtatParcoursAppelDistant
@@ -57,7 +85,7 @@
 			public $ValeurParamMtdDist ;
 			public $ValeurParamMtdDistBrute ;
 			public $MtdDistSelect ;
-			public $AppelDistant ;
+			public $ContenuAppelDistant ;
 			public $UrlDistant = "?" ;
 			protected $DhRepAppel ;
 			protected $TablAppelRecu ;
@@ -73,6 +101,12 @@
 			public $CheminDossierResults = "." ;
 			public $NomTacheAppelsFtp = "appels_ftp" ;
 			public $InscrireTachesProgs = 0 ;
+			public $LongueurMaxCorpsHttp = 8192 ;
+			public $Protocoles = array() ;
+			public $ProtocoleNonTrouve ;
+			public $ProtocoleSelect ;
+			public $NomProtocoleSelect ;
+			public $ProtocoleAppelsFtp ;
 			public function AdopteApplication($nom, & $application)
 			{
 				parent::AdopteApplication($nom, $application) ;
@@ -97,6 +131,14 @@
 			{
 				return new AbstractSqlDB() ;
 			}
+			public function CreeProtocoleAppelsFtp()
+			{
+				return new PvProtocNatifAppelDistant() ;
+			}
+			public function CreeProtocoleNonTrouve()
+			{
+				return new PvProtocNatifAppelDistant() ;
+			}
 			public function CreeFournBdAppelsRecus()
 			{
 				$fourn = new PvFournisseurDonneesSql() ;
@@ -111,18 +153,39 @@
 			{
 				$this->MtdDistNonTrouvee = $this->CreeMtdDistNonTrouvee() ;
 				$this->MtdDistNonTrouvee->AdopteZone("nonTrouvee", $this) ;
+				$this->ProtocoleNonTrouve = $this->CreeProtocoleNonTrouve() ;
+				$this->ProtocoleNonTrouve->AdopteZone("non_trouve", $this) ;
+				$this->ProtocoleAppelsFtp = $this->CreeProtocoleAppelsFtp() ;
+				$this->ProtocoleAppelsFtp->AdopteZone("appels_ftp", $this) ;
 			}
 			public function ChargeConfig()
 			{
 				parent::ChargeConfig() ;
+				$this->ChargeProtocoles() ;
 				$this->ChargeConfigAuto() ;
 			}
 			protected function CreeMtdDistNonTrouvee()
 			{
 				return new PvMtdDistNonTrouvee() ;
 			}
+			protected function ChargeProtocoles()
+			{
+			}
 			protected function ChargeMethodesDistantes()
 			{
+			}
+			protected function ChargeMtdsDistsElems()
+			{
+			}
+			public function & InsereProtocole($protocole)
+			{
+				$this->Protocoles[$protocole->NomProtocole()] = & $protocole ;
+				$protocole->AdopteZone($protocole->NomProtocole(), $this) ;
+				return $protocole ;
+			}
+			public function & InsereProtoc($protocole)
+			{
+				return $this->InsereProtocole($protocole) ;
 			}
 			public function & InsereMethodeDistante($nom, $methode)
 			{
@@ -146,7 +209,8 @@
 				{
 					while(! feof($fh))
 					{
-						$ctn .= fgets($fh) ;
+						$ligne = fgets($fh, 1024) ;
+						$ctn .= $ligne ;
 					}
 					fclose($fh) ;
 				}
@@ -162,25 +226,62 @@
 				}
 				return $ctn ;
 			}
+			public function EnteteHttp($nom, $valeurParDefaut='')
+			{
+				return $this->AppelRecu->ValeurEntete($nom, $valeurParDefaut) ;
+			}
+			public function EnteteContentType($nom, $valeurParDefaut='')
+			{
+				return $this->AppelRecu->ValeurEnteteContentType($nom, $valeurParDefaut) ;
+			}
+			protected function DetecteProtocSelect()
+			{
+				$this->ProtocoleSelect = & $this->ProtocoleNonTrouve ;
+				foreach($this->Protocoles as $nom => $protocole)
+				{
+					if($protocole->EstActif())
+					{
+						$this->NomProtocoleSelect = $nom ;
+						$this->ProtocoleSelect = & $this->Protocoles[$nom] ;
+						break ;
+					}
+				}
+			}
+			protected function DetermineAppelRecu()
+			{
+				$this->AppelRecu->Adresse = get_current_url() ;
+				$this->AppelRecu->DefinitEntetes(apache_request_headers()) ;
+				$this->AppelRecu->Contenu = $this->CorpsHttpBrut() ;
+			}
 			protected function AppelHttpDistant()
 			{
-				$ctn = $this->CorpsHttpBrut() ;
-				$this->AppelRecu->Adresse = get_current_url() ;
-				$this->AppelRecu->Contenu = $ctn ;
 				// file_put_contents("TTTT.txt", $this->CtnEntetesRequeteHttp()."\r\n".$ctn."\r\n\r\n", FILE_APPEND) ;
-				$appel = ($ctn != '') ? @svc_json_decode($ctn) : new PvAppelJsonDistant() ;
-				if($appel == null)
+				$contenuAppel = $this->ProtocoleSelect->DecodeContenu() ;
+				if($contenuAppel == null)
 				{
-					$appel = new PvAppelJsonDistant() ;
+					$contenuAppel = new PvContenuAppelDistant() ;
 				}
-				return $appel ;
+				return $contenuAppel ;
+			}
+			public function & ObtientMtdDist($nomMethode)
+			{
+				$mtdDist = & $this->MtdDistNonTrouvee ;
+				if($nomMethode != '' && isset($this->MethodesDistantes[$nomMethode]))
+				{
+					$mtdDist = & $this->MethodesDistantes[$nomMethode] ;
+				}
+				return $mtdDist ;
+			}
+			public function & ObtientMethodeDistante($nomMethode)
+			{
+				return $this->ObtientMtdDist($nomMethode) ;
 			}
 			protected function DetecteMtdDistSelect($appelDistant)
 			{
-				$this->AppelDistant = $appelDistant ;
-				$this->ValeurParamMtdDistBrute = $this->AppelDistant->method ;
+				$this->ContenuAppelDistant = $appelDistant ;
+				$this->ValeurParamMtdDistBrute = $this->ContenuAppelDistant->nomMethode ;
 				$this->ValeurParamMtdDist = "" ;
-				// file_put_contents("appel.txt", print_r($this->AppelDistant, true)) ;
+				// file_put_contents("appel.txt", print_r($this->ContenuAppelDistant, true)) ;
 				if(isset($this->MethodesDistantes[$this->ValeurParamMtdDistBrute]))
 				{
 					$this->ValeurParamMtdDist = $this->ValeurParamMtdDistBrute ;
@@ -194,7 +295,7 @@
 				{
 					$this->MtdDistSelect = & $this->MethodesDistantes[$this->ValeurParamMtdDist] ;
 				}
-				$this->MtdDistSelect->Execute($this->AppelDistant->args) ;
+				$this->MtdDistSelect->Execute($this->ContenuAppelDistant->args) ;
 			}
 			protected function FixeAccesCrossOrigin()
 			{
@@ -264,6 +365,8 @@
 				$this->FixeAccesCrossOrigin() ;
 				$this->ChargeMethodesDistantes() ;
 				$this->ChargeMtdsDistsElems() ;
+				$this->DetermineAppelRecu() ;
+				$this->DetecteProtocSelect() ;
 				$appelDistant = $this->AppelHttpDistant() ;
 				$this->InsereDonneesAppelRecu() ;
 				$this->DetecteMtdDistSelect($appelDistant) ;
@@ -277,12 +380,12 @@
 				$this->ChargeMtdsDistsElems() ;
 				$this->AppelRecu = $this->CreeAppelRecuVide("direct") ;
 				$this->AppelRecu->Adresse = (isset($_SERVER["argv"]) && isset($_SERVER["argv"][0])) ? $_SERVER["argv"][0] : '<vide>' ;
-				$this->AppelRecu->Contenu = svc_json_encode($appelDistant) ;
+				$this->AppelRecu->Contenu = $this->ProtocoleAppelsFtp->EncodeContenu($appelDistant) ;
 				$this->InsereDonneesAppelRecu() ;
 				$this->DetecteMtdDistSelect($appelDistant) ;
 				$this->ExecuteMtdDistSelect() ;
 				$resultat = $this->MtdDistSelect->Result() ;
-				$this->AppelRecu->Resultat = svc_json_encode($resultat) ;
+				$this->AppelRecu->Resultat = $this->ProtocoleAppelsFtp->EncodeResultat($resultat) ;
 				return $resultat ;
 			}
 			protected function CheminFichPrcAppelsFtp()
@@ -372,17 +475,17 @@
 							fclose($fh) ;
 						}
 						$this->AppelRecu = $this->CreeAppelRecuVide("repertoire") ;
-						$appelDistant = new PvAppelJsonDistant() ;
+						$appelDistant = new PvContenuAppelDistant() ;
 						if($ctnAppel != '')
 						{
-							$appelDistant = svc_json_decode($ctnAppel) ;
+							$appelDistant = $this->ProtocoleAppelsFtp->DecodeContenu($ctnAppel) ;
 						}
 						$this->AppelRecu->Adresse = $cheminFichAppel ;
 						$this->AppelRecu->Contenu = $ctnAppel ;
 						$this->InsereDonneesAppelRecu() ;
 						$this->DetecteMtdDistSelect($appelDistant) ;
 						$this->ExecuteMtdDistSelect() ;
-						$this->AppelRecu->Resultat = svc_json_encode($this->MtdDistSelect->Result()) ;
+						$this->AppelRecu->Resultat = $this->ProtocoleAppelsFtp->EncodeResultat($this->MtdDistSelect->Result()) ;
 						$cheminFichRes = $cheminRepResult."/".$nomFich ;
 						$fhRes = @fopen($cheminFichRes, "w") ;
 						if($fhRes !== false)
@@ -406,7 +509,7 @@
 			}
 			protected function AfficheResultAppelDistant()
 			{
-				$this->AppelRecu->Resultat = svc_json_encode($this->MtdDistSelect->Result()) ;
+				$this->AppelRecu->Resultat = $this->ProtocoleSelect->EncodeResultat($this->MtdDistSelect->Result()) ;
 				echo $this->AppelRecu->Resultat ;
 			}
 			public function AppelJs($args)

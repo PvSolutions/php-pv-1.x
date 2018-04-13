@@ -260,6 +260,19 @@
 				}
 			}
 		}
+		class PvFormatteurColonneTimestamp extends PvFormatteurColonneDonnees
+		{
+			public $FormatDate = "Y-m-d H:i:s" ;
+			public function Encode(& $script, $colonne, $ligne)
+			{
+				$valeurEntree = $ligne[$colonne->NomDonnees] ;
+				if($valeurEntree == "")
+				{
+					return $valeurEntree ;
+				}
+				return date($this->FormatDate, $valeurEntree) ;
+			}
+		}
 		class PvFormatteurColonneModeleHtml extends PvFormatteurColonneDonnees
 		{
 			public $ModeleHtml = "" ;

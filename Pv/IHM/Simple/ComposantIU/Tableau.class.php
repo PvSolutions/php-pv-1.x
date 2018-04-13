@@ -204,10 +204,9 @@
 				if(! in_array($this->MaxElements, $this->MaxElementsPossibles))
 					$this->MaxElements = $this->MaxElementsPossibles[0] ;
 				$this->IndiceDebut = (isset($_GET[$nomParamIndiceDebut])) ? intval($_GET[$nomParamIndiceDebut]) : 0 ;
-				$this->IndiceColonneTri = -1 ;
 				if($this->NePasTrier == 0)
 				{
-					$this->IndiceColonneTri = (isset($_GET[$nomParamIndiceColonneTri])) ? intval($_GET[$nomParamIndiceColonneTri]) : 0 ;
+					$this->IndiceColonneTri = (isset($_GET[$nomParamIndiceColonneTri])) ? intval($_GET[$nomParamIndiceColonneTri]) : $this->IndiceColonneTri ;
 					if($this->IndiceColonneTri >= count($this->DefinitionsColonnes) || $this->IndiceColonneTri < 0)
 						$this->IndiceColonneTri = 0 ;
 					// Gerer les tri sur des colonnes invisibles...
@@ -451,6 +450,13 @@
 				$defCol->Formatteur->ModeleHtml = $modeleHtml ;
 				return $defCol ;
 			}
+			public function & InsereDefColTimestamp($nomDonnees, $libelle="", $formatDate="d/m/Y H:i:s")
+			{
+				$defCol = $this->InsereDefCol($nomDonnees, $libelle, "") ;
+				$defCol->Formatteur = new PvFormatteurColonneTimestamp() ;
+				$defCol->Formatteur->FormatDate = $formatDate ;
+				return $defCol ;
+			}
 			public function & InsereDefColSansTri($nomDonnees, $libelle="", $aliasDonnees="")
 			{
 				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
@@ -544,6 +550,13 @@
 				$cmd->Libelle = $libelle ;
 				$cmd->Parametres = $params ;
 				$this->InscritCommande($nomCmd, $cmd) ;
+				return $cmd ;
+			}
+			public function & InsereCmdScriptSession($nomCmd, $libelle='', $urlDefaut=array())
+			{
+				$cmd = new PvCommandeRedirectScriptSession() ;
+				$this->InscritCommande($nomCmd, $cmd) ;
+				$cmd->Libelle = $libelle ;
 				return $cmd ;
 			}
 			public function & InsereCmdExportTxt($nomCmd, $libelle='')
@@ -784,11 +797,11 @@
 				$ctn .= '<input type="submit" value="Envoyer" />'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
 				$ctn .= '<script type="text/javascript">'.PHP_EOL ;
-				$ctn .= $this->CtnJSEnvoiFiltres($parametresRendu).PHP_EOL ;
+				$ctn .= $this->CtnJsEnvoiFiltres($parametresRendu).PHP_EOL ;
 				$ctn .= '</script>' ;
 				return $ctn ;
 			}
-			protected function CtnJSEnvoiFiltres(& $parametresRendu)
+			protected function CtnJsEnvoiFiltres(& $parametresRendu)
 			{
 				$ctn = '' ;
 				$ctn .= 'function SoumetEnvoiFiltres'.$this->IDInstanceCalc.'(parametres)
@@ -815,21 +828,43 @@
 				}
 			}
 		}
-		var formulaire = document.getElementById(idFormulaire) ;
-		if(formulaire != null)
-		{
-			var url = "?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ScriptParent->NomElementZone).'" ;
-			for(var nom in parametresGet)
-			{
-				if(url != "")
-					url += "&" ;
-				url += encodeURIComponent(nom) + "=" + encodeURIComponent(parametresGet[nom]) ;
-			}
-			formulaire.action = url ;
-			// alert(url) ;
-			formulaire.submit() ;
-		}
 	}
+	var formulaire = document.getElementById(idFormulaire) ;
+	if(formulaire != null)
+	{
+		var url = "?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ScriptParent->NomElementZone).'" ;
+		for(var nom in parametresGet)
+		{
+			if(url != "")
+				url += "&" ;
+			url += encodeURIComponent(nom) + "=" + encodeURIComponent(parametresGet[nom]) ;
+		}
+		formulaire.action = url ;
+		// alert(url) ;
+		formulaire.submit() ;
+	}
+}' ;
+				return $ctn ;
+			}
+			protected function CtnJsActualiseFormulaireFiltres()
+			{
+				$ctn = '' ;
+				/*
+				*/
+				$ctn .= 'var elem = document.getElementById("'.$this->IDInstanceCalc.'") ;
+if(elem !== null) {
+var forms = elem.getElementsByTagName("form") ;
+var formFiltres = null ;
+for(var j=0; j<forms.length; j++) {
+if(forms[j].className.indexOf("FormulaireFiltres") >= 0) {
+formFiltres = forms[j] ;
+break ;
+}
+}
+if(formFiltres !== null) {
+SoumetFormulaire'.$this->IDInstanceCalc.'(formFiltres) ;
+formFiltres.submit() ;
+}
 }' ;
 				return $ctn ;
 			}

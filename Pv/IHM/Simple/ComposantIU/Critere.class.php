@@ -54,7 +54,7 @@
 					) ;
 					return 0 ;
 				}
-				return 1 ;
+				return ($this->MessageErreur == '') ? 1 : 0 ;
 			}
 			public function RenseigneErreur($format, $params=array())
 			{
@@ -73,13 +73,46 @@
 		class PvCritereNonVide extends PvCritereBase
 		{
 			public $FormatMessageErreur = 'Les champs ${ListeFiltres} ne doivent pas &ecirc;tre vides' ;
+			public $FormatMessageErreurUn = 'Le champ ${ListeFiltres} ne doit pas &ecirc;tre vide' ;
 			protected function PrepareRenduFiltre(& $filtre)
 			{
 				$filtre->InsereSuffxErr("*") ;
 			}
+			public function EstRespecte()
+			{
+				if(count($this->FiltresCibles) == 0)
+				{
+					return 1 ;
+				}
+				$this->MessageErreur = "" ;
+				$nomFiltres = array_keys($this->FiltresCibles) ;
+				$filtreErreurs = array() ;
+				foreach($nomFiltres as $i => $nomFiltre)
+				{
+					$filtre = & $this->FiltresCibles[$nomFiltre] ;
+					$filtre->Lie() ;
+					$ok = $this->RespecteRegle($filtre) ;
+					if(! $ok)
+					{
+						$filtreErreurs[] = $filtre->ObtientLibelle() ;
+					}
+				}
+				if(count($filtreErreurs) > 0)
+				{
+					$this->MessageErreur = _parse_pattern(
+						(count($filtreErreurs) == 1) ? $this->FormatMessageErreurUn : $this->FormatMessageErreur,
+						array(
+							"ListeFiltres" => join(", ", $filtreErreurs)
+						)
+					) ;
+					return 0 ;
+				}
+				return ($this->MessageErreur == '') ? 1 : 0 ;
+			}
 			protected function RespecteRegle(& $filtre)
 			{
-				return ($filtre->ValeurParametre !== "" && $filtre->ValeurParametre !== null) ? 1 : 0 ;
+				$valeur = trim($filtre->ValeurParametre) ;
+				return ($valeur !== "" && $valeur !== null) ? 1 : 0 ;
 			}
 		}
 		class PvCritereFormatLogin extends PvCritereBase
@@ -114,6 +147,18 @@
 				return validate_url_format($filtre->ValeurParametre) ;
 			}
 		}
+		
+		class PvCritereValideCaptcha extends PvCritereBase
+		{
+			public $FltCaptchaParent ;
+			public $MessageErreur = "Le code de s&eacute;curit&eacute; saisi est incorrect" ;
+			public function EstRespecte()
+			{
+				$ok  = $this->FltCaptchaParent->Composant->ActionAffichImg->VerifieValeurSoumise($this->FltCaptchaParent->Lie()) ;
+				return $ok ;
+			}
+		}
+		
 		/*
 		class PvCritereElementUnique extends PvCritereBase
 		{

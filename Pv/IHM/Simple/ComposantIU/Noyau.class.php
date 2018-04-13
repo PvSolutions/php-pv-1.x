@@ -223,6 +223,17 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				exit ;
 			}
 		}
+		class PvActionRedirectScriptSession extends PvActionBaseZoneWebSimple
+		{
+			public $UrlDefaut = '' ;
+			public function Execute()
+			{
+				return $this->ZoneParent->RenduRedirectScriptSession($this->UrlDefaut) ;
+			}
+		}
+		class PvActionRedirScriptSession extends PvActionRedirectScriptSession
+		{
+		}
 		class PvActionNotificationWeb extends PvActionBaseZoneWebSimple
 		{
 			protected $Message ;
@@ -545,14 +556,17 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 					$this->NomFichierAttache = $this->NomElementZone.".".$this->ExtensionFichierAttache ;
 				}
 				*/
-				$infosFich = @pathinfo($this->CheminFichierSource) ;
-				if($this->ExtensionFichierAttache == "" && $this->CheminFichierSource != "")
+				if($this->UtiliserFichierSource == 1)
 				{
-					$this->ExtensionFichierAttache = $infosFich["extension"] ;
-				}
-				if($this->NomFichierAttache == "" && $this->CheminFichierSource != "")
-				{
-					$this->NomFichierAttache = (isset($infosFich["filename"])) ? $infosFich["filename"] : substr($infosFich["basename"], 0, count($infosFich["basename"]) - (($infosFich["extension"] != '') ? strlen($infosFich["extension"]) + 1 : 0)) ;
+					$infosFich = @pathinfo($this->CheminFichierSource) ;
+					if($this->ExtensionFichierAttache == "" && $this->CheminFichierSource != "")
+					{
+						$this->ExtensionFichierAttache = $infosFich["extension"] ;
+					}
+					if($this->NomFichierAttache == "" && $this->CheminFichierSource != "")
+					{
+						$this->NomFichierAttache = (isset($infosFich["filename"])) ? $infosFich["filename"] : substr($infosFich["basename"], 0, count($infosFich["basename"]) - (($infosFich["extension"] != '') ? strlen($infosFich["extension"]) + 1 : 0)) ;
+					}
 				}
 			}
 			public function SupprimeCaractsSpec($valeur)
@@ -563,7 +577,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			{
 				// echo $this->SupprimeCaractsSpec($this->NomFichierAttache) ;
 				// exit ;
-				if($this->UtiliserFichierSource == 1 && $this->TypeMime != "")
+				if($this->TypeMime != "")
 				{
 					Header("Content-type:".$this->TypeMime."\r\n") ;
 				}
@@ -623,6 +637,81 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $TypeMime = "text/css" ;
 			public $ExtensionFichierAttache = "css" ;
 		}
+		
+		class PvActionFluxRSS extends PvActionEnvoiFichierBaseZoneWeb
+		{
+			public $TypeMime = "application/rss+xml" ;
+			public $Titre = "" ;
+			public $ExtensionFichierAttache = "rss" ;
+			public $VersionXML = "1.0" ;
+			public $VersionRSS = "2.0" ;
+			public $Encodage = "utf-8" ;
+			public $UtiliserFichierSource = 1 ;
+			public $Lgns = array() ;
+			protected function AfficheContenu()
+			{
+				$this->PrepareDoc() ;
+				$this->AfficheDebutDoc() ;
+				$this->AfficheChaineZone() ;
+				$this->AfficheCorpsDoc() ;
+				$this->AfficheFinDoc() ;
+			}
+			protected function PrepareDoc()
+			{
+			}
+			protected function RenduLgnLien($lgn)
+			{
+				$ctn = '' ;
+				$ctn .= '<item>'.PHP_EOL ;
+				$ctn .= '</item>'.PHP_EOL ;
+				return $ctn ;
+			}
+			protected function AfficheDebutDoc()
+			{
+				echo '<?xml version="'.$this->VersionXML.'" encoding="'.$this->Encodage.'"?>
+<rss version="'.$this->VersionRSS.'">
+<channel>'.PHP_EOL ;
+			}
+			protected function AfficheCorpsDoc()
+			{
+			}
+			protected function AfficheFinDoc()
+			{
+				echo '</channel>
+</rss>' ;
+			}
+			protected function AfficheChaineZone()
+			{
+				$titre = '' ;
+				if($this->ZoneParent->ScriptAppele->TitreDocument != '')
+					$titre = $this->ZoneParent->ScriptAppele->TitreDocument ;
+				if($titre == '' && $this->ZoneParent->Titre != '')
+					$titre = $this->ZoneParent->Titre ;
+				if($titre == '' && $this->Titre != '')
+					$titre = $this->Titre ;
+				if($titre != "")
+				{
+					echo '<title><![CDATA['.strip_tags($titre).']]></title>'.PHP_EOL ;
+				}
+				$description = '' ;
+				if($this->ZoneParent->ScriptAppele->MotsCleMeta != '')
+				{
+					$description .= $this->ZoneParent->ScriptAppele->MotsCleMeta ;
+				}
+				if($this->ZoneParent->ScriptAppele->DescriptionMeta != '')
+				{
+					if($description != '')
+						$description .= ' : ' ;
+					$description .= $this->ZoneParent->ScriptAppele->DescriptionMeta ;
+				}
+				if($description != "")
+				{
+					echo '<description><![CDATA['.strip_tags($description).']]></description>'.PHP_EOL ;
+				}
+				echo '<link>'.htmlentities($this->ZoneParent->ObtientUrl()).'</link>'.PHP_EOL ;
+			}
+		}
+
 		
 		class PvDessinateurRenduBase
 		{
@@ -1105,7 +1194,8 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 							$ctn .= $commande->ContenuAvantRendu ;
 						}
 						$ctn .= '<button id="'.$commande->IDInstanceCalc.'" class="Commande '.$commande->NomClsCSS.'" type="submit" rel="'.$commande->NomElementSousComposantIU.'"' ;
-						$ctn .= ' onclick="'.$composant->IDInstanceCalc.'_ActiveCommande(this) ;"' ;
+						$contenuJsSurClick = ($commande->ContenuJsSurClick == '') ? $composant->IDInstanceCalc.'_ActiveCommande(this) ;' : $commande->ContenuJsSurClick ;
+						$ctn .= ' onclick="'.$contenuJsSurClick.'"' ;
 						if($this->InclureLibelle == 0)
 						{
 							$ctn .= ' title="'.htmlspecialchars($commande->Libelle).'"' ;
@@ -1180,7 +1270,8 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 						}
 						$classeBtn = $commande->ObtientValSuppl("classe-btn", "btn-default") ;
 						$ctn .= '<button id="'.$commande->IDInstanceCalc.'" class="Commande btn '.$commande->NomClsCSS.' '.$classeBtn.'" type="submit" rel="'.$commande->NomElementSousComposantIU.'"' ;
-						$ctn .= ' onclick="'.$composant->IDInstanceCalc.'_ActiveCommande(this) ;"' ;
+						$contenuJsSurClick = ($commande->ContenuJsSurClick == '') ? $composant->IDInstanceCalc.'_ActiveCommande(this) ;' : $commande->ContenuJsSurClick ;
+						$ctn .= ' onclick="'.$contenuJsSurClick.'"' ;
 						if($this->InclureLibelle == 0)
 						{
 							$ctn .= ' title="'.htmlspecialchars($commande->Libelle).'"' ;
@@ -1862,6 +1953,17 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				}
 				return $valeurs ;
 			}
+			public function ExtraitValeursParametreLie(& $filtres)
+			{
+				$nomFiltres = array_keys($filtres) ;
+				$valeurs = array() ;
+				foreach($nomFiltres as $i => $nomFiltre)
+				{
+					$filtre = & $filtres[$nomFiltre] ;
+					$valeurs[$filtre->NomParametreLie] = $filtre->Lie() ;
+				}
+				return $valeurs ;
+			}
 			public function ExtraitValeursColonneLiee(& $filtres)
 			{
 				$nomFiltres = array_keys($filtres) ;
@@ -2092,6 +2194,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $NecessiteFormulaireDonnees = 0 ;
 			public $NecessiteTableauDonnees = 0 ;
 			public $UtiliserRenduDispositif = 0 ;
+			public $ContenuJsSurClick = "" ;
 			public $FormulaireDonneesParent = null ;
 			public $TableauDonneesParent = null ;
 			public $ScriptParent = null ;
@@ -2117,6 +2220,20 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $InscrireLienReprendre = 0 ;
 			public $UrlLienAnnuler = "" ;
 			public $UrlLienReprendre = "" ;
+			public $ParamsExecution = array() ;
+			public function ExtraitParamsExecution()
+			{
+				$params = $this->ParamsExecution ;
+				if($this->NecessiteFormulaireDonnees)
+				{
+					$params = array_merge($params, $this->FormulaireDonneesParent->ExtraitValeursParametre($this->FormulaireDonneesParent->FiltresEdition)) ;
+				}
+				if($this->NecessiteTableauDonnees)
+				{
+					$params = array_merge($params, $this->TableauDonneesParent->ExtraitValeursParametre($this->TableauDonneesParent->FiltresSelection)) ;
+				}
+				return $params ;
+			}
 			public function EstSucces()
 			{
 				return $this->StatutExecution == 1 ;
@@ -2253,10 +2370,19 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				$this->MessageExecution = $messageErreur ;
 				$this->StatutExecution = 0 ;
 			}
-			protected function ConfirmeSucces($msgSucces = '')
+			public function ConfirmeSucces($msgSucces = '')
 			{
 				$this->StatutExecution = 1 ;
-				$this->MessageExecution = ($msgSucces == '') ? $this->MessageSuccesExecution : $msgSucces ;
+				$paramsSucces = $this->ExtraitParamsExecution() ;
+				// print_r($paramsSucces) ;
+				if(count($paramsSucces) == 0)
+				{
+					$this->MessageExecution = ($msgSucces == '') ? $this->MessageSuccesExecution : $msgSucces ;
+				}
+				else
+				{
+					$this->MessageExecution = _parse_pattern(($msgSucces == '') ? $this->MessageSuccesExecution : $msgSucces, array_map('htmlentities', $paramsSucces)) ;
+				}
 			}
 			protected function ExecuteInstructions()
 			{
@@ -2447,6 +2573,14 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 					return ;
 				}
 				redirect_to($url) ;
+			}
+		}
+		class PvCommandeRedirectScriptSession extends PvCommandeComposantIUBase
+		{
+			public $UrlDefaut = '' ;
+			protected function ExecuteInstructions()
+			{
+				return $this->ZoneParent->RenduRedirectScriptSession($this->UrlDefaut) ;
 			}
 		}
 		class PvCommandeOuvrePopup extends PvCommandeRedirectionHttp

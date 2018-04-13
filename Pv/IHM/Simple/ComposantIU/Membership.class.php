@@ -662,7 +662,7 @@
 				$form = & $this->FormulaireDonneesParent ;
 				if($form->InclureElementEnCours == 0)
 				{
-					return 1 ;
+					return 0 ;
 				}
 				$idMembre = $form->FiltreIdMembreEnCours->Lie() ;
 				$membership = & $this->ZoneParent->Membership ;
@@ -684,7 +684,7 @@
 						return 1 ;
 					}
 				}
-				return 1 ;
+				return 0 ;
 			}
 		}
 		class PvCommandeAjoutMembreMS extends PvCommandeEditionMembreMSBase
@@ -724,8 +724,6 @@
 					if($script->ConnecterNouveauMembre == 1 || ($script->AutoriserUrlsRetour== 1 && $script->ValeurUrlRetour != ''))
 					{
 						$row = $membership->FetchMemberRowByLogin($form->FiltreLoginMembre->Lie()) ;
-						//print_r($membership->Database) ;
-						// exit ;
 						$script->AutoConnecteNouveauMembre($row["MEMBER_ID"]) ;
 						if($script->AutoriserUrlsRetour== 1 && $script->ValeurUrlRetour != '')
 						{

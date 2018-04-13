@@ -204,7 +204,8 @@
 		
 		class PvTableauDonneesAdminDirecte extends PvTableauDonneesHtml
 		{
-			public $InclureCmdRafraich = 1 ;
+			public $AutoRachaichFermFenetre = 1 ;
+			public $InclureCmdRafraich = 0 ;
 			public $LibelleCmdRafraich = "Actualiser" ;
 			public $CheminIconeCmdRafraich = "images/icones/actualiser.png" ;
 			protected function ExtraitCommandesRendu()
@@ -258,6 +259,10 @@
 				$lien->FormatIdOnglet = $formatIdOnglet ;
 				$lien->FormatTitreOnglet = $formatTitreOnglet ;
 				$lien->UrlOnglActifSurFerm = $urlOnglActifSurFerm ;
+				if($this->AutoRachaichFermFenetre)
+				{
+					$lien->DefinitScriptOnglActifSurFerm($this->ScriptParent) ;
+				}
 				$lien->OptionsOnglet = $optsOnglet ;
 				$col->Formatteur->Liens[] = & $lien ;
 				return $lien ;
@@ -290,6 +295,10 @@
 				$cmd->TitreOnglet = $titreOnglet ;
 				$cmd->OptionsOnglet = $optsOnglet ;
 				$cmd->UrlOnglActifSurFerm = $urlOnglActifSurFerm ;
+				if($this->AutoRachaichFermFenetre)
+				{
+					$cmd->DefinitScriptOnglActifSurFerm($this->ScriptParent) ;
+				}
 				$this->InscritCommande($nomCmd, $cmd) ;
 				return $cmd ;
 			}

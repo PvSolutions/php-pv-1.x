@@ -786,11 +786,11 @@
 				}
 				if($expression->Texte != '')
 				{
-					$requeteSql .= ' and ('.$exprDebute.')' ;
+					$requeteSql .= ' and ('.(($exprDebute != '') ? $exprDebute : '1=1').')' ;
 				}
 				else
 				{
-					$requeteSql .= ' where ('.$exprDebute.')' ;
+					$requeteSql .= ' where ('.(($exprDebute != '') ? $exprDebute : '1=1').')' ;
 				}
 				// print $requeteSql."\n" ;
 				$params = array_merge($expression->Parametres, $this->ParamsSelection, $filtresExtra) ;
@@ -825,11 +825,11 @@
 				}
 				if($expression->Texte != '')
 				{
-					$requeteSql .= ' and ('.$exprDebute.')' ;
+					$requeteSql .= ' and ('.(($exprDebute != '') ? $exprDebute : '1=1').')' ;
 				}
 				else
 				{
-					$requeteSql .= ' where ('.$exprDebute.')' ;
+					$requeteSql .= ' where ('.(($exprDebute != '') ? $exprDebute : '1=1').')' ;
 				}
 				// print $requeteSql."\n" ;
 				$params = array_merge($expression->Parametres, $this->ParamsSelection, $filtresExtra) ;

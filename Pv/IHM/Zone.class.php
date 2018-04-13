@@ -604,7 +604,7 @@
 			{
 				$this->DetecteParamScriptAppele() ;
 				$nomScripts = array_keys($this->Scripts) ;
-				$this->ScriptAppele = $this->ScriptParDefaut ;
+				$this->ScriptAppele = & $this->ScriptParDefaut ;
 				foreach($nomScripts as $i => $nom)
 				{
 					$script = & $this->Scripts[$nom] ;

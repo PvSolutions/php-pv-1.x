@@ -135,6 +135,7 @@
 				if(count($this->Output->ChildNodes) > 1)
 				{
 					$_data = array_pop($this->Output->ChildNodes);
+					$_data->Name = $name ;
 					$_output_idx = count($this->Output->ChildNodes) - 1;
 					$this->Output->ChildNodes[$_output_idx]->AddNode($_data);
 				}
@@ -226,15 +227,15 @@
 			}
 			public function AddContent($content)
 			{
+				$this->AddElement('content', 'content', $content) ;
 				if($this->RegisterContents)
 					$this->Content .= $content ;
-				$this->AddElement('content', 'content', $content) ;
 			}
 			public function AddNode($node)
 			{
+				$this->AddElement('node', $node->Name, $node) ;
 				if($this->RegisterChildNodes)
 					$this->ChildNodes[] = $node ;
-				$this->AddElement('node', $node->Name, $node) ;
 			}
 			public function AddChildNode($node)
 			{
@@ -242,12 +243,12 @@
 			}
 			public function AddAttributes($attributes=array())
 			{
-				if($this->RegisterAttributes)
-					$this->Attributes = array_merge($this->Attributes, $attributes) ;
 				foreach($attributes as $name => $value)
 				{
 					$this->AddElement('attribute', $name, $value) ;
 				}
+				if($this->RegisterAttributes)
+					$this->Attributes = array_merge($this->Attributes, $attributes) ;
 			}
 			public function GetElementById($id)
 			{
@@ -275,6 +276,27 @@
 			}
 			public function GetChildNodesByName($name)
 			{
+				$result = array() ;
+				for($i=0; $i<count($this->ChildNodes); $i++)
+				{
+					if(isset($this->ChildNodes[$i]->Attributes["NAME"]) && $this->ChildNodes[$i]->Attributes["NAME"] == $name)
+					{
+						$result[] = $this->ChildNodes[$i] ;
+					}
+				}
+				return $result ;
+			}
+			public function GetChildNodesByTagName($name)
+			{
+				$result = array() ;
+				for($i=0; $i<count($this->ChildNodes); $i++)
+				{
+					if($this->ChildNodes[$i]->Name == $name)
+					{
+						$result[] = $this->ChildNodes[$i] ;
+					}
+				}
+				return $result ;
 			}
 		}
 		

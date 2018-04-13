@@ -28,6 +28,7 @@
 		class PvSvcAprPaiementBase
 		{
 			public $NomElementInterfPaiemt ;
+			public $NomZoneWebRendu ;
 			public $InterfPaiemtParent ;
 			public $UrlSucces = "" ;
 			public $UrlEchec = "" ;
@@ -178,6 +179,13 @@
 			protected $MsgPaiementNonFinalise = "Votre paiement a r&eacute;ussi, mais aucune action n'a &eacute;t&eacute; trouv&eacute;e pour le suivi." ;
 			public $CheminRelatifRepTransacts = "." ;
 			public $AfficherErreurs404 = 0 ;
+			public $TitresEtatExecution = array(
+				"paiement_annule" => "Annul&eacute;",
+				"paiement_termine" => "Termin&eacute;",
+				"paiement_echoue" => "Echou&eacute;",
+				"paiement_reussi" => "R&eacute;ussi",
+			) ;
+			public $TitreEtatExecutionNonTrouve = "En cours" ;
 			public function CheminRepTransacts()
 			{
 				return realpath(dirname(__FILE__)."/../../../../../".$this->CheminRelatifRepTransacts) ;
@@ -193,7 +201,7 @@
 					"designation" => $this->_Transaction->Designation,
 					"montant" => $this->_Transaction->Montant,
 					"monnaie" => $this->_Transaction->Monnaie,
-					"nom_fournisseur" => $this->NomFournisseur(),
+					"nom_interf_paiemt" => $this->NomElementApplication,
 					"contenu_brut" => serialize($this->_Transaction),
 					"id_etat" => $this->_EtatExecution->Id,
 					"timestamp_etat" => $this->_EtatExecution->TimestampCapt,
@@ -286,7 +294,6 @@
 						"id = :id",
 						array("id" => $this->_Transaction->IdDonnees)
 					) ;
-					
 				}
 			}
 			public function NomFournisseur()
@@ -674,6 +681,47 @@
 					$urlRedirect .= '?idTransactSoumise='.urlencode($this->_Transaction->IdTransaction) ;
 				}
 				redirect_to($urlRedirect) ;
+			}
+			public function RemplitTablTransactsPaie(& $tabl)
+			{
+				$bd = $this->CreeBdTransaction() ;
+				$tabl->FournisseurDonnees = new PvFournisseurDonneesSql() ;
+				$tabl->FournisseurDonnees->BaseDonnees = $this->CreeBdTransaction() ;
+				$tabl->FournisseurDonnees->RequeteSelection = $this->NomTableTransaction ;
+				$this->FltIdTransactPaie = $tabl->InsereFltSelectHttpGet("id_transaction", "id_transaction = <self>") ;
+				$this->FltIdTransactPaie->Libelle = "N&deg; Transaction" ;
+				$this->FltDesign = $tabl->InsereFltSelectHttpGet("designation", $bd->SqlIndexOf("designation", "<self>").' > 0') ;
+				$this->FltDesign->Libelle = "Designation" ;
+				$tabl->SensColonneTri = "desc" ;
+				$tabl->InsereDefColCachee("nom_interf_paiemt") ;
+				$tabl->InsereDefColTimestamp("timestamp_etat", "Date") ;
+				$tabl->InsereDefColHtml('${interf_paiemt}', "Moyen de paiement") ;
+				$tabl->InsereDefCol("id_transaction", "N&deg; Transaction") ;
+				$tabl->InsereDefCol("designation", "Designation") ;
+				$tabl->InsereDefColHtml('${titre_etat}', "Etat") ;
+				$tabl->InsereDefCol("montant", "Montant") ;
+				$tabl->InsereDefColCachee("id_etat") ;
+				$tabl->SourceValeursSuppl = new PvSrvValsSupplTransactInterfPaie() ;
+				$tabl->SourceValeursSuppl->InterfPaiemtParent = & $this ;
+			}
+		}
+		
+		class PvSrvValsSupplTransactInterfPaie extends PvSrcValsSupplLgnDonnees
+		{
+			public $InterfPaiemtParent ;
+			public function Applique(& $composant, $ligneDonnees)
+			{
+				$result = parent::Applique($composant, $ligneDonnees) ;
+				$interfPaie = & $this->InterfPaiemtParent ;
+				// print_r($result) ;
+				$interfExt = $interfPaie->ApplicationParent->InterfPaiement($result["nom_interf_paiemt"]) ;
+				$result["interf_paiemt"] = "(Non trouv&eacute;)" ;
+				if($interfExt != null)
+				{
+					$result["interf_paiemt"] = $interfExt->Titre ;
+				}
+				$result["titre_etat"] = (isset($interfPaie->TitresEtatExecution[$result["id_etat"]])) ? $interfPaie->TitresEtatExecution[$result["id_etat"]] : $interfPaie->TitreEtatExecutionNonTrouve ;
+				return $result ;
 			}
 		}
 		

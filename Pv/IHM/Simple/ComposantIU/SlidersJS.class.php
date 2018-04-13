@@ -92,10 +92,11 @@
 				{
 					$valeurs = $this->ExtraitValeursLgnDonnees($lgn) ;
 					$this->ElementsEnCours[] = $valeurs ;
+					$valeursUrl = array_map('urlencode', $valeurs) ;
 					$cheminImage = _parse_pattern($this->FormatCheminImage, $valeurs) ;
 					$url = _parse_pattern($this->FormatUrl, $valeurs) ;
 					$caption = (isset($valeurs[$this->NomColCaption])) ? $valeurs[$this->NomColCaption] : '' ;
-					$ctn .= '<div data-src="'.$cheminImage.'">'.PHP_EOL ;
+					$ctn .= '<div data-src="'.htmlspecialchars($cheminImage).'"'.(($url != '') ? ' data-link="'.htmlspecialchars($url).'"' : '').'>'.PHP_EOL ;
 					if($caption != '')
 					{
 						$ctn .= '<div class="camera_caption">'.PHP_EOL ;
