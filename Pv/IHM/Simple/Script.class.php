@@ -962,6 +962,7 @@
 <p>Veuillez cliquer sur ce lien pour confirmer votre inscription.</p>
 <p><a href="${url}">${url}</a></p>
 Cordialement' ;
+			public $EnvoiMailSucces = 0 ;
 			public $EnvoiMailSuccesConfirm = 0 ;
 			public $SujetMailSuccesConfirm = 'Compte ${login_member} confirme' ;
 			public $CorpsMailSuccesConfirm = '<p>Bonjour ${login_member},</p>

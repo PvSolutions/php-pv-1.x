@@ -1293,6 +1293,7 @@ z-index: 1;
 								"Date" => date("YmdHis")
 							)
 						) ;
+						// print $this->NomFichierSelect ;
 					}
 					if($this->ExtFichierSelect != "")
 					{
@@ -1340,7 +1341,7 @@ z-index: 1;
 				if($this->SourceTelechargement == 'files')
 				{
 					// echo $this->CheminFichierSrc.' '.$this->CheminFichierDest.'<br>' ;
-					$ok = @move_uploaded_file($this->CheminFichierSrc, $this->CheminFichierDest) ;
+					$ok = move_uploaded_file($this->CheminFichierSrc, $this->CheminFichierDest) ;
 					if(! $ok)
 					{
 						$this->CodeErreurTelechargement = $this->CodeErreurDeplFicTelecharg ;

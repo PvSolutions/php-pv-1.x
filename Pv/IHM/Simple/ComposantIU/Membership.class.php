@@ -699,10 +699,10 @@
 				parent::ExecuteInstructions() ;
 				$form = & $this->FormulaireDonneesParent ;
 				$script = & $form->ScriptParent ;
+				$email = ($membership->LoginWithEmail == 0) ? $form->FiltreEmailMembre->Lie() : $form->FiltreLoginMembre->Lie() ;
 				$membership = & $script->ZoneParent->Membership ;
 				if($this->StatutExecution == 1 && $script->DoitConfirmMail())
 				{
-					$email = ($membership->LoginWithEmail == 0) ? $form->FiltreEmailMembre->Lie() : $form->FiltreLoginMembre->Lie() ;
 					$params = $form->ExtraitValeursParametre($form->FiltresEdition) ;
 					$paramsUrlConfirm = array(
 						"login_confirm" => $form->FiltreLoginMembre->Lie(),
@@ -721,9 +721,17 @@
 				}
 				elseif($this->StatutExecution == 1)
 				{
+					$row = $membership->FetchMemberRowByLogin($form->FiltreLoginMembre->Lie()) ;
+					if($script->EnvoiMailSucces == 1)
+					{
+						$row["login_member"] = $form->FiltreLoginMembre->Lie() ;
+						$row["password_member"] = $form->FiltreMotPasseMembre->Lie() ;
+						$sujetMail = _parse_pattern($script->SujetMailSuccesConfirm, $row) ;
+						$corpsMail = _parse_pattern($script->CorpsMailSuccesConfirm, $row) ;
+						send_html_mail($email, $sujetMail, $corpsMail, $script->EmailEnvoiConfirm) ;
+					}
 					if($script->ConnecterNouveauMembre == 1 || ($script->AutoriserUrlsRetour== 1 && $script->ValeurUrlRetour != ''))
 					{
-						$row = $membership->FetchMemberRowByLogin($form->FiltreLoginMembre->Lie()) ;
 						$script->AutoConnecteNouveauMembre($row["MEMBER_ID"]) ;
 						if($script->AutoriserUrlsRetour== 1 && $script->ValeurUrlRetour != '')
 						{

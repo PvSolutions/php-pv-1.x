@@ -120,6 +120,8 @@
 			}
 			protected function VideElements()
 			{
+				$this->ElementActif = null ;
+				$this->ElementsBruts = array() ;
 			}
 		}
 		class PvProcesseurDossierSE extends PvProcesseurQueueBase
@@ -585,6 +587,28 @@
 				$methodes[$nomMethode]->Execute($this, $nomMethode, (isset($contenu->args)) ? $contenu->args : array()) ;
 				$retour = $methodes[$nomMethode]->RetourAppel ;
 				return $retour ;
+			}
+		}
+		
+		class PvServiceProcessus extends PvServicePersist
+		{
+			public function EstActif($cheminFichierAbsolu, $cheminFichierElementActif)
+			{
+				$ok = parent::EstActif($cheminFichierAbsolu, $cheminFichierElementActif) ;
+				if(! $ok)
+				{
+					return $ok ;
+				}
+				$ok = false ;
+				foreach($this->ArgsParDefaut as $nom => $valeur)
+				{
+					if(! isset($this->Args[$nom]) || $this->ArgsParDefaut[$nom] != $this->Args[$nom])
+					{
+						$ok = false ;
+						break ;
+					}
+				}
+				return $ok ;
 			}
 		}
 		

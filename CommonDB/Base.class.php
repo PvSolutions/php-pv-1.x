@@ -1703,6 +1703,21 @@
 				$sql .= ')' ;
 				return $sql ;
 			}
+			function GetNextAutoIncValue($tableName)
+			{
+				$value = $this->FetchSqlValue(
+					"SELECT AUTO_INCREMENT id
+FROM information_schema.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :tableName",
+					array("schema" => $this->ConnectionParams["schema"], "tableName" => $tableName),
+					"id"
+				) ;
+				if($value != null)
+				{
+					$value = (intval($value) + 1) ;
+					// $this->RunSql("alter table ".$this->EscapeTableName($tableName)." auto_increment = ".$value) ;
+				}
+				return $value ;
+			}
 			function OpenStoredProcCnx()
 			{
 				$server = (isset($this->ConnectionParams["server"])) ? $this->ConnectionParams["server"] : "localhost" ;

@@ -38,6 +38,7 @@
 			public $TitreNonConnecte = "" ;
 			public $Titre = "Pv - Sb Admin v2.0" ;
 			public $UtiliserTitreSiNonConnecte = 1 ;
+			public $InclureNavbarFlottant = 1 ;
 			public $CouleurTexteSidebars = "" ;
 			public $InclureCtnJsEntete = 0 ;
 			public $InclureJQuery = 1 ;
@@ -90,6 +91,29 @@
 			public $NomClasseScriptModifRole = "PvScriptModifRoleSbAdmin2" ;
 			public $NomClasseScriptSupprRole = "PvScriptSupprRoleSbAdmin2" ;
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesSbAdmin2" ;
+			public function InclutLibrairiesExternes()
+			{
+				parent::InclutLibrairiesExternes() ;
+				if($this->InclureNavbarFlottant == 1)
+				{
+					$this->InscritContenuCSS('@media (max-width:767px) {
+	.navbar-collapse {
+		position:absolute ;
+		top:100px ;
+		left :0px ;
+		width: 100% ;
+		z-index:9999999 ;
+		background:white ;
+	}
+	.navbar-collapse > ul {
+		width : 98%;
+	}
+	.navbar-collapse > ul > li {
+		width : 100%;
+	}
+}') ;
+				}
+			}
 			public function ObtientTitreNonConnecte()
 			{
 				return ($this->TitreNonConnecte != "") ? $this->TitreNonConnecte : (($this->UtiliserTitreSiNonConnecte == 1) ? $this->Titre : '') ;

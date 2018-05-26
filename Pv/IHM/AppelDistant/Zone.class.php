@@ -324,14 +324,14 @@
 					return ;
 				}
 				$bd = $this->CreeBdAppelsRecus() ;
-				$ok = $bd->RunSql("delete from ".$bd->EscapeTableName($this->NomTableAppelsRecus)." where ".$bd->SqlDateDiff($bd->SqlNow(), "date_creation")." > ".$bd->ParamPrefix."delaiExpir", array("delaiExpir" => $this->DelaiExpirAppelsRecus)) ;
+				$ok = $bd->RunSql("delete from ".$bd->EscapeTableName($this->NomTableAppelsRecus)." where ".$bd->SqlDateDiff($bd->SqlNow(), $bd->EscapeVariableName("date_creation"))." > ".$bd->ParamPrefix."delaiExpir", array("delaiExpir" => $this->DelaiExpirAppelsRecus)) ;
 				if(! $ok)
 				{
-					die("Impossible d'enregistrer les traces, le service est interrompu") ;
+					die("Impossible d'enregistrer les traces, le service est interrompu : ".$bd->ConnectionException) ;
 					return ;
 				}
 				$ok = $bd->RunSql(
-					"insert into ".$bd->EscapeTableName($this->NomTableAppelsRecus)." (id_ctrl, origine_appel, adresse_appel, contenu_appel) values (".$bd->ParamPrefix."idCtrl, ".$bd->ParamPrefix."origineAppel, ".$bd->ParamPrefix."adresseAppel, ".$bd->ParamPrefix."contenuAppel)",
+					"insert into ".$bd->EscapeTableName($this->NomTableAppelsRecus)." (".$bd->EscapeVariableName("id_ctrl").", ".$bd->EscapeVariableName("origine_appel").", ".$bd->EscapeVariableName("adresse_appel").", ".$bd->EscapeVariableName("contenu_appel").") values (".$bd->ParamPrefix."idCtrl, ".$bd->ParamPrefix."origineAppel, ".$bd->ParamPrefix."adresseAppel, ".$bd->ParamPrefix."contenuAppel)",
 					array(
 						"idCtrl" => $this->AppelRecu->Id,
 						"origineAppel" => $this->AppelRecu->Origine,
@@ -341,7 +341,7 @@
 				) ;
 				if($ok)
 				{
-					$this->AppelRecu->IdDonnees = $bd->FetchSqlValue("select id from ".$bd->EscapeTableName($this->NomTableAppelsRecus)." where id_ctrl=:idCtrl", array("idCtrl" => $this->AppelRecu->Id), "id") ;
+					$this->AppelRecu->IdDonnees = $bd->FetchSqlValue("select ".$bd->EscapeVariableName("id")." from ".$bd->EscapeTableName($this->NomTableAppelsRecus)." where ".$bd->EscapeVariableName("id_ctrl")."=:idCtrl", array("idCtrl" => $this->AppelRecu->Id), "id") ;
 				}
 			}
 			protected function MajDonneesAppelRecu()
@@ -352,7 +352,7 @@
 				}
 				$bd = $this->CreeBdAppelsRecus() ;
 				$bd->RunSql(
-					"update ".$bd->EscapeTableName($this->NomTableAppelsRecus)." set contenu_resultat=".$bd->ParamPrefix."resultat where id=".$bd->ParamPrefix."id",
+					"update ".$bd->EscapeTableName($this->NomTableAppelsRecus)." set ".$bd->EscapeVariableName("contenu_resultat")."=".$bd->ParamPrefix."resultat where ".$bd->EscapeVariableName("id")."=".$bd->ParamPrefix."id",
 					array(
 						"id" => $this->AppelRecu->IdDonnees,
 						"resultat" => $this->AppelRecu->Resultat,
@@ -509,8 +509,12 @@
 			}
 			protected function AfficheResultAppelDistant()
 			{
-				$this->AppelRecu->Resultat = $this->ProtocoleSelect->EncodeResultat($this->MtdDistSelect->Result()) ;
+				$this->AppelRecu->Resultat = $this->ContenuResultAppelDistant() ;
 				echo $this->AppelRecu->Resultat ;
+			}
+			public function ContenuResultAppelDistant()
+			{
+				return $this->ProtocoleSelect->EncodeResultat($this->MtdDistSelect->Result()) ;
 			}
 			public function AppelJs($args)
 			{
@@ -523,6 +527,16 @@
 				{
 					$this->RecoitAppelDistant() ;
 				}
+			}
+			protected function RenduWSDL()
+			{
+				$ctn = '' ;
+				$ctn .= '' ;
+				return $ctn ;
+			}
+			protected function AfficheWSDL()
+			{
+				
 			}
 			protected function CreeTacheProgAppelsFtp()
 			{

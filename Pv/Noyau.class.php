@@ -390,6 +390,16 @@
 				$this->InscritServPersist($nom, $srvPersist) ;
 				return $srvPersist ;
 			}
+			public function & InsereServsProcessus($nom, $srvProc, $totalInstances=2)
+			{
+				$servs = array() ;
+				for($i=0; $i<$totalInstances; $i++)
+				{
+					$servs[$i] = $this->InsereServPersist($nom."_".$i, $srvProc) ;
+					$servs[$i]->ArgsParDefaut["no_processus"] = $i ;
+				}
+				return $servs ;
+			}
 			public function & InsereIHM($nom, $ihm)
 			{
 				$this->InscritIHM($nom, $ihm) ;

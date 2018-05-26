@@ -20,6 +20,7 @@
 		class PvParamAppelDistant
 		{
 			public $Args ;
+			public $NomClasseArgs ;
 			public function Arg($nom, $valeurDefaut=null)
 			{
 				if(! is_object($this->Args))
@@ -172,6 +173,11 @@
 			{
 				$this->InitMessages($args) ;
 				$this->PrepareExecution() ;
+				if($this->ErreurDefinie())
+				{
+					$this->TermineExecution() ;
+					return ;
+				}
 				if($this->EstNul($this->CommandeParent))
 				{
 					$this->ExecuteInstructions() ;
@@ -245,7 +251,7 @@
 			}
 			public function ConfirmeSucces($valeur='')
 			{
-				if($valeur == '')
+				if(is_null($valeur) || $valeur === '')
 				{
 					$valeur = $this->MessageSuccesExecution ;
 				}

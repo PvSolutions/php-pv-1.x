@@ -755,7 +755,7 @@
 			}
 			public function SurScriptConnecte()
 			{
-				return ($this->InscrireScriptsMembership == 0 || ($this->PossedeMembreConnecte() && $this->NomScriptDeconnexion != $this->ValeurBruteParamScriptAppele)) ;
+				return ($this->InclureScriptsMembership == 0 || ($this->PossedeMembreConnecte() && $this->NomScriptDeconnexion != $this->ValeurBruteParamScriptAppele)) ;
 			}
 			public function ObtientMembreConnecte()
 			{

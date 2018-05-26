@@ -648,6 +648,10 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $Encodage = "utf-8" ;
 			public $UtiliserFichierSource = 1 ;
 			public $Lgns = array() ;
+			public function EncodeTexteRss($texte)
+			{
+				return strip_tags(clean_special_chars($texte)) ;
+			}
 			protected function AfficheContenu()
 			{
 				$this->PrepareDoc() ;
@@ -691,7 +695,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 					$titre = $this->Titre ;
 				if($titre != "")
 				{
-					echo '<title><![CDATA['.strip_tags($titre).']]></title>'.PHP_EOL ;
+					echo '<title><![CDATA['.$this->EncodeTexteRss($titre).']]></title>'.PHP_EOL ;
 				}
 				$description = '' ;
 				if($this->ZoneParent->ScriptAppele->MotsCleMeta != '')
@@ -706,7 +710,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				}
 				if($description != "")
 				{
-					echo '<description><![CDATA['.strip_tags($description).']]></description>'.PHP_EOL ;
+					echo '<description><![CDATA['.$this->EncodeTexteRss($description).']]></description>'.PHP_EOL ;
 				}
 				echo '<link>'.htmlentities($this->ZoneParent->ObtientUrl()).'</link>'.PHP_EOL ;
 			}
@@ -1194,7 +1198,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 							$ctn .= $commande->ContenuAvantRendu ;
 						}
 						$ctn .= '<button id="'.$commande->IDInstanceCalc.'" class="Commande '.$commande->NomClsCSS.'" type="submit" rel="'.$commande->NomElementSousComposantIU.'"' ;
-						$contenuJsSurClick = ($commande->ContenuJsSurClick == '') ? $composant->IDInstanceCalc.'_ActiveCommande(this) ;' : $commande->ContenuJsSurClick ;
+						$contenuJsSurClick = ($commande->ContenuJsSurClick == '') ? $composant->IDInstanceCalc.'_ActiveCommande(this) ;' : $commande->ContenuJsSurClick.' ; return false ;' ;
 						$ctn .= ' onclick="'.$contenuJsSurClick.'"' ;
 						if($this->InclureLibelle == 0)
 						{
@@ -1270,7 +1274,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 						}
 						$classeBtn = $commande->ObtientValSuppl("classe-btn", "btn-default") ;
 						$ctn .= '<button id="'.$commande->IDInstanceCalc.'" class="Commande btn '.$commande->NomClsCSS.' '.$classeBtn.'" type="submit" rel="'.$commande->NomElementSousComposantIU.'"' ;
-						$contenuJsSurClick = ($commande->ContenuJsSurClick == '') ? $composant->IDInstanceCalc.'_ActiveCommande(this) ;' : $commande->ContenuJsSurClick ;
+						$contenuJsSurClick = ($commande->ContenuJsSurClick == '') ? $composant->IDInstanceCalc.'_ActiveCommande(this) ;' : $commande->ContenuJsSurClick.' ; return false ;' ;
 						$ctn .= ' onclick="'.$contenuJsSurClick.'"' ;
 						if($this->InclureLibelle == 0)
 						{

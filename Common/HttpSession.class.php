@@ -186,6 +186,7 @@
 				try
 				{
 					$this->RequestUrlParts = parse_url($realUrl) ;
+					$this->RequestPort = (isset($this->RequestUrlParts["port"])) ? $this->RequestUrlParts["port"] : (($this->RequestUrlParts['scheme'] == 'https') ? 443 : 80) ;
 					$ok = 1 ;
 				}
 				catch(Exception $ex)

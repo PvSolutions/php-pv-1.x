@@ -13,6 +13,7 @@
 			public $InclureCtnJsEntete = 1 ;
 			public $InclureJQuery = 1 ;
 			public $InclureBootstrap = 1 ;
+			public $InclureNavbarFlottant = 1 ;
 			public $RenduExtraHead = '<meta http-equiv="X-UA-Compatible" content="IE=edge">' ;
 			public $ViewportMeta = 'width=device-width, initial-scale=1' ;
 			public $NomClasseScriptRecouvreMP = "PvScriptRecouvreMPBootstrap" ;
@@ -36,9 +37,32 @@
 			public $NomClasseScriptSupprRole = "PvScriptSupprRoleBootstrap" ;
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesBootstrap" ;
 			public $InclureHelpers = 1 ;
+			public $AbcisseXNavbarFlottant = "0px" ;
+			public $AbcisseYNavbarFlottant = "0px" ;
+			public $LargeurNavbarFlottant = "95%" ;
+			public $BackgroudNavbarFlottant = "white" ;
 			public function InclutLibrairiesExternes()
 			{
 				parent::InclutLibrairiesExternes() ;
+				if($this->InclureNavbarFlottant == 1)
+				{
+					$this->InscritContenuCSS('@media (max-width:767px) {
+	.navbar-collapse {
+		position:absolute ;
+		top:'.$this->AbcisseXNavbarFlottant.' ;
+		left :'.$this->AbcisseYNavbarFlottant.' ;
+		width: '.$this->LargeurNavbarFlottant.' ;
+		z-index:9999999 ;
+	}
+	.navbar-collapse > ul {
+		width : 98%;
+		background-color:'.$this->BackgroudNavbarFlottant.' ;
+	}
+	.navbar-collapse > ul > li {
+		width : 100%;
+	}
+}') ;
+				}
 				if($this->InclureHelpers == 1)
 				{
 					$this->InscritContenuJS($this->ContenuJsHelper()) ;
