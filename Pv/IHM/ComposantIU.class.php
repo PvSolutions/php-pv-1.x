@@ -279,10 +279,12 @@
 			}
 			protected function RenduLienCSS($url)
 			{
+				/*
 				if($this->EstPasNul($this->ZoneParent) && $this->ZoneParent->InclureCtnJsEntete == 0)
 				{
 					return $this->ZoneParent->InscritLienCSS($url) ;
 				}
+				*/
 				return '<link rel="stylesheet" type="text/css" href="'.htmlspecialchars($url).'" />' ;
 			}
 			protected function RenduContenuJs($ctn)
@@ -590,7 +592,7 @@
 	}
 	function ActualiseFormulaire'.$this->IDInstanceCalc.'()
 	{
-'.$this->CtnJsActualiseFormulaireFiltres().'
+'.$this->CtnJsActualiseFormulaireFiltres().' ;
 	}
 </script>' ;
 				return $ctn ;

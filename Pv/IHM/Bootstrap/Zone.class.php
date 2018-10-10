@@ -40,14 +40,17 @@
 			public $AbcisseXNavbarFlottant = "0px" ;
 			public $AbcisseYNavbarFlottant = "0px" ;
 			public $LargeurNavbarFlottant = "95%" ;
-			public $BackgroudNavbarFlottant = "white" ;
+			public $BackgroundNavbarFlottant = "white" ;
+			public $CouleurBordureNavbarFlottant = "" ;
+			public $CouleurTexteNavbarFlottant = "black" ;
+			public $ContenuCSSPetitsEcrans = "" ;
 			public function InclutLibrairiesExternes()
 			{
 				parent::InclutLibrairiesExternes() ;
-				if($this->InclureNavbarFlottant == 1)
+				if($this->ContenuCSSPetitsEcrans != '' || $this->InclureNavbarFlottant == 1)
 				{
 					$this->InscritContenuCSS('@media (max-width:767px) {
-	.navbar-collapse {
+'.(($this->InclureNavbarFlottant == 1) ? '	.navbar-collapse {
 		position:absolute ;
 		top:'.$this->AbcisseXNavbarFlottant.' ;
 		left :'.$this->AbcisseYNavbarFlottant.' ;
@@ -56,11 +59,15 @@
 	}
 	.navbar-collapse > ul {
 		width : 98%;
-		background-color:'.$this->BackgroudNavbarFlottant.' ;
+		background-color:'.$this->BackgroundNavbarFlottant.' !important ;
+	}
+	.navbar-collapse ul a {
+		color:'.$this->CouleurTexteNavbarFlottant.' !important ;
 	}
 	.navbar-collapse > ul > li {
 		width : 100%;
-	}
+	}' : '').(($this->ContenuCSSPetitsEcrans != '') ? '
+'.$this->ContenuCSSPetitsEcrans : '').'
 }') ;
 				}
 				if($this->InclureHelpers == 1)

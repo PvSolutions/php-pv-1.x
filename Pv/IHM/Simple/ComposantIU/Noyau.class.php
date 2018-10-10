@@ -57,7 +57,7 @@
 						$ligneDonnees,
 						array_apply_suffix(
 							array_map(
-								'urlencode',$this->LigneDonneesBrutes
+								'urlencode', $this->LigneDonneesBrutes
 							), $this->SuffixeUrl
 						)
 					) ;
@@ -502,6 +502,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 		{
 			public $Resultat = null ;
 			public $InclureEnteteContenu = 0 ;
+			public $AfficherException = 0 ;
 			public function Execute()
 			{
 				if(! is_object($this->Resultat))
@@ -513,7 +514,14 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				{
 					Header('Content-Type:application/json'."\r\n") ;
 				}
-                echo @svc_json_encode($this->Resultat) ;
+				if($this->AfficherException == 1)
+				{
+					echo svc_json_encode($this->Resultat) ;
+				}
+				else
+				{
+					echo @svc_json_encode($this->Resultat) ;
+				}
 				$this->ZoneParent->AnnulerRendu = 1 ;
 				exit ;
 			}
@@ -637,6 +645,14 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $TypeMime = "text/css" ;
 			public $ExtensionFichierAttache = "css" ;
 		}
+		class PvActionEnvoiFichierTxtZoneWeb extends PvActionEnvoiFichierBaseZoneWeb
+		{
+			public $TypeMime = "text/plain" ;
+			public $ExtensionFichierAttache = "txt" ;
+		}
+		class PvActionEnvoiFichierTxt extends PvActionEnvoiFichierTxtZoneWeb
+		{
+		}
 		
 		class PvActionFluxRSS extends PvActionEnvoiFichierBaseZoneWeb
 		{
@@ -715,7 +731,6 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				echo '<link>'.htmlentities($this->ZoneParent->ObtientUrl()).'</link>'.PHP_EOL ;
 			}
 		}
-
 		
 		class PvDessinateurRenduBase
 		{
@@ -892,6 +907,9 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			}
 		}
 		class PvDessinFltsDonneesHtml extends PvDessinateurRenduHtmlFiltresDonnees
+		{
+		}
+		class PvDessinFiltresDonneesHtml extends PvDessinateurRenduHtmlFiltresDonnees
 		{
 		}
 		class PvDessinFltsIllustrHtml extends PvDessinateurRenduHtmlFiltresDonnees

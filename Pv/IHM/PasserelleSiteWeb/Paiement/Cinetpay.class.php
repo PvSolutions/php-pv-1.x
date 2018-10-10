@@ -11,10 +11,11 @@
 		class PvTransactCinetpay extends PvTransactPaiementBase
 		{
 			public $Signature ;
-			public $Monnaie ;
+			public $Monnaie = 'CFA' ;
 			public $ConfigPaiement ;
 			public $ActionPage ;
 			public $Version ;
+			public $DatePaiement ;
 			public $MethodePaiement ;
 			public $Msisdn ;
 			public $Indicatif ;
@@ -100,6 +101,7 @@
 				$this->_Transaction->IdTransaction = $_POST["cpm_trans_id"] ;
 				$this->_Transaction->Montant = $_POST["cpm_amount"] ;
 				$this->_Transaction->Monnaie = $_POST["cpm_currency"] ;
+				$this->_Transaction->DatePaiement = $_POST["cpm_trans_date"] ;
 				$this->_Transaction->SiteId = $_POST["cpm_site_id"] ;
 				$this->_Transaction->Langage = $_POST["cpm_language"] ;
 				$this->_Transaction->Version = $_POST["cpm_version"] ;
@@ -202,20 +204,22 @@
 				$valSignature = '' ;
 				$codeErrSignature = '' ;
 				$msgErrSignature = '' ;
+				$this->_Transaction->DatePaiement = date('YmdHis') ;
+				$monnaie = ($this->_Transaction->Monnaie == "XOF") ? "CFA" : $this->_Transaction->Monnaie ;
 				$httpSess = new HttpSession() ;
 				$resultat = $httpSess->PostData(
 					$this->UrlSignature(),
 					array(
 						"cpm_amount" => $this->_Transaction->Montant,
-						"cpm_currency" => $this->_Transaction->Monnaie,
+						"cpm_currency" => $monnaie,
 						"cpm_site_id" => $this->_CompteMarchand->SiteId,
 						"cpm_trans_id" => $this->_Transaction->IdTransaction,
-						"cpm_trans_date" => date("YmdHis"),
+						"cpm_trans_date" => $this->_Transaction->DatePaiement,
 						"cpm_payment_config" => "SINGLE",
 						"cpm_page_action" => "PAYMENT",
 						"cpm_version" => $this->_CompteMarchand->Version,
 						"cpm_language" => $this->_CompteMarchand->Langage,
-						"cpm_designation" => $this->_Transaction->Designation,
+						"cpm_designation" => clean_special_chars($this->_Transaction->Designation),
 						"cpm_custom" => svc_json_encode($this->_Transaction->Cfg),
 						"apikey" => $this->_CompteMarchand->ApiKey,
 					)
@@ -266,14 +270,15 @@
 				{
 					$bd = $this->CreeBdCinetpay() ;
 					$bd->RunSql(
-						"insert into ".$bd->EscapeTableName($this->NomTableTransactCinetpay)." (id_transaction, date_signature, url_signature, ctn_req_signature, ctn_res_signature, valeur_signature, code_err_signature, msg_err_signature)
-values (".$bd->ParamPrefix."idTransact, ".$bd->SqlNow().", ".$bd->ParamPrefix."urlSignature, ".$bd->ParamPrefix."ctnReqSignature, ".$bd->ParamPrefix."ctnResSignature, ".$bd->ParamPrefix."valSignature, ".$bd->ParamPrefix."codeErrSignature, ".$bd->ParamPrefix."msgErrSignature)",
+						"insert into ".$bd->EscapeTableName($this->NomTableTransactCinetpay)." (id_transaction, date_signature, url_signature, ctn_req_signature, ctn_res_signature, valeur_signature, code_err_signature, msg_err_signature, ctn_form_transact)
+values (".$bd->ParamPrefix."idTransact, ".$bd->SqlNow().", ".$bd->ParamPrefix."urlSignature, ".$bd->ParamPrefix."ctnReqSignature, ".$bd->ParamPrefix."ctnResSignature, ".$bd->ParamPrefix."valSignature, ".$bd->ParamPrefix."codeErrSignature, ".$bd->ParamPrefix."msgErrSignature, ".$bd->ParamPrefix."ctnFormTransact)",
 						array(
 							"idTransact" => $this->_Transaction->IdTransaction,
 							"urlSignature" => $this->UrlSignature(),
 							"ctnReqSignature" => $httpSess->GetRequestContents(),
 							"ctnResSignature" => $httpSess->GetResponseContents(),
 							"valSignature" => $valSignature,
+							"ctnFormTransact" => $this->CtnFormSoumetTransaction(),
 							"codeErrSignature" => $codeSignature,
 							"msgErrSignature" => $msgErrSignature,
 						)
@@ -283,23 +288,23 @@ values (".$bd->ParamPrefix."idTransact, ".$bd->SqlNow().", ".$bd->ParamPrefix."u
 			protected function CtnFormSoumetTransaction()
 			{
 				$ctnForm = '' ;
+				$monnaie = ($this->_Transaction->Monnaie == "XOF") ? "CFA" : $this->_Transaction->Monnaie ;
 				$ctnForm .= '<form action="'.$this->UrlPaiement().'" method="post">'.PHP_EOL ;
-				$ctnForm .= '<input type="hidden" name="" value="" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="cpm_amount" value="'.htmlspecialchars($this->_Transaction->Montant).'" />'.PHP_EOL ;
-				$ctnForm .= '<input type="hidden" name="cpm_currency" value="'.htmlspecialchars($this->_Transaction->Monnaie).'" />'.PHP_EOL ;
+				$ctnForm .= '<input type="hidden" name="cpm_currency" value="'.htmlspecialchars($monnaie).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="cpm_site_id" value="'.htmlspecialchars($this->_CompteMarchand->SiteId).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="cpm_trans_id" value="'.htmlspecialchars($this->_Transaction->IdTransaction).'" />'.PHP_EOL ;
-				$ctnForm .= '<input type="hidden" name="cpm_trans_date" value="'.date("YmdHis").'" />'.PHP_EOL ;
+				$ctnForm .= '<input type="hidden" name="cpm_trans_date" value="'.$this->_Transaction->DatePaiement.'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="cpm_payment_config" value="'."SINGLE".'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="cpm_page_action" value="'."PAYMENT".'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="cpm_version" value="'.htmlspecialchars($this->_CompteMarchand->Version).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="cpm_language" value="'.htmlspecialchars($this->_CompteMarchand->Langage).'" />'.PHP_EOL ;
-				$ctnForm .= '<input type="hidden" name="cpm_designation" value="'.htmlspecialchars($this->_Transaction->Designation).'" />'.PHP_EOL ;
+				$ctnForm .= '<input type="hidden" name="cpm_designation" value="'.htmlspecialchars(clean_special_chars($this->_Transaction->Designation)).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="cpm_custom" value="'.htmlspecialchars(svc_json_encode($this->_Transaction->Cfg)).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="apikey" value="'.htmlspecialchars($this->_CompteMarchand->ApiKey).'" />'.PHP_EOL ;
+				$ctnForm .= '<input type="hidden" name="signature" value="'.htmlspecialchars($this->_Transaction->Signature).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="notify_url" value="'.htmlspecialchars($this->UrlPaiementTermine()).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="hidden" name="cancel_url" value="'.htmlspecialchars($this->UrlPaiementAnnule()).'" />'.PHP_EOL ;
-				$ctnForm .= '<input type="hidden" name="signature" value="'.htmlspecialchars($this->_Transaction->Signature).'" />'.PHP_EOL ;
 				$ctnForm .= '<input type="submit" />'.PHP_EOL ;
 				$ctnForm .= '</form>' ;
 				return $ctnForm ;
@@ -312,17 +317,17 @@ values (".$bd->ParamPrefix."idTransact, ".$bd->SqlNow().", ".$bd->ParamPrefix."u
 <head>
 <title>'.$this->TitreSoumetFormPaiement.'</title>
 </head>
+<body onload="soumetFormPaiement()">
+<div>'.$this->MsgSoumetFormPaiement.'</div>
+<div style="display:none">
+'.$this->CtnFormSoumetTransaction().'
+</div>
 <script language="javascript">
 function soumetFormPaiement()
 {
 	document.forms[0].submit() ;
 }
 </script>
-<body onload="soumetFormPaiement()">
-<div>'.$this->MsgSoumetFormPaiement.'</div>
-<div style="display:none">
-'.$this->CtnFormSoumetTransaction().'
-</div>
 </body>
 </html>' ;
 				return $ctn ;

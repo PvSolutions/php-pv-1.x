@@ -387,12 +387,12 @@
 		class PvAdrScriptSessionWeb
 		{
 			public $ChaineGet ;
-			public $DonneesPost ;
-			protected function Sauvegarde(& $zone)
+			public $DonneesPost = array() ;
+			public function Sauvegarde(& $zone)
 			{
 				$_SESSION[$zone->NomElementApplication."_AddrScriptSession"] = serialize($this) ;
 			}
-			protected function Restaure(& $zone)
+			public static function Restaure(& $zone)
 			{
 				if(isset($_SESSION[$zone->NomElementApplication."_AddrScriptSession"]))
 				{
@@ -447,6 +447,8 @@
 			public $CheminFontAwesome = "css/font-awesome.min.css" ;
 			public $InclureJQueryMigrate = 1 ;
 			public $CheminJQueryMigrate = "js/jquery-migrate.min.js" ;
+			public $InclureJQueryMigrate3 = 0 ;
+			public $CheminJQueryMigrate3 = "js/jquery-migrate3.min.js" ;
 			public $InclureJQueryUi = 0 ;
 			public $CheminJsJQueryUi = "js/jquery-ui.min.js" ;
 			public $CheminCSSJQueryUi = "css/jquery-ui.css" ;
@@ -741,12 +743,12 @@
 				$this->InscritActionPrinc($nomAction, $action) ;
 				return $action ;
 			}
-			public function InsereActionAvantRendu($nomAction, $action)
+			public function & InsereActionAvantRendu($nomAction, $action)
 			{
 				$this->InscritActionAvantRendu($nomAction, $action) ;
 				return $action ;
 			}
-			public function InsereActionApresRendu($nomAction, $action)
+			public function & InsereActionApresRendu($nomAction, $action)
 			{
 				$this->InscritActionApresRendu($nomAction, $action) ;
 				return $action ;
@@ -982,6 +984,10 @@
 						$ctnJs = new PvLienFichierJs() ;
 						$ctnJs->Src = $this->CheminJQueryMigrate ;
 						$lstCtnJs[] = $ctnJs ;
+						if($this->InclureJQueryMigrate3 == 1 && $this->CheminJQueryMigrate3 != '')
+						{
+							$this->InscritLienJs($this->CheminJQueryMigrate3) ;
+						}
 					}
 					array_splice($this->ContenusJs, 0, 0, $lstCtnJs) ;
 				}
@@ -1052,9 +1058,18 @@
 			{
 				if($this->InscrireActRedirectScriptSession == 0)
 				{
-					return '' ;
+					return '?' ;
 				}
-				return $this->ActionRedirScriptSession->ObtientUrl($urlDefaut) ;
+				if($this->AdrScriptSession->ChaineGet == '' && $urlDefaut != '')
+				{
+					$partsUrl = explode('?', $urlDefaut, 2) ;
+					if(count($partsUrl) == 2)
+					{
+						$this->AdrScriptSession->ChaineGet = '?'.$partsUrl[1] ;
+						$this->AdrScriptSession->Sauvegarde($this) ;
+					}
+				}
+				return $this->ActionRedirScriptSession->ObtientUrl() ;
 			}
 			protected function RenduCtnJs()
 			{

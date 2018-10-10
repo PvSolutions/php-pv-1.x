@@ -575,6 +575,11 @@
 				$this->FixeFiltresSelectionObligatoires($this->FiltresGlobauxSelection) ;
 				$this->FixeFiltresSelectionObligatoires($this->FiltresLigneSelection) ;
 			}
+			public function AppliqueCommandeSelectionnee()
+			{
+				$this->MAJConfigFiltresSelection() ;
+				$this->ExecuteCommandeSelectionnee() ;
+			}
 			protected function FixeFiltresSelectionObligatoires(& $filtres)
 			{
 				$nomFiltres = array_keys($filtres) ;
@@ -784,6 +789,11 @@
 						{
 							return "<p>Le dessinateur de filtres n'est pas défini</p>" ;
 						}
+						if($this->MaxFiltresEditionParLigne > 0)
+						{
+							$this->DessinateurFiltresEdition->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
+						}
+						$this->DessinateurFiltresEdition->InclureRenduLibelle = $this->InclureRenduLibelleFiltresEdition ;
 						$ctn .= '<div class="FormulaireFiltres">'.PHP_EOL ;
 						$ctn .= '<table' ;
 						$ctn .= ' cellpadding="2"' ;
@@ -1072,11 +1082,6 @@ form.submit() ;
 			protected function InitDessinateurFiltresEdition()
 			{
 				$this->DessinateurFiltresEdition = new PvDessinateurRenduHtmlFiltresDonnees() ;
-				if($this->MaxFiltresEditionParLigne > 0)
-				{
-					$this->DessinateurFiltresEdition->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
-				}
-				$this->DessinateurFiltresEdition->InclureRenduLibelle = $this->InclureRenduLibelleFiltresEdition ;
 			}
 			public function NotifieParMail($de, $a, $cc='', $cci='')
 			{

@@ -125,6 +125,7 @@
 			protected $NomScriptsEditMembership = array() ;
 			public $InclureScriptsMembership = 0 ;
 			public $PrivilegesEditMembership = array() ;
+			public $PrivilegesEditMembres = array() ;
 			public $NomClasseScriptDeconnexion = "" ;
 			public $NomClasseScriptRecouvreMP = "" ;
 			public $NomClasseScriptConnexion = "" ;
@@ -356,6 +357,8 @@
 			}
 			protected function ChargeScriptsMSConnecte()
 			{
+				$privilegesEditMembres = $this->PrivilegesEditMembres ;
+				array_splice($privilegesEditMembres, count($privilegesEditMembres) - 1, 0, $this->PrivilegesEditMembership) ;
 				if(class_exists($this->NomClasseScriptDeconnexion))
 				{
 					$nomClasse = $this->NomClasseScriptDeconnexion ;
@@ -396,7 +399,7 @@
 				{
 					$nomClasse = $this->NomClasseScriptAjoutMembre ;
 					$this->ScriptAjoutMembre = new $nomClasse() ;
-					$this->ScriptAjoutMembre->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->ScriptAjoutMembre->DeclarePrivileges($privilegesEditMembres) ;
 					$this->InscritScript($this->NomScriptAjoutMembre, $this->ScriptAjoutMembre) ;
 					$this->NomScriptsEditMembership[] = $this->NomScriptAjoutMembre ;
 				}
@@ -404,7 +407,7 @@
 				{
 					$nomClasse = $this->NomClasseScriptModifMembre ;
 					$this->ScriptModifMembre = new $nomClasse() ;
-					$this->ScriptModifMembre->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->ScriptModifMembre->DeclarePrivileges($privilegesEditMembres) ;
 					$this->InscritScript($this->NomScriptModifMembre, $this->ScriptModifMembre) ;
 					$this->NomScriptsEditMembership[] = $this->NomScriptModifMembre ;
 				}
@@ -418,7 +421,7 @@
 				{
 					$nomClasse = $this->NomClasseScriptSupprMembre ;
 					$this->ScriptSupprMembre = new $nomClasse() ;
-					$this->ScriptSupprMembre->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->ScriptSupprMembre->DeclarePrivileges($privilegesEditMembres) ;
 					$this->InscritScript($this->NomScriptSupprMembre, $this->ScriptSupprMembre) ;
 					$this->NomScriptsEditMembership[] = $this->NomScriptSupprMembre ;
 				}
@@ -426,7 +429,7 @@
 				{
 					$nomClasse = $this->NomClasseScriptListeMembres ;
 					$this->ScriptListeMembres = new $nomClasse() ;
-					$this->ScriptListeMembres->DeclarePrivileges($this->PrivilegesEditMembership) ;
+					$this->ScriptListeMembres->DeclarePrivileges($privilegesEditMembres) ;
 					$this->InscritScript($this->NomScriptListeMembres, $this->ScriptListeMembres) ;
 					$this->NomScriptsEditMembership[] = $this->NomScriptListeMembres ;
 				}
@@ -890,6 +893,15 @@
 					$ok = 1 ;
 				}
 				return $ok ;
+			}
+			public function PeutChangerMotPasse()
+			{
+				if($this->PossedeMembreConnecte() == 0 || $this->EstNul($this->ScriptChangeMotPasse))
+				{
+					return 0 ;
+				}
+				$membership = & $this->Membership ;
+				return ($membership->ADServerMemberColumn == "" || $membership->MemberLogged->ADActivated == $membership->ADActivatedMemberTrueValue) ? 0 : 1 ;
 			}
 			protected function VerifieValiditeMotPasse($script)
 			{

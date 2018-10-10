@@ -269,6 +269,20 @@
 			{
 				return $this->_Result->ErreurDefinie() ;
 			}
+			public function RemplitWsdl(& $wsdl)
+			{
+				$this->StructRequete->MembreRacine->Nom = $this->NomElementZone ;
+				$this->StructReponse->MembreRacine->Nom = $this->NomElementZone."Response" ;
+				$wsdl->ContenusType[] = $this->StructRequete->MembreRacine->ContenuTypeWsdl() ;
+				$wsdl->ContenusType[] = $this->StructReponse->MembreRacine->ContenuTypeWsdl() ;
+				$wsdl->ContenusMessage[$this->NomElementZone.'SoapIn'] = '<wsdl:part name="parameters" element="tns:'.$this->NomElementZone.'" />' ;
+				$wsdl->ContenusMessage[$this->NomElementZone.'SoapOut'] = '<wsdl:part name="parameters" element="tns:'.$this->NomElementZone.'Response" />' ;
+				$wsdl->ContenusPortType[] = '<wsdl:operation name="'.$this->NomElementZone.'">
+<wsdl:input message="tns:'.$this->NomElementZone.'SoapIn" />
+<wsdl:output message="tns:'.$this->NomElementZone.'SoapOut" />'.(($this->ZoneParent->InclureFaultWsdl = 1) ? PHP_EOL
+.'<wsdl:fault name="'.$this->ZoneParent->NomService.'Fault" message="tns:'.$this->ZoneParent->NomService.'Fault"/>' : '').'
+</wsdl:operation>' ;
+			}
 			public function ObtientUrl($params=array())
 			{
 			}

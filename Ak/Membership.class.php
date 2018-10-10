@@ -678,9 +678,9 @@
 			public $TitleRoleColumn = "title" ;
 			public $TitleRoleAlias = "" ;
 			public $TitleRoleLabel = "Titre" ;
-			public $SimilarProfileFoundErrorLabel = "Un profil avec le même titre existe d&eacute;j&agrave;" ;
+			public $SimilarProfileFoundErrorLabel = "Un profil avec le mÃªme titre existe d&eacute;j&agrave;" ;
 			public $SimilarProfileFoundErrorAlias = "" ;
-			public $SimilarRoleFoundErrorLabel = "Un rôle avec le même titre ou le même nom existe d&eacute;j&agrave;" ;
+			public $SimilarRoleFoundErrorLabel = "Un rÃ´le avec le mÃªme titre ou le mÃªme nom existe d&eacute;j&agrave;" ;
 			public $SimilarRoleFoundErrorAlias = "" ;
 			public $DescriptionRoleColumn = "description" ;
 			public $DescriptionRoleAlias = "" ;
@@ -711,7 +711,7 @@
 			public $FirstNameMemberFormatErrorAlias = "" ;
 			public $EmailMemberFormatErrorLabel = "L'adresse email a un mauvais format" ;
 			public $EmailMemberFormatErrorAlias = "" ;
-			public $SimilarMemberFoundErrorLabel = "Un membre avec le même login, le même mot de passe ou le même email existe d&eacute;j&agrave;" ;
+			public $SimilarMemberFoundErrorLabel = "Un membre avec le mÃªme login, le mÃªme mot de passe ou le mÃªme email existe d&eacute;j&agrave;" ;
 			public $SimilarMemberFoundErrorAlias = "" ;
 			public $ConfirmPasswordMemberMatchLabel = "Vous n'avez pas confirm&eacute; le mot de passe" ;
 			public $ConfirmPasswordMemberMatchAlias = "" ;
@@ -741,6 +741,7 @@
 			const VALIDATE_ERROR_AD_SERVER_NOT_FOUND = "ad_server_not_found" ;
 			const VALIDATE_ERROR_AD_SERVER_DISABLED = "ad_server_disabled" ;
 			const VALIDATE_ERROR_OTHER = "member_connection_impossible" ;
+			const VALIDATE_ERROR_DB_ERROR = "db_connection_failed" ;
 			public function FetchSimilarRole($idRoleExclude, $nameRole='', $titleRole='')
 			{
 				$sql = 'select * from ('.$this->SqlAllRoles().') ROLE_TABLE where ROLE_ID <> '.$this->Database->ParamPrefix.'roleId and (ROLE_NAME = '.$this->Database->ParamPrefix.'roleName or ROLE_TITLE = '.$this->Database->ParamPrefix.'roleTitle)' ;
@@ -792,7 +793,7 @@
 				$sql = '' ;
 				if($this->MemberTable == '' || $this->ProfileTable == '' || $this->IdMemberColumn == '' || $this->LoginMemberColumn == '' || $this->PasswordMemberColumn == '' || $this->IdProfileColumn == '')
 				{
-					die('Definition du membership non complête !!!') ;
+					die('Definition du membership non complÃªte !!!') ;
 				}
 				$sql .= 'SELECT 1 MEMBER_REQUEST' ;
 				$sql .= ', '.$this->Database->EscapeFieldName("MEMBER_TABLE", $this->IdMemberColumn).' MEMBER_ID' ;
@@ -1048,50 +1049,57 @@
 				) ;
 				$idMember = $this->IdMemberNotFoundValue ;
 				$ok = 0 ;
-				if(count($requestRow))
+				if(is_array($requestRow))
 				{
-					if(($this->EnableMemberColumn == '' || $requestRow["MEMBER_ENABLE"] == $this->EnableMemberTrueValue) && (! $this->LockMemberEnabled || ($this->LockedMemberColumn != '' && $requestRow["MEMBER_LOCKED"] == $this->LockedMemberFalseValue())))
+					if(count($requestRow))
 					{
-						$adActivated = 0 ;
-						if($this->ADActivatedMemberColumn != "")
+						if(($this->EnableMemberColumn == '' || $requestRow["MEMBER_ENABLE"] == $this->EnableMemberTrueValue) && (! $this->LockMemberEnabled || ($this->LockedMemberColumn != '' && $requestRow["MEMBER_LOCKED"] == $this->LockedMemberFalseValue())))
 						{
-							if($requestRow["MEMBER_AD_ACTIVATED"] == $this->ADActivatedMemberTrueValue)
+							$adActivated = 0 ;
+							if($this->ADActivatedMemberColumn != "")
 							{
-								$adActivated = 1 ;
-							}
-						}
-						if($adActivated == 0)
-						{
-							// print $requestRow["REQUEST_PASSWORD"].' and '.$requestRow["MEMBER_PASSWORD"].'<br>' ;
-							if($requestRow["REQUEST_PASSWORD"] == $requestRow["MEMBER_PASSWORD"])
-							{
-								$idMember = $requestRow["MEMBER_ID"] ;
-								if($this->LockMemberEnabled && $this->LockedMemberColumn != '')
+								if($requestRow["MEMBER_AD_ACTIVATED"] == $this->ADActivatedMemberTrueValue)
 								{
-									$this->UnlockMember($requestRow["MEMBER_ID"]) ;
+									$adActivated = 1 ;
+								}
+							}
+							if($adActivated == 0)
+							{
+								// print $requestRow["REQUEST_PASSWORD"].' and '.$requestRow["MEMBER_PASSWORD"].'<br>' ;
+								if($requestRow["REQUEST_PASSWORD"] == $requestRow["MEMBER_PASSWORD"])
+								{
+									$idMember = $requestRow["MEMBER_ID"] ;
+									if($this->LockMemberEnabled && $this->LockedMemberColumn != '')
+									{
+										$this->UnlockMember($requestRow["MEMBER_ID"]) ;
+									}
+								}
+								else
+								{
+									$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_PASSWORD_INCORRECT ;
+									if($this->LockMemberEnabled && $this->LockedMemberColumn != '')
+									{
+										$this->UpdateTotalRetry($requestRow["MEMBER_ID"]) ;
+									}
 								}
 							}
 							else
 							{
-								$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_PASSWORD_INCORRECT ;
-								if($this->LockMemberEnabled && $this->LockedMemberColumn != '')
+								$db = & $this->Database ;
+								$adServerRow = $this->Database->FetchSqlRow("select * from ".$db->EscapeTableName($this->ADServerTable)." where ".$db->EscapeFieldName($this->ADServerTable, $this->IdADServerColumn)." = :id", array("id" => $requestRow["MEMBER_AD_SERVER"])) ;
+								if(is_array($adServerRow))
 								{
-									$this->UpdateTotalRetry($requestRow["MEMBER_ID"]) ;
-								}
-							}
-						}
-						else
-						{
-							$db = & $this->Database ;
-							$adServerRow = $this->Database->FetchSqlRow("select * from ".$db->EscapeTableName($this->ADServerTable)." where ".$db->EscapeFieldName($this->ADServerTable, $this->IdADServerColumn)." = :id", array("id" => $requestRow["MEMBER_AD_SERVER"])) ;
-							if(is_array($adServerRow))
-							{
-								if(count($adServerRow) > 0)
-								{
-									$ok = $this->ValidateADAuthentification($login, $password, $adServerRow) ;
-									if($ok)
+									if(count($adServerRow) > 0)
 									{
-										$idMember = $requestRow["MEMBER_ID"] ;
+										$ok = $this->ValidateADAuthentification($login, $password, $adServerRow) ;
+										if($ok)
+										{
+											$idMember = $requestRow["MEMBER_ID"] ;
+										}
+									}
+									else
+									{
+										$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_AD_SERVER_NOT_FOUND ;
 									}
 								}
 								else
@@ -1099,20 +1107,20 @@
 									$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_AD_SERVER_NOT_FOUND ;
 								}
 							}
-							else
-							{
-								$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_AD_SERVER_NOT_FOUND ;
-							}
+						}
+						else
+						{
+							$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_MEMBER_NOT_ENABLED ;
 						}
 					}
 					else
 					{
-						$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_MEMBER_NOT_ENABLED ;
+						$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_MEMBER_NOT_FOUND ;
 					}
 				}
 				else
 				{
-					$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_MEMBER_NOT_FOUND ;
+					$this->LastValidateError = AkSqlMembership::VALIDATE_ERROR_DB_ERROR ;
 				}
 				return $idMember ;
 			}
@@ -1210,12 +1218,13 @@
 			}
 			public function FetchMemberRow($memberId)
 			{
-				return $this->Database->FetchSqlRow(
+				$row = $this->Database->FetchSqlRow(
 					$this->SqlFetchMemberRow($memberId),
 					array(
 						"MemberId" => $memberId
 					)
 				) ;
+				return $row ;
 			}
 			public function FetchMemberRowByLogin($memberId)
 			{

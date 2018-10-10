@@ -1819,7 +1819,7 @@
 				$table->FiltresSelection[$i] = $table->ScriptParent->CreeFiltreHttpGet("nomMembre") ;
 				$table->FiltresSelection[$i]->Libelle = $membership->FirstNameMemberLabel ;
 				$table->FiltresSelection[$i]->DeclareComposant("PvZoneTexteHtml") ;
-				$table->FiltresSelection[$i]->ExpressionDonnees = "upper(MEMBER_FIRST_NAME ) LIKE upper(".$membership->Database->SqlConcat(array("'%'", '<SELF>', "'%'")).") OR upper(MEMBER_FIRST_NAME ) LIKE upper(".$membership->Database->SqlConcat(array("'%'", '<SELF>', "'%'")).")" ;
+				$table->FiltresSelection[$i]->ExpressionDonnees = "upper(MEMBER_FIRST_NAME ) LIKE upper(".$membership->Database->SqlConcat(array("'%'", '<SELF>', "'%'")).") OR upper(MEMBER_LAST_NAME ) LIKE upper(".$membership->Database->SqlConcat(array("'%'", '<SELF>', "'%'")).")" ;
 				$i++ ;
 				$table->FiltresSelection[$i] = $table->ScriptParent->CreeFiltreHttpGet("profilMembre") ;
 				$table->FiltresSelection[$i]->NomColonneLiee = $membership->ProfileMemberColumn ;

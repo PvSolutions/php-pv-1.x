@@ -149,11 +149,31 @@
 			{
 				return true ;
 			}
-			public function Encode(& $script, $colonne, $ligne)
+			public function Encode(& $composant, $colonne, $ligne)
 			{
 				if(isset($ligne[$colonne->NomDonnees]))
 					return $ligne[$colonne->NomDonnees] ;
 				return '' ;
+			}
+			public function InstrsJsPrepareRendu()
+			{
+				$ctn = '' ;
+				return $ctn ;
+			}
+			public function InstrsJsEncode(& $composant, $colonne)
+			{
+				$ctn = '' ;
+				if($colonne->NomDonnees == '')
+				{
+					return '' ;
+				}
+				$nomDonnees = svc_json_encode($colonne->NomDonnees) ;
+				$ctn .= 'var val = "" ;
+if(donnees['.$nomDonnees.'] !== undefined) {
+val = donnees['.$nomDonnees.'] ;
+}
+noeudCellule.innerHTML = val ;' ;
+				return $ctn ;
 			}
 			public function ObtientDonnees($colonne, $ligne)
 			{
@@ -172,7 +192,7 @@
 			public $StyleValNegative = "color:red" ;
 			public $NomClasseCSSValPositive = "" ;
 			public $NomClasseCSSValNegative = "" ;
-			public function Encode(& $script, $colonne, $ligne)
+			public function Encode(& $composant, $colonne, $ligne)
 			{
 				$valeurEntree = $ligne[$colonne->NomDonnees] ;
 				if($this->CasseInsensitive)
@@ -180,6 +200,32 @@
 					$valeurEntree = strtolower($ligne[$colonne->NomDonnees]) ;
 				}
 				return (in_array($valeurEntree, $this->ValeursPositivesAcceptees)) ? $this->RenduValPositive() : $this->RenduValNegative() ;
+			}
+			public function InstrsJsPrepareRendu()
+			{
+				$ctn = '' ;
+				$ctn .= 'var valeursVrai'.$this->IDInstanceCalc.' = '.svc_json_encode($this->ValeursPositivesAcceptees).' ;' ;
+				return $ctn ;
+			}
+			public function InstrsJsEncode(& $composant, $colonne)
+			{
+				$ctn = '' ;
+				if($colonne->NomDonnees == '')
+				{
+					return '' ;
+				}
+				$nomDonnees = svc_json_encode($colonne->NomDonnees) ;
+				$ctn .= 'var valChoix, val = "" ;
+if(donnees['.$nomDonnees.'] !== undefined) {
+valChoix = donnees['.$nomDonnees.'] ;
+}
+if(valeursVrai'.$this->IDInstanceCalc.'.indexOf(valChoix) > -1) {
+val = '.svc_json_encode('<span style="'.$this->StyleValPositive.'">'.$this->ValeurPositive.'</span>').' ;
+} else {
+val = '.svc_json_encode('<span style="'.$this->StyleValNegative.'">'.$this->ValeurNegative.'</span>').' ;
+}
+noeudCellule.innerHTML = val ;' ;
+				return $ctn ;
 			}
 			protected function RenduValPositive()
 			{
@@ -212,7 +258,7 @@
 		{
 			public $ValeursChoix = array() ;
 			public $ValeurNonTrouvee = "&nbsp;" ;
-			public function Encode(& $script, $colonne, $ligne)
+			public function Encode(& $composant, $colonne, $ligne)
 			{
 				$valeurEntree = $ligne[$colonne->NomDonnees] ;
 				if(isset($this->ValeursChoix[$valeurEntree]))
@@ -229,7 +275,7 @@
 		class PvFormatteurColonneFixe extends PvFormatteurColonneDonnees
 		{
 			public $ValeurParDefaut = "" ;
-			public function Encode(& $script, $colonne, $ligne)
+			public function Encode(& $composant, $colonne, $ligne)
 			{
 				return htmlentities($this->ValeurParDefaut) ;
 			}
@@ -238,7 +284,7 @@
 		{
 			public $MaxDecimals = 3 ;
 			public $MinChiffres = 1 ;
-			public function Encode(& $script, $colonne, $ligne)
+			public function Encode(& $composant, $colonne, $ligne)
 			{
 				$valeurEntree = $ligne[$colonne->NomDonnees] ;
 				return format_money($valeurEntree, $this->MaxDecimals, $this->MinChiffres) ;
@@ -247,7 +293,7 @@
 		class PvFormatteurColonneDateFr extends PvFormatteurColonneDonnees
 		{
 			public $InclureHeure = 0 ;
-			public function Encode(& $script, $colonne, $ligne)
+			public function Encode(& $composant, $colonne, $ligne)
 			{
 				$valeurEntree = $ligne[$colonne->NomDonnees] ;
 				if($this->InclureHeure == 1)
@@ -263,7 +309,7 @@
 		class PvFormatteurColonneTimestamp extends PvFormatteurColonneDonnees
 		{
 			public $FormatDate = "Y-m-d H:i:s" ;
-			public function Encode(& $script, $colonne, $ligne)
+			public function Encode(& $composant, $colonne, $ligne)
 			{
 				$valeurEntree = $ligne[$colonne->NomDonnees] ;
 				if($valeurEntree == "")
@@ -278,7 +324,7 @@
 			public $ModeleHtml = "" ;
 			public $EncodeValeursHtml = array() ;
 			public $EncodeValeursUrl = array() ;
-			public function Encode(& $script, $colonne, $ligne)
+			public function Encode(& $composant, $colonne, $ligne)
 			{
 				$donnees = $this->ObtientDonnees($colonne, $ligne) ;
 				if(count($this->EncodeValeursHtml))
@@ -301,7 +347,7 @@
 			{
 				return ! $zone->ImpressionEnCours() ;
 			}
-			public function Encode(& $script, $colonne, $ligne)
+			public function Encode(& $composant, $colonne, $ligne)
 			{
 				$ctn = '' ;
 				foreach($this->Liens as $i => $lien)
@@ -332,7 +378,7 @@
 			public $TailleBordureBlocDetail = '4px' ;
 			protected $RenduSourceInclus = 0 ;
 			protected $IndexLigne = 0 ;
-			public function Encode(& $script, $colonne, $ligne)
+			public function Encode(& $composant, $colonne, $ligne)
 			{
 				$valeur = '' ;
 				if(isset($ligne[$colonne->NomDonnees]))
@@ -575,6 +621,28 @@ z-index: 1;
 				}
 				return $val ;
 			}
+			public function InstrsJsPrepareRendu()
+			{
+				$ctn = '' ;
+				if(! $this->EstNul($this->Formatteur))
+				{
+					$ctn = $this->Formatteur->InstrsJsPrepareRendu($composant, $this) ;
+				}
+				return $ctn ;
+			}
+			public function InstrsJsFormatteValeur(& $composant)
+			{
+				$ctn = '' ;
+				if($this->EstNul($this->Formatteur))
+				{
+					$ctn = $this->InstrsJsFormatteValeurInt($composant) ;
+				}
+				else
+				{
+					$ctn = $this->Formatteur->InstrsJsEncode($composant, $this) ;
+				}
+				return $ctn ;
+			}
 			protected function FormatteValeurInt(& $composant, $ligne)
 			{
 				$val = "" ;
@@ -587,6 +655,29 @@ z-index: 1;
 					$val = str_ireplace(array('${self}', '${luimeme}', '${soi}'), $val, $this->FormatValeur) ;
 				}
 				return $val ;
+			}
+			protected function InstrsJsFormatteValeurInt(& $composant)
+			{
+				$ctn = '' ;
+				if($this->NomDonnees == '')
+				{
+					return '' ;
+				}
+				$nomDonnees = svc_json_encode($this->NomDonnees) ;
+				$ctn .= 'var val = "" ;
+if(donnees['.$nomDonnees.'] !== undefined) {
+val = donnees['.$nomDonnees.'] ;
+}'.PHP_EOL ;
+				if($this->FormatValeur != '')
+				{
+					$ctn .= 'var formatVal = '.svc_json_decode($this->FormatValeur).' ;
+var tagsSelf = ["${self}", "${luimeme}", "${soi}"] ;
+for(var n in tagsSelf) {
+formatVal = formatVal.split(tagsSelf[i]).join(val) ;
+}'.PHP_EOL ;
+				}
+				$ctn .= 'noeudCellule.innerHTML = val ;' ;
+				return $ctn ;
 			}
 			public function EncodeValeur($valeur)
 			{

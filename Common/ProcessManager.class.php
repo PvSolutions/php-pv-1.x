@@ -167,7 +167,7 @@
 				$osProcessMgr = null ;
 				if(PHP_OS == "WINNT" || PHP_OS == "WIN32")
 				{
-					$osProcessMgr = new WindowsProcessManager() ;
+					$osProcessMgr = new WinProcessManager() ;
 				}
 				else
 				{
@@ -628,15 +628,16 @@
 				{
 					return "" ;
 				}
-				return 'taskkill '.$pids.(($force) ? ' /F' : '') ;
+				return 'taskkill '.(($force) ? '/F ' : '').$pids ;
 			}
-			function KillProcessList($pid_list=array())
+			function KillProcessIDs($pid_list=array())
 			{
 				if(! is_array($pid_list))
 				{
-					return "" ;
+					return false ;
 				}
-				return join(" ", $pid_list) ;
+				$pids = join(" ", $pid_list) ;
+				return $this->CaptureCommand($this->KillProcessCommand($pids)) ;
 			}
 			function KillProcessEntries($ProcessEntries=array())
 			{

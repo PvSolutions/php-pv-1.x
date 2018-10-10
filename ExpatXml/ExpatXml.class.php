@@ -298,6 +298,19 @@
 				}
 				return $result ;
 			}
+			public function GetFirstNodeByTagName($name)
+			{
+				$result = null ;
+				for($i=0; $i<count($this->ChildNodes); $i++)
+				{
+					if($this->ChildNodes[$i]->Name == $name)
+					{
+						$result = $this->ChildNodes[$i] ;
+						break ;
+					}
+				}
+				return $result ;
+			}
 		}
 		
 		class ExpatXmlDocument extends ExpatXmlNode

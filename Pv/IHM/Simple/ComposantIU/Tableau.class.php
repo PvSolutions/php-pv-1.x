@@ -21,6 +21,8 @@
 			public $Titre = "" ;
 			public $TypeComposant = "TableauDonneesHTML" ;
 			public $Largeur = "100%" ;
+			public $LargeurFormulaireFiltres = "" ;
+			public $AlignFormulaireFiltres = "" ;
 			public $Hauteur = "" ;
 			public $EspacementCell = "4" ;
 			public $MargesCell = "0" ;
@@ -467,6 +469,7 @@
 			{
 				$col = new PvDefinitionColonneDonnees() ;
 				$col->TriPossible = 0 ;
+				$col->ExporterDonnees = 0 ;
 				$col->Libelle = $libelle ;
 				$col->AlignEntete = "center" ;
 				$col->AlignElement = "center" ;
@@ -865,6 +868,9 @@ if(formFiltres !== null) {
 SoumetFormulaire'.$this->IDInstanceCalc.'(formFiltres) ;
 formFiltres.submit() ;
 }
+else{
+window.location.href = window.location.href ;
+}
 }' ;
 				return $ctn ;
 			}
@@ -891,6 +897,7 @@ formFiltres.submit() ;
 			{
 				$ctn = "" ;
 				$ctn .= $this->RenduEnvoiFiltres().PHP_EOL ;
+				$ctn .= $this->DeclarationSoumetFormulaireFiltres($this->FiltresSelection).PHP_EOL ;
 				if($this->Titre != "")
 				{
 					$ctn .= '<div class="Titre">'.$this->Titre.'</div>'.PHP_EOL ;
@@ -961,13 +968,18 @@ formFiltres.submit() ;
 				{
 					return "<p>Le dessinateur de filtres n'est pas défini</p>" ;
 				}
+				if($this->MaxFiltresSelectionParLigne > 0)
+				{
+					$this->DessinateurFiltresSelection->MaxFiltresParLigne = $this->MaxFiltresSelectionParLigne ;
+				}
 				$ctn = "" ;
 				if(! $this->PossedeFiltresRendus())
 				{
 					return '' ;
 				}
+				$largeur = ($this->LargeurFormulaireFiltres != 0) ? $this->LargeurFormulaireFiltres : '100%' ;
 				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;">'.PHP_EOL ;
-				$ctn .= '<table width="100%" cellspacing="0">'.PHP_EOL ;
+				$ctn .= '<table width="'.$largeur.'" cellspacing="0"'.(($this->AlignFormulaireFiltres != '') ? ' align="'.$this->AlignFormulaireFiltres.'"' : '').'>'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
 				{
 					$ctn .= '<tr>'.PHP_EOL ;
@@ -989,7 +1001,6 @@ formFiltres.submit() ;
 				$ctn .= '</tr>'.PHP_EOL ;
 				$ctn .= '</table>'.PHP_EOL ;
 				$ctn .= '</form>' ;
-				$ctn .= $this->DeclarationSoumetFormulaireFiltres($this->FiltresSelection) ;
 				return $ctn ;
 			}
 			protected function ExtraitCommandesRendu()
@@ -1308,10 +1319,6 @@ formFiltres.submit() ;
 			protected function InitDessinateurFiltresSelection()
 			{
 				$this->DessinateurFiltresSelection = new PvDessinateurRenduHtmlFiltresDonnees() ;
-				if($this->MaxFiltresSelectionParLigne > 0)
-				{
-					$this->DessinateurFiltresSelection->MaxFiltresParLigne = $this->MaxFiltresSelectionParLigne ;
-				}
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
@@ -1539,7 +1546,6 @@ formFiltres.submit() ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
-				$ctn .= $this->DeclarationSoumetFormulaireFiltres($this->FiltresSelection) ;
 				return $ctn ;
 			}
 			protected function RenduBlocCommandes()
@@ -1749,7 +1755,6 @@ formFiltres.submit() ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
-				$ctn .= $this->DeclarationSoumetFormulaireFiltres($this->FiltresSelection) ;
 				return $ctn ;
 			}
 			protected function RenduRangeeDonnees()
@@ -2026,7 +2031,7 @@ formFiltres.submit() ;
 					{
 						echo $this->SeparateurColonnes ;
 					}
-					echo html_entity_decode($libelle) ;
+					echo clean_special_chars($libelle) ;
 				}
 				echo $this->SeparateurLignes ;
 			}
@@ -2038,7 +2043,7 @@ formFiltres.submit() ;
 					{
 						echo $this->SeparateurColonnes ;
 					}
-					echo $this->ExprAvantValeur.html_entity_decode($valeur).$this->ExprApresValeur ;
+					echo $this->ExprAvantValeur.strip_tags(clean_special_chars($valeur)).$this->ExprApresValeur ;
 				}
 				echo $this->SeparateurLignes ;
 			}

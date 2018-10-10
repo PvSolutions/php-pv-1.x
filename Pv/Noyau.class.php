@@ -193,7 +193,7 @@
 			}
 			public function ObtientValSuppl($nom, $valeurDefaut=null)
 			{
-				return (isset($this->ValsSuppl[$nom])) ? $this->ValsSuppl[$nom] : $valeurDefaut ;
+				return (isset($this->AttrsSuppl[$nom])) ? $this->AttrsSuppl[$nom] : $valeurDefaut ;
 			}
 		}
 		class PvNul extends PvObjet
@@ -946,6 +946,11 @@
 				$os = $this->ObtientOS() ;
 				$execPath = PvApplication::ObtientCheminPHP() ;
 				$cmd = realpath(dirname(__FILE__).'/../../'.$prog->CheminFichierRelatif) ;
+				$chemJournal = '' ;
+				if($this->SortieDansFichier == 1)
+				{
+					$chemJournal = dirname($cmd).'/'.$prog->IDInstanceCalc.'.log' ;
+				}
 				if($cmd === false)
 				{
 					return "" ;
@@ -954,11 +959,11 @@
 				$cmd = $execPath.' '.$cmd ;
 				if($os == 'Linux')
 				{
-					$cmd = $cmd.' >/dev/null 2>&1 &' ;
+					$cmd = $cmd.' >'.(($prog->SortieDansFichier == 1) ? $chemJournal : '/dev/null').' 2>&1 &' ;
 				}
 				else
 				{
-					$cmd = 'start /b '.$cmd ;
+					$cmd = 'start /b ('.$cmd.(($prog->SortieDansFichier == 1) ? ' >'.$chemJournal.' 2>&1' : '').')' ;
 				}
 				return $cmd ;
 			}
@@ -1041,6 +1046,7 @@
 			protected $NaturePlateforme = "" ;
 			public $ArgsParDefaut = array() ;
 			public $Args = array() ;
+			public $SortieDansFichier = 0 ;
 			protected function CreePlateforme()
 			{
 				$platf = new PvPlateformProcIndef() ;

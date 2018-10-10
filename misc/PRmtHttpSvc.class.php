@@ -122,6 +122,7 @@
 			protected function prepare()
 			{
 				header("Access-Control-Allow-Origin: *");
+				// print_r(array_keys($this->getAllMethods())) ;
 				$this->req = null ;
 				$this->resp = new PRmtResp() ;
 			}

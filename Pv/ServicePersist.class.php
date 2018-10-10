@@ -200,14 +200,14 @@
 			public $Hote = "127.0.0.1" ;
 			protected $Adresse = "" ;
 			public $Port = 4401 ;
-			public $DelaiOuvrFlux = 10 ;
-			public $DelaiLectFlux = 2 ;
+			public $DelaiOuvrFlux = 30 ;
+			public $DelaiLectFlux = 30 ;
 			public $LimiterDelaiBoucle = 0 ;
 			public $DelaiInactivite = 30 ;
 			public $EcartInactiviteBoucle = 5 ;
 			public $TaillePaquetFlux = 1024 ;
 			public $FormatPaquet ;
-			public $DelaiAttente = 1 ;
+			public $DelaiAttente = 0 ;
 			public $MaxSessions = 0 ;
 			protected $DernErrEnvoiDemande ;
 			protected function InitConfig()
@@ -240,7 +240,7 @@
 			protected function TermineReception()
 			{
 			}
-			protected function ExtraitAdresse()
+			public function ExtraitAdresse()
 			{
 				return $this->Scheme.'://'.$this->Hote.':'.$this->Port ;
 			}
@@ -599,7 +599,7 @@
 				{
 					return $ok ;
 				}
-				$ok = false ;
+				$ok = true ;
 				foreach($this->ArgsParDefaut as $nom => $valeur)
 				{
 					if(! isset($this->Args[$nom]) || $this->ArgsParDefaut[$nom] != $this->Args[$nom])

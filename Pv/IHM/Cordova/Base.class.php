@@ -6,13 +6,17 @@
 		{
 			include dirname(__FILE__)."/../../../Pv/Base.class.php" ;
 		}
+		if(! defined('PV_COMPOSANT_CORDOVA'))
+		{
+			include dirname(__FILE__)."/Composant.class.php" ;
+		}
 		if(! defined('PV_MENU_CORDOVA'))
 		{
 			include dirname(__FILE__)."/Menu.class.php" ;
 		}
-		if(! defined('PV_COMPOSANT_CORDOVA'))
+		if(! defined('PV_MEMBERSHIP_CORDOVA'))
 		{
-			include dirname(__FILE__)."/Composant.class.php" ;
+			include dirname(__FILE__)."/Membership.class.php" ;
 		}
 		if(! defined('PV_ZONE_CORDOVA'))
 		{

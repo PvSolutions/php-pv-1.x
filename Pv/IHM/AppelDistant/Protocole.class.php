@@ -60,6 +60,13 @@
 		class PvMembreBaseStructMsgAppelDistant
 		{
 			public $Nom ;
+			public $MinOccurs = 0 ;
+			public $MaxOccurs = 1 ;
+			public function ContenuTypeWsdl()
+			{
+				$ctn = '' ;
+				return $ctn ;
+			}
 			public function Type()
 			{
 				return "base" ;
@@ -71,6 +78,12 @@
 		}
 		class PvMembreStringStructMsgAppelDistant extends PvMembreBaseStructMsgAppelDistant
 		{
+			public function ContenuTypeWsdl()
+			{
+				$ctn = '<s:element name="'.$this->Nom.'" minOccurs="'.$this->MinOccurs.'" maxOccurs="'.$this->MaxOccurs.'"' ;
+				$ctn .= ' type="s:string" />' ;
+				return $ctn ;
+			}
 			public function Type()
 			{
 				return "string" ;
@@ -82,9 +95,15 @@
 		}
 		class PvMembreDateStructMsgAppelDistant extends PvMembreBaseStructMsgAppelDistant
 		{
+			public function ContenuTypeWsdl()
+			{
+				$ctn = '<s:element name="'.$this->Nom.'" minOccurs="'.$this->MinOccurs.'" maxOccurs="'.$this->MaxOccurs.'"' ;
+				$ctn .= ' type="s:dateTime" />' ;
+				return $ctn ;
+			}
 			public function Type()
 			{
-				return "int" ;
+				return "date" ;
 			}
 			public function AccepteValeur($valeur)
 			{
@@ -93,6 +112,12 @@
 		}
 		class PvMembreIntStructMsgAppelDistant extends PvMembreBaseStructMsgAppelDistant
 		{
+			public function ContenuTypeWsdl()
+			{
+				$ctn = '<s:element name="'.$this->Nom.'" minOccurs="'.$this->MinOccurs.'" maxOccurs="'.$this->MaxOccurs.'"' ;
+				$ctn .= ' type="s:int" />' ;
+				return $ctn ;
+			}
 			public function Type()
 			{
 				return "int" ;
@@ -104,6 +129,12 @@
 		}
 		class PvMembreFloatStructMsgAppelDistant extends PvMembreBaseStructMsgAppelDistant
 		{
+			public function ContenuTypeWsdl()
+			{
+				$ctn = '<s:element name="'.$this->Nom.'" minOccurs="'.$this->MinOccurs.'" maxOccurs="'.$this->MaxOccurs.'"' ;
+				$ctn .= ' type="s:float" />' ;
+				return $ctn ;
+			}
 			public function Type()
 			{
 				return "float" ;
@@ -115,6 +146,12 @@
 		}
 		class PvMembreDoubleStructMsgAppelDistant extends PvMembreBaseStructMsgAppelDistant
 		{
+			public function ContenuTypeWsdl()
+			{
+				$ctn = '<s:element name="'.$this->Nom.'" minOccurs="'.$this->MinOccurs.'" maxOccurs="'.$this->MaxOccurs.'"' ;
+				$ctn .= ' type="s:double" />' ;
+				return $ctn ;
+			}
 			public function Type()
 			{
 				return "double" ;
@@ -126,6 +163,12 @@
 		}
 		class PvMembreBoolStructMsgAppelDistant extends PvMembreBaseStructMsgAppelDistant
 		{
+			public function ContenuTypeWsdl()
+			{
+				$ctn = '<s:element name="'.$this->Nom.'" minOccurs="'.$this->MinOccurs.'" maxOccurs="'.$this->MaxOccurs.'"' ;
+				$ctn .= ' type="s:boolean" />' ;
+				return $ctn ;
+			}
 			public function Type()
 			{
 				return "bool" ;
@@ -140,9 +183,22 @@
 			public $Membre ;
 			public $NomMembre = "item" ;
 			public $MaxOccurences = 0 ;
-			protected function __construct()
+			public function __construct()
 			{
 				$this->Membre = new PvMembreVarStructMsgAppelDistant() ;
+			}
+			public function ContenuTypeWsdl()
+			{
+				$this->Membre->Nom = $this->NomMembre ;
+				$this->Membre->MaxOccurs = "unbounded" ;
+				$ctn = '<s:element name="'.$this->Nom.'" minOccurs="'.$this->MinOccurs.'" maxOccurs="'.$this->MaxOccurs.'">'.PHP_EOL ;
+				$ctn .= '<s:complexType>'.PHP_EOL ;
+				$ctn .= '<s:sequence>'.PHP_EOL ;
+				$ctn .= $this->Membre->ContenuTypeWsdl() ;
+				$ctn .= '</s:sequence>'.PHP_EOL ;
+				$ctn .= '</s:complexType>'.PHP_EOL ;
+				$ctn .= '</s:element>' ;
+				return $ctn ;
 			}
 			public function Type()
 			{
@@ -210,6 +266,21 @@
 		class PvMembreObjetStructMsgAppelDistant extends PvMembreBaseStructMsgAppelDistant
 		{
 			public $Membres = array() ;
+			public function ContenuTypeWsdl()
+			{
+				$ctn = '<s:element name="'.$this->Nom.'" minOccurs="'.$this->MinOccurs.'" maxOccurs="'.$this->MaxOccurs.'">'.PHP_EOL ;
+				$ctn .= '<s:complexType>'.PHP_EOL ;
+				$ctn .= '<s:sequence>'.PHP_EOL ;
+				foreach($this->Membres as $n => $membre)
+				{
+					$membre->Nom = $n ;
+					$ctn .= $membre->ContenuTypeWsdl().PHP_EOL ;
+				}
+				$ctn .= '</s:sequence>'.PHP_EOL ;
+				$ctn .= '</s:complexType>'.PHP_EOL ;
+				$ctn .= '</s:element>' ;
+				return $ctn ;
+			}
 			public function Type()
 			{
 				return "object" ;
@@ -277,6 +348,12 @@
 		}
 		class PvMembreVarStructMsgAppelDistant extends PvMembreObjetStructMsgAppelDistant
 		{
+			public function ContenuTypeWsdl()
+			{
+				$ctn = '<s:element name="'.$this->Nom.'" minOccurs="'.$this->MinOccurs.'" maxOccurs="'.$this->MaxOccurs.'"' ;
+				$ctn .= ' type="s:string" />' ;
+				return $ctn ;
+			}
 			public function Type()
 			{
 				return "variable" ;
@@ -288,6 +365,23 @@
 		}
 		class PvMembreChoixStructMsgAppelDistant extends PvMembreObjetStructMsgAppelDistant
 		{
+			public function ContenuTypeWsdl()
+			{
+				$ctn = '<s:element name="'.$this->Nom.'" minOccurs="'.$this->MinOccurs.'" maxOccurs="'.$this->MaxOccurs.'">'.PHP_EOL ;
+				$ctn .= '<s:complexType>'.PHP_EOL ;
+				$ctn .= '<s:sequence>'.PHP_EOL ;
+				$ctn .= '<s:choice>'.PHP_EOL ;
+				foreach($this->Membres as $n => $membre)
+				{
+					$membre->Nom = $n ;
+					$ctn .= $membre->ContenuTypeWsdl().PHP_EOL ;
+				}
+				$ctn .= '</s:choice>'.PHP_EOL ;
+				$ctn .= '</s:sequence>'.PHP_EOL ;
+				$ctn .= '</s:complexType>'.PHP_EOL ;
+				$ctn .= '</s:element>' ;
+				return $ctn ;
+			}
 			public function Type()
 			{
 				return "choice" ;
@@ -310,6 +404,38 @@
 		
 		class PvProtocoleBaseAppelDistant extends PvElemZoneAppelDistant
 		{
+			public $Encodage = "utf-8" ;
+			public function NomBindingWsdl()
+			{
+				return $this->ZoneParent->NomService.$this->NomElementZone ;
+			}
+			public function RemplitWsdl(& $wsdl)
+			{
+				$wsdl->ContenusBinding[$this->NomBindingWsdl()] = $this->RenduBindingWsdl() ; 
+				$wsdl->ContenusService[] = '<wsdl:port name="'.$this->NomBindingWsdl().'" binding="tns:'.$this->NomBindingWsdl().'">
+<soap:address location="'.remove_url_params(get_current_url()).'" />
+</wsdl:port>' ;
+			}
+			protected function RenduBindingWsdl()
+			{
+				$ctn = '' ;
+				foreach($this->ZoneParent->MethodesDistantes as $nom => $mtdDist)
+				{
+					$ctn .= '<wsdl:operation name="'.$nom.'">
+<soap:operation soapAction="http://tempuri.org/'.$nom.'" style="document" />
+<wsdl:input>
+<soap:body use="literal" />
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal" />
+</wsdl:output>'.(($this->ZoneParent->InclureFaultWsdl == 1) ? PHP_EOL
+.'<wsdl:fault name="'.$this->ZoneParent->NomService.'Fault">
+<soap:fault name="'.$this->ZoneParent->NomService.'Fault" use="literal"/>
+</wsdl:fault>' : '').'
+</wsdl:operation>'.PHP_EOL ;
+				}
+				return $ctn ;
+			}
 			public function EnteteHttp($nom, $valeurParDefaut='')
 			{
 				return $this->ZoneParent->EnteteHttp($nom, $valeurParDefaut) ;
@@ -403,6 +529,54 @@
 		
 		class PvProtocSoapBaseAppelDistant extends PvProtocoleBaseAppelDistant
 		{
+			public $XmlnsTem = "http://tempuri.org/" ;
+			public $PrefixeMembre = "TEM:" ;
+			public $XmlnsSoap = "http://www.w3.org/2003/05/soap-envelope" ;
+			public $XmlnsXsi = "http://www.w3.org/2001/XMLSchema-instance" ;
+			public $XmlnsXsd = "http://www.w3.org/2001/XMLSchema" ;
+			public $PrefixeEnvRecu ;
+			protected function EncodeFault($resultat)
+			{
+				$ctn = '' ;
+				if($this->ZoneParent->InclureFaultWsdl == 0)
+				{
+					$ctn .= '<soap:Fault>
+<soap:Code>
+<soap:Value>'.$resultat->erreur->code.'</soap:Value>
+</soap:Code>
+<soap:Reason>
+<soap:Text>'.htmlentities($resultat->erreur->message, ENT_COMPAT).'</soap:Text>
+</soap:Reason>
+</soap:Fault>' ;
+				}
+				else
+				{
+					$nomMethode = $this->ZoneParent->ValeurParamMtdDist ;
+					/*
+					if($nomMethode != '')
+					{
+						$ctn .= '<'.$nomMethode.'Response xmlns="'.$this->XmlnsTem.'">'.PHP_EOL ;
+					}
+					*/
+					$ctn .= '<soap:Fault>
+<faultcode>SOAP:Server</faultcode>
+<faultstring>Erreur rencontree</faultstring>
+<detail>
+<'.$this->ZoneParent->NomService.'Fault xmlns="'.$this->XmlnsTem.'">
+<errorCode>'.$resultat->erreur->code.'</errorCode>
+<errorMessage>'.htmlentities($resultat->erreur->message, ENT_COMPAT).'</errorMessage>
+</'.$this->ZoneParent->NomService.'Fault>
+</detail>
+</soap:Fault>' ;
+					/*
+					if($nomMethode != '')
+					{
+						$ctn .= '</'.$nomMethode.'Response>'.PHP_EOL ;
+					}
+					*/
+				}
+				return $ctn ;
+			}
 			protected function DecodeNodeMembre($node, $membreStruct)
 			{
 				$ctn = '' ;
@@ -434,7 +608,7 @@
 								$membreStructTmp = null ;
 								foreach($membreStruct->Membres as $nom => $membreStructTmp)
 								{
-									if(strtoupper($this->PrefixeMembre.$membreStructTmp->Nom) == $childNode->Name)
+									if(strtoupper($this->PrefixeMembre.$membreStructTmp->Nom) == $childNode->Name || strtoupper($membreStructTmp->Nom) == $childNode->Name)
 									{
 										$nomProp = $membreStructTmp->Nom ;
 										break ;
@@ -455,7 +629,7 @@
 							foreach($node->ChildNodes as $i => $childNode)
 							{
 								$nomProp = $childNode->Name ;
-								if($nomProp == strtoupper($this->PrefixeMembre.$membreStruct->NomMembre))
+								if($nomProp == strtoupper($this->PrefixeMembre.$membreStruct->NomMembre)|| $nomProp == strtoupper($membreStruct->NomMembre))
 								{
 									$ctn[] = $this->DecodeNodeMembre($childNode, $membreStruct->Membre) ;
 								}
@@ -507,20 +681,45 @@
 							$ctn .= 'Resource' ;
 						}
 						else {
-							$ctn .= htmlentities($valeur) ;
+							$ctn .= htmlentities($valeur, ENT_COMPAT | ENT_IGNORE | ENT_XML1, 'utf-8') ;
 						}
 					}
 					break ;
 					case "string" :
 					{
-						return htmlentities($valeur) ;
+						// return $this->EncodeTexteHtml($valeur) ;
+						return ($this->ZoneParent->NettoieCaractsSoap == 1) ? htmlentities($valeur, ENT_COMPAT | ENT_SUBSTITUTE | ENT_XML1, 'utf-8') : encode_html_symbols($valeur) ;
+					}
+					break ;
+					case "date" :
+					{
+						if(is_numeric($valeur))
+						{
+							return str_replace("T", " ", $valeur) ;
+						}
+						elseif(preg_match('/\d+\-\d+\-\d+ \d+\:\d+\:\d+/', $valeur))
+						{
+							return str_replace(" ", "T", $valeur) ;
+						}
+						else
+						{
+							return '' ;
+						}
 					}
 					break ;
 					case "int" :
+					{
+						return intval($valeur) ;
+					}
+					break ;
 					case "float" :
+					{
+						return floatval($valeur) ;
+					}
+					break ;
 					case "double" :
 					{
-						return $valeur ;
+						return doubleval($valeur) ;
 					}
 					break ;
 					case "bool" :
@@ -582,12 +781,12 @@
 		}
 		class PvProtocSoap1_1AppelDistant extends PvProtocSoapBaseAppelDistant
 		{
-			public $Encodage = "utf-8" ;
-			public $XmlnsTem = "http://tempuri.org/" ;
-			public $PrefixeMembre = "TEM:" ;
-			public $XmlnsSoap = "http://www.w3.org/2003/05/soap-envelope" ;
-			public $XmlnsXsi = "http://www.w3.org/2001/XMLSchema-instance" ;
-			public $XmlnsXsd = "http://www.w3.org/2001/XMLSchema" ;
+			public function RemplitWsdl(& $wsdl)
+			{
+				parent::RemplitWsdl($wsdl) ;
+				$wsdl->ContenusBinding[$this->NomBindingWsdl()] = '<soap:binding transport="http://schemas.xmlsoap.org/soap/http" />'.PHP_EOL
+.$wsdl->ContenusBinding[$this->NomBindingWsdl()] ;
+			}
 			public function NomProtocole()
 			{
 				return "soap_1_1" ;
@@ -595,52 +794,33 @@
 			public function EstActif()
 			{
 				$contentType = $this->EnteteHttp("Content-Type") ;
-				$soapAction = $this->EnteteHttp("SOAPAction") ;
-				if($contentType == "text/xml" && $soapAction != "")
+				// $soapAction = $this->EnteteHttp("SOAPAction") ;
+				if($contentType == "text/xml")
 				{
 					return 1 ;
 				}
 				return 0 ;
 			}
-			protected function EncodeFault($resultat)
-			{
-				$ctn = '' ;
-				$ctn .= '<soap:Fault>
-<soap:Code>
-<soap:Value>'.$resultat->erreur->code.'</soap:Value>
-</soap:Code>
-<soap:Reason>
-<soap:Text>'.htmlentities($resultat->erreur->message).'</soap:Text>
-</soap:Reason>
-</soap:Fault>' ;
-				return $ctn ;
-			}
 			public function DecodeContenu()
 			{
 				$ctn = $this->CreeContenu() ;
 				$enteteAction = $this->ZoneParent->EnteteHttp("SOAPAction") ;
-				if($enteteAction == '')
+				if($enteteAction != '')
 				{
-					return ;
+					$enteteAction = str_replace('"', '', $enteteAction) ;
+					$enteteAction = str_replace('\'', '', $enteteAction) ;
+					$ctn->nomMethode = substr($enteteAction, strlen($this->XmlnsTem)) ;
 				}
-				$enteteAction = str_replace('"', '', $enteteAction) ;
-				$enteteAction = str_replace('\'', '', $enteteAction) ;
-				$ctn->nomMethode = substr($enteteAction, strlen($this->XmlnsTem)) ;
 				$parser = new ExpatXmlParser() ;
 				$rootDoc = $parser->ParseContent($this->ContenuAppelRecu()) ;
 				$rootNode = $rootDoc->RootNode() ;
-				if($rootNode->Name == "SOAP:ENVELOPE")
-				{
-					if($rootNode->GetAttribute("XMLNS:SOAP") != $this->XmlnsSoap || $rootNode->GetAttribute("XMLNS:TEM") != $this->XmlnsTem)
-					{
-						return $ctn ;
-					}
-				}
-				else
+				$envelopAttrs = explode(":", $rootNode->Name, 2) ;
+				$this->PrefixeEnvRecu = $envelopAttrs[0] ;
+				if($rootNode->Name != $this->PrefixeEnvRecu.":ENVELOPE")
 				{
 					return $ctn ;
 				}
-				$bodyNodes = $rootNode->GetChildNodesByTagName("SOAP:BODY") ;
+				$bodyNodes = $rootNode->GetChildNodesByTagName($this->PrefixeEnvRecu.":BODY") ;
 				if(count($bodyNodes) != 1)
 				{
 					return $ctn ;
@@ -652,7 +832,7 @@
 					{
 						for($j=0; $j<count($tempNodes); $j++)
 						{
-							if($tempNodes[$j]->Name == "TEM:".strtoupper($nom))
+							if($tempNodes[$j]->Name == $this->PrefixeMembre.strtoupper($nom) || $tempNodes[$j]->Name == strtoupper($nom))
 							{
 								$ctn->nomMethode = $nom ;
 								$methodNodes = array($tempNodes[$j]) ;
@@ -667,7 +847,11 @@
 				}
 				else
 				{
-					$methodNodes = $bodyNodes[0]->GetChildNodesByTagName("TEM:".strtoupper($ctn->nomMethode)) ;
+					$methodNodes = $bodyNodes[0]->GetChildNodesByTagName(strtoupper($ctn->nomMethode)) ;
+					if(count($methodNodes) == 0)
+					{
+						$methodNodes = $bodyNodes[0]->GetChildNodesByTagName($this->PrefixeMembre.strtoupper($ctn->nomMethode)) ;
+					}
 				}
 				if(count($methodNodes) != 1)
 				{
@@ -677,12 +861,9 @@
 				$ctn->args = $this->DecodeNodeMembre($methodNodes[0], $methodeDist->StructRequete->MembreRacine) ;
 				return $ctn ;
 			}
-			public function EncodeContenu($contenu)
-			{
-			}
 			public function EncodeResultat($resultat)
 			{
-				Header("Content-Type: application/soap+xml; charset=".$this->Encodage) ;
+				Header("Content-Type: text/xml; charset=".$this->Encodage) ;
 				$ctn = '' ;
 				$nomMethode = $this->ZoneParent->ValeurParamMtdDist ;
 				$ctn .= '<?xml version="1.0" encoding="'.$this->Encodage.'"?>
@@ -695,9 +876,7 @@
 				else
 				{
 					$ctn .= '<'.$nomMethode.'Response xmlns="'.$this->XmlnsTem.'">'.PHP_EOL ;
-					$ctn .= '<'.$nomMethode.'Result>' ;
 					$ctn .= $this->EncodeValeurMembre($resultat->valeur, $this->ZoneParent->MtdDistSelect->StructReponse->MembreRacine) ;
-					$ctn .= '</'.$nomMethode.'Result>'.PHP_EOL ;
 					$ctn .= '</'.$nomMethode.'Response>'.PHP_EOL ;
 				}
 				$ctn .= '</soap:Body>'.PHP_EOL ;
@@ -707,12 +886,13 @@
 		}
 		class PvProtocSoap1_2AppelDistant extends PvProtocSoapBaseAppelDistant
 		{
-			public $Encodage = "utf-8" ;
-			public $XmlnsTem = "http://tempuri.org/" ;
-			public $PrefixeMembre = "TEM:" ;
-			public $XmlnsSoap = "http://www.w3.org/2003/05/soap-envelope" ;
-			public $XmlnsXsi = "http://www.w3.org/2001/XMLSchema-instance" ;
-			public $XmlnsXsd = "http://www.w3.org/2001/XMLSchema" ;
+			public function RemplitWsdl(& $wsdl)
+			{
+				$wsdl->AttrsDefinition["xmlns:soap12"] = "http://schemas.xmlsoap.org/wsdl/soap12/" ;
+				parent::RemplitWsdl($wsdl) ;
+				$wsdl->ContenusBinding[$this->NomBindingWsdl()] = '<soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />'.PHP_EOL
+.$wsdl->ContenusBinding[$this->NomBindingWsdl()] ;
+			}
 			public function NomProtocole()
 			{
 				return "soap_1_2" ;
@@ -725,19 +905,6 @@
 					return 1 ;
 				}
 				return 0 ;
-			}
-			protected function EncodeFault($resultat)
-			{
-				$ctn = '' ;
-				$ctn .= '<soap:Fault>
-<soap:Code>
-<soap:Value>'.$resultat->erreur->code.'</soap:Value>
-</soap:Code>
-<soap:Reason>
-<soap:Text>'.htmlentities($resultat->erreur->message).'</soap:Text>
-</soap:Reason>
-</soap:Fault>' ;
-				return $ctn ;
 			}
 			public function DecodeContenu()
 			{
@@ -752,18 +919,13 @@
 				$parser = new ExpatXmlParser() ;
 				$rootDoc = $parser->ParseContent($this->ContenuAppelRecu()) ;
 				$rootNode = $rootDoc->RootNode() ;
-				if($rootNode->Name == "SOAP:ENVELOPE")
-				{
-					if($rootNode->GetAttribute("XMLNS:SOAP") != $this->XmlnsSoap || $rootNode->GetAttribute("XMLNS:TEM") != $this->XmlnsTem)
-					{
-						return $ctn ;
-					}
-				}
-				else
+				$envelopAttrs = explode(":", $rootNode->Name, 2) ;
+				$this->PrefixeEnvRecu = $envelopAttrs[0] ;
+				if($rootNode->Name != $this->PrefixeEnvRecu.":ENVELOPE")
 				{
 					return $ctn ;
 				}
-				$bodyNodes = $rootNode->GetChildNodesByTagName("SOAP:BODY") ;
+				$bodyNodes = $rootNode->GetChildNodesByTagName($this->PrefixeEnvRecu.":BODY") ;
 				if(count($bodyNodes) != 1)
 				{
 					return $ctn ;
@@ -775,7 +937,7 @@
 					{
 						for($j=0; $j<count($tempNodes); $j++)
 						{
-							if($tempNodes[$j]->Name == "TEM:".strtoupper($nom))
+							if($tempNodes[$j]->Name == $this->PrefixeMembre.strtoupper($nom) || $tempNodes[$j]->Name == strtoupper($nom))
 							{
 								$ctn->nomMethode = $nom ;
 								$methodNodes = array($tempNodes[$j]) ;
@@ -790,7 +952,11 @@
 				}
 				else
 				{
-					$methodNodes = $bodyNodes[0]->GetChildNodesByTagName("TEM:".strtoupper($ctn->nomMethode)) ;
+					$methodNodes = $bodyNodes[0]->GetChildNodesByTagName(strtoupper($ctn->nomMethode)) ;
+					if(count($methodNodes) == 0)
+					{
+						$methodNodes = $bodyNodes[0]->GetChildNodesByTagName($this->PrefixeMembre.strtoupper($ctn->nomMethode)) ;
+					}
 				}
 				if(count($methodNodes) != 1)
 				{
@@ -799,9 +965,6 @@
 				$methodeDist = $this->ZoneParent->ObtientMethodeDistante($ctn->nomMethode) ;
 				$ctn->args = $this->DecodeNodeMembre($methodNodes[0], $methodeDist->StructRequete->MembreRacine) ;
 				return $ctn ;
-			}
-			public function EncodeContenu($contenu)
-			{
 			}
 			public function EncodeResultat($resultat)
 			{
@@ -818,9 +981,7 @@
 				else
 				{
 					$ctn .= '<'.$nomMethode.'Response xmlns="'.$this->XmlnsTem.'">'.PHP_EOL ;
-					$ctn .= '<'.$nomMethode.'Result>' ;
 					$ctn .= $this->EncodeValeurMembre($resultat->valeur, $this->ZoneParent->MtdDistSelect->StructReponse->MembreRacine) ;
-					$ctn .= '</'.$nomMethode.'Result>'.PHP_EOL ;
 					$ctn .= '</'.$nomMethode.'Response>'.PHP_EOL ;
 				}
 				$ctn .= '</soap:Body>'.PHP_EOL ;

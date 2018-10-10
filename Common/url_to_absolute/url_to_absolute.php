@@ -112,7 +112,14 @@ function url_to_absolute( $baseUrl, $relativeUrl )
 	// If relative URL path doesn't start with /, merge with base path
 	if ( $r['path'][0] != '/' )
 	{
+		if(function_exists('mb_strrchr'))
+		{
 		$base = mb_strrchr( $b['path'], '/', TRUE, 'UTF-8' );
+		}
+		else
+		{
+			$base = strrchr($b['path'], '/') ;
+		}
 		if ( $base === FALSE ) $base = '';
 		$r['path'] = $base . '/' . $r['path'];
 	}
@@ -154,9 +161,13 @@ function url_remove_dot_segments( $path )
 	if ( $path[0] == '/' )
 		$outPath = '/' . $outPath;
 	// compare last multi-byte character against '/'
-	if ( $outPath != '/' &&
-		(mb_strlen($path)-1) == mb_strrpos( $path, '/', 'UTF-8' ) )
-		$outPath .= '/';
+	if ( $outPath != '/')
+	{
+		if(function_exists('mb_strlen') && mb_strlen($path)-1 == mb_strrpos( $path, '/', 'UTF-8' ))
+			$outPath .= '/';
+		elseif(strlen($path)-1 == strrpos( $path, '/' ))
+			$outPath .= '/';
+	}
 	return $outPath;
 }
 

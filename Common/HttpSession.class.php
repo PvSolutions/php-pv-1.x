@@ -68,6 +68,10 @@
 			var $ResponseHttpStatusCode = false;
 			var $ResponseHttpStatusDesc = false;
 			
+			var $ResponseTransferChunked = false ;
+			var $ResponseChunkSize = -1 ;
+			var $ResponseChunkRead = 0 ;
+			
 			function ResetRequest()
 			{
 				$this->RequestData = "" ;
@@ -419,7 +423,7 @@
 				$this->RequestOutput = @fsockopen(($this->RequestUrlParts['scheme'] == 'https' ? 'ssl://' : '').$this->RequestHost, $this->RequestUrlParts['port'], $errno, $errstr, $this->ConnectTimeout);
 				if($this->RequestOutput == false)
 				{
-					$this->SetRequestException($errstr) ;
+					$this->SetRequestException($errno."# ".$errstr) ;
 					return false ;
 				}
 				return true ;
@@ -631,6 +635,13 @@
 					$this->ResponseRedirectionUrl = $responseHeaders["location"] ;
 					$this->ResponseParseBodyEnabled = true;
 				}
+				elseif(isset($responseHeaders['transfer-encoding']))
+				{
+					if(strtolower($responseHeaders['transfer-encoding']) == "chunked")
+					{
+						$this->ResponseTransferChunked = true ;
+					}
+				}
 			}
 			protected function CookieHost()
 			{
@@ -648,6 +659,15 @@
 			}
 			function ProcessResponseBodyData($line)
 			{
+				if($this->ResponseTransferChunked == true)
+				{
+					if($this->ResponseChunkSize == -1)
+					{
+						$this->ResponseChunkSize = hexdec(trim($line)) ;
+						$this->ResponseChunkRead = 0 ;
+						return ;
+					}
+				}
 				if($this->ResponseFileName != "")
 				{
 					if(! $this->ResponseOutputSet)
@@ -669,6 +689,17 @@
 				else
 				{
 					$this->ResponseData .= $line ;
+				}
+				if($this->ResponseTransferChunked == true)
+				{
+					if($this->ResponseChunkSize >= 0)
+					{
+						$this->ResponseChunkRead += strlen($line) ;
+						if($this->ResponseChunkRead >= $this->ResponseChunkSize)
+						{
+							$this->ResponseChunkSize = -1 ;
+						}
+					}
 				}
 			}
 			function CloseResponseOutput()
@@ -756,6 +787,10 @@
 			function GetRequestContents()
 			{
 				$ctn = '' ;
+				if($this->RequestHeadersData == '')
+				{
+					$this->BuildHeadersRequest() ;
+				}
 				if($this->RequestHeadersData != '')
 				{
 					$ctn .= $this->RequestHeadersData."\r\n\r\n" ;

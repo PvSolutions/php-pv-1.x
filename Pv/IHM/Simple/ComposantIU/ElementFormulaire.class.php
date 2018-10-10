@@ -63,6 +63,12 @@
 			public $FmtLbl ;
 			public $EncodeHtmlEtiquette = 1 ;
 			public $AttrsSupplHtml = array() ;
+			public function RenduJsDefinitValeur()
+			{
+				return 'if(document.getElementById("'.$this->IDInstanceCalc.'") != null) {
+document.getElementById("'.$this->IDInstanceCalc.'").value = valeur ;
+}' ;
+			}
 			protected function CreeFmtLbl()
 			{
 				return new PvFmtLblWeb() ;

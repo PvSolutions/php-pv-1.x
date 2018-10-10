@@ -120,7 +120,14 @@
 				}
 				if(function_exists($Sub.$Format))
 				{
-					$Result = call_user_func($Sub.$Format, $FilePath) ;
+					if(PHP_VERSION >= "7")
+					{
+						$Result = @call_user_func($Sub.$Format, $FilePath) ;
+					}
+					else
+					{
+						$Result = call_user_func($Sub.$Format, $FilePath) ;
+					}
 				}
 				return $Result ;
 			}

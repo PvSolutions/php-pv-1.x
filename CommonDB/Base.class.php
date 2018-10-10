@@ -495,6 +495,20 @@
 				return $res ;
 			}
 		/**
+		* Fetch the fields from the query.
+		* @access public
+		* @param resource $res Query Reader resource
+		* @return array|false
+		*/
+			public function ColumnsQuery(&$res)
+			{
+				if($res === false)
+				{
+					return false ;
+				}
+				return array() ;
+			}
+		/**
 		* Fetch the next row present in the Query Reader.
 		* @access public
 		* @param resource $res Query Reader resource
@@ -1711,11 +1725,6 @@ FROM information_schema.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :ta
 					array("schema" => $this->ConnectionParams["schema"], "tableName" => $tableName),
 					"id"
 				) ;
-				if($value != null)
-				{
-					$value = (intval($value) + 1) ;
-					// $this->RunSql("alter table ".$this->EscapeTableName($tableName)." auto_increment = ".$value) ;
-				}
 				return $value ;
 			}
 			function OpenStoredProcCnx()
@@ -2283,6 +2292,7 @@ FROM information_schema.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :ta
 			public $StoredProcCursor = false ;
 			public $StoredProcQuery = false ;
 			public $OracleCharacterSet = "AL32UTF8" ;
+			// public $OracleCharacterSet = "AL32UTF8" ;
 			public function ImportConfigFromNode(& $node)
 			{
 				parent::ImportConfigFromNode($node) ;
@@ -2507,6 +2517,20 @@ FROM information_schema.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :ta
 					$result .= $errorData["message"] ;
 				}
 				return $result ;
+			}
+			public function ColumnsQuery(&$res)
+			{
+				if($res === false)
+				{
+					return false ;
+				}
+				$cols = array() ;
+				$colCount = oci_num_fields($res) ;
+				for($i=1; $i<=$colCount; $i++)
+				{
+					$cols[] = oci_field_name($res, $i) ;
+				}
+				return $cols ;
 			}
 			function ReadQuery(&$res)
 			{

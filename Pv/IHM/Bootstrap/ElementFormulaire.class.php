@@ -243,6 +243,15 @@ jQuery(".spinner .btn:last-of-type").on("click", function() {
 		{
 		}
 		
+		class PvCfgBootstrapDatetimePicker
+		{
+			public $format ;
+			public $minView = 0 ;
+			public $startView = 2 ;
+			public $maxView = 4 ;
+			public $viewSelect = 0 ;
+		}
+		
 		class PvBootstrapDatetimePicker extends PvEditeurHtmlBase
 		{
 			protected static $SourceIncluse = 0 ;
@@ -254,6 +263,12 @@ jQuery(".spinner .btn:last-of-type").on("click", function() {
 			public $TailleZone = 16 ;
 			public $ClasseCSSVideDate = "glyphicon glyphicon-remove" ;
 			public $ClasseCSSDropdown = "glyphicon glyphicon-th" ;
+			public $Cfg ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->Cfg = new PvCfgBootstrapDatetimePicker() ;
+			}
 			protected function RenduSourceBrut()
 			{
 				$ctn = '' ;
@@ -273,6 +288,7 @@ jQuery(".spinner .btn:last-of-type").on("click", function() {
 			}
 			protected function RenduEditeurBrut()
 			{
+				$this->Cfg->format = $this->FormatDateJs ;
 				$ctn = '' ;
 				$valeurFmt = date($this->FormatDatePHP) ;
 				$valeurSelect = date("Y-m-d H:i:s") ;
@@ -286,12 +302,13 @@ jQuery(".spinner .btn:last-of-type").on("click", function() {
 						$valeurSelect = date("Y-m-d H:i:s", $timestmp) ;
 					}
 				}
-				$ctn .= '<input type="text" id="'.$this->IDInstanceCalc.'_support" value="'.htmlspecialchars($valeurFmt).'" readonly />
+				$ctn .= '<div class="input-append date form_datetime">
+<input type="text" id="'.$this->IDInstanceCalc.'_support" value="'.htmlspecialchars($valeurFmt).'" readonly />
+<span class="add-on"><i class="'.$this->ClasseCSSDropdown.'"></i></span>
+</div>
 <input type="hidden" id="'.$this->IDInstanceCalc.'" name="'.$this->NomElementHtml.'" value="'.htmlspecialchars($valeurSelect).'" />' ;
 				$ctn .= $this->RenduContenuJs('jQuery(function() {
-var cfgInst = {
-    format: "'.$this->FormatDateJs.'"
-} ;
+var cfgInst = '.svc_json_encode($this->Cfg).' ;
 jQuery("#'.$this->IDInstanceCalc.'_support").datetimepicker(cfgInst).on("changeDate", function(evt) {
 var dateSelect = evt.date ;
 if(dateSelect == null)

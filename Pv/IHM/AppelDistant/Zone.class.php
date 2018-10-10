@@ -14,6 +14,10 @@
 		{
 			include dirname(__FILE__)."/MethodeDistante.class.php" ;
 		}
+		if(! defined('PV_WSDL_APPEL_DISTANT'))
+		{
+			include dirname(__FILE__)."/Wsdl.class.php" ;
+		}
 		define('PV_ZONE_APPEL_DISTANT_BASE', 1) ;
 		
 		class PvAppelRecuDistant
@@ -78,6 +82,10 @@
 		
 		class PvZoneAppelDistant extends PvIHM
 		{
+			public $Wsdl ;
+			public $InclureFaultWsdl = 0 ;
+			public $NomService ;
+			public $NettoieCaractsSoap = 1 ;
 			public $MethodesDistantes = array() ;
 			public $MessageMtdDistNonTrouvee = "La méthode que vous souhaitez exécuter n'existe pas." ;
 			public $MtdDistNonTrouvee ;
@@ -110,6 +118,7 @@
 			public function AdopteApplication($nom, & $application)
 			{
 				parent::AdopteApplication($nom, $application) ;
+				$this->NomService = $nom ;
 				if($this->InscrireTachesProgs == 1)
 				{
 					$this->RemplitTachesProgs($application) ;
@@ -119,6 +128,8 @@
 			{
 				parent::InitConfig() ;
 				$this->AppelRecu = $this->CreeAppelRecuVide() ;
+				$this->Wsdl = new PvWsdlAppelDistant() ;
+				$this->Wsdl->ZoneParent = & $this ; 
 			}
 			protected function CreeAppelRecuVide($origine="")
 			{
@@ -512,6 +523,13 @@
 				$this->AppelRecu->Resultat = $this->ContenuResultAppelDistant() ;
 				echo $this->AppelRecu->Resultat ;
 			}
+			public function AfficheWsdl()
+			{
+				$this->ChargeConfig() ;
+				$this->ChargeMethodesDistantes() ;
+				$this->ChargeMtdsDistsElems() ;
+				$this->Wsdl->Affiche() ;
+			}
 			public function ContenuResultAppelDistant()
 			{
 				return $this->ProtocoleSelect->EncodeResultat($this->MtdDistSelect->Result()) ;
@@ -525,18 +543,16 @@
 			{
 				if(php_sapi_name() != "cli")
 				{
-					$this->RecoitAppelDistant() ;
+					$paramsGet = array_map('strtolower', array_keys($_GET)) ;
+					if(in_array('wsdl', $paramsGet))
+					{
+						$this->AfficheWsdl() ;
+					}
+					else
+					{
+						$this->RecoitAppelDistant() ;
+					}
 				}
-			}
-			protected function RenduWSDL()
-			{
-				$ctn = '' ;
-				$ctn .= '' ;
-				return $ctn ;
-			}
-			protected function AfficheWSDL()
-			{
-				
 			}
 			protected function CreeTacheProgAppelsFtp()
 			{

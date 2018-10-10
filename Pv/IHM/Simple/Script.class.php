@@ -77,6 +77,13 @@
 			{
 				return PvVerificateurReferantsSursWeb::Valide($this) ;
 			}
+			public function & InsereActionPrinc($nomAction, $action)
+			{
+				$actionResult = $this->ZoneParent->InsereActionPrinc($this->NomElementZone."_".$nomAction, $action) ;
+				$actionResult->NomElementScript = $nomAction ;
+				$actionResult->ScriptParent = & $this ;
+				return $actionResult ;
+			}
 			public function & InsereActionAvantRendu($nomAction, $action)
 			{
 				$this->InscritActionAvantRendu($nomAction, $action) ;
@@ -561,6 +568,11 @@
 						$this->MessageConnexionEchouee = $this->MessageErreurValidation ;
 						switch($this->ZoneParent->Membership->LastValidateError)
 						{
+							case AkSqlMembership::VALIDATE_ERROR_DB_ERROR :
+							{
+								$this->MessageConnexionEchouee = 'Exception BD : '.$this->ZoneParent->Membership->Database->ConnectionException ;
+							}
+							break ;
 							case AkSqlMembership::VALIDATE_ERROR_MEMBER_NOT_FOUND :
 							{
 								$this->MessageConnexionEchouee = $this->MessageMembreNonTrouve ;
