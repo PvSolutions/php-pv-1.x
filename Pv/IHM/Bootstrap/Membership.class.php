@@ -4,6 +4,14 @@
 	{
 		define('PV_MEMBERSHIP_BOOTSTRAP', 1) ;
 		
+		class PvRemplisseurConfigMembershipBootstrap extends PvRemplisseurConfigMembershipSimple
+		{
+			public function CreeFormulaireDonnees()
+			{
+				return new PvFormulaireDonneesBootstrap() ;
+			}
+		}
+		
 		class PvScriptConnexionBootstrap extends PvScriptConnexionWeb
 		{
 			public $MessageRecouvreMP = '<br><p>Mot de passe oubli&eacute; ? <a href="${url}">Cliquez ici</a> pour le r&eacute;cup&eacute;rer</p>' ;
@@ -730,6 +738,8 @@
 			
 		class PvFormulaireAjoutMembreBootstrap extends PvFormulaireAjoutMembreMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
 				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap() ;
@@ -741,6 +751,8 @@
 		}
 		class PvFormulaireInscriptionMembreBootstrap extends PvFormulaireInscriptionMembreMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
@@ -797,6 +809,8 @@
 		}
 		class PvFormulaireModifMembreBootstrap extends PvFormulaireModifMembreMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
@@ -853,6 +867,8 @@
 		}
 		class PvFormulaireModifInfosBootstrap extends PvFormulaireModifInfosMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
@@ -909,6 +925,8 @@
 		}
 		class PvFormulaireSupprMembreBootstrap extends PvFormulaireSupprMembreMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
@@ -965,6 +983,8 @@
 		}
 		class PvFormulaireChangeMPMembreBootstrap extends PvFormulaireChangeMPMembreMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			public $MaxFiltresEditionParLigne = 1 ;
 			protected function RenduComposants()
 			{
@@ -1023,6 +1043,8 @@
 		}
 		class PvFormulaireDoitChangerMotPasseBootstrap extends PvFormulaireDoitChangerMotPasseMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
@@ -1079,6 +1101,8 @@
 		}
 		class PvFormulaireChangeMotPasseBootstrap extends PvFormulaireChangeMotPasseMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			public $MaxFiltresEditionParLigne = 1 ;
 			protected function RenduComposants()
 			{
@@ -1138,6 +1162,8 @@
 		
 		class PvFormulaireAjoutRoleBootstrap extends PvFormulaireAjoutRoleMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
 				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap() ;
@@ -1177,6 +1203,8 @@
 		}
 		class PvFormulaireModifRoleBootstrap extends PvFormulaireModifRoleMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
 				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap() ;
@@ -1209,6 +1237,8 @@
 		}
 		class PvFormulaireSupprRoleBootstrap extends PvFormulaireSupprRoleMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
 				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap() ;
@@ -1221,6 +1251,8 @@
 		
 		class PvFormulaireAjoutProfilBootstrap extends PvFormulaireAjoutProfilMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
 				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap() ;
@@ -1260,6 +1292,8 @@
 		}
 		class PvFormulaireModifProfilBootstrap extends PvFormulaireModifProfilMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
 				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap() ;
@@ -1292,6 +1326,8 @@
 		}
 		class PvFormulaireSupprProfilBootstrap extends PvFormulaireSupprProfilMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
@@ -1349,6 +1385,8 @@
 
 		class PvFormulaireRecouvreMPBootstrap extends PvFormulaireRecouvreMPMS
 		{
+			public $ClasseCSSSucces = "bg-primary text-primary" ;
+			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function RenduComposants()
 			{
 				$ctn = '' ;

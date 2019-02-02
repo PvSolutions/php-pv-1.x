@@ -1442,6 +1442,20 @@ Cordialement' ;
 			}
 		}
 		
+		class PvScriptImportMembreMSWeb extends PvScriptWebSimple
+		{
+			public $TitreDocument = "Importer membres" ;
+			public $Titre = "Importer membres" ;
+			public function DetermineEnvironnement()
+			{
+				$this->ZoneParent->RemplisseurConfigMembership->DetermineFormImporteMembreMS($this) ;
+			}
+			public function RenduSpecifique()
+			{
+				return $this->ZoneParent->RemplisseurConfigMembership->RenduFormImporteMembreMS($this) ;
+			}
+		}
+
 		class CritrCodeSecurValideInscriptionWeb extends PvCritereBase
 		{
 			public $MessageErreur = "Le code de s&eacute;curit&eacute; saisi est incorrect" ;

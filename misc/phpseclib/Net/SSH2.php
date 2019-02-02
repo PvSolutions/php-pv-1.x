@@ -855,15 +855,15 @@ class Net_SSH2
         // Include Math_BigInteger
         // Used to do Diffie-Hellman key exchange and DSA/RSA signature verification.
         if (!class_exists('Math_BigInteger')) {
-            include_once 'Math/BigInteger.php';
+            include_once dirname(__FILE__).'/../Math/BigInteger.php';
         }
 
         if (!function_exists('crypt_random_string')) {
-            include_once 'Crypt/Random.php';
+            include_once dirname(__FILE__).'/../Crypt/Random.php';
         }
 
         if (!class_exists('Crypt_Hash')) {
-            include_once 'Crypt/Hash.php';
+            include_once dirname(__FILE__).'/../Crypt/Hash.php';
         }
 
         $this->message_numbers = array(
@@ -2805,9 +2805,9 @@ class Net_SSH2
         if (($this->bitmap & NET_SSH2_MASK_CONNECTED) && ($this->bitmap & NET_SSH2_MASK_LOGIN)) {
             switch (ord($payload[0])) {
                 case NET_SSH2_MSG_GLOBAL_REQUEST: // see http://tools.ietf.org/html/rfc4254#section-4
-                    $this->_string_shift($payload, 1);
-                    extract(unpack('Nlength', $this->_string_shift($payload)));
-                    $this->errors[] = 'SSH_MSG_GLOBAL_REQUEST: ' . utf8_decode($this->_string_shift($payload, $length));
+                    // extract(unpack('Nlength', $this->_string_shift($payload)));
+                    extract(unpack('Nlength', $this->_string_shift($payload, 4)));
+                    $this->errors[] = 'SSH_MSG_GLOBAL_REQUEST: ' . $this->_string_shift($payload, $length);
 
                     if (!$this->_send_binary_packet(pack('C', NET_SSH2_MSG_REQUEST_FAILURE))) {
                         return $this->_disconnect(NET_SSH2_DISCONNECT_BY_APPLICATION);

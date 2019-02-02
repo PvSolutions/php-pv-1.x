@@ -2885,6 +2885,10 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 			function ExecFixCharacterEncoding()
 			{
 			}
+			function EscapeVariableName($varName)
+			{
+				return "[".$varName."]" ;		
+			}
 			function EscapeTableName($tableName)
 			{
 				return "[".$tableName."]" ;		

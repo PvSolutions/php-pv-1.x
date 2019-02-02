@@ -1124,9 +1124,9 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 					{
 						if($this->EditeurSurligne == 0)
 						{
-							$ctn .= '<div class="container-fluid">'.PHP_EOL .'<div class="row">'.PHP_EOL .'<div class="col-xs-'.$this->ColXsLibelle.'">'.PHP_EOL ;
+							$ctn .= '<div class="container-fluid">'.PHP_EOL .'<div class="row">'.PHP_EOL .'<div class="col-xs-12 col-sm-'.$this->ColXsLibelle.'">'.PHP_EOL ;
 							$ctn .= $this->RenduLibelleFiltre($filtre).PHP_EOL ;
-							$ctn .= '</div>'.PHP_EOL .'<div class="col-xs-'.(12 - $this->ColXsLibelle).'">'.PHP_EOL ;
+							$ctn .= '</div>'.PHP_EOL .'<div class="col-xs-12 col-sm-'.(12 - $this->ColXsLibelle).'">'.PHP_EOL ;
 						}
 						else
 						{
@@ -1188,6 +1188,48 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				}
 				return 1 ;
 			}
+			protected function RenduCommande(& $commande, & $composant)
+			{
+				$ctn = '' ;
+				if($commande->ContenuAvantRendu != '')
+				{
+					$ctn .= $commande->ContenuAvantRendu ;
+				}
+				$ctn .= '<button id="'.$commande->IDInstanceCalc.'" class="Commande '.$commande->NomClsCSS.'" type="submit" rel="'.$commande->NomElementSousComposantIU.'"' ;
+				$contenuJsSurClick = ($commande->ContenuJsSurClick == '') ? $composant->IDInstanceCalc.'_ActiveCommande(this) ;' : $commande->ContenuJsSurClick.' ; return false ;' ;
+				$ctn .= ' onclick="'.$contenuJsSurClick.'"' ;
+				if($this->InclureLibelle == 0)
+				{
+					$ctn .= ' title="'.htmlspecialchars($commande->Libelle).'"' ;
+				}
+				$ctn .= '>'.PHP_EOL ;
+				if($this->InclureIcones)
+				{
+					$cheminIcone = $this->CheminIconeParDefaut ;
+					if($commande->CheminIcone != '')
+					{
+						$cheminIcone = $commande->CheminIcone ;
+					}
+					if(file_exists($cheminIcone))
+					{
+						$ctn .= '<img src="'.$cheminIcone.'" height="'.$this->HauteurIcone.'" border="0" />' ;
+					}
+					if($commande->InclureLibelle == 1)
+					{
+						$ctn .= $this->SeparateurIconeLibelle ;
+					}
+				}
+				if($this->InclureLibelle)
+				{
+					$ctn .= $commande->Libelle ;
+				}
+				$ctn .= '</button>'.PHP_EOL ;
+				if($commande->ContenuApresRendu != '')
+				{
+					$ctn .= $commande->ContenuApresRendu ;
+				}
+				return $ctn ;
+			}
 			public function Execute(& $script, & $composant, $parametres)
 			{
 				$ctn = '' ;
@@ -1211,48 +1253,15 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 					else
 					{
 						$ctn .= $this->DebutExecParam($script, $composant, $i, $commande) ;
-						if($commande->ContenuAvantRendu != '')
-						{
-							$ctn .= $commande->ContenuAvantRendu ;
-						}
-						$ctn .= '<button id="'.$commande->IDInstanceCalc.'" class="Commande '.$commande->NomClsCSS.'" type="submit" rel="'.$commande->NomElementSousComposantIU.'"' ;
-						$contenuJsSurClick = ($commande->ContenuJsSurClick == '') ? $composant->IDInstanceCalc.'_ActiveCommande(this) ;' : $commande->ContenuJsSurClick.' ; return false ;' ;
-						$ctn .= ' onclick="'.$contenuJsSurClick.'"' ;
-						if($this->InclureLibelle == 0)
-						{
-							$ctn .= ' title="'.htmlspecialchars($commande->Libelle).'"' ;
-						}
-						$ctn .= '>'.PHP_EOL ;
-						if($this->InclureIcones)
-						{
-							$cheminIcone = $this->CheminIconeParDefaut ;
-							if($commande->CheminIcone != '')
-							{
-								$cheminIcone = $commande->CheminIcone ;
-							}
-							if(file_exists($cheminIcone))
-							{
-								$ctn .= '<img src="'.$cheminIcone.'" height="'.$this->HauteurIcone.'" border="0" />' ;
-							}
-							if($commande->InclureLibelle == 1)
-							{
-								$ctn .= $this->SeparateurIconeLibelle ;
-							}
-						}
-						if($this->InclureLibelle)
-						{
-							$ctn .= $commande->Libelle ;
-						}
-						$ctn .= '</button>'.PHP_EOL ;
-						if($commande->ContenuApresRendu != '')
-						{
-							$ctn .= $commande->ContenuApresRendu ;
-						}
+						$ctn .= $this->RenduCommande($commande, $composant) ;
 						$ctn .= $this->FinExecParam($script, $composant, $i, $commande) ;
 					}
 				}
 				return $ctn ;
 			}
+		}
+		class PvDessinCommandesHtml extends PvDessinateurRenduHtmlCommandes
+		{
 		}
 		class PvDessinCmdsHtml extends PvDessinateurRenduHtmlCommandes
 		{

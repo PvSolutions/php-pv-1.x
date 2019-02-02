@@ -36,6 +36,7 @@
 			public $NomClasseScriptModifRole = "PvScriptModifRoleBootstrap" ;
 			public $NomClasseScriptSupprRole = "PvScriptSupprRoleBootstrap" ;
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesBootstrap" ;
+			public $NomClasseRemplisseurConfigMembership = "PvRemplisseurConfigMembershipBootstrap" ;
 			public $InclureHelpers = 1 ;
 			public $AbcisseXNavbarFlottant = "0px" ;
 			public $AbcisseYNavbarFlottant = "0px" ;

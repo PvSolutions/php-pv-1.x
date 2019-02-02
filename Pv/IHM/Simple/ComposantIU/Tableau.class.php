@@ -1497,7 +1497,7 @@ window.location.href = window.location.href ;
 			public $ClasseCSSRangee = "table-striped" ;
 			public $ClasseCSSBtnNav = "btn-primary" ;
 			public $ClsBstBoutonSoumettre = "btn-success" ;
-			public $ClsBstFormFiltresSelect = "col-xs-6" ;
+			public $ClsBstFormFiltresSelect = "col-xs-12 col-sm-8 col-md-6" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;

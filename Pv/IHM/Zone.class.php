@@ -134,6 +134,7 @@
 			public $NomClasseScriptDoitChangerMotPasse = "" ;
 			public $NomClasseScriptInscription = "" ;
 			public $NomClasseScriptAjoutMembre = "" ;
+			public $NomClasseScriptImportMembre = "" ;
 			public $NomClasseScriptModifMembre = "" ;
 			public $NomClasseScriptModifPrefs = "" ;
 			public $NomClasseScriptSupprMembre = "" ;
@@ -160,13 +161,14 @@
 			public $NomScriptChangeMotPasse = "changeMotPasse" ;
 			public $NomScriptDoitChangerMotPasse = "doitChangerMotPasse" ;
 			public $NomScriptAjoutMembre = "ajoutMembre" ;
+			public $NomScriptImportMembre = "importMembre" ;
 			public $NomScriptModifMembre = "modifMembre" ;
 			public $NomScriptModifPrefs = "modifPrefs" ;
 			public $NomScriptSupprMembre = "supprMembre" ;
 			public $NomScriptListeMembres = "listeMembres" ;
 			public $NomScriptAjoutProfil = "ajoutProfil" ;
 			public $NomScriptModifProfil = "modifProfil" ;
-			public $NomScriptSupprProfil = "supprProfils" ;
+			public $NomScriptSupprProfil = "supprProfil" ;
 			public $NomScriptListeProfils = "listeProfils" ;
 			public $NomScriptAjoutRole = "ajoutRole" ;
 			public $NomScriptModifRole = "modifRole" ;
@@ -185,6 +187,7 @@
 			public $ScriptDoitChangerMotPasse = null ;
 			public $ScriptAjoutMembre = null ;
 			public $ScriptModifMembre = null ;
+			public $ScriptImportMembre = null ;
 			public $ScriptModifPrefs = null ;
 			public $ScriptSupprMembre = null ;
 			public $ScriptListeMembres = null ;
@@ -402,6 +405,14 @@
 					$this->ScriptAjoutMembre->DeclarePrivileges($privilegesEditMembres) ;
 					$this->InscritScript($this->NomScriptAjoutMembre, $this->ScriptAjoutMembre) ;
 					$this->NomScriptsEditMembership[] = $this->NomScriptAjoutMembre ;
+				}
+				if(class_exists($this->NomClasseScriptImportMembre))
+				{
+					$nomClasse = $this->NomClasseScriptImportMembre ;
+					$this->ScriptImportMembre = new $nomClasse() ;
+					$this->ScriptImportMembre->DeclarePrivileges($privilegesEditMembres) ;
+					$this->InscritScript($this->NomScriptImportMembre, $this->ScriptImportMembre) ;
+					$this->NomScriptsEditMembership[] = $this->NomScriptImportMembre ;
 				}
 				if(class_exists($this->NomClasseScriptModifMembre))
 				{

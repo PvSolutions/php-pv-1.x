@@ -1365,6 +1365,11 @@
 		class PvRemplisseurConfigMembershipSimple
 		{
 			public $ConfirmMotPasseMembre = 0 ;
+			public $IdProfilImporteMembreMS = 0 ;
+			public $CheminDossierImporteMembreMS = "files" ;
+			public $MessageImporteMembreMSSucces = '${TotalSucces}/${totalMembres} membres importés avec succès.' ;
+			public $MessageImporteMembreMSEchecs = 'Importation échouée' ;
+			public $LibFltFichierImporteMembreMS = "Fichier (TXT, CSV)" ;
 			public $NomClasseLienModifTableauMembre = "PvConfigFormatteurColonneLien" ;
 			public $NomClasseLienChangeMPTableauMembre = "PvConfigFormatteurColonneLien" ;
 			public $NomClasseLienSupprTableauMembre = "PvConfigFormatteurColonneLien" ;
@@ -1372,6 +1377,39 @@
 			public $NomClasseLienSupprTableauRole = "PvConfigFormatteurColonneLien" ;
 			public $NomClasseLienModifTableauProfil = "PvConfigFormatteurColonneLien" ;
 			public $NomClasseLienSupprTableauProfil = "PvConfigFormatteurColonneLien" ;
+			public function NomsColImporteMembreMS(& $membership)
+			{
+				$cols = array(
+					"login" => $membership->LoginMemberColumn,
+					"mot_passe" => $membership->PasswordMemberColumn,
+					"mot_de_passe" => $membership->PasswordMemberColumn,
+					"mot de passe" => $membership->PasswordMemberColumn,
+					"password" => $membership->PasswordMemberColumn,
+					"compte" => $membership->LoginMemberColumn,
+					"nom" => $membership->LastNameMemberColumn,
+					"prenom" => $membership->FirstNameMemberColumn,
+					"prenoms" => $membership->FirstNameMemberColumn,
+					"actif" => $membership->EnableMemberColumn,
+					"active" => $membership->EnableMemberColumn,
+					"activer" => $membership->EnableMemberColumn,
+					"enable" => $membership->EnableMemberColumn,
+					"contact" => $membership->ContactMemberColumn,
+					"adresse" => $membership->AddressMemberColumn,
+					"email" => $membership->EmailMemberColumn,
+					"profil" => $membership->ProfileMemberColumn,
+					"profile" => $membership->ProfileMemberColumn,
+					"role" => $membership->ProfileMemberColumn
+				) ;
+				if($membership->ADActivatedMemberColumn != '')
+				{
+					$cols["connexionad"] = $membership->ADActivatedMemberColumn ;
+					$cols["activer ad"] = $membership->ADActivatedMemberColumn ;
+					$cols["par windows"] = $membership->ADActivatedMemberColumn ;
+					$cols["serveur ad"] = $membership->ADServerMemberColumn ;
+					$cols["serveurad"] = $membership->ADServerMemberColumn ;
+				}
+				return $cols ;
+			}
 			public function RemplitFormulaireGlobalProfil(& $form)
 			{
 				$this->InitFormulaireProfil($form) ;
@@ -2066,6 +2104,219 @@
 					$lienSuppr->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptSupprProfil).'&idProfil=${PROFILE_ID}' ;
 					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienSuppr ;
 				}
+			}
+			public function CreeFormulaireDonnees()
+			{
+				return new PvFormulaireDonneesHtml() ;
+			}
+			public function DetermineFormImporteMembreMS(& $script)
+			{
+				$this->FormImporteMembreMS = $this->CreeFormulaireDonnees() ;
+				$this->FormImporteMembreMS->AdopteScript("formImporteMembreMS", $script) ;
+				$this->FormImporteMembreMS->InclureTotalElements = 0 ;
+				$this->FormImporteMembreMS->InclureElementEnCours = 0 ;
+				$this->FormImporteMembreMS->ChargeConfig() ;
+				$this->FltFichImporteMembreMS = $this->FormImporteMembreMS->InsereFltEditHttpUpload("chemin_fichier", $this->CheminDossierImporteMembreMS, "chemin_fichier") ;
+				$this->FltFichImporteMembreMS->Libelle = $this->LibFltFichierImporteMembreMS ;
+				$this->CompFichImporteMembreMS = $this->FltFichImporteMembreMS->ObtientComposant() ;
+				$this->CompFichImporteMembreMS->ExtensionsAcceptees = array('txt', 'csv') ;
+				$this->FormImporteMembreMS->CommandeExecuter->InsereActCmd("PvActCmdImporteMembreMS", array()) ;
+				if($this->FormImporteMembreMS->InscrireCommandeAnnuler == 1)
+				{
+					$this->FormImporteMembreMS->RedirigeAnnulerVersScript($script->ZoneParent->NomScriptListeMembres) ;
+				}
+			}
+			public function RenduFormImporteMembreMS(& $script)
+			{
+				return $this->FormImporteMembreMS->RenduDispositif() ;
+			}
+			public function AppliqueActCmdImporteMembreMS(& $act)
+			{
+				$membership = & $act->ZoneParent->Membership ;
+				$cheminFich = $this->FltFichImporteMembreMS->Lie() ;
+				$totalSucces = 0 ;
+				$totalEchecs = 0 ;
+				if($cheminFich != '')
+				{
+					$colsAcceptees = $this->NomsColImporteMembreMS($membership) ;
+					$nomsColsAcceptees = array_keys($colsAcceptees) ;
+					if(($fh = fopen($cheminFich, 'r')) !== false)
+					{
+						$nomsCol = array() ;
+						if(($ligne = fgets($fh)) !== false)
+						{
+							$donneesEntete = explode(";", trim($ligne)) ;
+							foreach($donneesEntete as $i => $valEntete)
+							{
+								$valEntete = trim(strtolower($valEntete)) ;
+								if(in_array($valEntete, $nomsColsAcceptees))
+								{
+									$nomsCol[$i] = $colsAcceptees[$valEntete] ;
+								}
+							}
+						}
+						// print_r($nomsCol) ;
+						if(count($nomsCol) > 0)
+						{
+							while(($ligne = fgets($fh)) !== false)
+							{
+								$lgn = array() ;
+								$donneesLigne = explode(";", trim($ligne)) ;
+								foreach($donneesLigne as $i => $valLigne)
+								{
+									if(! isset($nomsCol[$i]))
+									{
+										continue ;
+									}
+									$valLigne = trim($valLigne) ;
+									$lgn[$nomsCol[$i]] = $valLigne ;
+								}
+								// print_r($lgn) ;
+								$ok = $this->ImporteLgnMembreMS($lgn, $membership) ;
+								if($ok)
+								{
+									$totalSucces ++ ;
+								}
+								else
+								{
+									$totalEchecs ++ ;
+								}
+							}
+						}
+						else
+						{
+							$act->CommandeParent->RenseigneErreur('Aucune colonne n\'est renseignée') ;
+							return ;
+						}
+						fclose($fh) ;
+					}
+					else
+					{
+						$act->CommandeParent->RenseigneErreur('Veuillez soumettre un fichier valide') ;
+						return ;
+					}
+					$totalMembres = $totalSucces + $totalEchecs ;
+					if($totalSucces > 0)
+					{
+						$act->CommandeParent->ConfirmeSucces(
+							_parse_pattern(
+								$this->MessageImporteMembreMSSucces,
+								array('TotalSucces' => $totalSucces, 'TotalEchecs' => $totalEchecs, 'totalMembres' => $totalMembres)
+							)
+						) ;
+					}
+					elseif($totalEchecs > 0)
+					{
+						$act->CommandeParent->ConfirmeSucces(
+							_parse_pattern(
+								$this->MessageImporteMembreMSEchecs,
+								array('TotalSucces' => $totalSucces, 'TotalEchecs' => $totalEchecs, 'totalMembres' => $totalMembres)
+							)
+						) ;
+					}
+				}
+				else
+				{
+					$act->CommandeParent->RenseigneErreur('Veuillez soumettre un fichier valide') ;
+				}
+			}
+			protected function ImporteLgnMembreMS(& $lgn, & $membership)
+			{
+				$bd = & $membership->Database ;
+				$lgnMembre = array() ;
+				$modeEdition = 1 ;
+				if(isset($lgn[$membership->LoginMemberColumn]))
+				{
+					$lgnMembre = $bd->FetchSqlRow(
+						'select * from '.$membership->MemberTable.' MEMBER_TABLE where '.$bd->EscapeVariableName($membership->LoginMemberColumn).'='.$bd->ParamPrefix.'login',
+						array('login' => $lgn[$membership->LoginMemberColumn])
+					) ;
+					if(count($lgnMembre) > 0)
+					{
+						$modeEdition = 2 ;
+					}
+				}
+				if($lgn[$membership->LoginMemberColumn] == '')
+				{
+					return false ;
+				}
+				$idProfil = ($this->IdProfilImporteMembreMS == 0) ? $membership->RootMemberId : $this->IdProfilImporteMembreMS ;
+				if(isset($lgn[$membership->ProfileMemberColumn]))
+				{
+					$lgnProfil = $bd->FetchSqlRow('select '.$bd->EscapeTableName($membership->IdProfileColumn).' PROFILE_ID
+from '.$bd->EscapeTableName($membership->ProfileTable).' PROFILE_TABLE
+where (PROFILE_TABLE. '.$bd->EscapeVariableName($membership->IdProfileColumn).' = '.$bd->ParamPrefix.'profil
+or PROFILE_TABLE. '.$bd->EscapeVariableName($membership->TitleProfileColumn).' = '.$bd->ParamPrefix.'profil)', array('profil' => $lgn[$membership->ProfileMemberColumn])) ;
+					if(count($lgnProfil) > 0)
+					{
+						$idProfil = $lgnProfil["PROFILE_ID"] ;
+					}
+				}
+				$lgn[$membership->ProfileMemberColumn] = $idProfil ;
+				if(isset($lgn[$membership->EnableMemberColumn]))
+				{
+					$lgn[$membership->EnableMemberColumn] = $this->ExtraitValeurBool($lgn[$membership->EnableMemberColumn]) ;
+				}
+				else
+				{
+					$lgn[$membership->EnableMemberColumn] = $membership->EnableMemberTrueValue ;
+				}
+				if(isset($lgn[$membership->ADActivatedMemberColumn]))
+				{
+					$lgn[$membership->ADActivatedMemberColumn] = $this->ExtraitValeurBool($lgn[$membership->ADActivatedMemberColumn]) ;
+				}
+				if(! isset($lgn[$membership->PasswordMemberColumn]))
+				{
+					if($membership->ADActivatedMemberColumn == '' || ! isset($lgn[$membership->ADActivatedMemberColumn]) || $lgn[$membership->ADActivatedMemberColumn] != $membership->ADActivatedMemberTrueValue)
+					{
+						$lgn[$membership->PasswordMemberColumn] = $lgn[$membership->LoginMemberColumn] ;
+					}
+				}
+				if($membership->PasswordMemberExpr != '')
+				{
+					$lgn[$bd->ExprKeyName][$membership->PasswordMemberColumn] = $membership->PasswordMemberExpr.'(<self>)' ;
+				}
+				if(! isset($lgn[$membership->FirstNameMemberColumn]) || ! isset($lgn[$membership->LastNameMemberColumn]))
+				{
+					return false ;
+				}
+				if(! validate_name_user_format($lgn[$membership->LoginMemberColumn]))
+				{
+					return false ;
+				}
+				if(! validate_email_format($lgn[$membership->EmailMemberColumn]))
+				{
+					return false ;
+				}
+				if($modeEdition == 1)
+				{
+					$ok = $bd->InsertRow($membership->MemberTable, $lgn) ;
+					return $ok ;
+				}
+				else
+				{
+					$loginMembre = $lgn[$membership->LoginMemberColumn] ;
+					unset($lgn[$membership->LoginMemberColumn]) ;
+					$ok = $bd->UpdateRow(
+						$membership->MemberTable,
+						$lgn,
+						$bd->EscapeVariableName($membership->LoginMemberColumn)." = ".$bd->ParamPrefix."login",
+						array("login" => $loginMembre)
+					) ;
+					return $ok ;
+				}
+			}
+			protected function ExtraitValeurBool($contenu)
+			{
+				return (in_array(strtolower($contenu), array('1', 'oui', 'y', 'yes', 'ok'))) ? 1 : 0 ;
+			}
+		}
+		
+		class PvActCmdImporteMembreMS extends PvActCmdBase
+		{
+			public function Execute()
+			{
+				$this->ZoneParent->RemplisseurConfigMembership->AppliqueActCmdImporteMembreMS($this) ;
 			}
 		}
 	}

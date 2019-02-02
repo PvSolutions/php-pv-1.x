@@ -493,6 +493,7 @@
 			public $NomClasseScriptChangeMPMembre = "PvScriptChangeMPMembreWeb" ;
 			public $NomClasseScriptAjoutMembre = "PvScriptAjoutMembreMSWeb" ;
 			public $NomClasseScriptModifMembre = "PvScriptModifMembreMSWeb" ;
+			public $NomClasseScriptImportMembre = "PvScriptImportMembreMSWeb" ;
 			public $NomClasseScriptModifPrefs = "PvScriptModifPrefsWeb" ;
 			public $NomClasseScriptSupprMembre = "PvScriptSupprMembreMSWeb" ;
 			public $NomClasseScriptListeMembres = "PvScriptListeMembresMSWeb" ;
