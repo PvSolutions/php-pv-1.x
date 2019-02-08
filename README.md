@@ -8,6 +8,10 @@ Il possède des classes pour :
 *	des tâches programmées
 *	des clients de bases de données
 
+## Documentation
+
+[Guide](Doc/Guide.adoc)
+
 ## Exemple d'usage
 * lib/Application.class.php
 ```php
@@ -99,10 +103,6 @@ Vous pouvez tester les URLs suivantes, avec <url_racine> comme l'URL du dossier 
 * http://<url_racine>/index.php (Classe MaZone1)
 * http://<url_racine>/services/service1.php (Classe MonServicePersist1)
 * http://<url_racine>/services/tache1.php (Classe MaTacheProg1)
-
-## Documentation
-
-[Guide](Doc/Guide.adoc)
 
 ## Pré-requis 
 * PHP >= 5.1

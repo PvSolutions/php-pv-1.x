@@ -1,110 +1,22 @@
-PHP-PV
-
-GUIDE D’UTILISATION
-
-== Table des matières
-
 link:#introduction[[.underline]#Introduction#]
 
 link:#caractéristiques-de-programmation[[.underline]#Caractéristiques de programmation#]
 
-link:#méthode-de-programmation[[.underline]#Méthode de programmation#]
+link:#Installation[[.underline]#Installation#]
 
-link:#projets-prêts-à-lemploi[[.underline]#Projets prêts à l’emploi#]
+link:#Mon-premier-projet[[.underline]#Mon premier projet#]
 
-link:#installation[[.underline]#Installation#]
+link:#La-classe-Application[[.underline]#La classe Application#]
 
-link:#structure-de-solution[[.underline]#Structure de solution#]
+link:#Les-classes-base-de-données[[.underline]#Les classes base de données#]
 
-link:#dossiers-principaux[[.underline]#Dossiers principaux#]
+link:#La-classe-Zone-Web-Simple[[.underline]#La classe Zone Web Simple#]
 
-link:#mon-premier-projet[[.underline]#Mon premier projet#]
+link:#La-classe-Tache-Programmée[[.underline]#La classe Tache Programmée#]
 
-link:#création-du-dossier-solution[[.underline]#Création du dossier solution#]
+link:#La-classe-Service-Persistant[[.underline]#La classe Service Persistant#]
 
-link:#déclaration-de-lapplication[[.underline]#Déclaration de l’application#]
-
-link:#déclaration-de-la-zone-web[[.underline]#Déclaration de la zone Web#]
-
-link:#déclaration-du-script-par-défaut[[.underline]#Déclaration du script par défaut#]
-
-link:#démarrer-lapplication[[.underline]#Démarrer l’application#]
-
-link:#inscrire-dautres-scripts-web[[.underline]#Inscrire d’autres scripts web#]
-
-link:#_Toc533935446[[.underline]#Organisation de la solution#]
-
-link:#dossiers-principaux-1[[.underline]#Dossiers principaux#]
-
-link:#structure-du-dossier-lib[[.underline]#Structure du dossier lib#]
-
-link:#la-classe-application[[.underline]#La classe Application#]
-
-link:#méthodes-principales[[.underline]#Méthodes principales#]
-
-link:#les-élements-dapplication[[.underline]#Les élements d’application#]
-
-link:#les-classes-base-de-données[[.underline]#Les classes base de données#]
-
-link:#présentation[[.underline]#Présentation#]
-
-link:#propriétés-et-méthodes-principales[[.underline]#Propriétés et Méthodes principales#]
-
-link:#méthodes-natives-sql[[.underline]#Méthodes Natives SQL#]
-
-link:#les-fournisseurs-de-base-de-données[[.underline]#Les fournisseurs de base de données#]
-
-link:#mysql[[.underline]#MySQL#]
-
-link:#oracle[[.underline]#Oracle#]
-
-link:#sql-server[[.underline]#Sql Server#]
-
-link:#la-classe-zone-web-simple[[.underline]#La classe Zone Web Simple#]
-
-link:#propriétés-html[[.underline]#Propriétés HTML#]
-
-link:#bibliothèques-css-et-javascript[[.underline]#Bibliothèques CSS et Javascript#]
-
-link:#contenus-css-et-javascript[[.underline]#Insertion contenus CSS et Javascript#]
-
-link:#scripts[[.underline]#Scripts#]
-
-link:#membership[[.underline]#Membership#]
-
-link:#fonctionnement[[.underline]#Déclaration#]
-
-link:#scripts-web-membership[[.underline]#Composants IU#]
-
-link:#documents-web[[.underline]#Documents Web#]
-
-link:#déclaration-1[[.underline]#Déclaration#]
-
-link:#intégration-dans-la-zone-web[[.underline]#Intégration dans la zone web#]
-
-link:#affectation-à-un-script[[.underline]#Affectation à un script#]
-
-link:#composants-iu[[.underline]#Actions Web#]
-
-link:#définition-1[[.underline]#Définition#]
-
-link:#déclaration-2[[.underline]#Déclaration#]
-
-link:#types-daction[[.underline]#Types d’action#]
-
-link:#tâches-web[[.underline]#Tâches Web#]
-
-link:#définition-2[[.underline]#Définition#]
-
-link:#déclaration-3[[.underline]#Déclaration#]
-
-link:#le-gestionnaire-de-tâches-web[[.underline]#Le gestionnaire de tâches web#]
-
-link:#le-fichier-etat-de-la-tâche-web[[.underline]#Le fichier Etat de la tâche web#]
-
-link:#le-formulaire-de-données[[.underline]#Le Formulaire de Données#]
-
-link:#rendu-du-formulaire-de-filtres[[.underline]#Le Tableau de Données#]
+link:#Organisation-dune-solution-PHP-PV[[.underline]#Organisation d’une solution PHP-PV#]
 
 == Introduction
 
@@ -1708,7 +1620,7 @@ Affiche une zone de plusieurs options CHECKBOX à cocher.
 
 Pour récupérer toutes les valeurs cochées, utilisez la propriété $ValeurBrute du filtre.
 
-|PvZoneCadreOptionsRadioHtml |Affiche une zone de plusieurs options RADIO à cocher, qui sont dans un IFRAME HTML
+|PvZoneCadreOptionsRadioHtml |Affiche une zone de plusieurs options RADIO à cocher, dans un IFRAME HTML
 |===============================================================================================================
 
 ===== Formatage de libellé
@@ -1796,17 +1708,162 @@ Ses propriétés principales sont :
 |$HauteurCadreApercu |Hauteur HTML du cadre d’aperçu.
 |======================================================================================
 
+=== La Grille de données HTML
+
+La grille de données affiche les lignes d'enregistrement sur une grille. Elle se base sur le tableau de données.
+
+[cols=",",options="header",]
+|======================================================================================
+|*Propriété* |*Description*
+|$ContenuLigneModele |Format de la cellule. Vous incorporez les colonnes de données à partir de leur noms. +
+Ex. ${id}
+|$EmpilerValeursSiModLigVide |Empile les valeurs de toutes les colonnes si $ContenuLigneModele est vide.
+|$AlignVCellule |Alignement HTML vertical de la cellule
+|$MaxColonnes |Nombre de colonnes Maximum à afficher.
+|======================================================================================
+
+[source,php]
+class MonScript1 extends PvScriptWebSimple
+{
+// ....
+public function DetermineEnvironnement()
+{
+//Initiation
+$grille = new PvGrilleDonneesHtml() ;
+$grille->AdopteScript("grille", $this) ;
+$grille->ChargeConfig() ;
+// Définition des colonnes
+$grille->InsereDefCol("id") ;
+$grille->InsereDefCol("titre") ;
+$grille->InsereDefCol("description") ;
+// Définition des autres propriétés
+$grille->MaxColonnes = 3 ;
+$grille->ContenuLigneModele = '<h4>${id}. ${titre}</h4>
+<p>${description}</p>' ;
+// définir le fournisseur de données...
+}
+}
+
 == La classe Tache Programmée
 
-A compléter…
+La tâche programmée est un composant de l'application, pour exécuter des instructions à un moment précis.
+
+=== Utilisation
+
+* Vous devez réecrire une classe héritant de la tache *PvTacheProg*. Réécrivez la méthode *ExecuteSession()*, qui contient le code à exécuter.
+* Dans la déclaration de votre application, réécrivez la méthode *ChargeTachesProgs()*. Invoquez *InsereTacheProg($nom, $tacheProg)* pour inscrire votre tache programmée
+
+[source,php]
+class MaTacheProg1 extends PvTacheProg
+{
+public $CheminFichierRelatif = "monApp/tache1.php" ;
+protected function ExecuteSession()
+{
+echo "Ma tache a ete executee" ;
+}
+}
+class MonApplication1 extends PvApplication
+{
+protected function ChargeTachesProgs()
+{
+$this->Tache1 = $this->InsereTacheProg("maTache1", new MaTacheProg1()) ;
+}
+}
+
+=== Planification
+
+Utilisez le planificateur de tâche de votre système d'exploitation (crontab, ...).
+
+=== Contexte d'exécution
+
+La tâche programmée s'exécute en ligne de commande par défaut. Pour l'afficher dans un navigateur, mettez la propriété *$NaturePlateforme* à "WEB".
+
+[source,php]
+class MaTacheProg1 extends PvTacheProg
+{
+public $CheminFichierRelatif = "monApp/tache1.php" ;
+public $NaturePlateforme = "WEB" ;
+// ...
+}
 
 == La classe Service Persistant
 
-A compléter…
+Le service persistant est un daemon PHP. Une fois exécutée, il ne s'arrête jamais.
 
-== La classe Elément d’application
+Il s'exécute uniquement par ligne de commande.
 
-A compléter…
+=== Utilisation
+
+* Vous devez réecrire une classe héritant de la tache *PvServicePersist*. Réécrivez la méthode *ExecuteSession()*, qui contient le code à exécuter.
+* Dans la déclaration de votre application, réécrivez la méthode *ChargeServsPersists()*. Invoquez *InsereServPersist($nom, $servPersist)* pour inscrire votre service
+
+[source,php]
+class MonService1 extends PvServicePersist
+{
+public $CheminFichierRelatif = "monApp/service1.php" ;
+protected function ExecuteSession()
+{
+echo "Mon service est en cours d'execution\n" ;
+}
+}
+// Déclaration de la classe Application
+class MonApplication1 extends PvApplication
+{
+// ...
+protected function ChargeServsPersists()
+{
+$this->Service1 = $this->InsereServPersist("monServ1", new MonService1()) ;
+}
+}
+
+=== Propriétés principales
+
+[cols=",",options="header",]
+|======================================================================================
+|*Propriété* |*Description*
+|$DelaiAttente |Délai avant de recommencer la boucle(session)
+|$DelaiEtatInactif |Délai avant de considerer le service comme inactif ou planté
+|$MaxSessions |Maximum de boucle possible avant d'arrêter le service.
+|$LimiterDelaiBoucle |Provoque une erreur fatale si la session prend trop de temps
+|$DelaiBoucle |Délai maximum pour exécuter une boucle
+|$Arreter |Arrêter le service une fois la session exécutée.
+|======================================================================================
+
+==== L'état d'un service
+
+C'est la capture qui témoigne de l'état d'un service. Elle contient les informations suivantes :
+* PID : ID du processus
+* Statut : 1=démarré, 2=stoppé
+* TimestmpCapt : Timestamp de la capture
+* TimestmpDebutSession : Timestamp de démarrage de la session en cours
+* TimestmpFinSession : Timestamp de la fin de la session en cours
+
+Le service persistant sauvegarde cette capture dans un fichier, avec la méthode *SauveEtat()*.
+Vous définissez le répertoire de ces captures avec la propriété $ChemRelRegServsPersists de la classe Application. Son fichier est du format "<nomService>.dat".
+
+[source,php]
+class MonService1 extends PvServicePersist
+{
+public $CheminFichierRelatif = "monApp/service1.php" ;
+protected function ExecuteSession()
+{
+echo "Mon service est en cours d'execution\n" ;
+// Sauvegarder l'état dans "monApp/data/monServ1.dat"
+$this->SauveEtat() ;
+echo "Traitement suivant...\n" ;
+}
+}
+// Déclaration de la classe Application
+class MonApplication1 extends PvApplication
+{
+// Définir le répertoire des états des services persistant
+public $ChemRelRegServsPersists = "monApp/data" ;
+// ...
+protected function ChargeServsPersists()
+{
+$this->Service1 = $this->InsereServPersist("monServ1", new MonService1()) ;
+}
+}
 
 == Organisation d’une solution PHP-PV
 
@@ -1834,7 +1891,7 @@ Dans le dossier « /lib », nous vous recommandons de créer les fichiers suiv
 |========================================================================================================================================
 |*Fichier ou Répertoire* |*Rôle*
 |/lib/Application.class.php |Déclaration de votre classe Application. Elle inclura toutes les librairies PHP et fichiers de ce répertoire
-|/lib/Zone.class.php |Déclaration de votre classe Zone. Elle inclura la classe des scripts
-|/lib/Script.class.php |Déclaration de votre classe Zone. Elle inclura tous les scripts (/lib/Script.class.php)
+|/lib/Zone.class.php |Déclaration de votre classe Zone. Elle inclura les fichiers scripts
+|/lib/Script.class.php |Elle inclura tous les scripts (/lib/Script.class.php)
 |/lib/script/Noyau.class.php |Déclaration de vos scripts web de référence. Ces scripts seront étendus par les autres scripts
 |========================================================================================================================================

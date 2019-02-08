@@ -1049,7 +1049,7 @@
 			public $SortieDansFichier = 0 ;
 			protected function CreePlateforme()
 			{
-				$platf = new PvPlateformProcIndef() ;
+				$platf = new PvPlateformProcConsole() ;
 				switch(strtoupper($this->NaturePlateforme))
 				{
 					case "WEB" :
@@ -1062,6 +1062,11 @@
 					case "SHELL" :
 					case "DOS" :
 						{ $platf = new PvPlateformProcConsole() ; }
+					break ;
+					case "INDEF" :
+					case "UNDEF" :
+					case "INDEFINI" :
+						{ $platf = new PvPlateformProcIndef() ; }
 					break ;
 				}
 				return $platf ;
@@ -1152,7 +1157,7 @@
 		{
 			public $Declenchs = array() ;
 			public $DeclenchParDefaut ;
-			public $ToujoursExecuter = 0 ;
+			public $ToujoursExecuter = 1 ;
 			public $TypeDeclenchParDefaut = "" ;
 			public function NatureElementApplication()
 			{
