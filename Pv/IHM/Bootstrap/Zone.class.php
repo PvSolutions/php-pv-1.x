@@ -58,9 +58,11 @@
 		width: '.$this->LargeurNavbarFlottant.' ;
 		z-index:9999999 ;
 	}
+	.navbar-collapse {
+		background-color:'.$this->BackgroundNavbarFlottant.' !important ;
+	}
 	.navbar-collapse > ul {
 		width : 98%;
-		background-color:'.$this->BackgroundNavbarFlottant.' !important ;
 	}
 	.navbar-collapse ul a {
 		color:'.$this->CouleurTexteNavbarFlottant.' !important ;

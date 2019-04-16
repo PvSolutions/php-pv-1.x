@@ -620,7 +620,6 @@
 					$valeurs[] = $colonne->ObtientLibelle() ;
 				}
 				return $valeurs ;
-			
 			}
 			public function FiltresSoumis()
 			{
@@ -1707,6 +1706,7 @@ window.location.href = window.location.href ;
 			public $ClsBstBoutonSoumettre = "btn-success" ;
 			public $ClsBstFormFiltresSelect = "col-xs-6" ;
 			public $SautLigneSansCommande = 0 ;
+			public $MaxColonnesXs = 0 ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -1775,14 +1775,16 @@ window.location.href = window.location.href ;
 						$ctn .= '>'.PHP_EOL ;
 						$ctn .= '<tr><td'.(($this->AlignVCellule != '') ? ' valign="'.$this->AlignVCellule.'"' : '').'><div class="container-fluid">'.PHP_EOL ;
 						$inclureLargCell = 1 ;
-						$colXs = 12 / $this->MaxColonnes ;
+						$maxColsXs = ($this->MaxColonnesXs > 0) ? $this->MaxColonnesXs : $this->MaxColonnes ;
+						$colXs = 12 / $this->MaxColonnesXs ;
+						$colDef = 12 / $this->MaxColonnes ;
 						foreach($this->ElementsEnCours as $j => $ligne)
 						{
 							if($this->MaxColonnes <= 1 || $j % $this->MaxColonnes == 0)
 							{
 								$ctn .= '<div class="row">'.PHP_EOL ;
 							}
-							$ctn .= '<div class="Contenu col-xs-'.$colXs.''.(($this->ClasseCSSCellule != '') ? ' '.$this->ClasseCSSCellule : '').'"' ;
+							$ctn .= '<div class="Contenu col-xs-'.$colXs.' col-sm-'.$colDef.(($this->ClasseCSSCellule != '') ? ' '.$this->ClasseCSSCellule : '').'"' ;
 							$ctn .= ' align="'.$this->AlignCellule.'"' ;
 							$ctn .= '>'.PHP_EOL ;
 							$ligneDonnees = $ligne ;
@@ -1844,7 +1846,7 @@ window.location.href = window.location.href ;
 				$ctn .= '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL ;
 				$ctn .= '<div class="NavigateurRangees container-fluid">'.PHP_EOL ;
 				$ctn .= '<div class="row">'.PHP_EOL ;
-				$ctn .= '<div class="col-xs-6 LiensRangee">'.PHP_EOL ;
+				$ctn .= '<div class="col-xs-12 col-sm-6 LiensRangee">'.PHP_EOL ;
 				$paramPremiereRangee = array_merge($parametresRendu, array($composant->NomParamIndiceDebut() => 0)) ;
 				$ctn .= '<a class="btn '.$classeCSSBtn.'" href="javascript:'.$composant->AppelJsEnvoiFiltres($paramPremiereRangee).'" title="'.$composant->TitrePremiereRangee.'">'.$composant->LibellePremiereRangee.'</a>'.PHP_EOL ;
 				$ctn .= $composant->SeparateurLiensRangee ;
@@ -1874,7 +1876,7 @@ window.location.href = window.location.href ;
 				$ctn .= $composant->SeparateurLiensRangee ;
 				$ctn .= '<a class="btn '.$classeCSSBtn.'" href="javascript:'.$composant->AppelJsEnvoiFiltres($paramDerniereRangee).'" title="'.$composant->TitreDerniereRangee.'">'.$composant->LibelleDerniereRangee.'</a>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '<div align="right" class="InfosRangees col-xs-6">'.PHP_EOL ;
+				$ctn .= '<div align="right" class="InfosRangees col-xs-12 col-sm-6">'.PHP_EOL ;
 				$valeursRangee = array(
 					'IndiceDebut' => $composant->IndiceDebut,
 					'NoDebut' => $composant->IndiceDebut + 1,
@@ -2006,7 +2008,8 @@ window.location.href = window.location.href ;
 			public $NomFichier = "resultat.txt" ;
 			protected function EnvoieContenu()
 			{
-				$requete = $this->TableauDonneesParent->FournisseurDonnees->OuvreRequeteSelectElements($this->TableauDonneesParent->FiltresSelection) ;
+				$defCols = $this->TableauDonneesParent->DefinitionsColonnesExport() ;
+				$requete = $this->TableauDonneesParent->FournisseurDonnees->OuvreRequeteSelectElements($this->TableauDonneesParent->FiltresSelection, $defCols) ;
 				$this->EnvoieEntete() ;
 				$this->TotalLignes = 0 ;
 				while($ligne = $this->TableauDonneesParent->FournisseurDonnees->LitRequete($requete))

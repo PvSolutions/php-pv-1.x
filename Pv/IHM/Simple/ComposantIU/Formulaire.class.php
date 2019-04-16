@@ -41,6 +41,7 @@
 			public $ElementEnCoursTrouve = 0 ;
 			public $CommandeSelectionnee = null ;
 			public $AnnulerCommandeSelectionnee = 0 ;
+			public $AnnulerRenduFiltres = 0 ;
 			public $ClasseCSSSucces = "Succes" ;
 			public $ClasseCSSErreur = "Erreur" ;
 			public $Titre = "" ;
@@ -64,6 +65,7 @@
 			public $DessinateurFiltresEdition = null ;
 			public $DessinateurBlocCommandes = null ;
 			public $CacherBlocCommandes = 0 ;
+			public $AfficherCommandesAucunElement = 0 ;
 			public $AnnulerLiaisonParametre = 0 ;
 			public $DispositionComposants = array(4, 3, 1, 2) ;
 			public $MessageResultatCalculElements = "" ;
@@ -777,7 +779,7 @@
 			{
 				$ctn = "" ;
 				// echo "Cacher form : ".$this->CacherFormulaireFiltres."<br/>" ;
-				if(! $this->CacherFormulaireFiltres)
+				if(! $this->CacherFormulaireFiltres && ! $this->AnnulerRenduFiltres)
 				{
 					if($this->ElementEnCoursTrouve)
 					{
@@ -877,7 +879,7 @@
 				$ctn = '' ;
 				if(! $this->CacherBlocCommandes && ! $this->CacherFormulaireFiltres && ! $this->ImpressionEnCours())
 				{
-					if($this->ElementEnCoursTrouve)
+					if($this->ElementEnCoursTrouve || $this->AfficherCommandesAucunElement)
 					{
 						if($this->EstNul($this->DessinateurBlocCommandes))
 						{
@@ -1367,7 +1369,8 @@ form.submit() ;
 				}
 				if($this->Mode == 3 && $this->StatutExecution == 1)
 				{
-					$this->CacherFormulaireFiltresSiSucces = 1 ;
+					$this->CacherFormulaireFiltres = 1 ;
+					$this->Visible = 0 ;
 				}
 			}
 		}

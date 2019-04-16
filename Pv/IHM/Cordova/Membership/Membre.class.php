@@ -4,8 +4,6 @@
 	{
 		define('PV_MEMBRE_MEMBERSHIP_CORDOVA', 1) ;
 		
-		
-		
 		class PvScriptAjoutMembreCordova extends PvScriptAjoutMembreMSWeb
 		{
 			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutMembreCordova" ;

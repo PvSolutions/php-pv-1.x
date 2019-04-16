@@ -18,6 +18,10 @@
 		{
 			include dirname(__FILE__)."/Membership/Profil.class.php" ;
 		}
+		if(! defined('PV_REMPL_CONFIG_MEMBERSHIP_CORDOVA'))
+		{
+			include dirname(__FILE__)."/Membership/RemplConfig.class.php" ;
+		}
 		define('PV_MEMBERSHIP_BASE_CORDOVA', 1) ;
 	}
 	

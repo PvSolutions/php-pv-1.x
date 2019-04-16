@@ -14,22 +14,50 @@
 		}
 		class PvCompteMarchandPaypal extends PvCompteMarchandBase
 		{
-			public $SandboxClientId = "" ;
-			public $LiveClientId = "" ;
+			public $SbClientId ;
+			public $LiveClient ;
+			public $LiveSecret ;
 			public $Monnaie = "EUR" ;
 			public $TauxChange = 665 ;
+		}
+		
+		class PvResultVerifOrderPaypal
+		{
+			public $ValeurAccessToken ;
+			public $CtnReqAuth ;
+			public $CtnRepAuth ;
+			public $CtnReqCheckOrder ;
+			public $CtnRepCheckOrder ;
+			public $CodeErreur = "non_defini" ;
+			public function EstSucces()
+			{
+				return $this->CodeErreur == "" ;
+			}
 		}
 		
 		class PvInterfacePaiementPaypal extends PvInterfacePaiementBase
 		{
 			public $LiveClientIdCompteMarchand = "Addh9YqzQXoOH1K_7Jeh2awZMvVffhcsYfWisNr-CW_XJNrHESMWy5bGJCLzTCnYzZ7EaxWMvU_Z8C11" ;
-			public $SandboxClientIdCompteMarchand = "ATlpVU2UTNk463rcCFLB2SmasaSPgaJSXd-swkXUqIzDVvaNIuhwn2m4GuRjPjtDwI93LwW993gsPEwi" ;
+			public $LiveClientCompteMarchand ;
+			public $LiveSecretCompteMarchand ;
 			public $Titre = "Paypal" ;
 			public $CheminImage = "https://www.paypalobjects.com/webstatic/en_US/i/buttons/PP_logo_h_200x51.png" ;
 			public $TitreSoumetFormPaiement = "Traitement Paypal" ;
 			public $MsgSoumetFormPaiement = "Veuillez confirmer en cliquant sur ce bouton" ;
 			public $EnregistrerTransactPaypal = 1 ;
 			public $NomTableTransactPaypal = "transaction_paypal" ;
+			public function UrlOAuthApi()
+			{
+				return ($this->EnLive()) ? 'https://api.paypal.com/v1/oauth2/token/' : 'https://api.sandbox.paypal.com/v1/oauth2/token/' ;
+			}
+			public function UrlOrderApi()
+			{
+				return ($this->EnLive()) ? 'https://api.paypal.com/v2/checkout/orders/' : 'https://api.sandbox.paypal.com/v2/checkout/orders/' ;
+			}
+			public function EnLive()
+			{
+				return ($this->LiveClientCompteMarchand != '' && $this->LiveSecretCompteMarchand != '') ;
+			}
 			public function CreeBdPaypal()
 			{
 				return new AbstractSqlDB() ;
@@ -45,15 +73,16 @@
 			protected function CreeCompteMarchand()
 			{
 				$compte = new PvCompteMarchandPaypal() ;
-				$compte->SandboxClientId = $this->SandboxClientIdCompteMarchand ;
-				$compte->LiveClientId = $this->LiveClientIdCompteMarchand ;
+				$compte->SbClientId = $this->SbClientIdCompteMarchand ;
+				$compte->LiveClient = $this->LiveClientCompteMarchand ;
+				$compte->LiveSecret = $this->LiveSecretCompteMarchand ;
 				return $compte ;
 			}
 			public function UrlPaiementAnnule()
 			{
 				return $this->UrlRacine()."?".$this->NomParamResultat."=".urlencode($this->ValeurParamAnnule)."&idTransact=".urlencode($this->_Transaction->IdTransaction) ;
 			}
-			protected function SauveEchecIPNTransact($nv, $result)
+			protected function SauveEchecTransaction($result)
 			{
 				if(! $this->EnregistrerTransactPaypal)
 				{
@@ -61,13 +90,15 @@
 				}
 				$bd = $this->CreeBdPaypal() ;
 				$bd->RunSql(
-					"update ".$bd->EscapeTableName($this->NomTableTransactPaypal)." set succes_confirm_ipn_".$nv."=".$bd->ParamPrefix."succesConfirmIPN, mtd_confirm_ipn_".$nv."=".$bd->ParamPrefix."mtdConfirmIPN, param1_confirm_ipn_".$nv."=".$bd->ParamPrefix."param1ConfirmIPN, param2_confirm_ipn_".$nv."=".$bd->ParamPrefix."param2ConfirmIPN where id_transaction=".$bd->ParamPrefix."idTransact",
+					"update ".$bd->EscapeTableName($this->NomTableTransactPaypal)." set date_verif=".$bd->SqlNow().", code_erreur_verif=".$bd->ParamPrefix."codeVerifOrder, ctn_req_auth_order=".$bd->ParamPrefix."ctnReqAuthOrder, ctn_rep_auth_order=".$bd->ParamPrefix."ctnRepAuthOrder, ctn_req_check_order=".$bd->ParamPrefix."ctnReqCheckOrder, ctn_rep_check_order=".$bd->ParamPrefix."ctnRepCheckOrder
+					where id_transaction=".$bd->ParamPrefix."idTransact",
 					array(
 						"idTransact" => $this->_Transaction->IdTransaction,
-						"succesConfirmIPN" => $result->EstSucces(),
-						"mtdConfirmIPN" => $result->Methode,
-						"param1ConfirmIPN" => $result->Param1,
-						"param2ConfirmIPN" => $result->Param2,
+						"codeVerifOrder" => $result->CodeErreur,
+						"ctnReqAuthOrder" => $result->CtnReqAuth,
+						"ctnRepAuthOrder" => $result->CtnRepAuth,
+						"ctnReqCheckOrder" => $result->CtnReqCheckOrder,
+						"ctnRepCheckOrder" => $result->CtnRepCheckOrder,
 					)
 				) ;
 			}
@@ -88,38 +119,129 @@
 			}
 			protected function RestaureTransactionEnCours()
 			{
-				parent::RestaureTransactionEnCours() ;
+				$this->DetermineResultatPaiement() ;
+				if($this->ValeurParamResultat == $this->ValeurParamTermine)
+				{
+					if(isset($_POST["id_transaction"]))
+					{
+						$this->_Transaction->IdTransaction = $_POST["id_transaction"] ;
+						$this->RestaureTransactionSession() ;
+						$this->DefinitEtatExecution("termine") ;
+					}
+				}
+				elseif($this->ValeurParamResultat == $this->ValeurParamAnnule)
+				{
+					$this->RestaureTransactionSession() ;
+					$this->DefinitEtatExecution("annule") ;
+					$this->ConfirmeTransactionAnnuleeAuto() ;
+					$this->ConfirmeTransactionAnnulee() ;
+				}
 				if($this->IdEtatExecution() == "termine")
 				{
 					$this->AnalyseTransactionPostee() ;
 				}
 			}
+			protected function VerifiePaiementTransaction($orderId)
+			{
+				$resOrder = new PvResultVerifOrderPaypal() ;
+				$httpSess = new HttpSession() ;
+				$ctnAuth = $httpSess->PostData(
+					$this->UrlOAuthApi(), array("grant_type" => "client_credentials"),
+					array(
+						"Authorization" => "Basic ".base64_encode($this->_CompteMarchand->LiveClient.":".$this->_CompteMarchand->LiveSecret),
+						"Accept" => "application/json"
+					)
+				) ;
+				$resOrder->CtnReqAuth = $httpSess->GetRequestContents() ;
+				$resOrder->CtnRepAuth = $httpSess->GetResponseContents() ;
+				if($ctnAuth != "")
+				{
+					$objAuth = svc_json_decode($ctnAuth) ;
+					if(is_object($ctnAuth))
+					{
+						if(isset($ctnAuth->access_token))
+						{
+							$resOrder->ValeurAccessToken = $ctnAuth->access_token ;
+						}
+						else
+						{
+							$resOrder->CodeErreur = "auth_echoue" ;
+						}
+					}
+					else
+					{
+						$resOrder->CodeErreur = "auth_exception" ;
+					}
+				}
+				else
+				{
+					$resOrder->CodeErreur = "auth_contenu_vide" ;
+				}
+				if(! $resOrder->EstSucces())
+				{
+					return $resOrder ;
+				}
+				$ctnVerif = $httpSess->GetData(
+					$this->UrlOrderApi(), array(),
+					array(
+						"Authorization" => "Bearer ".$resOrder->ValeurAccessToken,
+						"Accept" => "application/json"
+					)
+				) ;
+				$resOrder->CtnReqCheckOrder = $httpSess->GetRequestContents() ;
+				$resOrder->CtnRepCheckOrder = $httpSess->GetResponseContents() ;
+				if($ctnVerif != "")
+				{
+					$objVerif = svc_json_decode($ctnVerif) ;
+					if(is_object($objVerif))
+					{
+						if(isset($objVerif->error))
+						{
+							$resOrder->CodeErreur = "erreur_commande" ;
+						}
+						else
+						{
+							$resOrder->CodeErreur = "" ;
+						}
+					}
+					else
+					{
+						$resOrder->CodeErreur = "commande_introuvable" ;
+					}
+				}
+				else
+				{
+					$resOrder->CodeErreur = "exception_commande" ;
+				}
+				return $resOrder ;
+			}
 			protected function AnalyseTransactionPostee()
 			{
-				$resultConfirmIPN = $this->ConfirmeIPN() ;
-				if(! $resultConfirmIPN->EstSucces())
+				$resOrder = $this->VerifiePaiementTransaction() ;
+				if(! $resOrder->EstSucces())
 				{
-					$this->SauveEchecIPNTransact("retour", $resultConfirmIPN) ;
+					$this->SauveEchecTransaction($resOrder) ;
 					return ;
 				}
-				$this->_Transaction->IdTransaction = $_POST["invoice"] ;
-				$this->_Transaction->Montant = ($this->_CompteMarchand->TauxChange * $_POST["amount1"]) ;
-				$this->_Transaction->Monnaie = $_POST["currency"] ;
-				$this->_Transaction->Langage = $_POST["language"] ;
-				$this->_Transaction->Cfg = svc_json_decode($_POST["custom"]) ;
-				$this->_Transaction->Designation = $_POST["item_name"] ;
+				$this->_Transaction->IdTransaction = $_POST["id_transaction"] ;
+				$this->_Transaction->Montant = $_POST["montant"] ;
+				$this->_Transaction->Monnaie = $_POST["monnaie"] ;
+				$this->_Transaction->Designation = $_POST["designation"] ;
 				if($this->EnregistrerTransactPaypal == 1)
 				{
-					$statutTransact = $_POST["status"] ;
 					$bd = $this->CreeBdPaypal() ;
 					$bd->RunSql(
-						"update ".$bd->EscapeTableName($this->NomTableTransactPaypal)." set date_retour=".$bd->SqlNow().", ctn_res_retour=".$bd->ParamPrefix."ctnRetour, est_regle = ".$bd->ParamPrefix."estRegle, code_err_retour = ".$bd->ParamPrefix."codeErrRetour, msg_err_retour = ".$bd->ParamPrefix."msgErrRetour where id_transaction=".$bd->ParamPrefix."idTransact",
+						"update ".$bd->EscapeTableName($this->NomTableTransactPaypal)." set date_regle=".$bd->SqlNow().", montant=".$bd->ParamPrefix."montant, est_regle = ".$bd->ParamPrefix."estRegle, monnaie = ".$bd->ParamPrefix."monnaie, nom_client = ".$bd->ParamPrefix."nomClient, prenom_client = ".$bd->ParamPrefix."prenomClient, id_client = ".$bd->ParamPrefix."idClient, id_commande = ".$bd->ParamPrefix."idCommande, id_achat = ".$bd->ParamPrefix."idAchat where id_transaction=".$bd->ParamPrefix."idTransact",
 						array(
 							"idTransact" => $this->_Transaction->IdTransaction,
-							"ctnRetour" => http_build_query_string($_POST),
-							"estRegle" => ($statutTransact >= 100) ? 1 : 0,
-							"codeErrRetour" => $statutTransact,
-							"msgErrRetour" => ($statutTransact >= 100) ? "" : (($statutTransact < 0) ? "failure ".$statutTransact : "pending ".$statutTransact),
+							"montant" => $_POST["montant"],
+							"estRegle" => 1,
+							"monnaie" => $_POST["monnaie"],
+							"nomClient" => $_POST["nom_client"],
+							"prenomClient" => $_POST["prenom_client"],
+							"idClient" => $_POST["id_client"],
+							"idCommande" => $_POST["id_commande"],
+							"idAchat" => $_POST["id_achat"],
 						)
 					) ;
 				}
@@ -135,12 +257,10 @@
 				{
 					$bd = $this->CreeBdPaypal() ;
 					$bd->RunSql(
-						"insert into ".$bd->EscapeTableName($this->NomTableTransactPaypal)." (id_transaction, date_envoi, url_envoi, ctn_req_envoi)
-values (".$bd->ParamPrefix."idTransact, ".$bd->SqlNow().", ".$bd->ParamPrefix."urlEnvoi, ".$bd->ParamPrefix."ctnReqEnvoi)",
+						"insert into ".$bd->EscapeTableName($this->NomTableTransactPaypal)." (id_transaction, date_envoi)
+values (".$bd->ParamPrefix."idTransact, ".$bd->SqlNow().")",
 						array(
-							"idTransact" => $this->_Transaction->IdTransaction,
-							"urlEnvoi" => $this->UrlPaiement(),
-							"ctnReqEnvoi" => $this->CtnFormSoumetTransaction()
+							"idTransact" => $this->_Transaction->IdTransaction
 						)
 					) ;
 				}
@@ -153,52 +273,67 @@ values (".$bd->ParamPrefix."idTransact, ".$bd->SqlNow().", ".$bd->ParamPrefix."u
 <html>
 <head>
 <title>'.$this->TitreSoumetFormPaiement.'</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body align="center">
 <div>'.$this->MsgSoumetFormPaiement.'</div>
 <div style="display:none">
-<form id="confirmeTransact" action="?'.$this->NomParamResultat.'='.urlencode($this->ValeurParamTermine).'">
-<input type="hidden" name="transactionData" id="transactionData" value="" />
-<input type="hidden" name="id_session" value="'.htmlentities(session_id()).'" />
+<form id="confirme_transact" action="about:blank">
+<input type="hidden" name="id_transaction" id="id_transaction" value="'.htmlspecialchars($this->_Transaction->IdTransaction).'" />
+<input type="hidden" name="montant" id="montant" value="'.htmlspecialchars($this->_Transaction->Montant).'" />
+<input type="hidden" name="monnaie" id="monnaie" value="'.htmlspecialchars($this->_Transaction->Monnaie).'" />
+<input type="hidden" name="designation" id="designation" value="'.htmlspecialchars(substr($this->_Transaction->Designation, 127)).'" />
+<input type="hidden" name="id_commande" id="id_commande" value="" />
+<input type="hidden" name="nom_client" id="nom_client" value="" />
+<input type="hidden" name="prenom_client" id="prenom_client" value="" />
+<input type="hidden" name="email_client" id="email_client" value="" />
+<input type="hidden" name="id_client" id="id_client" value="" />
+<input type="hidden" name="id_achat" id="id_achat" value="" />
 <input type="submit" value="Soumettre" />
 </form>
 </div>
 <div id="paypal-button"></div>
-<script src="https://www.paypalobjects.com/api/checkout.js"></script>
-<script>
-paypal.Button.render({
-env: \'production\', // Or \'sandbox\'
-client: {
-sandbox:    \''.$this->CompteMarchand->SandboxClientId.'\',
-production: \''.$this->CompteMarchand->LiveClientId.'\'
-},
-commit: true, // Show a \'Pay Now\' button
-payment: function(data, actions) {
-return actions.payment.create({
-payment: {
-transactions: [
-{
-invoice_number : '.svc_json_encode($this->_Transaction->IdTransaction).',
+<script src="https://www.paypal.com/sdk/js?client-id='.urlencode($this->SbClientIdCompteMarchand).'"></script>
+<script>' ;
+			if($this->EnLive())
+			{
+				$ctn .= 'var PAYPAL_CLIENT = '.svc_json_encode($this->LiveClientCompteMarchand).' ;
+var PAYPAL_SECRET = '.svc_json_encode($this->LiveSecretCompteMarchand).' ;
+// Point your server to the PayPal API
+var PAYPAL_ORDER_API = \'https://api.paypal.com/v2/checkout/orders/\';' ;
+			}
+			$ctn .= 'Paypal.Buttons({
+createOrder: function(data, actions) {
+return actions.order.create({
+purchase_units: [{
+invoice_id : '.svc_json_encode($this->_Transaction->IdTransaction).',
 description : '.svc_json_encode($this->_Transaction->Designation).',
 amount: {
-total: '.svc_json_encode($this->_Transaction->Montant).'\',
-currency: \''.$this->_Transaction->Monnaie.'\'
-},
-custom: '.svc_json_encode($this->_Transaction->Cfg).'
+value: '.svc_json_encode(ceil($this->_Transaction->Montant / $this->_Transaction->TauxChange)).',
+currency_code: \''.$this->_Transaction->Monnaie.'\'
 }
-]
-}
+}]
 });
 },
-onAuthorize: function(data, actions) {
-return actions.payment.execute().then(function(payment) {
-// The payment is complete!
-// You can now show a confirmation message to the customer
-document.getElementById("transactionData").value = JSON.encode(payment) ;
-document.getElementById("confirmeTransact").submit() ;
+onApprove: function(data, actions) {
+return actions.order.capture().then(function(details) {
+document.getElementById("nom_client").value = details.payer.name.surname ;
+document.getElementById("prenom_client").value = details.payer.given_name ;
+document.getElementById("email_client").value = details.payer.email_address ;
+document.getElementById("id_client").value = details.payer.payer_id ;
+document.getElementById("id_achat").value = details.purchase_units[0].reference_id ;
+document.getElementById("montant").value = details.purchase_units[0].amount.value ;
+document.getElementById("monnaie").value = details.purchase_units[0].amount.currency_code ;
+document.getElementById("confirme_transact").action = "?'.$this->NomParamResultat.'='.urlencode($this->ValeurParamTermine).'" ;
+document.getElementById("confirme_transact").submit() ;
 });
+},
+onCancel : function(data) {
+document.getElementById("confirme_transact").action = "?'.$this->NomParamResultat.'='.urlencode($this->ValeurParamAnnule).'" ;
+document.getElementById("confirme_transact").submit() ;
 }
-}, \'#paypal-button\');
+}).render(\'#paypal-button\');
 </script>
 </body>
 </html>' ;

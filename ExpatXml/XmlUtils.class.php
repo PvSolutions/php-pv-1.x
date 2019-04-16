@@ -62,7 +62,7 @@
 				/**
 				 * The class constructor.
 				 */
-			   function XMLParser(){ }
+			   function __construct(){ }
 				/**
 				 * parse the XML file (or URL)
 				 *

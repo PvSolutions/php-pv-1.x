@@ -532,6 +532,30 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 		class PvActionEnvoiJSON extends PvActionResultatJSONZoneWeb
 		{
 		}
+		class PvActionRedirigeFichier extends PvActionBaseZoneWebSimple
+		{
+			public $CheminFichierSource ;
+			public function Execute()
+			{
+				$this->DetermineFichierSource() ;
+				if($this->CheminFichierSource == '')
+				{
+					$this->AfficheMsgErreur() ;
+				}
+				else
+				{
+					Header('location: '.$this->CheminFichierSource."\r\n") ;
+				}
+				exit ;
+			}
+			protected function AfficheMsgErreur()
+			{
+				echo 'Fichier source non renseigne ;/' ;
+			}
+			protected function DetermineFichierSource()
+			{
+			}
+		}
 		class PvActionEnvoiFichierBaseZoneWeb extends PvActionBaseZoneWebSimple
 		{
 			public $UtiliserTypeMime = 0 ;

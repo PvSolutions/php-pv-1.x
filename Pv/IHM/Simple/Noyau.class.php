@@ -47,6 +47,7 @@
 			public $ClasseCSS ;
 			public $ChaineAttributs ;
 			public $Cible ;
+			public static $InstanceJs = 0 ;
 			public $InclureIcone = 1 ;
 			public $InclureLibelle = 1 ;
 			public $HauteurIcone = "18" ;
@@ -57,6 +58,19 @@
 			public function Accepte($donnees)
 			{
 				$ok = ($this->RenduPossible() && ($this->NomDonneesValid == "" || (isset($donnees[$this->NomDonneesValid]) && $donnees[$this->NomDonneesValid] == $this->ValeurVraiValid))) ? 1 : 0 ;
+				return $ok ;
+			}
+			public function InstrJsAccepte()
+			{
+				if($this->RenduPossible() == false)
+				{
+					return 'false' ;
+				}
+				if($this->NomDonneesValid == "")
+				{
+					return 'true' ;
+				}
+				return '(donnees['.svc_json_encode($this->NomDonneesValid).'] !== undefined && donnees['.svc_json_encode($this->NomDonneesValid).'] == '.svc_json_encode($this->ValeurVraiValid).') ? 1 : 0' ;
 				return $ok ;
 			}
 			protected function RenduIcone($donnees, $donneesUrl)
@@ -81,6 +95,14 @@
 					return '' ;
 				}
 				return $this->RenduBrut($donnees) ;
+			}
+			public function InstrJsRendu()
+			{
+				if(! $this->RenduPossible())
+				{
+					return '' ;
+				}
+				return $this->InstrJsRenduBrut() ;
 			}
 			protected function ObtientHrefFmt(& $donneesUrl)
 			{
@@ -129,6 +151,59 @@
 					$ctn .= $libelle ;
 				}
 				$ctn .= '</a>' ;
+				return $ctn ;
+			}
+			protected function InstrJsRenduBrut()
+			{
+				$instanceJs = PvConfigFormatteurColonneLien::$InstanceJs ;
+				PvConfigFormatteurColonneLien::$InstanceJs++ ;
+				$ctn = '' ;
+				$ctn .= 'var href'.$instanceJs.' = '.svc_json_encode($this->FormatURL).' ;
+var libelle'.$instanceJs.' = '.svc_json_encode($this->FormatLibelle).' ;
+for(var n in donnees)
+{
+href'.$instanceJs.' = href'.$instanceJs.'.split("${" + n + "}").join(encodeURIComponent(donnees[n])) ;
+libelle'.$instanceJs.' = libelle'.$instanceJs.'.split("${" + n + "}").join((donnees[n] !== null) ? donnees[n].replace(/[\u00A0-\u9999<>\&]/gim, function(indexTmp) {
+   return \'&#\'+indexTmp.charCodeAt(0)+\';\';
+}) : "") ;
+}
+var noeud'.$instanceJs.' = document.createElement("a") ;
+noeud'.$instanceJs.'.setAttribute("href", href'.$instanceJs.') ;'.PHP_EOL ;
+				if($this->Cible != '')
+				{
+					$ctn .= 'noeud'.$instanceJs.'.setAttribute("target", '.svc_json_encode($this->Cible).') ;'.PHP_EOL ;
+				}
+				if($this->ChaineAttributs != '')
+				{
+					$attrs = explode(" ", $this->ChaineAttributs) ;
+					foreach($attrs as $i => $attrStr)
+					{
+						$parts = explode("=", $attrStr, 2) ;
+						$ctn .= 'noeud'.$instanceJs.'.setAttribute('.svc_json_encode($parts[0]).', '.((count($parts) == 2) ? svc_json_encode($parts[1]) : '""').') ;'.PHP_EOL ;
+					}
+				}
+				if($this->ClasseCSS != '')
+				{
+					$ctn .= 'noeud'.$instanceJs.'.setAttribute("class", '.svc_json_encode($this->ClasseCSS).') ;'.PHP_EOL ;
+				}
+				if($this->InclureLibelle == 0)
+				{
+					$ctn .= 'noeud'.$instanceJs.'.setAttribute("title", libelle'.$instanceJs.') ;'.PHP_EOL ;
+				}
+				// $ctnIcone = $this->RenduIcone($donnees, $donneesUrl) ;
+				// $ctn .= $ctnIcone ;
+				if($this->InclureLibelle)
+				{
+					if($this->EncodeHtmlLibelle == true)
+					{
+						$ctn .= 'noeud'.$instanceJs.'.textContent = libelle'.$instanceJs.' ;'.PHP_EOL ;
+					}
+					else
+					{
+						$ctn .= 'noeud'.$instanceJs.'.innerHTML = libelle'.$instanceJs.' ;'.PHP_EOL ;
+					}
+				}
+				$ctn .= 'noeudCellule.appendChild(noeud'.$instanceJs.') ;' ;
 				return $ctn ;
 			}
 			public function DefinitValidite($nomDonnees, $valeurVrai=1)
@@ -271,6 +346,27 @@ noeudCellule.innerHTML = val ;' ;
 				}
 				return $valeur ;
 			}
+			public function InstrsJsEncode(& $composant, $colonne)
+			{
+				$ctn = '' ;
+				if($colonne->NomDonnees == '')
+				{
+					return '' ;
+				}
+				$nomDonnees = svc_json_encode($colonne->NomDonnees) ;
+				$ctn .= 'var valEntree, val = "" ;
+var valsChoix'.$this->IDInstanceCalc.' = svc_json_encode('.$this->ValeursChoix.') ;
+if(donnees['.$nomDonnees.'] !== undefined) {
+valEntree = donnees['.$nomDonnees.'] ;
+}
+if(valsChoix'.$this->IDInstanceCalc.'[valEntree] !== undefined) {
+val = valsChoix'.$this->IDInstanceCalc.'[valEntree] ;
+} else {
+val = '.svc_json_encode($this->ValeurNonTrouvee).' ;
+}
+noeudCellule.innerHTML = val ;' ;
+				return $ctn ;
+			}
 		}
 		class PvFormatteurColonneFixe extends PvFormatteurColonneDonnees
 		{
@@ -278,6 +374,10 @@ noeudCellule.innerHTML = val ;' ;
 			public function Encode(& $composant, $colonne, $ligne)
 			{
 				return htmlentities($this->ValeurParDefaut) ;
+			}
+			public function InstrsJsEncode(& $composant, $colonne)
+			{
+				return 'noeudCellule.innerHTML = '.svc_json_encode($this->ValeurParDefaut).' ;' ;
 			}
 		}
 		class PvFormatteurColonneMonnaie extends PvFormatteurColonneDonnees
@@ -288,6 +388,22 @@ noeudCellule.innerHTML = val ;' ;
 			{
 				$valeurEntree = $ligne[$colonne->NomDonnees] ;
 				return format_money($valeurEntree, $this->MaxDecimals, $this->MinChiffres) ;
+			}
+			public function InstrsJsEncode(& $composant, $colonne)
+			{
+				$ctn = '' ;
+				$nomDonnees = $colonne->NomDonnees ;
+				$ctn .= 'var valEntree, val = "" ;
+if(donnees['.$nomDonnees.'] !== undefined) {
+valEntree = donnees['.$nomDonnees.'] ;
+}
+if(valEntree !== "") {
+var parts = valEntree.toString().split(".");
+parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+val = parts.join(".");
+}
+noeudCellule.innerText = val ;' ;
+				return 'noeudCellule.innerHTML = '.svc_json_encode($this->ValeurParDefaut).' ;' ;
 			}
 		}
 		class PvFormatteurColonneDateFr extends PvFormatteurColonneDonnees
@@ -305,10 +421,31 @@ noeudCellule.innerHTML = val ;' ;
 					return date_fr($valeurEntree) ;
 				}
 			}
+			public function InstrsJsEncode(& $composant, $colonne)
+			{
+				$ctn = 'var val = (donnees['.svc_json_encode($this->NomDonnees).'] !== undefined) ? donnees['.svc_json_encode($this->NomDonnees).'] : null ;
+var valCellule = "" ;
+if(val !== null) {
+var attrsDate = val.split("-") ;
+if(attrsDate.length == 3) {'.PHP_EOL ;
+				if($this->InclureHeure)
+				{
+					$ctn .= 'var attrsHeure = attrsDate[2].split(" ") ;
+valCellule = attrsHeure[0] + "/" + attrsDate[1] + "/" + attrsDate[0] + " " + ((attrsHeure.length > 1) ? attrsHeure[1] : "00:00:00") ;'.PHP_EOL ;
+				}
+				else
+				{
+					$ctn .= 'valCellule = attrsDate[2] + "/" + attrsDate[1] + "/" + attrsDate[0] ;'.PHP_EOL ;
+				}
+				$ctn .= '}
+}
+noeudCellule.innerText = valCellule ;' ;
+			}
 		}
 		class PvFormatteurColonneTimestamp extends PvFormatteurColonneDonnees
 		{
 			public $FormatDate = "Y-m-d H:i:s" ;
+			public $FormatDateJs = "Y-m-d H:i:s" ;
 			public function Encode(& $composant, $colonne, $ligne)
 			{
 				$valeurEntree = $ligne[$colonne->NomDonnees] ;
@@ -337,6 +474,19 @@ noeudCellule.innerHTML = val ;' ;
 				}
 				return _parse_pattern($this->ModeleHtml, $donnees) ;
 			}
+			public function InstrsJsEncode(& $composant, $colonne)
+			{
+				$ctn = '' ;
+				$ctn .= 'var modeleHtml = '.svc_json_encode($this->ModeleHtml).' ;
+for(var n in donnees)
+{
+modeleHtml = modeleHtml.split("${" + n + "}").join(encodeURIComponent(donnees[n])) ;
+modeleHtml = modeleHtml.split("${" + n + "}").join((donnees[n] !== null) ? donnees[n].replace(/[\u00A0-\u9999<>\&]/gim, function(indexTmp) {
+   return \'&#\'+indexTmp.charCodeAt(0)+\';\';
+}) : "") ;
+}
+noeudCellule.innerHTML = modeleHtml ;' ;
+			}
 		}
 		class PvFormatteurColonneLiens extends PvFormatteurColonneDonnees
 		{
@@ -350,9 +500,9 @@ noeudCellule.innerHTML = val ;' ;
 			public function Encode(& $composant, $colonne, $ligne)
 			{
 				$ctn = '' ;
+				$donnees = $this->ObtientDonnees($colonne, $ligne) ;
 				foreach($this->Liens as $i => $lien)
 				{
-					$donnees = $this->ObtientDonnees($colonne, $ligne) ;
 					if(! $lien->Accepte($donnees))
 					{
 						continue ;
@@ -364,6 +514,29 @@ noeudCellule.innerHTML = val ;' ;
 					if($this->InclureIcone)
 						$lien->InclureIcone = $this->InclureIcone ;
 					$ctn .= $lien->Rendu($donnees) ;
+				}
+				return $ctn ;
+			}
+			public function InstrsJsEncode(& $composant, $colonne)
+			{
+				$ctn = '' ;
+				$ctn .= 'noeudCellule.innerHTML = "" ;'.PHP_EOL ;
+				foreach($this->Liens as $i => $lien)
+				{
+					$ctn .= 'if('.$lien->InstrJsAccepte().') {'.PHP_EOL ;
+					if($this->InclureIcone)
+						$lien->InclureIcone = $this->InclureIcone ;
+					$ctnLien = $lien->InstrJsRendu() ;
+					if($ctnLien != '')
+					{
+						$ctn .= 'if(noeudCellule.childNodes.length > 0) {
+var noeudSep'.$i.' = document.createElement("span") ;
+noeudSep'.$i.'.innerHTML = '.svc_json_encode($this->SeparateurLiens).' ;
+noeudCellule.appendChild(noeudSep'.$i.') ;
+}'.PHP_EOL ;
+						$ctn .= $ctnLien.PHP_EOL ;
+					}
+					$ctn .= '}'.PHP_EOL ;
 				}
 				return $ctn ;
 			}
@@ -551,11 +724,11 @@ z-index: 1;
 			public $NomDonnees ;
 			public $AliasDonnees ;
 			public $Libelle ;
-			public $Formatteur = null ;
-			public $CorrecteurValeur = null ;
+			public $Formatteur ;
+			public $CorrecteurValeur ;
 			public $TriPossible = 1 ;
 			public $EncodeHtmlValeur = 1 ;
-			public $ExtracteurValeur = null ;
+			public $ExtracteurValeur ;
 			public $PrefixeValeursExtraites = "" ;
 			public $Visible = 1 ;
 			public $ExporterDonnees = 1 ;

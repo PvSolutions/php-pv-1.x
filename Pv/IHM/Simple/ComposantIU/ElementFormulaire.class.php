@@ -69,6 +69,12 @@
 document.getElementById("'.$this->IDInstanceCalc.'").value = valeur ;
 }' ;
 			}
+			public function RenduJsDefinitEtiquette()
+			{
+				return 'if(document.getElementById("'.$this->IDInstanceCalc.'") != null) {
+document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
+}' ;
+			}
 			protected function CreeFmtLbl()
 			{
 				return new PvFmtLblWeb() ;
@@ -84,7 +90,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").value = valeur ;
 			}
 			public function RenduEtiquette()
 			{
-				return $this->EncodeEtiquette($this->Valeur) ;
+				return '<span id="'.$this->IDInstanceCalc.'">'.$this->EncodeEtiquette($this->Valeur).'</span>' ;
 			}
 			protected function RenduAttrStyleCSS()
 			{
@@ -155,7 +161,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").value = valeur ;
 			}
 			public function RenduEtiquette()
 			{
-				return htmlentities($this->ObtientLibelle()) ;
+				return '<span id="'.$this->IDInstanceCalc.'">'.htmlentities($this->ObtientLibelle()).'</span>' ;
 			}
 			public function ObtientLibelle()
 			{
@@ -195,7 +201,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").value = valeur ;
 						$this->Libelle = $this->LibelleNonTrouve ;
 					}
 				}
-				return $etiquette ;
+				return '<span id="'.$this->IDInstanceCalc.'">'.$etiquette.'</span>' ;
 			}
 			public function RenduEtiquette()
 			{
@@ -388,7 +394,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").value = valeur ;
 				{
 					$ctn .= $this->RenduCadreApercu() ;
 				}
-				return $ctn ;
+				return '<span id="'.$this->IDInstanceCalc.'">'.$ctn.'</span>' ;
 			}
 		}
 		class PvZoneCocherHtml extends PvElementFormulaireHtml
@@ -404,7 +410,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").value = valeur ;
 			}
 			public function RenduEtiquette()
 			{
-				return ($this->Valeur == $this->ValeurVrai) ? $this->LibelleVrai : $this->LibelleFaux ;
+				return '<span id="'.$this->IDInstanceCalc.'">'.(($this->Valeur == $this->ValeurVrai) ? $this->LibelleVrai : $this->LibelleFaux).'</span>' ;
 			}
 			public function RenduOption()
 			{
@@ -745,7 +751,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").value = valeur ;
 				{
 					$etiquette = $this->LibelleEtiqVide ;
 				}
-				return $etiquette ;
+				return '<span id="'.$this->IDInstanceCalc.'">'.$etiquette.'</span>' ;
 			}
 			protected function CalculeValeursSelectionnees()
 			{
@@ -853,6 +859,20 @@ document.getElementById("'.$this->IDInstanceCalc.'").value = valeur ;
 		}
 		class PvZoneBoiteSelectHtml extends PvZoneBoiteChoixBaseHtml
 		{
+			public function RenduJsDefinitValeur()
+			{
+				return 'if(document.getElementById("'.$this->IDInstanceCalc.'") != null) {
+var noeudSelect = document.getElementById("'.$this->IDInstanceCalc.'") ;
+noeudSelect.selectedIndex = 0 ;
+for (var tmp=0; tmp<noeudSelect.options.length; tmp++) {
+var noeudOption = noeudSelect.options[tmp] ;
+if(noeudOption.value === valeur) {
+noeudSelect.selectedIndex = tmp ;
+break ;
+}
+}
+}' ;
+			}
 			protected function RenduListeElements()
 			{
 				$this->CorrigeIDsElementHtml() ;
@@ -1424,7 +1444,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").value = valeur ;
 			public $LibelleFaux = "Non" ;
 			public function RenduEtiquette()
 			{
-				return ($this->Valeur == $this->ValeurVrai) ? $this->LibelleVrai : $this->LibelleFaux ;
+				return '<span id="'.$this->IDInstanceCalc.'">'.(($this->Valeur == $this->ValeurVrai) ? $this->LibelleVrai : $this->LibelleFaux).'</span>' ;
 			}
 			protected function RenduDispositifBrut()
 			{

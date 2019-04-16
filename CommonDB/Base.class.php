@@ -2336,7 +2336,7 @@ FROM information_schema.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :ta
 				{
 					if(preg_match('/^([A-Z0-9_\.\-]+)/', $server, $host_match))
 					{
-						$port = 1521 ;
+						$port = (isset($this->ConnectionParams["port"])) ? $this->ConnectionParams["port"] : 1521 ;
 						if(preg_match('/(^\d+)$/', $server, $port_match))
 						{
 							$port = $port_match[1] ;

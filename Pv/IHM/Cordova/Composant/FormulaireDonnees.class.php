@@ -36,25 +36,35 @@
 		{
 			public $ActPrincCalculeRendu ;
 			public $ActPrincSelectCommande ;
+			public function DetecteParametresLocalisation()
+			{
+				parent::DetecteParametresLocalisation() ;
+			}
 			protected static function InstrsJsDefinitRendu(& $form)
 			{
 				$ctn = '' ;
-				$ctn .= 'pvZoneCordova.appelleUrl('.svc_json_encode($form->ActPrincCalculeRendu->ObtientUrl()).' + "&" + pvZoneCordova.encodeQueryString(args), {}, function(resultat, xhr) {
-var valeur = null ;
+				$ctn .= 'pvZoneCordova.appelleUrl('.svc_json_encode($form->ActPrincCalculeRendu->ObtientUrl()).' + "&" + pvZoneCordova.encodeQueryString(args), {}, function(resultat, xhr) {'.PHP_EOL ;
+				if($form->InclureElementEnCours == 1)
+				{
+					$ctn .= 'var valeur = null ;
+if(resultat === "" || resultat === null) {
+return ;
+}
 var donnees = JSON.parse(resultat) ;
 if(donnees !== undefined && donnees.elementEnCours !== undefined) {'.PHP_EOL ;
-				// print $form->IDInstanceCalc.' : '.count($form->FiltresEdition)."\n" ;
-				foreach($form->FiltresEdition as $i => $filtreEdit)
-				{
-					if($filtreEdit->RenduPossible())
+					// print $form->IDInstanceCalc.' : '.count($form->FiltresEdition)."\n" ;
+					foreach($form->FiltresEdition as $i => $filtreEdit)
 					{
-						$nomJsParam = svc_json_encode($filtreEdit->NomParametreLie) ;
-						$comp = $filtreEdit->ObtientComposant() ;
-						$ctn .= 'valeur = (donnees.elementEnCours['.$nomJsParam.'] !== undefined) ? donnees.elementEnCours['.$nomJsParam.'] : "" ;'.PHP_EOL ;
-						$ctn .= $comp->RenduJsDefinitValeur().PHP_EOL ;
+						if($filtreEdit->RenduPossible() && $filtreEdit->NomParametreDonnees != "")
+						{
+							$nomJsParam = svc_json_encode($filtreEdit->NomParametreDonnees) ;
+							$comp = $filtreEdit->ObtientComposant() ;
+							$ctn .= 'valeur = (donnees.elementEnCours['.$nomJsParam.'] !== undefined) ? donnees.elementEnCours['.$nomJsParam.'] : "" ;'.PHP_EOL ;
+							$ctn .= $comp->RenduJsDefinitValeur().PHP_EOL ;
+						}
 					}
+					$ctn .= '}'.PHP_EOL ;
 				}
-				$ctn .= '}'.PHP_EOL ;
 				$ctn .= '}) ;' ;
 				return $ctn ;
 			}
@@ -72,6 +82,15 @@ if(donnees !== undefined && donnees.elementEnCours !== undefined) {'.PHP_EOL ;
 			public static function & ChargeConfigForm(& $form)
 			{
 				$form->ZoneParent->InscritInstrsJsOuvrEcran($form->ScriptParent, PvFormulaireDonneesCordova::InstrsJsDefinitRendu($form)) ;
+			}
+			protected function RenduFormulaireFiltres()
+			{
+				if($this->InclureElementEnCours == 1)
+				{
+					$this->ElementEnCoursTrouve = 1 ;
+				}
+				$ctn = parent::RenduFormulaireFiltres() ;
+				return $ctn ;
 			}
 			public static function RenduResultatCommandeExecuteeForm(& $form)
 			{
@@ -130,6 +149,11 @@ if(donnees !== undefined && donnees.elementEnCours !== undefined) {'.PHP_EOL ;
 			}
 		}
 		var argsGet = '.json_encode($filtresGets).' ;
+		for(var nomTemp in pvZoneCordova.argsEcran) {
+			if(argsGet.indexOf(nomTemp) == -1) {
+				argsGet.push(nomTemp) ;
+			}
+		}
 		if(argsGet != undefined)
 		{
 			for(var i in argsGet)
@@ -142,7 +166,12 @@ if(donnees !== undefined && donnees.elementEnCours !== undefined) {'.PHP_EOL ;
 		}
 		pvZoneCordova.soumetForm(urlFormulaire, jQuery(form), function(resultat, xhr) {
 			var jqForm = jQuery("#'.$form->IDInstanceCalc.'") ;
-			var resultExec = JSON.parse(resultat) ;
+			var resultExec = null ;
+			if(resultat !== "" && resultat !== null) {
+				try { resultExec = JSON.parse(resultat) ; }
+				catch(ex) { }
+			}
+			
 			if(resultExec !== null) {
 				if(resultExec.messageExecution !== null)
 				{

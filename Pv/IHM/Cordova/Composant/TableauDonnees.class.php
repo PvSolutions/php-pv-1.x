@@ -73,7 +73,7 @@
 				$maxElements = $tabl->MaxElementsPossibles[0] ;
 				for($j = 0; $j < $maxElements; $j++)
 				{
-					$ctn .= '<tr class="Ligne">'.PHP_EOL ;
+					$ctn .= '<tr class="Ligne" style="display:none">'.PHP_EOL ;
 					foreach($tabl->DefinitionsColonnes as $i => $colonne)
 					{
 						if(! $colonne->EstVisible($tabl->ZoneParent))

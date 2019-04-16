@@ -78,6 +78,7 @@
 			public $NomClasseScriptModifRole = "PvScriptModifRoleCordova" ;
 			public $NomClasseScriptSupprRole = "PvScriptSupprRoleCordova" ;
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesCordova" ;
+			public $NomClasseRemplisseurConfigMembership = "PvRemplConfigMembershipCordova" ;
 			protected function RenduCSSDeviceXs()
 			{
 				$ctn = '' ;

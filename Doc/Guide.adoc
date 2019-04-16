@@ -12,6 +12,8 @@ link:#Les-classes-base-de-données[[.underline]#Les classes base de données#]
 
 link:#La-classe-Zone-Web-Simple[[.underline]#La classe Zone Web Simple#]
 
+link:#La-classe-Zone-Bootstrap[[.underline]#La classe Zone Bootstrap#]
+
 link:#La-classe-Tache-Programmée[[.underline]#La classe Tache Programmée#]
 
 link:#La-classe-Service-Persistant[[.underline]#La classe Service Persistant#]
@@ -1419,7 +1421,6 @@ $this->Tabl1->SourceValeursSuppl = new SrcValsSuppl1() ;
 $this->Tabl1->InsereDefColCachee("id") ;
 $this->Tabl1->InsereDefColHtml('$\{menu} $\{id}', 'Actions') ;
 }
-
 }
 
 ==== Autres propriétés
@@ -1430,10 +1431,14 @@ $this->Tabl1->InsereDefColHtml('$\{menu} $\{id}', 'Actions') ;
 |$Largeur |Largeur du formulaire de filtres
 |$LargeurFormulaireFiltres |Largeur du formulaire de filtres
 |$AlignFormulaireFiltres |Alignement du formulaire de filtres
+|$ToujoursAfficher |Toujours afficher les résultats du tableau. Sinon, vous verrez le formulaire de filtres uniquement, pour validation.
 |$MessageAucunElement |Message lorsqu’il n’y a aucun élément trouvé
 |$ElementsEnCours |Tableau contenant toutes les lignes trouvées
 |$AlerterAucunElement |Affichera le message s’il n’y a aucun élément
 |$TriPossible |Permettra le tri
+|$SensColonneTri |Sens du tri par défaut (asc ou desc)
+|$IndiceColonneTri |Index de la colonne pour le tri par défaut
+|$AccepterTriColonneInvisible |Trier sur la colonne invisible si elle est la 1ère déclarée.
 |$TotalElements |Nombre de lignes retournées
 |$CacherNavigateurRangees |Cacher le navigateur de rangées
 |$CacherFormulaireFiltres |Cacher le formulaire de filtres
@@ -1467,7 +1472,7 @@ $this->Tabl1->InsereDefColHtml('$\{menu} $\{id}', 'Actions') ;
 |InsereCmdExportExcel($nomCmd, $libelle='') |Inscrit une commande qui exporte les résultats au format HTML pour Excel
 |======================================================================================================================================
 
-==== Rendu du formulaire de données
+==== Rendu du formulaire de filtres
 
 Vous pouvez personnaliser le rendu du formulaire de filtres avec sa propriété *$DessinateurFiltresSelection*.
 
@@ -1678,7 +1683,7 @@ Format du nom de fichier téléchargé. Variables disponibles : +
 - Date : Date au format YmdHis
 
 [source,]
-Ex : "Bon-Commande-$\{Cle}"
+Ex : "Bon-Commande-\${Cle}"
 
 |$SourceTelechargement |Contient les valeurs suivantes : +
 - post : Aucun fichier n’est soumis +
@@ -1743,6 +1748,49 @@ $grille->ContenuLigneModele = '<h4>${id}. ${titre}</h4>
 // définir le fournisseur de données...
 }
 }
+
+== La classe Zone Bootstrap
+
+C'est une IHM basée sur la zone web simple, avec la librairie Bootstrap 3.3.x ou 4.x.
+
+=== Scripts Membership
+
+[cols=",,,",options="header",]
+|===============================================================================================================================================
+|*Nom du script* |*Classe script web* |*Pré-requis +
+zone web* |*Description*
+|connexion |PvScriptConnexionBootstrap |Aucun |Page de connexion
+|deconnexion |PvScriptDeconnexionBootstrap |Aucun |Page de déconnexion
+|recouvreMP |PvScriptRecouvreMPBootstrap |Aucun |Page pour récupérer son mot de passe, à partir du login et du mot de passe
+|inscription |PvScriptInscriptionBootstrap |Mettre la propriété $AutoriserInscription à 1 |Page d’inscription d’un membre
+|modifPrefs |PvScriptModifPrefsBootstrap |Mettre la propriété $AutoriserModifPrefs à 1 |Page pour modifier les informations du membre (nom, prénom, …)
+|doitChangerMotPasse |PvScriptDoitChangerMotPasseBootstrap |Aucun |Page qui force le membre connecté à changer son mot de passe
+|changeMotPasse |PvScriptChangeMotPasseBootstrap |Aucun |Page pour modifier le mot de passe
+|ajoutMembre |PvScriptAjoutMembreMSBootstrap |Aucun |Ajouter un membre
+|modifMembre |PvScriptModifMembreMSBootstrap |Aucun |Modifie un membre
+|supprMembre |PvScriptSupprMembreMSBootstrap |Aucun |Désactive le membre
+|listeMembres |PvScriptListeMembresMSBootstrap |Aucun |Liste les membres
+|ajoutProfil |PvScriptAjoutProfilMSBootstrap |Aucun |Ajoute un profil
+|modifProfil |PvScriptModifProfilMSBootstrap |Aucun |Modifie un profil
+|supprProfil |PvScriptSupprProfilMSBootstrap |Aucun |Désactive le profil
+|listeProfils |PvScriptListeProfilsMSBootstrap |Aucun |Liste les profils
+|ajoutRole |PvScriptAjoutRoleMSBootstrap |Aucun |Ajoute un rôle
+|modifRole |PvScriptModifRoleMSBootstrap |Aucun |Modifie un rôle
+|supprRole |PvScriptSupprRoleMSBootstrap |Aucun |Désactive un rôle
+|listeRoles |PvScriptListeRolesMSBootstrap |Aucun |Liste les rôles
+|ajoutServeurAD |PvScriptAjoutServeurADBootstrap |Aucun |Ajoute une connexion LDAP
+|modifServeurAD |PvScriptModifServeurADBootstrap |Aucun |Modifie une connexion LDAP
+|supprServeurAD |PvScriptSupprServeurADBootstrap |Aucun |Supprime une connexion LDAP
+|listeServeursAD |PvScriptListeServeursADBootstrap |Aucun |Liste les connexions LDAP
+|===============================================================================================================================================
+
+=== Le tableau de données
+
+Le composant est PvTableauDonneesBootstrap.
+
+=== Le formulaire de données
+
+Le composant est PvFormulaireDonneesBootstrap.
 
 == La classe Tache Programmée
 
@@ -1864,6 +1912,52 @@ protected function ChargeServsPersists()
 $this->Service1 = $this->InsereServPersist("monServ1", new MonService1()) ;
 }
 }
+
+==== Le contrôleur de services persistant
+
+C'est une tâche programmée qui redémarre les services persistants inactifs. Pour chaque service, réécrivez la méthode *Verifie()* pour surveiller son fonctionnement.
+
+[source,php]
+class MonService1 extends PvServicePersist
+{
+public $CheminFichierRelatif = "monApp/service1.php" ;
+protected function ExecuteSession()
+{
+echo "Mon service est en cours d'execution\n" ;
+}
+// Verification
+public function Verifie()
+{
+$ok = 1 ;
+$totalElements = 0 ;
+// Effectuer des controles ... (nombre d'elements en attente, date dernière action, etc)
+if($totalElements > 10)
+{
+$ok = 0 ; // 0 = Service inactif
+}
+return $ok ;
+}
+}
+
+Pour intégrer le contrôleur de services persistants, invoquez la méthode *InscritCtrlServsPersists()* dans la classe Application. Ce contrôleur devient accessible par la propriété *$CtrlServsPersists*. Renseignez alors le chemin relatif, pour l'appeler en ligne de commande.
+
+[source,php]
+// Déclaration de la classe Application
+class MonApplication1 extends PvApplication
+{
+// ...
+protected function ChargeServsPersists()
+{
+$this->Service1 = $this->InsereServPersist("monServ1", new MonService1()) ;
+// Inscrire le controleur
+$this->InscritCtrlServsPersists() ;
+// Définir le chemin du fichier PHP
+$this->CtrlServsPersists->CheminFichierRelatif = "monApp/processus/ctrl_services.php" ;
+// php /.../monApp/processus/ctrl_services.php
+}
+}
+
+Inscrivez cette tâche programmée dans votre planificateur OS (ex : crontab sous Linux). Vous ne surveillerez plus vos services persistants.
 
 == Organisation d’une solution PHP-PV
 

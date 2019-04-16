@@ -497,6 +497,7 @@
 			}
 			protected function TransactionEnCours()
 			{
+				return 0 ;
 			}
 			protected function TransactionEffectuee()
 			{
