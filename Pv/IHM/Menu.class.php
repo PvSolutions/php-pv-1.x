@@ -16,6 +16,7 @@
 		{
 			protected $EstRacine = 0 ;
 			public $BarreMenu ;
+			public $InclureRenduFa = 1 ;
 			public $InclureRenduTitre = 1 ;
 			public $InclureRenduIcone = 1 ;
 			public $InclureRenduMiniature = 1 ;
@@ -27,6 +28,7 @@
 			public $CheminIcone = "" ;
 			public $CheminMiniature = "" ;
 			public $NomClasseCSS = '' ;
+			public $ClasseFa = '' ;
 			public $Tips = "" ;
 			public $Description = "" ;
 			public $SousMenus = array() ;
@@ -408,9 +410,12 @@
 			public $NomClasseCSSSelect = 'Selectionne' ;
 			public $MenuRacine = null ;
 			public $InclureSelection = 1 ;
+			public $InclureRenduFa = 1 ;
 			public $InclureRenduIcone = 1 ;
 			public $InclureRenduTitre = 1 ;
 			public $InclureRenduMiniature = 1 ;
+			public $ClasseFaParDefaut = "fa-menu" ;
+			public $ClasseTailleFa = "" ;
 			public $LargeurIcone = 21 ;
 			public $HauteurMiniature = 42 ;
 			public $NomClasseMenuRacine = "PvMenuIHMRacine" ;
@@ -512,6 +517,7 @@
 					// echo get_class($menu) ;
 					$ctn .= $this->RenduTagOuvrLien($menu).PHP_EOL ;
 					$ctn .= $this->RenduIconeMenu($menu).PHP_EOL ;
+					$ctn .= $this->RenduFaMenu($menu).PHP_EOL ;
 					$ctn .= $this->RenduTitreMenu($menu).PHP_EOL ;
 					$ctn .= $this->RenduTagFermLien($menu).PHP_EOL ;
 				}
@@ -592,6 +598,20 @@
 						$cheminIcone = $this->CheminIconeParDefaut ;
 					}
 					$ctn .= '<img src="'.$cheminIcone.'" border="0" /> ' ;
+				}
+				return $ctn ;
+			}
+			protected function RenduFaMenu(& $menu)
+			{
+				$ctn = '' ;
+				if($this->InclureRenduFa && $menu->InclureRenduFa)
+				{
+					$classeFa = $menu->ClasseFa ;
+					if($classeFa == '')
+					{
+						$classeFa = $this->ClasseFaParDefaut ;
+					}
+					$ctn .= '<i class="fa'.(($this->ClasseTailleFa != '') ? ' '.$this->ClasseTailleFa : '').' '.$classeFa.'"></i> ' ;
 				}
 				return $ctn ;
 			}
@@ -885,6 +905,72 @@
 				$ctn .= $this->RenduTitreMenu($menu) ;
 				$ctn .= $this->RenduTagFermLien($menu) ;
 				$ctn .= '</div>' ;
+				return $ctn ;
+			}
+		}
+
+		class PvBarreOngletsBootstrap extends PvBarreMenuWebBase
+		{
+			public $NomClasseCSSMenuRacine = "MenuRacine" ;
+			public $NomClasseCSSNavs = "nav nav-pills" ;
+			public $InclureRenduMiniature = 0 ;
+			public $CentrerMenu = 1 ;
+			public $ClasseTailleFa = "fa-4x" ;
+			protected function RenduDefinitionsMenuRacine()
+			{
+				$ctn = '' ;
+				if($this->CentrerMenu == 1)
+				{
+				$ctn .= '<style type="text/css">
+#'.$this->IDInstanceCalc.' .nav > li {
+float:none;
+display:inline-block;
+zoom:1;
+}
+#'.$this->IDInstanceCalc.' .nav {
+text-align:center;
+}
+</style>' ;
+				}
+				$ctn .= $this->RenduDefinitionsMenu($this->MenuRacine) ;
+				return $ctn ;
+			}
+			protected function RenduMenu($menu)
+			{
+				$ctn = '' ;
+				$this->TotalColonnes = 0 ;
+				if(! $menu->EstVisible || ! $menu->EstMenuRacine())
+				{
+					return '' ;
+				}
+				$menu->ComposantSupport = $this ;
+				$menus = $menu->SousMenusAffichables() ;
+				if(count($menus))
+				{
+					$ctn .= '<div id="'.$this->IDInstanceCalc.'" class="'.$this->NomClasseCSSMenuRacine.'">'.PHP_EOL ;
+					$ctn .= '<ul class="'.$this->NomClasseCSSNavs.'">'.PHP_EOL ;
+					$nomSousMenus = array_keys($menus) ;
+					$totalMenus = 0 ;
+					foreach($nomSousMenus as $i => $nomSousMenu)
+					{
+						$sousMenu = $menus[$nomSousMenu] ;
+						$attr = '' ;
+						$ctn .= '<li'.(($sousMenu->EstSelectionne) ? ' class="active"' : '').'>'.PHP_EOL ;
+						$ctn .= $this->RenduSousMenu($sousMenu).PHP_EOL ;
+						$ctn .= '</li>'.PHP_EOL ;
+					}
+					$ctn .= '</ul>' ;
+				}
+				$menu->ComposantSupport = null ;
+				return $ctn ;
+			}
+			protected function RenduSousMenu(& $sousMenu)
+			{
+				$ctn = '' ;
+				$ctn .= $this->RenduTagOuvrLien($sousMenu) ;
+				$ctn .= '<div>'.$this->RenduFaMenu($sousMenu).'</div>' ;
+				$ctn .= '<div>'.$this->RenduTitreMenu($sousMenu).'</div>' ;
+				$ctn .= $this->RenduTagFermLien($sousMenu) ;
 				return $ctn ;
 			}
 		}

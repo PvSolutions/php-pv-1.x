@@ -516,7 +516,7 @@
 			{
 				$nomFiltres = array_keys($filtres) ;
 				$filtresGets = array() ;
-				$nomFiltresGets = array() ;
+				$nomFiltresGets = array($this->IDInstanceCalc."_".$this->NomParamIdCommande) ;
 				$filtresGetsEdit = array() ;
 				foreach($nomFiltres as $i => $nomFiltre)
 				{

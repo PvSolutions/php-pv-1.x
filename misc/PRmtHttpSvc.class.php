@@ -318,8 +318,7 @@
 			public function render($resp, & $svc)
 			{
 				$contentType = ($svc->respContentTypePlain == 1) ? "text/plain" : "application/json" ;
-				Header("Content-type:".$contentType."\n") ;
-				header("Content-Type: text/html; charset=".$svc->respCharset."\n");
+				Header("Content-type:".$contentType."; charset=".$svc->respCharset."\n") ;
                 echo svc_json_encode($resp) ;
                 // print_r($resp) ;
 			}
