@@ -195,7 +195,7 @@
 			public $NomElementGest ;
 			public $GestParent ;
 			protected $Etat ;
-			public $DelaiExecution = 1 ;
+			public $DelaiExecution = 1 ; // En heures
 			protected $TerminerExecution = 0 ;
 			public function InitConfig()
 			{
@@ -367,7 +367,8 @@
 			public $Message = "Verification des services persistants terminee" ;
 			protected function ExecuteInstructions()
 			{
-				$nomServsPersists = array_keys($this->ApplicationParent->ServsPersists) ;
+				$zone = $this->ZoneParent() ;
+				$nomServsPersists = array_keys($zone->ApplicationParent->ServsPersists) ;
 				foreach($nomServsPersists as $i => $nomServPersist)
 				{
 					$servPersist = & $this->ApplicationParent->ServsPersists[$nomServPersist] ;
@@ -379,6 +380,21 @@
 							sleep($this->DelaiTransition) ;
 						}
 					}
+				}
+				echo $this->Message."\n" ;
+			}
+		}
+		class PvTacheWebCtrlTransacts extends PvTacheWebBaseSimple
+		{
+			public $DelaiExecution = 0.25 ;
+			public $Message = "Verification des transactions en attente terminee" ;
+			protected function ExecuteInstructions()
+			{
+				$zone = $this->ZoneParent() ;
+				$interfsPaiement = $zone->ApplicationParent->InterfsPaiement() ;
+				foreach($interfsPaiement as $i => $interfPaiement)
+				{
+					$interfPaiement->ControleTransactionsEnAttente() ;
 				}
 				echo $this->Message."\n" ;
 			}
@@ -417,6 +433,9 @@
 		{
 			public $TagTitre = "div" ;
 			public $TypeDocument ;
+			public $HoteRecaptcha ;
+			public $CleSiteRecaptcha ;
+			public $CleSecreteRecaptcha ;
 			public $AdrScriptSession ;
 			public $DocumentsWeb = array() ;
 			public $GestTachesWeb ;
@@ -515,8 +534,12 @@
 			public $ClasseCSSMsgExecSucces = "Succes" ;
 			public $ClasseCSSMsgExecErreur = "Erreur" ;
 			public $InscrireActRedirectScriptSession = 1 ;
+			public $InscrireTacheWebCtrlTransacts = 1 ;
 			public $Metas = array() ;
 			public $ActionRedirScriptSession ;
+			public $NomDossierModelesEval ;
+			public $UtiliserModelesEval = 0 ;
+			public $UtiliserModelesEvalAuto = 1 ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -533,6 +556,10 @@
 				$this->DetecteScriptAppele() ;
 				$this->ExecuteScriptAppele() ;
 				$this->TermineExecution() ;
+			}
+			protected function CreeTacheWebCtrlTransacts()
+			{
+				return new PvTacheWebCtrlTransacts() ;
 			}
 			public function RestaureMessageExecutionSession()
 			{
@@ -551,6 +578,10 @@
 				$msg->Contenu = $contenu ;
 				$msg->NomScriptSource = $nomScript ;
 				$_SESSION[$this->CleMessageExecutionSession] = serialize($msg) ;
+			}
+			public function DefinitMessageExecution($statut, $contenu, $nomScript='')
+			{
+				$this->SauveMessageExecutionSession($statut, $contenu, $nomScript) ;
 			}
 			protected function ExecuteActionPrinc()
 			{
@@ -649,6 +680,14 @@
 				if($this->InscrireActRedirectScriptSession == 1)
 				{
 					$this->ActionRedirScriptSession = $this->InsereActionAvantRendu("redirectScriptSession", new PvActionRedirScriptSession()) ;
+				}
+				if($this->InscrireTacheWebCtrlTransacts == 1)
+				{
+					$interfsPaiement = $this->ApplicationParent->InterfsPaiement() ;
+					if(count($interfsPaiement) > 0)
+					{
+						$this->InsereTacheWeb('ctrlTransacts', $this->CreeTacheWebCtrlTransacts()) ;
+					}
 				}
 				if(class_exists($this->NomClasseHabillage))
 				{
@@ -1378,6 +1417,30 @@
 				{
 					redirect_to($urlDefaut) ;
 				}
+			}
+			public function ObtientCheminDossierTaches()
+			{
+				if($this->NomDossierModelesEval === null)
+				{
+					return null ;
+				}
+				return dirname($this->ObtientCheminFichierRelatif()).DIRECTORY_SEPARATOR.$this->NomDossierModelesEval ;
+			}
+			public function ModelesEvalActive()
+			{
+				return ($this->UtiliserModelesEval == 1 && $this->NomDossierModelesEval !== null) ;
+			}
+			public function RenduModeleEval($cheminModele)
+			{
+				ob_start() ;
+				$zone = & $this ;
+				if($this->EstPasNul($this->ScriptPourRendu))
+				{
+					$script = & $this->ScriptPourRendu ;
+				}
+				include $cheminModele ;
+				$ctn = ob_get_clean() ;
+				return $ctn ;
 			}
 		}
 		

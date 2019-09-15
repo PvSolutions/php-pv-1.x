@@ -53,6 +53,12 @@
 			public $Imprimable = 0 ;
 			public $NomActionImprime = "imprimeScript" ;
 			public $ActionImprime ;
+			public $MessageExecution ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->MessageExecution = new PvMessageExecutionZoneWeb() ;
+			}
 			public function ChargeConfig()
 			{
 				parent::ChargeConfig() ;
@@ -234,13 +240,27 @@
 					return '' ;
 				}
 			}
+			public function DefinitMessageExecution($statut, $contenu)
+			{
+				$this->MessageExecution->Statut = $statut ;
+				$this->MessageExecution->Contenu = $contenu ;
+			}
+			public function ObtientMessageExecution()
+			{
+				$msg = $this->MessageExecution ;
+				if($msg->NonRenseigne() || $msg->EstVide())
+				{
+					$msg = $this->ZoneParent->RestaureMessageExecutionSession() ;
+				}
+				return $msg ;
+			}
 			public function RenduMessageExecution()
 			{
 				if(! $this->ZoneParent->InclureRenduMessageExecution || ! $this->InclureRenduMessageExecution)
 				{
 					return '' ;
 				}
-				$msg = $this->ZoneParent->RestaureMessageExecutionSession() ;
+				$msg = $this->ObtientMessageExecution() ;
 				if($msg->NonRenseigne() || $msg->EstVide())
 				{
 					return '' ;
@@ -1465,7 +1485,7 @@ Cordialement' ;
 				{
 					return 1 ;
 				}
-				$ok = $this->ScriptParent->FltCaptcha->Composant->ActionAffichImg->VerifieValeurSoumise($this->ScriptParent->FltCaptcha->Lie()) ;
+				$ok = $this->ScriptParent->FltCaptcha->Composant->VerifieValeurSoumise($this->ScriptParent->FltCaptcha->Lie()) ;
 				return $ok ;
 			}
 		}

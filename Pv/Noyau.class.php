@@ -54,6 +54,10 @@
 				}
 				return $valeurDefaut ;
 			}
+			public function AffecteValSuppl($nom, $valeur)
+			{
+				$this->AttrsSuppl[$nom] = $valeur ;
+			}
 			public function AffecteAttrSuppl($nom, $valeur)
 			{
 				$this->AttrsSuppl[$nom] = $valeur ;
@@ -194,6 +198,13 @@
 			public function ObtientValSuppl($nom, $valeurDefaut=null)
 			{
 				return (isset($this->AttrsSuppl[$nom])) ? $this->AttrsSuppl[$nom] : $valeurDefaut ;
+			}
+			public function RenduModeleEval($cheminModele)
+			{
+				ob_start() ;
+				include $cheminModele ;
+				$ctn = ob_get_clean() ;
+				return $ctn ;
 			}
 		}
 		class PvNul extends PvObjet
@@ -925,6 +936,10 @@
 			public function RecupArgs()
 			{
 				$args = array() ;
+				if(! is_array($_SERVER["argv"]))
+				{
+					return $args ;
+				}
 				for($i=1; $i<count($_SERVER["argv"]); $i++)
 				{
 					$partsArg = explode("=", $_SERVER["argv"][$i], 2) ;

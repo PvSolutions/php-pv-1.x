@@ -189,6 +189,10 @@
 				$ctn .= $this->RenduPiedDocument() ;
 				return $ctn ;
 			}
+			protected function ControleTransactionEnAttente()
+			{
+				// $this->DefinitEtatExecution("paiement_echoue") ;
+			}
 		}
 	}
 	

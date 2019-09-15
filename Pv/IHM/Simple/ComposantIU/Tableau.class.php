@@ -1776,7 +1776,7 @@ window.location.href = window.location.href ;
 						$ctn .= '<tr><td'.(($this->AlignVCellule != '') ? ' valign="'.$this->AlignVCellule.'"' : '').'><div class="container-fluid">'.PHP_EOL ;
 						$inclureLargCell = 1 ;
 						$maxColsXs = ($this->MaxColonnesXs > 0) ? $this->MaxColonnesXs : $this->MaxColonnes ;
-						$colXs = 12 / $this->MaxColonnesXs ;
+						$colXs = 12 / $maxColsXs ;
 						$colDef = 12 / $this->MaxColonnes ;
 						foreach($this->ElementsEnCours as $j => $ligne)
 						{

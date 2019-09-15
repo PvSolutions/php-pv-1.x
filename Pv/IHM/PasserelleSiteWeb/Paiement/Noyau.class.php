@@ -53,6 +53,13 @@
 			public function Prepare(& $transaction)
 			{
 			}
+			public function EstEffectue(& $transaction)
+			{
+				return 0 ;
+			}
+			public function Rembourse(& $transaction)
+			{
+			}
 			public function ConfirmeSucces(& $transaction)
 			{
 			}
@@ -166,6 +173,8 @@
 			public $CheminIcone = "" ;
 			public $Titre = "Ne rien faire" ;
 			public $Description = "" ;
+			protected $DelaiControleTransacts = 600 ; // En secondes
+			protected $MaxTransactsAControler = 5 ; // En secondes
 			protected $TransactionValidee = 0 ;
 			protected $DelaiExpirCfgsTransact = 24 ;
 			protected $NomParamResultat = "resultat" ;
@@ -210,6 +219,11 @@
 			}
 			protected function ExporteFichCfgTransition()
 			{
+				if($this->EnregistrerTransaction)
+				{
+					$this->SauveTransaction() ;
+					return ;
+				}
 				$cheminFich = $this->CheminRepTransacts()."/".$this->_Transaction->IdTransaction.".dat" ;
 				$resFich = fopen($cheminFich, "w") ;
 				if($resFich != false)
@@ -220,6 +234,16 @@
 			}
 			protected function ImporteFichCfgTransition()
 			{
+				if($this->EnregistrerTransaction == 1)
+				{
+					$bd = $this->CreeBdTransaction() ;
+					$lgn = $bd->FetchSqlRow('select * from '.$bd->EscapeTableName($this->NomTableTransaction).' where id_transaction='.$bd->ParamPrefix.'id', array('id' => $this->_Transaction->IdTransaction)) ;
+					if(is_array($lgn) && count($lgn) > 0 && $lgn["cfg"] != '')
+					{
+						$this->_Transaction->Cfg = unserialize($lgn["cfg"]) ;
+					}
+					return ;
+				}
 				$cheminFich = $this->CheminRepTransacts()."/".$this->_Transaction->IdTransaction.".dat" ;
 				$ctnFich = '' ;
 				if(file_exists($cheminFich))
@@ -509,11 +533,11 @@
 			}
 			protected function TransactionEchouee()
 			{
-				return $this->_EtatExecution->Id == "paiement_echoue" || $this->_EtatExecution->Id == "exception_paiement" ;
+				return $this->_EtatExecution->Id == "paiement_echoue" || $this->_EtatExecution->Id == "exception_paiement" || $this->_EtatExecution->Id == "paiement_expire" ;
 			}
 			protected function TransactionAnnulee()
 			{
-				return $this->_EtatExecution->Id != "annule" ;
+				return $this->_EtatExecution->Id != "annule" || $this->_EtatExecution->Id != "paiement_annule" ;
 			}
 			protected function ConfirmeTransactionReussieAuto()
 			{
@@ -521,7 +545,14 @@
 				if($this->_Transaction->Cfg->NomSvcAprPaiement != '' && isset($this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement]))
 				{
 					$svcAprPaiement = & $this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement] ;
-					$svcAprPaiement->ConfirmeSucces($this->_Transaction) ;
+					if($svcAprPaiement->EstEffectue($this->_Transaction))
+					{
+						$svcAprPaiement->Rembourse($this->_Transaction) ;
+					}
+					else
+					{
+						$svcAprPaiement->ConfirmeSucces($this->_Transaction) ;
+					}
 				}
 				else
 				{
@@ -704,6 +735,65 @@
 				$tabl->InsereDefColCachee("id_etat") ;
 				$tabl->SourceValeursSuppl = new PvSrvValsSupplTransactInterfPaie() ;
 				$tabl->SourceValeursSuppl->InterfPaiemtParent = & $this ;
+			}
+			public function ControleTransactionsEnAttente()
+			{
+				if($this->EnregistrerTransaction == 0)
+				{
+					return ;
+				}
+				$bd = $this->CreeBdTransaction() ;
+				$lgnsTransact = array() ;
+				do
+				{
+					$lgnsTransact = $bd->LimitSqlRows(
+						"select * from ".$bd->EscapeTableName($this->NomTableTransaction)." where nom_interf_paiemt=".$bd->ParamPrefix."nom and id_etat not in ('paiement_reussi', 'paiement_annule', 'paiement_echoue', 'paiement_expire') and timestamp_etat + ".$this->DelaiControleTransacts." <= ".date("U"),
+						array("nom" => $this->NomElementApplication),
+						0, $this->MaxTransactsAControler
+					) ;
+					if(! is_array($lgnsTransact))
+					{
+						break ;
+					}
+					foreach($lgnsTransact as $i => $lgnTransact)
+					{
+						$this->_Transaction = $this->CreeTransaction() ;
+						$this->_Transaction->ImporteParLgn($lgnTransact) ;
+						$this->_EtatExecution->Id = $lgnTransact["id_etat"] ;
+						$this->_EtatExecution->TimestampCapt = $lgnTransact["timestamp_etat"] ;
+						$this->ControleTransactionEnAttente() ;
+						if(! in_array($this->_EtatExecution->Id, array('paiement_reussi', 'paiement_annule', 'paiement_echoue', 'paiement_expire')))
+						{
+							$this->DefinitEtatExecution("verification_ok") ;
+						}
+						else
+						{
+							if($this->TransactionEffectuee())
+							{
+								if($this->TransactionReussie())
+								{
+									$this->ConfirmeTransactionReussieAuto() ;
+									$this->ConfirmeTransactionReussie() ;
+								}
+								else
+								{
+									$this->ConfirmeTransactionEchoueeAuto() ;
+									$this->ConfirmeTransactionEchouee() ;
+								}
+							}
+							elseif($this->TransactionAnnulee())
+							{
+								$this->ConfirmeTransactionAnnuleeAuto() ;
+								$this->ConfirmeTransactionAnnulee() ;
+							}
+							$this->TermineTransaction() ;
+						}
+					}
+				}
+				while(is_array($lgnsTransact) && count($lgnsTransact) > 0) ;
+			}
+			protected function ControleTransactionEnAttente()
+			{
 			}
 		}
 		

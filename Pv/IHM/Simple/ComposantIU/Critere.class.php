@@ -154,7 +154,7 @@
 			public $MessageErreur = "Le code de s&eacute;curit&eacute; saisi est incorrect" ;
 			public function EstRespecte()
 			{
-				$ok  = $this->FltCaptchaParent->Composant->ActionAffichImg->VerifieValeurSoumise($this->FltCaptchaParent->Lie()) ;
+				$ok  = $this->FltCaptchaParent->Composant->VerifieValeurSoumise($this->FltCaptchaParent->Lie()) ;
 				return $ok ;
 			}
 		}

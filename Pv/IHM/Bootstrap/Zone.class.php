@@ -38,6 +38,8 @@
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesBootstrap" ;
 			public $NomClasseRemplisseurConfigMembership = "PvRemplisseurConfigMembershipBootstrap" ;
 			public $InclureHelpers = 1 ;
+			public $ClasseCSSMsgExecSucces = "bg-success text-success" ;
+			public $ClasseCSSMsgExecErreur = "bg-danger text-danger" ;
 			public $AbcisseXNavbarFlottant = "0px" ;
 			public $AbcisseYNavbarFlottant = "0px" ;
 			public $LargeurNavbarFlottant = "95%" ;

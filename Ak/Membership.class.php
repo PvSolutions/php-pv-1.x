@@ -170,6 +170,17 @@
 				if(! empty($this->SessionMemberId))
 					$this->MemberLogged = $this->FetchMember($this->SessionMemberId) ;
 			}
+			public function LoadMember($id)
+			{
+				$this->SessionMemberId = $id ;
+				if($this->SessionMemberId === false && $this->UseGuestMember && $this->GuestMemberId != false)
+				{
+					$this->SessionMemberId = $this->GuestMemberId ;
+				}
+				$this->MemberLogged = $this->NullValue() ;
+				if(! empty($this->SessionMemberId))
+					$this->MemberLogged = $this->FetchMember($this->SessionMemberId) ;
+			}
 			public function SaveSession($memberId)
 			{
 				$this->SetSessionValue($this->SessionMemberKey, $memberId) ;

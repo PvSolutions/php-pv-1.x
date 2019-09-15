@@ -28,6 +28,8 @@
 		{
 			public $TypeComposant = "FormulaireDonneesHTML" ;
 			public $Largeur = 0 ;
+			public $UtiliserLargeur = 1 ;
+			public $IdTagForm = "" ;
 			public $InclureElementEnCours = 1 ;
 			public $InclureTotalElements = 1 ;
 			public $RequeteSelection = "" ;
@@ -81,8 +83,12 @@
 			public $ParamsScriptExecSuccesCommandeExecuter = array() ;
 			public $ActCmdsCommandeExecuter = array() ;
 			public $CriteresCommandeExecuter = array() ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseBoutonCommandeExecuter = "" ;
 			public $MsgExecSuccesCommandeAnnuler = "" ;
 			public $MsgExecEchecCommandeAnnuler = "" ;
+			public $ClasseCSSCommandeAnnuler = "" ;
+			public $ClasseBoutonCommandeAnnuler = "" ;
 			public $ActCmdsCommandeAnnuler = array() ;
 			public $CriteresCommandeAnnuler = array() ;
 			public $PopupMessageExecution = 0 ;
@@ -797,20 +803,26 @@
 						}
 						$this->DessinateurFiltresEdition->InclureRenduLibelle = $this->InclureRenduLibelleFiltresEdition ;
 						$ctn .= '<div class="FormulaireFiltres">'.PHP_EOL ;
-						$ctn .= '<table' ;
-						$ctn .= ' cellpadding="2"' ;
-						if($this->Largeur != "")
+						if($this->UtiliserLargeur == 1)
 						{
-							$ctn .= ' width="'.$this->Largeur.'"' ;
+							$ctn .= '<table' ;
+							$ctn .= ' cellpadding="2"' ;
+							if($this->Largeur != "")
+							{
+								$ctn .= ' width="'.$this->Largeur.'"' ;
+							}
+							$ctn .= ' cellspacing="0"' ;
+							$ctn .= '>'.PHP_EOL ;
+							$ctn .= '<tr>'.PHP_EOL ;
+							$ctn .= '<td>'.PHP_EOL ;
 						}
-						$ctn .= ' cellspacing="0"' ;
-						$ctn .= '>'.PHP_EOL ;
-						$ctn .= '<tr>'.PHP_EOL ;
-						$ctn .= '<td>'.PHP_EOL ;
 						$ctn .= $this->RenduFormulaireFiltreElemEnCours() ;
-						$ctn .= '</td>'.PHP_EOL ;
-						$ctn .= '</tr>'.PHP_EOL ;
-						$ctn .= '</table>'.PHP_EOL ;
+						if($this->UtiliserLargeur == 1)
+						{
+							$ctn .= '</td>'.PHP_EOL ;
+							$ctn .= '</tr>'.PHP_EOL ;
+							$ctn .= '</table>'.PHP_EOL ;
+						}
 						$ctn .= '</div>' ;
 						$ctn .= $this->DeclarationSoumetFormulaireFiltres($this->FiltresEdition).PHP_EOL ;
 					}
@@ -1044,6 +1056,14 @@ form.submit() ;
 						$this->CommandeExecuter->InscritNouvCritere($this->CriteresCommandeExecuter[$i]) ;
 					}
 				}
+				if($this->ClasseBoutonCommandeExecuter != '')
+				{
+					$this->CommandeExecuter->AffecteAttrSuppl('classe-btn', $this->ClasseBoutonCommandeExecuter) ; 
+				}
+				if($this->ClasseCSSCommandeExecuter != '')
+				{
+					$this->CommandeExecuter->NomClsCSS = $this->ClasseCSSCommandeExecuter ; 
+				}
 				return 1 ;
 			}
 			protected function ChargeCommandeAnnuler()
@@ -1074,6 +1094,14 @@ form.submit() ;
 					{
 						$this->CommandeAnnuler->InscritNouvCritere($this->CriteresCommandeAnnuler[$i]) ;
 					}
+				}
+				if($this->ClasseBoutonCommandeAnnuler != '')
+				{
+					$this->CommandeAnnuler->AffecteAttrSuppl('classe-btn', $this->ClasseBoutonCommandeAnnuler) ; 
+				}
+				if($this->ClasseCSSCommandeAnnuler != '')
+				{
+					$this->CommandeAnnuler->NomClsCSS = $this->ClasseCSSCommandeAnnuler ; 
 				}
 				return 1 ;
 			}
@@ -1172,6 +1200,7 @@ form.submit() ;
 		
 		class PvFormulaireDonneesBootstrap extends PvFormulaireDonneesHtml
 		{
+			public $UtiliserLargeur = 1 ;
 			public $ClasseCSSSucces = "bg-primary text-primary" ;
 			public $ClasseCSSErreur = "bg-danger text-danger" ;
 			protected function InitConfig()

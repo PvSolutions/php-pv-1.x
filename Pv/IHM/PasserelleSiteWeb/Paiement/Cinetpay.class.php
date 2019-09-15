@@ -116,13 +116,17 @@
 				{
 					$bd = $this->CreeBdCinetpay() ;
 					$bd->RunSql(
-						"update ".$bd->EscapeTableName($this->NomTableTransactCinetpay)." set date_retour=".$bd->SqlNow().", ctn_res_retour=".$bd->ParamPrefix."ctnRetour where id_transaction=:idTransact",
+						"update ".$bd->EscapeTableName($this->NomTableTransactCinetpay)." set date_retour=".$bd->SqlNow().", ctn_res_retour=".$bd->ParamPrefix."ctnRetour where id_transaction=".$bd->ParamPrefix."idTransact",
 						array(
 							"idTransact" => $this->_Transaction->IdTransaction,
 							"ctnRetour" => http_build_query_string($_POST),
 						)
 					) ;
 				}
+				$this->VerifieFinTransaction() ;
+			}
+			protected function VerifieFinTransaction()
+			{
 				$httpSess = new HttpSession() ;
 				$codeErrVerif = "" ;
 				$msgErrVerif = "" ;
@@ -176,23 +180,27 @@
 							$this->DefinitEtatExecution("exception_paiement", "Impossible d'obtenir le statut de la transaction a partir de l'URL de verification") ;
 						}
 					}
-				if($this->EnregistrerTransactCinetpay == 1)
-				{
-					$bd = $this->CreeBdCinetpay() ;
-					$bd->RunSql(
-						"update ".$bd->EscapeTableName($this->NomTableTransactCinetpay)." set date_verif=".$bd->SqlNow().", url_verif=".$bd->ParamPrefix."urlVerif, ctn_req_verif=".$bd->ParamPrefix."ctnReqVerif, ctn_res_verif=".$bd->ParamPrefix."ctnResVerif, est_regle=".$bd->ParamPrefix."estRegle, code_err_verif=".$bd->ParamPrefix."codeErrVerif, msg_err_verif=".$bd->ParamPrefix."msgErrVerif where id_transaction=:idTransact",
-						array(
-							"idTransact" => $this->_Transaction->IdTransaction,
-							"urlVerif" => $this->UrlVerif(),
-							"ctnReqVerif" => $httpSess->GetRequestContents(),
-							"ctnResVerif" => $httpSess->GetResponseContents(),
-							"estRegle" => ($codeErrVerif == 0) ? 0 : 1,
-							"codeErrVerif" => $codeErrVerif,
-							"msgErrVerif" => $msgErrVerif,
-						)
-					) ;
+					if($this->EnregistrerTransactCinetpay == 1)
+					{
+						$bd = $this->CreeBdCinetpay() ;
+						$bd->RunSql(
+							"update ".$bd->EscapeTableName($this->NomTableTransactCinetpay)." set date_verif=".$bd->SqlNow().", url_verif=".$bd->ParamPrefix."urlVerif, ctn_req_verif=".$bd->ParamPrefix."ctnReqVerif, ctn_res_verif=".$bd->ParamPrefix."ctnResVerif, est_regle=".$bd->ParamPrefix."estRegle, code_err_verif=".$bd->ParamPrefix."codeErrVerif, msg_err_verif=".$bd->ParamPrefix."msgErrVerif where id_transaction=:idTransact",
+							array(
+								"idTransact" => $this->_Transaction->IdTransaction,
+								"urlVerif" => $this->UrlVerif(),
+								"ctnReqVerif" => $httpSess->GetRequestContents(),
+								"ctnResVerif" => $httpSess->GetResponseContents(),
+								"estRegle" => ($codeErrVerif == 0) ? 0 : 1,
+								"codeErrVerif" => $codeErrVerif,
+								"msgErrVerif" => $msgErrVerif,
+							)
+						) ;
+					}
 				}
-				}
+			}
+			protected function ControleTransactionEnAttente()
+			{
+				$this->VerifieFinTransaction() ;
 			}
 			protected function PrepareTransaction()
 			{

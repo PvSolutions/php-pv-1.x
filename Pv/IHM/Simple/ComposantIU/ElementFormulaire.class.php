@@ -236,6 +236,10 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 		{
 			public $TypeElementFormulaire = "text" ;
 		}
+		class PvZoneDateHtml extends PvZoneEntreeHtml
+		{
+			public $TypeElementFormulaire = "date" ;
+		}
 		class PvZoneMultiligneHtml extends PvElementFormulaireHtml
 		{
 			public $TotalLignes = 0 ;
@@ -255,7 +259,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 				$ctn .= $this->RenduAttrStyleCSS() ;
 				$ctn .= $this->RenduAttrsSupplHtml() ;
 				$ctn .= '>' ;
-				$ctn .= htmlentities($this->Valeur) ;
+				$ctn .= $this->Valeur ;
 				$ctn .= '</textarea>' ;
 				return $ctn ;
 			}
@@ -1395,7 +1399,7 @@ break ;
 				$url = get_current_url() ;
 				$this->CorrigeIDsElementHtml() ;
 				$ctn = '' ;
-				$ctn .= '<div class="Conteneur'.$this->IDInstanceCalc.'"><input type="hidden" name="'.$this->NomElementHtml.'" id="'.$this->IDInstanceCalc.'" value="'.htmlentities($this->Valeur).'" /><span id="'.$this->IDInstanceCalc.'_Libelle">'.htmlentities($this->RenduValeurCadre()).'</span></div>' ;
+				$ctn .= '<div class="Conteneur'.$this->IDInstanceCalc.'"><input type="hidden" name="'.$this->NomElementHtml.'" id="'.$this->IDInstanceCalc.'" value="'.htmlentities($this->Valeur).'" />'.$this->RenduValeurCadre().'</div>' ;
 				$urlCadre = update_url_params($url, array($this->IDInstanceCalc.'_'.$this->NomParamCadre => 1)) ;
 				switch(strtoupper($this->StyleIncorporation))
 				{
@@ -1481,7 +1485,7 @@ break ;
 			}
 		}
 		
-		class PvZoneDateHtml extends PvElementFormulaireHtml
+		class PvDateEditorHtml extends PvElementFormulaireHtml
 		{
 			public $ValeurJour = "" ;
 			public $ValeurMois = "" ;

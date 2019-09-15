@@ -755,6 +755,9 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				echo '<link>'.htmlentities($this->ZoneParent->ObtientUrl()).'</link>'.PHP_EOL ;
 			}
 		}
+		class PvActionWeb extends PvActionBaseZoneWebSimple
+		{
+		}
 		
 		class PvDessinateurRenduBase
 		{
@@ -2269,7 +2272,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $StatutExecution = 0 ;
 			public $Criteres = array() ;
 			public $Actions = array() ;
-			public $SeparateurCriteresNonRespectes = "<br/>" ;
+			public $SeparateurCriteresNonRespectes = "; " ;
 			public $Liens = array() ;
 			public $InscrireLienAnnuler = 0 ;
 			public $InscrireLienReprendre = 0 ;

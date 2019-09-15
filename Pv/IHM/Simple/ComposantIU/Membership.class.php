@@ -698,6 +698,7 @@
 			{
 				parent::ExecuteInstructions() ;
 				$form = & $this->FormulaireDonneesParent ;
+				$membership = & $form->ZoneParent->Membership ;
 				$script = & $form->ScriptParent ;
 				$email = ($membership->LoginWithEmail == 0) ? $form->FiltreEmailMembre->Lie() : $form->FiltreLoginMembre->Lie() ;
 				$membership = & $script->ZoneParent->Membership ;

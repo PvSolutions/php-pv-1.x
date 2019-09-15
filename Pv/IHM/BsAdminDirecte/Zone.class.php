@@ -39,6 +39,8 @@
 			public $BarreMenuSuperfish = null ;
 			protected $TypeRendu = 0 ;
 			public $NomClasseRemplisseurConfigMembership = "PvRemplisseurConfigMembershipBsAdminDirecte" ;
+			public $ClasseCSSMsgExecSucces = "bg-success text-success" ;
+			public $ClasseCSSMsgExecErreur = "bg-danger text-danger" ;
 			public $NomScriptBienvenue = "bienvenue" ;
 			protected $LargeurFenInscription = 525 ;
 			protected $HauteurFenInscription = 450 ;

@@ -767,6 +767,10 @@
 				}
 				return $ok ;
 			}
+			public function SurScriptParDefaut()
+			{
+				return ($this->ValeurParamScriptAppele == $this->NomScriptParDefaut) ;
+			}
 			public function SurScriptConnecte()
 			{
 				return ($this->InclureScriptsMembership == 0 || ($this->PossedeMembreConnecte() && $this->NomScriptDeconnexion != $this->ValeurBruteParamScriptAppele)) ;
@@ -821,9 +825,17 @@
 			{
 				if(! $this->PossedeMembreConnecte())
 				{
-					return 0 ;
+					return "" ;
 				}
 				return $this->Membership->MemberLogged->Login ;
+			}
+			public function NomCompletMembreConnecte($inverse=0)
+			{
+				if(! $this->PossedeMembreConnecte())
+				{
+					return "" ;
+				}
+				return ($inverse == 0) ? $this->AttrMembreConnecte("MEMBER_FIRST_NAME")." ".$this->AttrMembreConnecte("MEMBER_LAST_NAME") : $this->AttrMembreConnecte("MEMBER_LAST_NAME")." ".$this->AttrMembreConnecte("MEMBER_FIRST_NAME") ;
 			}
 			public function AttrMembreConnecte($nomAttr)
 			{
