@@ -79,6 +79,7 @@
 				$ctn .= '<!doctype html>'.PHP_EOL ;
 				$ctn .= '<html lang="'.$zone->LangueDocument.'">'.PHP_EOL ;
 				$ctn .= '<head>'.PHP_EOL ;
+				$ctn .= $zone->RenduLienBase() ;
 				$ctn .= $zone->RenduLienFavicon() ;
 				$ctn .= $zone->RenduMetasDocument() ;
 				$ctn .= '<title>'.$zone->ObtientTitreDocument().'</title>'.PHP_EOL ;
@@ -129,6 +130,11 @@
 			protected $Taches = array() ;
 			public $ZoneParent = null ;
 			public $NomElementZone = "" ;
+			public $Activer = 1 ;
+			public function EstPret()
+			{
+				return ($this->Activer == 1 && is_dir($this->ObtientCheminDossierTaches())) ;
+			}
 			public function AdopteZone($nom, & $zone)
 			{
 				$this->ZoneParent = & $zone ;
@@ -154,6 +160,10 @@
 			}
 			public function Execute()
 			{
+				if(! $this->EstPret())
+				{
+					return ;
+				}
 				$taches = $this->ObtientTaches() ;
 				foreach($taches as $i => & $tache)
 				{
@@ -549,6 +559,7 @@
 			}
 			public function Execute()
 			{
+				$this->ExecuteGestTachesWeb() ;
 				$this->DetecteActionAppelee() ;
 				$this->ExecuteActionPrinc() ;
 				$this->DemarreExecution() ;
@@ -582,6 +593,10 @@
 			public function DefinitMessageExecution($statut, $contenu, $nomScript='')
 			{
 				$this->SauveMessageExecutionSession($statut, $contenu, $nomScript) ;
+			}
+			public function ConfirmeSuccesExecution($contenu, $nomScript='')
+			{
+				$this->SauveMessageExecutionSession(1, $contenu, $nomScript) ;
 			}
 			protected function ExecuteActionPrinc()
 			{
@@ -1073,11 +1088,49 @@
 				$ctn .= PHP_EOL ;
 				return $ctn ;
 			}
+			public function RenduLienBase()
+			{
+				$ctn = '' ;
+				if($this->UrlBase == '')
+				{
+					return '' ;
+				}
+				$ctn = '<base href="'.$this->UrlBase.'">' ;
+				return $ctn ;
+			}
+			public function RenduTitre()
+			{
+				$script = & $this->ScriptPourRendu ;
+				$tagTitre = $this->TagTitre ;
+				if($script->TagTitre != '')
+				{
+					$tagTitre = $script->TagTitre ;
+				}
+				if($tagTitre == '')
+				{
+					$tagTitre = 'div' ;
+				}
+				if(! $this->InclureRenduTitre || ! $script->InclureRenduTitre)
+				{
+					return '' ;
+				}
+				$ctn = '' ;
+				$ctn .= '<'.$tagTitre.' class="titre">' ;
+				$ctnIcone = $script->RenduIcone() ;
+				if($ctnIcone != '')
+				{
+					$ctn .= $ctnIcone.'&nbsp;&nbsp;' ;
+				}
+				$ctn .= $script->Titre ;
+				$ctn .= '</'.$tagTitre.'>' ;
+				return $ctn ;
+			}
 			public function RenduEnteteDocument()
 			{
 				$this->InclutLibrairiesExternes() ;
 				$ctn = '' ;
 				$ctn .= '<head>'.PHP_EOL ;
+				$ctn .= $this->RenduLienBase() ;
 				$ctn .= $this->RenduLienFavicon() ;
 				$ctn .= $this->RenduMetasDocument() ;
 				$ctn .= '<title>'.$this->ObtientTitreDocument().'</title>'.PHP_EOL ;
@@ -1088,9 +1141,9 @@
 				}
 				if($this->InclureCtnJsEntete)
 				{
-					$ctn .= $this->RenduCtnJs() ;
+					$ctn .= $this->RenduCtnJs().PHP_EOL ;
 				}
-				$ctn .= $this->RenduExtraHead ;
+				$ctn .= ($this->RenduExtraHead != '') ? $this->RenduExtraHead. PHP_EOL : '' ;
 				$ctn .= '</head>' ;
 				return $ctn ;
 			}
@@ -1172,7 +1225,6 @@
 			public function ExecuteScript(& $script)
 			{
 				$this->RapporteRequeteEnvoyee() ;
-				$this->ExecuteGestTachesWeb() ;
 				if($script->EstBienRefere() == 0)
 				{
 					$this->ExecuteScriptMalRefere($script) ;
@@ -1236,16 +1288,18 @@
 			{
 			}
 			// Incrire un fichier CSS
-			public function InscritContenuCSS($contenu)
+			public function InscritContenuCSS($contenu, $media="")
 			{
 				$ctnCSS = new PvBaliseCSS() ;
 				$ctnCSS->Definitions = $contenu ;
+				$ctnCSS->Media = $media ;
 				$this->ContenusCSS[] = $ctnCSS ;
 			}
-			public function InscritLienCSS($href)
+			public function InscritLienCSS($href, $media="")
 			{
 				$ctnCSS = new PvLienFichierCSS() ;
 				$ctnCSS->Href = $href ;
+				$ctnCSS->Media = $media ;
 				$this->ContenusCSS[] = $ctnCSS ;
 			}
 			public function InscritContenuJs($contenu)

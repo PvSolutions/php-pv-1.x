@@ -1,49 +1,41 @@
 <?php
 	
-	if(! defined('PV_MEMBERSHIP_BOOTSTRAP4'))
+	if(! defined('PV_MEMBERSHIP_MATERIALIZE'))
 	{
-		define('PV_MEMBERSHIP_BOOTSTRAP4', 1) ;
+		define('PV_MEMBERSHIP_MATERIALIZE', 1) ;
 		
-		class PvRemplisseurConfigMembershipBootstrap4 extends PvRemplisseurConfigMembershipSimple
+		class PvRemplisseurConfigMembershipMaterialize extends PvRemplisseurConfigMembershipSimple
 		{
 			public function CreeFormulaireDonnees()
 			{
-				return new PvFormulaireDonneesBootstrap4() ;
+				return new PvFormulaireDonneesMaterialize() ;
 			}
 		}
 		
-		class PvScriptConnexionBootstrap4 extends PvScriptConnexionWeb
+		class PvScriptConnexionMaterialize extends PvScriptConnexionWeb
 		{
-			public $MessageRecouvreMP = '<br><p>Mot de passe oubli&eacute; ? <a href="${url}">Cliquez ici</a> pour le r&eacute;cup&eacute;rer</p>' ;
-			public $MessageInscription = '<br><p>Si vous n\'avez pas de compte, <a href="${url}">Inscrivez-vous</a>.</p>' ;
+			public $MessageRecouvreMP = '<p>Mot de passe oubli&eacute; ? <a href="${url}">Cliquez ici</a> pour le r&eacute;cup&eacute;rer</p>' ;
+			public $MessageInscription = '<p>Si vous n\'avez pas de compte, <a href="${url}">Inscrivez-vous</a>.</p>' ;
 			public $ColXsLibelle = 5 ;
 			public $TagTitre = 'h3' ;
 			public $InclureIcones = 0 ;
-			public $ClasseCSSCadre = "col-12 col-sm-12 col-md-4" ;
-			public $ClasseCSSErreur = 'alert alert-danger alert-dismissable' ;
+			public $ClasseCSSCadre = "col l6 s12 m10 xl6" ;
+			public $ClasseCSSErreur = 'card-panel red lighten-4' ;
 			public function RenduSpecifique()
 			{
 				$ctn = '' ;
-				$ctn .= '<div class="container-fluid">'.PHP_EOL ;
 				$ctn .= '<div class="row">'.PHP_EOL ;
-				$ctn .= '<div class="'.$this->ClasseCSSCadre.' center-block">'.PHP_EOL ;
-				$ctn .= '<form class="user_login_box '.$this->NomClsCSSFormulaireDonnees.'" action="'.$this->UrlSoumetTentativeConnexion().'" role="form" method="post">'.PHP_EOL ;
-				$ctn .= '<div class="panel panel-default">'.PHP_EOL ;
-				$ctn .= '<div class="panel-body">'.PHP_EOL ;
+				$ctn .= '<form class="user_login_box '.$this->ClasseCSSCadre.' '.$this->NomClsCSSFormulaireDonnees.'" action="'.$this->UrlSoumetTentativeConnexion().'" method="post">'.PHP_EOL ;
+				$ctn .= '<div class="card-panel">'.PHP_EOL ;
 				$ctn .= $this->RenduMessageErreur() ;
-				$ctn .= '<fieldset>'.PHP_EOL ;
 				$ctn .= $this->RenduTableauParametres().PHP_EOL ;
-				$ctn .= '</fieldset>'.PHP_EOL ;
 				if($this->AfficherBoutonSoumettre)
 				{
 					$ctn .= '<input type="submit" value="'.$this->LibelleBoutonSoumettre.'" class="btn btn-lg btn-success btn-block" />'.PHP_EOL ;
 				}
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>' ;
 				if($this->ZoneParent->AutoriserInscription == 1 && $this->ZoneParent->EstPasNul($this->ZoneParent->ScriptInscription))
 				{
 					if($this->AutoriserUrlsRetour == 1 && $this->ZoneParent->ScriptInscription->AutoriserUrlsRetour == 1)
@@ -61,76 +53,26 @@
 			public function RenduTableauParametres()
 			{
 				$ctn = '' ;
-				$ctn .= '<div class="form-group">
-<div class="container-fluid">
-<div class="row">
-<div class="col-'.$this->ColXsLibelle.'" align="center">'.$this->LibellePseudo.'</div>
-<div class="col-'.(12 - $this->ColXsLibelle).'">
-'.(($this->InclureIcones) ? '<div class="input-group">
-<span class="input-group-addon">
-<i class="glyphicon glyphicon-user"></i>
-</span>' : '').'<input class="form-control" name="'.$this->NomParamPseudo.'" type="text" value="'.htmlspecialchars($this->ValeurParamPseudo).'" autofocus />
-'.(($this->InclureIcones) ? '</div>' : '').'</div>
+				$ctn .= '<div class="row">
+<div class="input-field">
+<input class="validate" id="login" name="'.$this->NomParamPseudo.'" type="text" value="'.htmlspecialchars($this->ValeurParamPseudo).'" autofocus />
+<label for="login">'.$this->LibellePseudo.'</label>
 </div>
-</div>
-</div>
-<div class="form-group">
-<div class="container-fluid">
-<div class="row">
-<div class="col-'.$this->ColXsLibelle.'" align="center">'.$this->LibelleMotPasse.'</div>
-<div class="col-'.(12 - $this->ColXsLibelle).'">
-'.(($this->InclureIcones) ? '<div class="input-group">
-<span class="input-group-addon">
-<i class="glyphicon glyphicon-lock"></i>
-</span>' : '').'<input class="form-control" name="'.$this->NomParamMotPasse.'" type="password" value="" />
-'.(($this->InclureIcones) ? '</div>' : '').'</div>
-</div>
+<div class="input-field">
+<input class="form-control" name="'.$this->NomParamMotPasse.'" id="password" type="password" value="" />
+<label for="password">'.$this->LibelleMotPasse.'</label>
 </div>
 </div>' ;
 				$ctn .= '<input type="hidden" name="'.$this->NomParamSoumetTentative.'" value="'.htmlentities($this->ValeurParamSoumetTentative).'" />' ;
-				if($this->InclureIcones)
-				{
-					$ctn .= '<style type="text/css">
-.icon-addon {
-    position: relative;
-    color: #555;
-    display: block;
-}
-.icon-addon:after,
-.icon-addon:before {
-    display: table;
-    content: " ";
-}
-
-.icon-addon:after {
-    clear: both;
-}
-
-.icon-addon.addon-md .glyphicon,
-.icon-addon .glyphicon, 
-.icon-addon.addon-md .fa,
-.icon-addon .fa {
-    position: absolute;
-    z-index: 2;
-    left: 10px;
-    font-size: 14px;
-    width: 20px;
-    margin-left: -2.5px;
-    text-align: center;
-    padding: 10px 0;
-    top: 1px
-}
-</style>' ;
-				}
 				return $ctn ;
 			}
 		}
-		class PvScriptRecouvreMPBootstrap4 extends PvScriptRecouvreMPWeb
+		class PvScriptRecouvreMPMaterialize extends PvScriptRecouvreMPWeb
 		{
 			public $TagTitre = "h3" ;
-			public $NomClasseFormulaireDonnees = "PvFormulaireRecouvreMPBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireRecouvreMPMaterialize" ;
 		}
-		class PvScriptDeconnexionBootstrap4 extends PvScriptDeconnexionWeb
+		class PvScriptDeconnexionMaterialize extends PvScriptDeconnexionWeb
 		{
 			public $TagTitre = "h3" ;
 			public function RenduSpecifique()
@@ -145,20 +87,20 @@
 			}
 		}
 		
-		class PvTableauMembresBootstrap4 extends PvTableauMembresMSHtml
+		class PvTableauMembresMaterialize extends PvTableauMembresMSHtml
 		{
 			public $SautLigneSansCommande = 0 ;
-			public $MaxFiltresEditionParLigne = 2 ;
-			public $ClasseCSSRangee = "table-striped" ;
-			public $ClasseCSSBtnNav = "btn-primary" ;
-			public $ClsBstBoutonSoumettre = "btn-primary" ;
-			public $ClsBstFormFiltresSelect = "col-sm-8" ;
+			public $ClasseCSSTitre = "teal lighten-4" ;
+			public $ClasseCSSRangee = "highlight" ;
+			public $ClasseCSSBtnNav = "waves-effect waves-light btn" ;
+			public $ClsBstBoutonSoumettre = "waves-effect waves-light btn" ;
+			public $ClsBstFormFiltresSelect = "col s12 m10 l8 xl6" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap4() ;
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
-				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap4() ;
+				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+				$this->NavigateurRangees = new PvNavTableauDonneesMaterialize() ;
 			}
 			protected function RenduFormulaireFiltres()
 			{
@@ -178,31 +120,36 @@
 				{
 					return '' ;
 				}
-				$this->DessinateurFiltresSelection->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
-				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;" role="form">'.PHP_EOL ;
-				$ctn .= '<div class="panel panel-default">'.PHP_EOL ;
+				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;">'.PHP_EOL ;
+				$ctn .= '<div class="row">'.PHP_EOL ;
+				$ctn .= '<div class="'.$this->ClsBstFormFiltresSelect.'">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
 				{
-					$ctn .= '<div class="panel-heading" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
+					$ctn .= '<div class="card-panel '.$this->ClasseCSSTitre.'" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
 					$ctn .= $this->TitreFormulaireFiltres ;
 					$ctn .= '</div>'.PHP_EOL ;
 				}
-				$ctn .= '<div class="panel-body">'.PHP_EOL ;
-				$ctn .= '<div class="container-fluid">'.PHP_EOL ;
-				$ctn .= '<div class="row">'.PHP_EOL ;
-				$ctn .= '<div class="'.$this->ClsBstFormFiltresSelect.'">'.PHP_EOL ;
+				$ctn .= '<div class="card-panel">'.PHP_EOL ;
 				$ctn .= $this->DessinateurFiltresSelection->Execute($this->ScriptParent, $this, $this->FiltresSelection) ;
 				$ctn .= '<input type="hidden" name="'.$this->NomParamFiltresSoumis().'" id="'.$this->NomParamFiltresSoumis().'" value="1" />'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '<div class="panel-footer">'.PHP_EOL ;
+				$ctn .= '<div class="row">'.PHP_EOL ;
 				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
-				$ctn .= $this->DeclarationSoumetFormulaireFiltres($this->FiltresSelection) ;
+				return $ctn ;
+			}
+			protected function RenduBlocCommandes()
+			{
+				$ctn = trim(parent::RenduBlocCommandes()) ;
+				if(count($this->Commandes) > 0)
+				{
+					$ctn = '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL
+						.$ctn.PHP_EOL
+						.'</div></div>' ;
+				}
 				return $ctn ;
 			}
 			protected function RenduRangeeDonnees()
@@ -214,15 +161,15 @@
 					{
 						$libelleTriAsc = '<span data-fa-transform="up-4" class="text-muted fa fa-sort-up" title="'.htmlspecialchars($this->LibelleTriAsc).'"></span>' ;
 						$libelleTriDesc = '<span data-fa-transform="down-4" class="text-muted fa fa-sort-down" title="'.htmlspecialchars($this->LibelleTriDesc).'"></span>' ;
-						$libelleTriAscSelectionne = '<span data-fa-transform="up-4" class="fa fa-sort-up" title="'.htmlspecialchars($this->LibelleTriAsc).'"></span>' ;
-						$libelleTriDescSelectionne = '<span data-fa-transform="down-4" class="fa fa-sort-down" title="'.htmlspecialchars($this->LibelleTriDesc).'"></span>' ;
+						$libelleTriAscSelectionne = '<span data-fa-transform="up-4" class="grey-text fa fa-sort-up" title="'.htmlspecialchars($this->LibelleTriAsc).'"></span>' ;
+						$libelleTriDescSelectionne = '<span data-fa-transform="down-4" class="grey-text fa fa-sort-down" title="'.htmlspecialchars($this->LibelleTriDesc).'"></span>' ;
 					}
 					else
 					{
-						$libelleTriAsc = '<span class="text-muted" title="'.htmlspecialchars($this->LibelleTriAsc).'">Asc</span>' ;
-						$libelleTriDesc = '<span class="text-muted fa fa-sort-down" title="'.htmlspecialchars($this->LibelleTriDesc).'">Desc</span>' ;
-						$libelleTriAscSelectionne = '<span title="'.htmlspecialchars($this->LibelleTriAsc).'">Asc</span>' ;
-						$libelleTriDescSelectionne = '<span class="fa" title="'.htmlspecialchars($this->LibelleTriDesc).'">Desc</span>' ;
+						$libelleTriAsc = '<span title="'.htmlspecialchars($this->LibelleTriAsc).'">Asc</span>' ;
+						$libelleTriDesc = '<span title="'.htmlspecialchars($this->LibelleTriDesc).'">Desc</span>' ;
+						$libelleTriAscSelectionne = '<span class="grey-text" title="'.htmlspecialchars($this->LibelleTriAsc).'">Asc</span>' ;
+						$libelleTriDescSelectionne = '<span class="grey-text" title="'.htmlspecialchars($this->LibelleTriDesc).'">Desc</span>' ;
 					}
 					$parametresRendu = $this->ParametresCommandeSelectionnee() ;
 					if(count($this->ElementsEnCours) > 0)
@@ -255,9 +202,8 @@
 							$ctn .= '<form action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
-						$ctn .= '<div class="panel panel-default"><div class="panel-body">'.PHP_EOL ;
 						$ctn .= '<table' ;
-						$ctn .= ' class="RangeeDonnees table '.$this->ClasseCSSRangee.'"' ;
+						$ctn .= ' class="RangeeDonnees responsive-table '.$this->ClasseCSSRangee.'"' ;
 						$ctn .= '>'.PHP_EOL ;
 						$ctn .= '<thead>'.PHP_EOL ;
 						$ctn .= '<tr class="Entete">'.PHP_EOL ;
@@ -325,7 +271,6 @@
 						}
 						$ctn .= '</tbody>'.PHP_EOL ;
 						$ctn .= '</table>'.PHP_EOL ;
-						$ctn .= '</div></div>' ;
 						if($this->PossedeColonneEditable())
 						{
 							$ctn .= PHP_EOL .'<div style="display:none"><input type="submit" /></div>
@@ -334,7 +279,7 @@
 					}
 					else
 					{
-						$ctn .= '<p class="AucunElement">'.$this->MessageAucunElement.'</p>' ;
+						$ctn .= '<div class="AucunElement card-panel teal lighten-4">'.$this->MessageAucunElement.'</div>' ;
 					}
 				}
 				else
@@ -344,20 +289,20 @@
 				return $ctn ;
 			}
 		}
-		class PvTableauRolesBootstrap4 extends PvTableauRolesMSHtml
+		class PvTableauRolesMaterialize extends PvTableauRolesMSHtml
 		{
 			public $SautLigneSansCommande = 0 ;
-			public $MaxFiltresEditionParLigne = 2 ;
-			public $ClasseCSSRangee = "table-striped" ;
-			public $ClasseCSSBtnNav = "btn-primary" ;
-			public $ClsBstBoutonSoumettre = "btn-primary" ;
-			public $ClsBstFormFiltresSelect = "col-sm-6" ;
+			public $ClasseCSSTitre = "teal lighten-4" ;
+			public $ClasseCSSRangee = "highlight" ;
+			public $ClasseCSSBtnNav = "waves-effect waves-light btn" ;
+			public $ClsBstBoutonSoumettre = "waves-effect waves-light btn" ;
+			public $ClsBstFormFiltresSelect = "col s12 m10 l8 xl6" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap4() ;
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
-				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap4() ;
+				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+				$this->NavigateurRangees = new PvNavTableauDonneesMaterialize() ;
 			}
 			protected function RenduFormulaireFiltres()
 			{
@@ -377,31 +322,36 @@
 				{
 					return '' ;
 				}
-				$this->DessinateurFiltresSelection->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
-				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;" role="form">'.PHP_EOL ;
-				$ctn .= '<div class="panel panel-default">'.PHP_EOL ;
+				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;">'.PHP_EOL ;
+				$ctn .= '<div class="row">'.PHP_EOL ;
+				$ctn .= '<div class="'.$this->ClsBstFormFiltresSelect.'">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
 				{
-					$ctn .= '<div class="panel-heading" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
+					$ctn .= '<div class="card-panel '.$this->ClasseCSSTitre.'" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
 					$ctn .= $this->TitreFormulaireFiltres ;
 					$ctn .= '</div>'.PHP_EOL ;
 				}
-				$ctn .= '<div class="panel-body">'.PHP_EOL ;
-				$ctn .= '<div class="container-fluid">'.PHP_EOL ;
-				$ctn .= '<div class="row">'.PHP_EOL ;
-				$ctn .= '<div class="'.$this->ClsBstFormFiltresSelect.'">'.PHP_EOL ;
+				$ctn .= '<div class="card-panel">'.PHP_EOL ;
 				$ctn .= $this->DessinateurFiltresSelection->Execute($this->ScriptParent, $this, $this->FiltresSelection) ;
 				$ctn .= '<input type="hidden" name="'.$this->NomParamFiltresSoumis().'" id="'.$this->NomParamFiltresSoumis().'" value="1" />'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '<div class="panel-footer">'.PHP_EOL ;
+				$ctn .= '<div class="row">'.PHP_EOL ;
 				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
-				$ctn .= $this->DeclarationSoumetFormulaireFiltres($this->FiltresSelection) ;
+				return $ctn ;
+			}
+			protected function RenduBlocCommandes()
+			{
+				$ctn = trim(parent::RenduBlocCommandes()) ;
+				if(count($this->Commandes) > 0)
+				{
+					$ctn = '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL
+						.$ctn.PHP_EOL
+						.'</div></div>' ;
+				}
 				return $ctn ;
 			}
 			protected function RenduRangeeDonnees()
@@ -413,15 +363,15 @@
 					{
 						$libelleTriAsc = '<span data-fa-transform="up-4" class="text-muted fa fa-sort-up" title="'.htmlspecialchars($this->LibelleTriAsc).'"></span>' ;
 						$libelleTriDesc = '<span data-fa-transform="down-4" class="text-muted fa fa-sort-down" title="'.htmlspecialchars($this->LibelleTriDesc).'"></span>' ;
-						$libelleTriAscSelectionne = '<span data-fa-transform="up-4" class="fa fa-sort-up" title="'.htmlspecialchars($this->LibelleTriAsc).'"></span>' ;
-						$libelleTriDescSelectionne = '<span data-fa-transform="down-4" class="fa fa-sort-down" title="'.htmlspecialchars($this->LibelleTriDesc).'"></span>' ;
+						$libelleTriAscSelectionne = '<span data-fa-transform="up-4" class="grey-text fa fa-sort-up" title="'.htmlspecialchars($this->LibelleTriAsc).'"></span>' ;
+						$libelleTriDescSelectionne = '<span data-fa-transform="down-4" class="grey-text fa fa-sort-down" title="'.htmlspecialchars($this->LibelleTriDesc).'"></span>' ;
 					}
 					else
 					{
-						$libelleTriAsc = '<span class="text-muted" title="'.htmlspecialchars($this->LibelleTriAsc).'">Asc</span>' ;
-						$libelleTriDesc = '<span class="text-muted fa fa-sort-down" title="'.htmlspecialchars($this->LibelleTriDesc).'">Desc</span>' ;
-						$libelleTriAscSelectionne = '<span title="'.htmlspecialchars($this->LibelleTriAsc).'">Asc</span>' ;
-						$libelleTriDescSelectionne = '<span class="fa" title="'.htmlspecialchars($this->LibelleTriDesc).'">Desc</span>' ;
+						$libelleTriAsc = '<span title="'.htmlspecialchars($this->LibelleTriAsc).'">Asc</span>' ;
+						$libelleTriDesc = '<span title="'.htmlspecialchars($this->LibelleTriDesc).'">Desc</span>' ;
+						$libelleTriAscSelectionne = '<span class="grey-text" title="'.htmlspecialchars($this->LibelleTriAsc).'">Asc</span>' ;
+						$libelleTriDescSelectionne = '<span class="grey-text" title="'.htmlspecialchars($this->LibelleTriDesc).'">Desc</span>' ;
 					}
 					$parametresRendu = $this->ParametresCommandeSelectionnee() ;
 					if(count($this->ElementsEnCours) > 0)
@@ -454,9 +404,8 @@
 							$ctn .= '<form action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
-						$ctn .= '<div class="panel panel-default"><div class="panel-body">'.PHP_EOL ;
 						$ctn .= '<table' ;
-						$ctn .= ' class="RangeeDonnees table '.$this->ClasseCSSRangee.'"' ;
+						$ctn .= ' class="RangeeDonnees responsive-table '.$this->ClasseCSSRangee.'"' ;
 						$ctn .= '>'.PHP_EOL ;
 						$ctn .= '<thead>'.PHP_EOL ;
 						$ctn .= '<tr class="Entete">'.PHP_EOL ;
@@ -524,7 +473,6 @@
 						}
 						$ctn .= '</tbody>'.PHP_EOL ;
 						$ctn .= '</table>'.PHP_EOL ;
-						$ctn .= '</div></div>' ;
 						if($this->PossedeColonneEditable())
 						{
 							$ctn .= PHP_EOL .'<div style="display:none"><input type="submit" /></div>
@@ -533,7 +481,7 @@
 					}
 					else
 					{
-						$ctn .= '<p class="AucunElement">'.$this->MessageAucunElement.'</p>' ;
+						$ctn .= '<div class="AucunElement card-panel teal lighten-4">'.$this->MessageAucunElement.'</div>' ;
 					}
 				}
 				else
@@ -543,20 +491,20 @@
 				return $ctn ;
 			}
 		}
-		class PvTableauProfilsBootstrap4 extends PvTableauProfilsMSHtml
+		class PvTableauProfilsMaterialize extends PvTableauProfilsMSHtml
 		{
 			public $SautLigneSansCommande = 0 ;
-			public $MaxFiltresEditionParLigne = 2 ;
-			public $ClasseCSSRangee = "table-striped" ;
-			public $ClasseCSSBtnNav = "btn-primary" ;
-			public $ClsBstBoutonSoumettre = "btn-primary" ;
-			public $ClsBstFormFiltresSelect = "col-sm-6" ;
+			public $ClasseCSSTitre = "teal lighten-4" ;
+			public $ClasseCSSRangee = "highlight" ;
+			public $ClasseCSSBtnNav = "waves-effect waves-light btn" ;
+			public $ClsBstBoutonSoumettre = "waves-effect waves-light btn" ;
+			public $ClsBstFormFiltresSelect = "col s12 m10 l8 xl6" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap4() ;
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
-				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap4() ;
+				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+				$this->NavigateurRangees = new PvNavTableauDonneesMaterialize() ;
 			}
 			protected function RenduFormulaireFiltres()
 			{
@@ -576,31 +524,36 @@
 				{
 					return '' ;
 				}
-				$this->DessinateurFiltresSelection->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
-				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;" role="form">'.PHP_EOL ;
-				$ctn .= '<div class="panel panel-default">'.PHP_EOL ;
+				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;">'.PHP_EOL ;
+				$ctn .= '<div class="row">'.PHP_EOL ;
+				$ctn .= '<div class="'.$this->ClsBstFormFiltresSelect.'">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
 				{
-					$ctn .= '<div class="panel-heading" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
+					$ctn .= '<div class="card-panel '.$this->ClasseCSSTitre.'" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
 					$ctn .= $this->TitreFormulaireFiltres ;
 					$ctn .= '</div>'.PHP_EOL ;
 				}
-				$ctn .= '<div class="panel-body">'.PHP_EOL ;
-				$ctn .= '<div class="container-fluid">'.PHP_EOL ;
-				$ctn .= '<div class="row">'.PHP_EOL ;
-				$ctn .= '<div class="'.$this->ClsBstFormFiltresSelect.'">'.PHP_EOL ;
+				$ctn .= '<div class="card-panel">'.PHP_EOL ;
 				$ctn .= $this->DessinateurFiltresSelection->Execute($this->ScriptParent, $this, $this->FiltresSelection) ;
 				$ctn .= '<input type="hidden" name="'.$this->NomParamFiltresSoumis().'" id="'.$this->NomParamFiltresSoumis().'" value="1" />'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '<div class="panel-footer">'.PHP_EOL ;
+				$ctn .= '<div class="row">'.PHP_EOL ;
 				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
-				$ctn .= $this->DeclarationSoumetFormulaireFiltres($this->FiltresSelection) ;
+				return $ctn ;
+			}
+			protected function RenduBlocCommandes()
+			{
+				$ctn = trim(parent::RenduBlocCommandes()) ;
+				if(count($this->Commandes) > 0)
+				{
+					$ctn = '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL
+						.$ctn.PHP_EOL
+						.'</div></div>' ;
+				}
 				return $ctn ;
 			}
 			protected function RenduRangeeDonnees()
@@ -612,15 +565,15 @@
 					{
 						$libelleTriAsc = '<span data-fa-transform="up-4" class="text-muted fa fa-sort-up" title="'.htmlspecialchars($this->LibelleTriAsc).'"></span>' ;
 						$libelleTriDesc = '<span data-fa-transform="down-4" class="text-muted fa fa-sort-down" title="'.htmlspecialchars($this->LibelleTriDesc).'"></span>' ;
-						$libelleTriAscSelectionne = '<span data-fa-transform="up-4" class="fa fa-sort-up" title="'.htmlspecialchars($this->LibelleTriAsc).'"></span>' ;
-						$libelleTriDescSelectionne = '<span data-fa-transform="down-4" class="fa fa-sort-down" title="'.htmlspecialchars($this->LibelleTriDesc).'"></span>' ;
+						$libelleTriAscSelectionne = '<span data-fa-transform="up-4" class="grey-text fa fa-sort-up" title="'.htmlspecialchars($this->LibelleTriAsc).'"></span>' ;
+						$libelleTriDescSelectionne = '<span data-fa-transform="down-4" class="grey-text fa fa-sort-down" title="'.htmlspecialchars($this->LibelleTriDesc).'"></span>' ;
 					}
 					else
 					{
-						$libelleTriAsc = '<span class="text-muted" title="'.htmlspecialchars($this->LibelleTriAsc).'">Asc</span>' ;
-						$libelleTriDesc = '<span class="text-muted fa fa-sort-down" title="'.htmlspecialchars($this->LibelleTriDesc).'">Desc</span>' ;
-						$libelleTriAscSelectionne = '<span title="'.htmlspecialchars($this->LibelleTriAsc).'">Asc</span>' ;
-						$libelleTriDescSelectionne = '<span class="fa" title="'.htmlspecialchars($this->LibelleTriDesc).'">Desc</span>' ;
+						$libelleTriAsc = '<span title="'.htmlspecialchars($this->LibelleTriAsc).'">Asc</span>' ;
+						$libelleTriDesc = '<span title="'.htmlspecialchars($this->LibelleTriDesc).'">Desc</span>' ;
+						$libelleTriAscSelectionne = '<span class="grey-text" title="'.htmlspecialchars($this->LibelleTriAsc).'">Asc</span>' ;
+						$libelleTriDescSelectionne = '<span class="grey-text" title="'.htmlspecialchars($this->LibelleTriDesc).'">Desc</span>' ;
 					}
 					$parametresRendu = $this->ParametresCommandeSelectionnee() ;
 					if(count($this->ElementsEnCours) > 0)
@@ -653,9 +606,8 @@
 							$ctn .= '<form action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
-						$ctn .= '<div class="panel panel-default"><div class="panel-body">'.PHP_EOL ;
 						$ctn .= '<table' ;
-						$ctn .= ' class="RangeeDonnees table '.$this->ClasseCSSRangee.'"' ;
+						$ctn .= ' class="RangeeDonnees responsive-table '.$this->ClasseCSSRangee.'"' ;
 						$ctn .= '>'.PHP_EOL ;
 						$ctn .= '<thead>'.PHP_EOL ;
 						$ctn .= '<tr class="Entete">'.PHP_EOL ;
@@ -723,7 +675,6 @@
 						}
 						$ctn .= '</tbody>'.PHP_EOL ;
 						$ctn .= '</table>'.PHP_EOL ;
-						$ctn .= '</div></div>' ;
 						if($this->PossedeColonneEditable())
 						{
 							$ctn .= PHP_EOL .'<div style="display:none"><input type="submit" /></div>
@@ -732,7 +683,7 @@
 					}
 					else
 					{
-						$ctn .= '<p class="AucunElement">'.$this->MessageAucunElement.'</p>' ;
+						$ctn .= '<div class="AucunElement card-panel teal lighten-4">'.$this->MessageAucunElement.'</div>' ;
 					}
 				}
 				else
@@ -743,33 +694,30 @@
 			}
 		}
 			
-		class PvFormulaireAjoutMembreBootstrap4 extends PvFormulaireAjoutMembreMS
+		class PvFormulaireAjoutMembreMaterialize extends PvFormulaireAjoutMembreMS
 		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
-			protected function InitDessinateurFiltresEdition()
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
-			protected function InitDessinateurBlocCommandes()
-			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
-			}
-		}
-		class PvFormulaireInscriptionMembreBootstrap4 extends PvFormulaireInscriptionMembreMS
-		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
 				if(count($this->DispositionComposants))
 				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
 					foreach($this->DispositionComposants as $i => $id)
 					{
 						if($i > 0)
@@ -805,29 +753,46 @@
 							break ;
 						}
 					}
-					$ctn .= '</form>' ;
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
 		}
-		class PvFormulaireModifMembreBootstrap4 extends PvFormulaireModifMembreMS
+		class PvFormulaireInscriptionMembreMaterialize extends PvFormulaireInscriptionMembreMS
 		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
 				if(count($this->DispositionComposants))
 				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
 					foreach($this->DispositionComposants as $i => $id)
 					{
 						if($i > 0)
@@ -863,31 +828,46 @@
 							break ;
 						}
 					}
-					$ctn .= '</form>' ;
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
 		}
-		class PvFormulaireModifInfosBootstrap4 extends PvFormulaireModifInfosMS
+		class PvFormulaireModifMembreMaterialize extends PvFormulaireModifMembreMS
 		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
 				if(count($this->DispositionComposants))
 				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
 					foreach($this->DispositionComposants as $i => $id)
 					{
 						if($i > 0)
@@ -923,31 +903,46 @@
 							break ;
 						}
 					}
-					$ctn .= '</form>' ;
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
 		}
-		class PvFormulaireSupprMembreBootstrap4 extends PvFormulaireSupprMembreMS
+		class PvFormulaireModifInfosMaterialize extends PvFormulaireModifInfosMS
 		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
 				if(count($this->DispositionComposants))
 				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
 					foreach($this->DispositionComposants as $i => $id)
 					{
 						if($i > 0)
@@ -983,32 +978,46 @@
 							break ;
 						}
 					}
-					$ctn .= '</form>' ;
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
 		}
-		class PvFormulaireChangeMPMembreBootstrap4 extends PvFormulaireChangeMPMembreMS
+		class PvFormulaireSupprMembreMaterialize extends PvFormulaireSupprMembreMS
 		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
-			public $MaxFiltresEditionParLigne = 1 ;
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
 				if(count($this->DispositionComposants))
 				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
 					foreach($this->DispositionComposants as $i => $id)
 					{
 						if($i > 0)
@@ -1044,30 +1053,46 @@
 							break ;
 						}
 					}
-					$ctn .= '</form>' ;
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
-				$this->DessinateurFiltresEdition->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
 		}
-		class PvFormulaireDoitChangerMotPasseBootstrap4 extends PvFormulaireDoitChangerMotPasseMS
+		class PvFormulaireChangeMPMembreMaterialize extends PvFormulaireChangeMPMembreMS
 		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
 				if(count($this->DispositionComposants))
 				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
 					foreach($this->DispositionComposants as $i => $id)
 					{
 						if($i > 0)
@@ -1103,32 +1128,46 @@
 							break ;
 						}
 					}
-					$ctn .= '</form>' ;
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
 		}
-		class PvFormulaireChangeMotPasseBootstrap4 extends PvFormulaireChangeMotPasseMS
+		class PvFormulaireDoitChangerMotPasseMaterialize extends PvFormulaireDoitChangerMotPasseMS
 		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
-			public $MaxFiltresEditionParLigne = 1 ;
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
 				if(count($this->DispositionComposants))
 				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
 					foreach($this->DispositionComposants as $i => $id)
 					{
 						if($i > 0)
@@ -1164,34 +1203,163 @@
 							break ;
 						}
 					}
-					$ctn .= '</form>' ;
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
-				$this->DessinateurFiltresEdition->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
+		}
+		class PvFormulaireChangeMotPasseMaterialize extends PvFormulaireChangeMotPasseMS
+		{
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
+			protected function RenduComposants()
+			{
+				$ctn = '' ;
+				if(count($this->DispositionComposants))
+				{
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
+					foreach($this->DispositionComposants as $i => $id)
+					{
+						if($i > 0)
+						{
+							$ctn .= PHP_EOL ;
+						}
+						switch($id)
+						{
+							case PvDispositionFormulaireDonnees::BlocEntete :
+							{
+								$ctn .= $this->RenduBlocEntete() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
+							{
+								$ctn .= $this->RenduFormulaireFiltres() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
+							{
+								$ctn .= $this->RenduResultatCommandeExecutee() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::BlocCommandes :
+							{
+								$ctn .= $this->RenduBlocCommandes() ;
+							}
+							break ;
+							default :
+							{
+								$ctn .= $this->RenduAutreComposantSupport($id) ;
+							}
+							break ;
+						}
+					}
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
+				}
+				return $ctn ;
+			}
+			protected function InitDessinateurFiltresEdition()
+			{
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+			}
+			protected function InitDessinateurBlocCommandes()
+			{
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
 		}
 		
-		class PvFormulaireAjoutRoleBootstrap4 extends PvFormulaireAjoutRoleMS
+		class PvFormulaireAjoutRoleMaterialize extends PvFormulaireAjoutRoleMS
 		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
-			protected function InitDessinateurFiltresEdition()
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
-			protected function InitDessinateurBlocCommandes()
+			protected function RenduComposants()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$ctn = '' ;
+				if(count($this->DispositionComposants))
+				{
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
+					foreach($this->DispositionComposants as $i => $id)
+					{
+						if($i > 0)
+						{
+							$ctn .= PHP_EOL ;
+						}
+						switch($id)
+						{
+							case PvDispositionFormulaireDonnees::BlocEntete :
+							{
+								$ctn .= $this->RenduBlocEntete() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
+							{
+								$ctn .= $this->RenduFormulaireFiltres() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
+							{
+								$ctn .= $this->RenduResultatCommandeExecutee() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::BlocCommandes :
+							{
+								$ctn .= $this->RenduBlocCommandes() ;
+							}
+							break ;
+							default :
+							{
+								$ctn .= $this->RenduAutreComposantSupport($id) ;
+							}
+							break ;
+						}
+					}
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
+				}
+				return $ctn ;
 			}
 			protected function DeclareCompListeProfils()
 			{
@@ -1221,20 +1389,80 @@
 				parent::ChargeConfig() ;
 				$this->DeclareCompListeProfils() ;
 			}
-		}
-		class PvFormulaireModifRoleBootstrap4 extends PvFormulaireModifRoleMS
-		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
+		}
+		class PvFormulaireModifRoleMaterialize extends PvFormulaireModifRoleMS
+		{
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
+			protected function RenduComposants()
+			{
+				$ctn = '' ;
+				if(count($this->DispositionComposants))
+				{
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
+					foreach($this->DispositionComposants as $i => $id)
+					{
+						if($i > 0)
+						{
+							$ctn .= PHP_EOL ;
+						}
+						switch($id)
+						{
+							case PvDispositionFormulaireDonnees::BlocEntete :
+							{
+								$ctn .= $this->RenduBlocEntete() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
+							{
+								$ctn .= $this->RenduFormulaireFiltres() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
+							{
+								$ctn .= $this->RenduResultatCommandeExecutee() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::BlocCommandes :
+							{
+								$ctn .= $this->RenduBlocCommandes() ;
+							}
+							break ;
+							default :
+							{
+								$ctn .= $this->RenduAutreComposantSupport($id) ;
+							}
+							break ;
+						}
+					}
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
+				}
+				return $ctn ;
 			}
 			protected function DeclareCompListeProfils()
 			{
@@ -1257,36 +1485,156 @@
 				parent::ChargeConfig() ;
 				$this->DeclareCompListeProfils() ;
 			}
-		}
-		class PvFormulaireSupprRoleBootstrap4 extends PvFormulaireSupprRoleMS
-		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
+		}
+		class PvFormulaireSupprRoleMaterialize extends PvFormulaireSupprRoleMS
+		{
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
+			protected function RenduComposants()
+			{
+				$ctn = '' ;
+				if(count($this->DispositionComposants))
+				{
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
+					foreach($this->DispositionComposants as $i => $id)
+					{
+						if($i > 0)
+						{
+							$ctn .= PHP_EOL ;
+						}
+						switch($id)
+						{
+							case PvDispositionFormulaireDonnees::BlocEntete :
+							{
+								$ctn .= $this->RenduBlocEntete() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
+							{
+								$ctn .= $this->RenduFormulaireFiltres() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
+							{
+								$ctn .= $this->RenduResultatCommandeExecutee() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::BlocCommandes :
+							{
+								$ctn .= $this->RenduBlocCommandes() ;
+							}
+							break ;
+							default :
+							{
+								$ctn .= $this->RenduAutreComposantSupport($id) ;
+							}
+							break ;
+						}
+					}
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
+				}
+				return $ctn ;
+			}
+			protected function InitDessinateurFiltresEdition()
+			{
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+			}
+			protected function InitDessinateurBlocCommandes()
+			{
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
 		}
 		
-		class PvFormulaireAjoutProfilBootstrap4 extends PvFormulaireAjoutProfilMS
+		class PvFormulaireAjoutProfilMaterialize extends PvFormulaireAjoutProfilMS
 		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
-			protected function InitDessinateurFiltresEdition()
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
-			protected function InitDessinateurBlocCommandes()
+			protected function RenduComposants()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$ctn = '' ;
+				if(count($this->DispositionComposants))
+				{
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
+					foreach($this->DispositionComposants as $i => $id)
+					{
+						if($i > 0)
+						{
+							$ctn .= PHP_EOL ;
+						}
+						switch($id)
+						{
+							case PvDispositionFormulaireDonnees::BlocEntete :
+							{
+								$ctn .= $this->RenduBlocEntete() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
+							{
+								$ctn .= $this->RenduFormulaireFiltres() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
+							{
+								$ctn .= $this->RenduResultatCommandeExecutee() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::BlocCommandes :
+							{
+								$ctn .= $this->RenduBlocCommandes() ;
+							}
+							break ;
+							default :
+							{
+								$ctn .= $this->RenduAutreComposantSupport($id) ;
+							}
+							break ;
+						}
+					}
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
+				}
+				return $ctn ;
 			}
 			protected function DeclareCompListeRoles()
 			{
@@ -1316,20 +1664,80 @@
 				parent::ChargeConfig() ;
 				$this->DeclareCompListeRoles() ;
 			}
-		}
-		class PvFormulaireModifProfilBootstrap4 extends PvFormulaireModifProfilMS
-		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
+		}
+		class PvFormulaireModifProfilMaterialize extends PvFormulaireModifProfilMS
+		{
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
+			protected function RenduComposants()
+			{
+				$ctn = '' ;
+				if(count($this->DispositionComposants))
+				{
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
+					foreach($this->DispositionComposants as $i => $id)
+					{
+						if($i > 0)
+						{
+							$ctn .= PHP_EOL ;
+						}
+						switch($id)
+						{
+							case PvDispositionFormulaireDonnees::BlocEntete :
+							{
+								$ctn .= $this->RenduBlocEntete() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
+							{
+								$ctn .= $this->RenduFormulaireFiltres() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
+							{
+								$ctn .= $this->RenduResultatCommandeExecutee() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::BlocCommandes :
+							{
+								$ctn .= $this->RenduBlocCommandes() ;
+							}
+							break ;
+							default :
+							{
+								$ctn .= $this->RenduAutreComposantSupport($id) ;
+							}
+							break ;
+						}
+					}
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
+				}
+				return $ctn ;
 			}
 			protected function DeclareCompListeRoles()
 			{
@@ -1352,19 +1760,39 @@
 				parent::ChargeConfig() ;
 				$this->DeclareCompListeRoles() ;
 			}
+			protected function InitDessinateurFiltresEdition()
+			{
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+			}
+			protected function InitDessinateurBlocCommandes()
+			{
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
 		}
-		class PvFormulaireSupprProfilBootstrap4 extends PvFormulaireSupprProfilMS
+		class PvFormulaireSupprProfilMaterialize extends PvFormulaireSupprProfilMS
 		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
+			}
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
 				if(count($this->DispositionComposants))
 				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
 					foreach($this->DispositionComposants as $i => $id)
 					{
 						if($i > 0)
@@ -1400,32 +1828,45 @@
 							break ;
 						}
 					}
-					$ctn .= '</form>' ;
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
 		}
 
-		class PvFormulaireRecouvreMPBootstrap4 extends PvFormulaireRecouvreMPMS
+		class PvFormulaireRecouvreMPMaterialize extends PvFormulaireRecouvreMPMS
 		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
+			public $ClasseCSSSucces = "card-panel teal lighten-4" ;
+			public $ClasseCSSErreur = "card-panel red lighten-4" ;
+			public $ClasseCSSCommandeExecuter = "" ;
+			public $ClasseCSSCommandeAnnuler = "red" ;
+			public $ClasseCSSBlocCommandes = "row" ;
+			public $UtiliserLargeur = 0 ;
+			public $ClasseCSSLargeur = 's12 m8 l6 xl6' ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+			}
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
 				if(count($this->DispositionComposants))
 				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					$ctn .= '<div class="row">
+<div class="col '.$this->ClasseCSSLargeur.'">
+<div class="card-panel">'.PHP_EOL ;
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)">'.PHP_EOL ;
 					foreach($this->DispositionComposants as $i => $id)
 					{
 						if($i > 0)
@@ -1461,103 +1902,106 @@
 							break ;
 						}
 					}
-					$ctn .= '</form>' ;
+					$ctn .= '</form>'.PHP_EOL ;
+					$ctn .= '</div>
+</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesMaterialize() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesMaterialize() ;
 			}
 		}
 		
-		class PvScriptAjoutMembreBootstrap4 extends PvScriptAjoutMembreMSWeb
+		class PvScriptAjoutMembreMaterialize extends PvScriptAjoutMembreMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutMembreBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutMembreMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptInscriptionBootstrap4 extends PvScriptInscriptionWeb
+		class PvScriptInscriptionMaterialize extends PvScriptInscriptionWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireInscriptionMembreBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireInscriptionMembreMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptModifMembreBootstrap4 extends PvScriptModifMembreMSWeb
+		class PvScriptModifMembreMaterialize extends PvScriptModifMembreMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireModifMembreBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireModifMembreMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptSupprMembreBootstrap4 extends PvScriptSupprMembreMSWeb
+		class PvScriptSupprMembreMaterialize extends PvScriptSupprMembreMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireSupprMembreBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireSupprMembreMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptModifPrefsBootstrap4 extends PvScriptModifPrefsWeb
+		class PvScriptModifPrefsMaterialize extends PvScriptModifPrefsWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireModifInfosBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireModifInfosMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptChangeMotPasseBootstrap4 extends PvScriptChangeMotPasseWeb
+		class PvScriptChangeMotPasseMaterialize extends PvScriptChangeMotPasseWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireChangeMotPasseBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireChangeMotPasseMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptDoitChangerMotPasseBootstrap4 extends PvScriptDoitChangerMotPasseWeb
+		class PvScriptDoitChangerMotPasseMaterialize extends PvScriptDoitChangerMotPasseWeb
 		{
 			public $TagTitre = "h3" ;
-			public $NomClasseFormulaireDonnees = "PvFormulaireDoitChangerMotPasseBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireDoitChangerMotPasseMaterialize" ;
 		}
-		class PvScriptChangeMPMembreBootstrap4 extends PvScriptChangeMPMembreWeb
+		class PvScriptChangeMPMembreMaterialize extends PvScriptChangeMPMembreWeb
 		{
 			public $TagTitre = "h3" ;
-			public $NomClasseFormulaireDonnees = "PvFormulaireChangeMPMembreBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireChangeMPMembreMaterialize" ;
 		}
-		class PvScriptListeMembresBootstrap4 extends PvScriptListeMembresMSWeb
+		class PvScriptListeMembresMaterialize extends PvScriptListeMembresMSWeb
 		{
-			public $NomClasseTableauDonnees = "PvTableauMembresBootstrap4" ;
+			public $NomClasseTableauDonnees = "PvTableauMembresMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptAjoutProfilBootstrap4 extends PvScriptAjoutProfilMSWeb
+		class PvScriptAjoutProfilMaterialize extends PvScriptAjoutProfilMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutProfilBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutProfilMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptModifProfilBootstrap4 extends PvScriptModifProfilMSWeb
+		class PvScriptModifProfilMaterialize extends PvScriptModifProfilMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireModifProfilBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireModifProfilMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptSupprProfilBootstrap4 extends PvScriptSupprProfilMSWeb
+		class PvScriptSupprProfilMaterialize extends PvScriptSupprProfilMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireSupprProfilBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireSupprProfilMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptListeProfilsBootstrap4 extends PvScriptListeProfilsMSWeb
+		class PvScriptListeProfilsMaterialize extends PvScriptListeProfilsMSWeb
 		{
-			public $NomClasseTableauDonnees = "PvTableauProfilsBootstrap4" ;
+			public $NomClasseTableauDonnees = "PvTableauProfilsMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptAjoutRoleBootstrap4 extends PvScriptAjoutRoleMSWeb
+		class PvScriptAjoutRoleMaterialize extends PvScriptAjoutRoleMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutRoleBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutRoleMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptModifRoleBootstrap4 extends PvScriptModifRoleMSWeb
+		class PvScriptModifRoleMaterialize extends PvScriptModifRoleMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireModifRoleBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireModifRoleMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptSupprRoleBootstrap4 extends PvScriptSupprRoleMSWeb
+		class PvScriptSupprRoleMaterialize extends PvScriptSupprRoleMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireSupprRoleBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireSupprRoleMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptListeRolesBootstrap4 extends PvScriptListeRolesMSWeb
+		class PvScriptListeRolesMaterialize extends PvScriptListeRolesMSWeb
 		{
-			public $NomClasseTableauDonnees = "PvTableauRolesBootstrap4" ;
+			public $NomClasseTableauDonnees = "PvTableauRolesMaterialize" ;
 			public $TagTitre = "h3" ;
 		}
 	}

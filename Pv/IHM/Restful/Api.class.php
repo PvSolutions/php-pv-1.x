@@ -2,6 +2,22 @@
 	
 	if(! defined('PV_API_RESTFUL'))
 	{
+		if(! defined('PV_FILTRE_RESTFUL'))
+		{
+			include dirname(__FILE__)."/Filtre.class.php" ;
+		}
+		if(! defined('PV_COMMANDE_RESTFUL'))
+		{
+			include dirname(__FILE__)."/Commande.class.php" ;
+		}
+		if(! defined('PV_ACTION_RESTFUL'))
+		{
+			include dirname(__FILE__)."/Action.class.php" ;
+		}
+		if(! defined('PV_COMPOSANT_BASE_RESTFUL'))
+		{
+			include dirname(__FILE__)."/Composant.class.php" ;
+		}
 		if(! defined('PV_ROUTE_BASE_RESTFUL'))
 		{
 			include dirname(__FILE__)."/Route.class.php" ;
@@ -23,7 +39,7 @@
 			public $AttrsContentType = array() ;
 			public $ParamsGet = array() ;
 			public $ParamsPost = array() ;
-			public $CheminRoute ;
+			public $CheminRelatifRoute ;
 			public function __construct()
 			{
 				$this->Entetes = array() ;
@@ -34,7 +50,7 @@
 				}
 				$this->DetecteEntetesSpec() ;
 				$attrs = explode("?", $_SERVER["REQUEST_URI"], 2) ;
-				$this->CheminRelatifRoute = $attrs[1] ;
+				$this->CheminRelatifRoute = $attrs[0] ;
 				if(count($attrs) == 2)
 				{
 					parse_str($this->ParamsGet, $attrs[1]) ;
@@ -167,6 +183,14 @@
 				$this->EnteteStatusCode = $code ;
 				$this->InsereErreur($code, (($message != '') ? $message : 'Le service a renvoye le code HTTP '.$code)) ;
 			}
+			public function EstSucces()
+			{
+				return $this->EnteteStatusCode == 200 ;
+			}
+			public function EstEchec()
+			{
+				return ! $this->EstSucces() ;
+			}
 			public function ConfirmeSucces()
 			{
 				$this->DefinitEnteteStatusCode(200) ;
@@ -209,7 +233,7 @@
 		class PvApiRestful extends PvIHM
 		{
 			public $TypeIHM = "API" ;
-			public $CheminRacineApi ;
+			public $CheminRacineApi = "/" ;
 			public $Routes = array() ;
 			public $VersionMin = 1 ;
 			public $VersionMax = 1 ;
@@ -253,24 +277,39 @@
 			public $NomRouteModifServeurAD = "modifServeurAD" ;
 			public $NomRouteSupprServeurAD = "supprServeurAD" ;
 			public $NomRouteListeServeursAD = "listeServeursAD" ;
-			public function & InscritRoute($nom, & $route)
+			public function & InscritRoute($nom, $cheminRoute, & $route)
 			{
 				$this->Routes[$nom] = & $route ;
-				$route->AdopteApi($nom, $this) ;
+				$route->AdopteApi($nom, $cheminRoute, $this) ;
 				return $route ;
 			}
-			public function & InsereRoute($nom, $route)
+			public function & InsereRoute($nom, $cheminRoute, $route)
 			{
-				return $this->InscritRoute($nom, $route) ;
+				return $this->InscritRoute($nom, $cheminRoute, $route) ;
+			}
+			public function & InsereRouteParDefaut($route)
+			{
+				$this->RouteParDefaut = $route ;
+				$route->AdopteApi("accueil", "", $this) ;
+				return $this->RouteParDefaut ;
 			}
 			protected function DetecteRouteAppelee()
 			{
 				$this->NomRouteAppelee = '' ;
 				foreach($this->Routes as $nom => $route)
 				{
-					if($this->ValeurParamRoute == $this->CheminRacineApi.$route->NomElementApi && $route->EstAppelee() == 1 && ($this->MethodeHttp != '' && $this->MethodeHttp != $this->ApiParent->MethodeHttp))
+					preg_match_all("/\{([a-zA-Z0-9\_]+)\}/", $route->CheminRouteApi, $nomsArgsRoute) ;
+					$cheminRegexRoute = preg_quote($this->CheminRacineApi, '/')
+						.preg_replace("/\\\\{[a-zA-Z0-9\_]+\\\\}/", '([^\/]+)', preg_quote($route->CheminRouteApi, '/')) ;
+					// echo $cheminRegexRoute ;
+					// exit ;
+					if(preg_match('/^'.$cheminRegexRoute.'$/', $this->ValeurParamRoute, $valeursArgsRoute) && ($route->MethodeHttp == '' || $route->MethodeHttp != $this->MethodeHttp))
 					{
 						$this->NomRouteAppelee = $nom ;
+						foreach($valeursArgsRoute as $i => $valeur)
+						{
+							$this->ArgsRouteAppelee[$nomsArgsRoute[1][0]] = $valeur ;
+						}
 					}
 				}
 				if($this->NomRouteAppelee != '')
@@ -394,6 +433,12 @@
 					return 1 ;
 				return $this->PossedePrivileges($this->PrivilegesEditMembership) ;
 			}
+			public function EditMembresPossible()
+			{
+				if($this->PossedeMembreConnecte() && count($this->PrivilegesEditMembres) == 0)
+					return 1 ;
+				return $this->PossedePrivileges($this->PrivilegesEditMembres) ;
+			}
 			public function IdMembreConnecte()
 			{
 				if(! $this->PossedeMembreConnecte())
@@ -478,14 +523,29 @@
 			{
 				$this->Requete = new PvRequeteRestful() ;
 				$this->Reponse = new PvReponseRestful() ;
-				$this->ValeurParamRoute = $this->Reponse->CheminRelatifRoute ;
+				$this->ValeurParamRoute = $this->Requete->CheminRelatifRoute ;
 				$this->ChargeMembership() ;
+				$this->ChargeRoutes() ;
 			}
 			protected function TermineExecution()
 			{
 				$this->Requete = null ;
 				$this->Reponse = null ;
 				exit ;
+			}
+			public function ChargeConfig()
+			{
+			}
+			protected function ChargeRoutes()
+			{
+			}
+			public function SuccesReponse()
+			{
+				return $this->Reponse->EstSucces() ;
+			}
+			public function EchecReponse()
+			{
+				return $this->Reponse->EstEchec() ;
 			}
 			public function Execute()
 			{

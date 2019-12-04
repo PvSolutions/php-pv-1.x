@@ -49,8 +49,11 @@
 			public $Titre = "" ;
 			public $AlignTitre = "left" ;
 			public $NomClasseCSS = "" ;
-			public $NomClasseCSSTitre = "titre" ;
-			public $NomClasseCSSDescription = "description" ;
+			public $ClasseCSSTitre = "titre" ;
+			public $ClasseCSSDescription = "description" ;
+			public $ClasseCSSDispositif = "" ;
+			public $ClasseCSSBlocCommandes ;
+			public $ClasseCSSFormulaireFiltres ;
 			public $Description = "" ;
 			public $MessageException ;
 			public $InscrireCommandeExecuter = 1 ;
@@ -81,6 +84,7 @@
 			public $MsgExecEchecCommandeExecuter = "" ;
 			public $NomScriptExecSuccesCommandeExecuter = "" ;
 			public $ParamsScriptExecSuccesCommandeExecuter = array() ;
+			public $AlignBlocCommandes ;
 			public $ActCmdsCommandeExecuter = array() ;
 			public $CriteresCommandeExecuter = array() ;
 			public $ClasseCSSCommandeExecuter = "" ;
@@ -192,6 +196,10 @@
 					$critr->FltCaptchaParent = & $flt ;
 				}
 				return $flt ;
+			}
+			public function & InsereFltEditRecaptcha($nom, $nomCmd="")
+			{
+				return $this->InsereFltEditCaptcha($nom, $nomCmd, "PvRecaptcha2") ;
 			}
 			public function & InsereFltLgSelectRef($nom, & $filtreRef, $exprDonnees='', $nomComp='')
 			{
@@ -632,7 +640,7 @@
 				$this->MAJConfigFiltresSelection() ;
 				$this->ExecuteCommandeSelectionnee() ;
 				$this->PrepareRendu() ;
-				$ctn = '<div id="'.$this->IDInstanceCalc.'">'.PHP_EOL ;
+				$ctn = '<div id="'.$this->IDInstanceCalc.'"'.(($this->ClasseCSSDispositif != '') ? ' class="'.$this->ClasseCSSDispositif.'"' : '').'>'.PHP_EOL ;
 				$ctn .= $this->AppliqueHabillage().PHP_EOL ;
 				if($this->MessageException == null)
 				{
@@ -772,12 +780,12 @@
 				if($this->Titre != '')
 				{
 					$titre = _parse_pattern($this->Titre, array_map('htmlentities', $this->ElementEnCours)) ;
-					$ctn .= '<div align="'.$this->AlignTitre.'" class="'.$this->NomClasseCSSTitre.'">'.$titre.'</div>'.PHP_EOL ;
+					$ctn .= '<div align="'.$this->AlignTitre.'" class="'.$this->ClasseCSSTitre.'">'.$titre.'</div>'.PHP_EOL ;
 				}
 				if($this->Description != '')
 				{
 					$desc = _parse_pattern($this->Description, array_map('htmlentities', $this->ElementEnCours)) ;
-					$ctn .= '<div class="'.$this->NomClasseCSSDescription.'">'.$desc.'</div>' ;
+					$ctn .= '<div class="'.$this->ClasseCSSDescription.'">'.$desc.'</div>' ;
 				}
 				return $ctn ;
 			}
@@ -901,7 +909,7 @@
 						{
 							return "<p>Le dessinateur de filtres n'est pas défini</p>" ;
 						}
-						$ctn .= '<div class="BlocCommandes">'.PHP_EOL ;
+						$ctn .= '<div class="BlocCommandes'.(($this->ClasseCSSBlocCommandes)).'"'.(($this->AlignBlocCommandes != '') ? ' align="'.$this->AlignBlocCommandes.'"' : '').'>'.PHP_EOL ;
 						$ctn .= $this->DessinateurBlocCommandes->Execute($this->ScriptParent, $this, $this->Commandes) ;
 						$ctn .= $this->DeclarationJsActiveCommande().PHP_EOL ;
 						$ctn .= '</div>' ;
@@ -1320,6 +1328,14 @@ form.submit() ;
 		{
 			public $CacherFormulaireFiltresSiSucces = 0 ;
 			public $AnnuleLiaisonParametresSiSucces = 0 ;
+			public function AdopteFormulaireDonnees($nom, & $formulaireDonnees)
+			{
+				parent::AdopteFormulaireDonnees($nom, $formulaireDonnees) ;
+				if($formulaireDonnees->Editable == 1)
+				{
+					$this->InsereNouvCritere(new PvCritereValideRegexpForm()) ;
+				}
+			}
 			public function Execute()
 			{
 				parent::Execute() ;

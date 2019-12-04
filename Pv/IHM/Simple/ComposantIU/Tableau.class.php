@@ -97,6 +97,7 @@
 			public $ExtraireValeursElements = 1 ;
 			public $SautLigneSansCommande = 1 ;
 			public $NavigateurRangees = null ;
+			public $RangeeDonneesEditable = 0 ;
 			public $SourceValeursSuppl ;
 			protected function InitConfig()
 			{
@@ -875,7 +876,11 @@ window.location.href = window.location.href ;
 			}
 			public function PossedeColonneEditable()
 			{
-				$ok = 0 ;
+				$ok = $this->RangeeDonneesEditable ;
+				if($ok == 1)
+				{
+					return $ok ;
+				}
 				foreach($this->DefinitionsColonnes as $i => $defCol)
 				{
 					if($defCol->EstVisible($this->ZoneParent) && $defCol->EstEditable())
@@ -1119,7 +1124,7 @@ window.location.href = window.location.href ;
 									}
 								}
 							}
-							$ctn .= '<form action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
 						$ctn .= '<table' ;
@@ -1595,7 +1600,7 @@ window.location.href = window.location.href ;
 									}
 								}
 							}
-							$ctn .= '<form action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
 						$ctn .= '<div class="panel panel-default"><div class="panel-body">'.PHP_EOL ;
@@ -1956,6 +1961,11 @@ window.location.href = window.location.href ;
 		class PvCommandeTableauDonneesBase extends PvCommandeComposantIUBase
 		{
 			public $NecessiteTableauDonnees = 1 ;
+			public function AdopteTableauDonnees($nom, & $tableauDonnees)
+			{
+				parent::AdopteTableauDonnees($nom, $tableauDonnees) ;
+				$this->InsereNouvCritere(new PvCritereValideRegexpTabl()) ;
+			}
 		}
 		
 		class PvCommandeSoumetFiltresTabl extends PvCommandeTableauDonneesBase

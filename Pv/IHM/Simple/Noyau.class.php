@@ -1177,7 +1177,7 @@ formatVal = formatVal.split(tagsSelf[i]).join(val) ;
 				}
 				if($this->EstNul($this->Composant))
 				{
-					return "(Composant nul)" ;
+					return "(Composant inexistant : ".$this->NomClasseComposant.")" ;
 				}
 				$this->Composant->Valeur = $this->LiePourRendu() ;
 				$this->Composant->EspaceReserve = $this->EspaceReserve ;
@@ -1341,6 +1341,9 @@ formatVal = formatVal.split(tagsSelf[i]).join(val) ;
 		class PvFiltreDonneesHttpRequest extends PvFiltreDonneesBase
 		{
 			public $Role = "request" ;
+			public $TypeFormatRegexp ;
+			public $FormatRegexp ;
+			public $MessageErreurRegexp ;
 			public $TypeLiaisonParametre = "request" ;
 			public $AccepteTagsHtml = 1 ;
 			public $AccepteTagsSuspicieux = 0 ;
@@ -1462,7 +1465,7 @@ formatVal = formatVal.split(tagsSelf[i]).join(val) ;
 			public $DejaTelecharge = 0 ;
 			public $NettoyerCaractsFichier = 1 ;
 			public $ExtensionsAcceptees = array() ;
-			public $ExtensionsRejetees = array('pl', 'cgi', 'html', 'xhtml', 'html5', 'html4', 'xml', 'xss', 'rss', 'xlt', 'php', 'phtml', 'inc', 'js', 'vbs', 'py', 'bat', 'sh', 'cmd') ;
+			public $ExtensionsRejetees = array('pl', 'cgi', 'html', 'xhtml', 'html5', 'html4', 'xml', 'xss', 'rss', 'xlt', 'php', 'phtml', 'inc', 'js', 'vbs', 'py', 'bat', 'sh', 'cmd', 'exe', 'msi', 'bin', 'apk', 'com', 'command', 'cpl', 'action', 'csh', 'gadget', 'inf1', 'ins', 'inx', 'ipa', 'isu', 'job', 'jse', 'ksh', 'lnk', 'msc', 'msp', 'mst', 'osx', 'out', 'paf', 'pif', 'prg', 'ps1', 'reg', 'rgs', 'run', 'scr', 'sct', 'shb', 'shs', 'u3p', 'vb', 'vbe', 'vbs', 'vbscript', 'workflow', 'ws', 'wsf', 'wsh') ;
 			public $CheminFichierClient = "" ;
 			public $CodeErreurTelechargement = "0" ;
 			public $CheminFichierSoumis = "" ;

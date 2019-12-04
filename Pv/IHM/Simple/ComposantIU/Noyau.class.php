@@ -2268,7 +2268,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $InfoBulle = "" ;
 			public $MessageErreurExecution = "La commande a &eacute;t&eacute; ex&eacute;cut&eacute;e avec des erreurs" ;
 			public $MessageSuccesExecution = "La commande a &eacute;t&eacute; ex&eacute;cut&eacute;e avec succ&egrave;s" ;
-			public $MessageExecution = "" ;
+			public $MessageExecution ;
 			public $StatutExecution = 0 ;
 			public $Criteres = array() ;
 			public $Actions = array() ;

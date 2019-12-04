@@ -92,9 +92,9 @@
 							case 3 :
 							{
 								if(strpos(strtolower($parser->iNodeValue), "\!doctype") !== false)
-									continue ;
+									continue 2 ;
 								if(strpos(strtolower($parser->iNodeValue), "html public") !== false)
-									continue ;
+									continue 2 ;
 								$text = $parser->iNodeValue ;
 								if(! $this->PreserveSpaces)
 									$text = preg_replace("/[[:space:]]{2,}/", " ", $text) ;

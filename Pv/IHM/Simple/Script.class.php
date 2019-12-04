@@ -205,29 +205,7 @@
 			}
 			public function RenduTitre()
 			{
-				$tagTitre = $this->ZoneParent->TagTitre ;
-				if($this->TagTitre != '')
-				{
-					$tagTitre = $this->TagTitre ;
-				}
-				if($tagTitre == '')
-				{
-					$tagTitre = 'div' ;
-				}
-				if(! $this->ZoneParent->InclureRenduTitre || ! $this->InclureRenduTitre)
-				{
-					return '' ;
-				}
-				$ctn = '' ;
-				$ctn .= '<'.$tagTitre.' class="titre">' ;
-				$ctnIcone = $this->RenduIcone() ;
-				if($ctnIcone != '')
-				{
-					$ctn .= $ctnIcone.'&nbsp;&nbsp;' ;
-				}
-				$ctn .= $this->Titre ;
-				$ctn .= '</'.$tagTitre.'>' ;
-				return $ctn ;
+				return $this->ZoneParent->RenduTitre() ;
 			}
 			public function ObtientTitreDocument()
 			{
@@ -1025,8 +1003,8 @@ Cordialement' ;
 			public $UrlAutoConnexionMembre = "?" ;
 			public function DetermineEnvironnement()
 			{
-				parent::DetermineEnvironnement() ;
 				$this->DetermineUrlRetour() ;
+				parent::DetermineEnvironnement() ;
 				$this->DetermineConfirm() ;
 			}
 			protected function DetermineUrlRetour()
@@ -1107,6 +1085,10 @@ Cordialement' ;
 				$form = & $this->ComposantFormulaireDonnees ;
 				$membership = & $this->ZoneParent->Membership ;
 				parent::ChargeConfigComposantFormulaireDonnees() ;
+				if($this->AutoriserUrlsRetour == 1 && $this->ValeurUrlRetour != '')
+				{
+					$form->ParamsGetSoumetFormulaire[$this->NomParamUrlRetour] = $this->ValeurUrlRetour ;
+				}
 				if($this->Securiser)
 				{
 					$this->FltCaptcha = $form->InsereFltEditHttpPost($this->NomParamCaptcha) ;
@@ -1170,7 +1152,7 @@ Cordialement' ;
 				{
 					if($this->AutoriserUrlsRetour == 1 && $this->ValeurUrlRetour != '')
 					{
-						$form->CommandeExecuter->RedirigeVersUrl($this->ValeurUrlRetour) ;
+						$form->RedirigeExecuterVersUrl($this->ValeurUrlRetour) ;
 					}
 				}
 				$form->CommandeExecuter->Libelle = $this->LibelleCmdExecuter ;

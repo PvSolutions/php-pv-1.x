@@ -212,13 +212,13 @@
 			public $LibelleDetailsException = "Plus de d&eacute;tails" ;
 			public $AliasDetailsException = "exception_more_details" ;
 			public $UtiliserJournalRequetesEnvoyees = 0 ;
-			public $JournalRequetesEnvoyees = null ;
+			public $JournalRequetesEnvoyees ;
 			public $UtiliserJournalExceptions = 0 ;
-			public $JournalExceptions = null ;
+			public $JournalExceptions ;
 			public $NomClasseJournalRequetesEnvoyees = "PvJournalRequetesEnvoyeesBase" ;
 			public $NomClasseJournalExceptions = "PvJournalExceptions" ;
 			public $NomClasseRemplisseurConfigMembership = "PvRemplisseurConfigMembershipSimple" ;
-			public $RemplisseurConfigMembership = null ;
+			public $RemplisseurConfigMembership ;
 			public $MessageScriptMalRefere = "<p>Ce script n'est pas bien refere. Il ne peut etre affiche.</p>" ;
 			public $AnnulDetectMemberCnx = 0 ;
 			public function NatureZone()
@@ -806,6 +806,12 @@
 					return 0 ;
 				}
 				return $this->EstSuperAdmin($this->Membership->MemberLogged) ;
+			}
+			public function EditMembresPossible()
+			{
+				if($this->PossedeMembreConnecte() && count($this->PrivilegesEditMembres) == 0)
+					return 1 ;
+				return $this->PossedePrivileges($this->PrivilegesEditMembres) ;
 			}
 			public function EditMembershipPossible()
 			{

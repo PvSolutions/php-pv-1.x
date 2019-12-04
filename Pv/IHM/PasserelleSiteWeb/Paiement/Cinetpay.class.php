@@ -85,7 +85,10 @@
 				{
 					$this->AnalyseTransactionPostee() ;
 				}
-				elseif($this->IdEtatExecution() == "annule" && $this->EnregistrerTransactCinetpay == 1)
+			}
+			protected function ConfirmeTransactionAnnuleeAuto()
+			{
+				if($this->EnregistrerTransactCinetpay == 1)
 				{
 					$bd = $this->CreeBdCinetpay() ;
 					$bd->RunSql(
@@ -95,6 +98,7 @@
 						)
 					) ;
 				}
+				parent::ConfirmeTransactionAnnuleeAuto() ;
 			}
 			protected function AnalyseTransactionPostee()
 			{

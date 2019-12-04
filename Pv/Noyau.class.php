@@ -1325,14 +1325,24 @@
 					return ;
 				}
 				$fh = fopen($chemFicEtat, "r") ;
+				$erreur = "" ;
 				$ctn = "" ;
-				if($fh != false)
+				if(is_resource($fh))
 				{
 					while(! feof($fh))
 					{
 						$ctn .= fgets($fh) ;
 					}
 					fclose($fh) ;
+				}
+				else
+				{
+					$erreur = "Impossible de lire le fichier ".$chemFicEtat ;
+				}
+				if($erreur != '')
+				{
+					echo $erreur ;
+					exit ;
 				}
 				if($ctn != "")
 				{
@@ -1346,10 +1356,26 @@
 			protected function SauveEtat()
 			{
 				$chemFicEtat = $this->ObtientChemFicEtat() ;
+				$erreur = "" ;
 				$fh = fopen($chemFicEtat, "w") ;
-				$this->Etat->TimestmpCapt = date("U") ;
-				fputs($fh, serialize($this->Etat)) ;
-				fclose($fh) ;
+				if(is_resource($fh))
+				{
+					$this->Etat->TimestmpCapt = date("U") ;
+					if(! fputs($fh, serialize($this->Etat)))
+					{
+						$erreur = "Impossible d'enregistrer l'etat du service ".$this->NomElementApplication." dans ".$cheminFichier ;
+					}
+					fclose($fh) ;
+				}
+				else
+				{
+					$erreur = "Impossible d'ouvrir le fichier ".$cheminFichier ;
+				}
+				if($erreur != '')
+				{
+					echo $erreur ;
+					exit ;
+				}
 			}
 			protected function FixeTempsExec($nouvDelai)
 			{

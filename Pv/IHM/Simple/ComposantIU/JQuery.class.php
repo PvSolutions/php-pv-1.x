@@ -783,8 +783,9 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
 			public $FournisseurDonnees ;
 			public $NomColonneLibelle ;
 			public $NomColonneValeur ;
+			public $NomsColonneExtra = array() ;
 			public $ActSupport ;
-			public $Largeur = '200px' ;
+			public $Largeur = '100%' ;
 			public $MaxElemsParPage = 30 ;
 			public $SeparateurLibelleEtiqVide = ", " ;
 			public $FiltresSelection = array() ;
@@ -792,6 +793,7 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
 			public $ValeurElementHorsLigne = "" ;
 			public $LibelleElementHorsLigne = "" ;
 			public $RechercheParDebut = 1 ;
+			public $ParamsActSupport = array() ;
 			public function ExtraitFiltresSelection($termeRech)
 			{
 				$filtres = $this->FiltresSelection ;
@@ -823,7 +825,7 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
 			protected function RenduEditeurBrut()
 			{
 				$ctn = '' ;
-				$ctn .= '<select name="'.htmlentities($this->NomElementHtml).'" id="'.$this->IDInstanceCalc.'"'.$this->RenduAttrStyleCSS().'>'.PHP_EOL ;
+				$ctn .= '<select name="'.htmlentities($this->NomElementHtml).'" id="'.$this->IDInstanceCalc.'"'.$this->RenduAttrStyleCSS().''.$this->RenduAttrsSupplHtml().'>'.PHP_EOL ;
 				$ctn .= '</select>' ;
 				return $ctn ;
 			}
@@ -838,12 +840,18 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
 				{
 					$valeurSelect = $this->Valeur ;
 					$lignes = $this->FournisseurDonnees->RechExacteElements($this->FiltresSelection, $this->NomColonneValeur, $valeurSelect) ;
+					// print_r($this->FournisseurDonnees) ;
 					if(count($lignes))
 					{
 						$ctn .= PHP_EOL .'var noeudSelect2 = jQuery("#'.$this->IDInstanceCalc.'") ;
-var dataDefaut = {id : '.svc_json_encode($lignes[0][$this->NomColonneValeur]).', text : '.svc_json_encode($lignes[0][$this->NomColonneLibelle]).'} ;
+var dataDefaut = { id : '.svc_json_encode($lignes[0][$this->NomColonneValeur]).', text : '.svc_json_encode($lignes[0][$this->NomColonneLibelle]) ;
+						foreach($this->NomsColonneExtra as $i => $nomCol)
+						{
+							$ctn .= ', '.$nomCol.' : '.svc_json_encode($lignes[0][$nomCol]) ;
+						}
+						$ctn .= '} ;
 var option = new Option(dataDefaut.text, dataDefaut.id, true, true);
-noeudSelect2.append(option).trigger("change");
+noeudSelect2.append(option) ;
 noeudSelect2.trigger({
 type: "select2:select",
 params: {
@@ -856,6 +864,24 @@ data: dataDefaut
 			}
 			protected function CtnJSCfgInst()
 			{
+				$ctnFonctProcRes = 'params.page = params.page || 1;
+if(data == null || data == undefined) {
+	return { results : [{ id : -1, text : "Contenu vide"}] }
+}
+return {
+	results: jQuery.map(data.items, function (item) {
+		return { text: item.'.$this->NomColonneLibelle.', id: item.'.$this->NomColonneValeur ;
+				foreach($this->NomsColonneExtra as $i => $nomCol)
+				{
+					$ctnFonctProcRes .= ', '.$nomCol.' : item.'.$nomCol ;
+				}
+				$ctnFonctProcRes .= ' } ;
+	}),
+	pagination: {
+		more: (params.page * '.$this->MaxElemsParPage.') < data.total_count
+	}
+};' ;
+				$this->FonctsInst[] = new PvFonctInstJQuery("ajax.processResults", array("data", "params"), $ctnFonctProcRes) ;
 				$this->CfgInst->placeholder = $this->EspaceReserve ;
 				if($this->InclureElementHorsLigne == 1)
 				{
@@ -863,24 +889,12 @@ data: dataDefaut
 					$this->CfgInst->placeholder->id = $this->ValeurElementHorsLigne ;
 					$this->CfgInst->placeholder->text = $this->LibelleElementHorsLigne ;
 				}
-				$this->CfgInst->ajax->url = $this->ActSupport->ObtientUrl() ;
+				$this->CfgInst->ajax->url = $this->ActSupport->ObtientUrl($this->ParamsActSupport) ;
 				$ctn = parent::CtnJSCfgInst().PHP_EOL ;
 				return $ctn ;
 			}
 			protected function RenduSourceBrut()
 			{
-				$this->FonctsInst[] = new PvFonctInstJQuery("ajax.processResults", array("data", "params"), 'params.page = params.page || 1;
-return {
-	results: jQuery.map(data.items, function (item) {
-		return {
-			text: item.'.$this->NomColonneLibelle.',
-			id: item.'.$this->NomColonneValeur.'
-		};
-	}),
-	pagination: {
-		more: (params.page * '.$this->MaxElemsParPage.') < data.total_count
-	}
-};') ;
 				$ctn = $this->RenduLienJs($this->CheminFichierJs) ;
 				if($ctn != '') { $ctn .= PHP_EOL ; }
 				$ctn .= $this->RenduContenuJs('jQuery.fn.select2.defaults.set("language", "fr");') ;
@@ -929,13 +943,22 @@ return {
 				$this->TermeRech = (isset($_GET["q"])) ? $_GET["q"] : '' ;
 				$filtres = $comp->ExtraitFiltresSelection($this->TermeRech) ;
 				// $this->Resultat->total_count = $fourn->CompteElements(array(), $filtres) ;
+				$colonnes = array($comp->NomColonneLibelle, $comp->NomColonneValeur) ;
+				if(count($comp->NomsColonneExtra) > 0)
+				{
+					array_splice($colonnes, count($colonnes), 0, $comp->NomsColonneExtra) ;
+				}
 				if($this->RechercheParDebut == 1)
 				{
-					$this->Resultat->items = $fourn->RechDebuteElements($filtres, array($comp->NomColonneLibelle, $comp->NomColonneValeur), $this->TermeRech) ;
+					$this->Resultat->items = $fourn->RechDebuteElements($filtres, $colonnes, $this->TermeRech) ;
 				}
 				else
 				{
-					$this->Resultat->items = $fourn->RechPartielleElements($filtres, array($comp->NomColonneLibelle, $comp->NomColonneValeur), $this->TermeRech) ;
+					$this->Resultat->items = $fourn->RechPartielleElements($filtres, $colonnes, $this->TermeRech) ;
+				}
+				if(count($this->Resultat->items) > $comp->MaxElemsParPage)
+				{
+					array_splice($this->Resultat->items, $comp->MaxElemsParPage) ;
 				}
 				$this->Resultat->total_count = count($this->Resultat->items) ;
 				// print_r($fourn) ;
@@ -949,6 +972,7 @@ return {
 		class PvCfgSelect2
 		{
 			public $ajax ;
+			public $language = "fr" ;
 			public $escapeMarkup ;
 			public $minimumInputLength = 1 ;
 			public $placeholder = "" ;

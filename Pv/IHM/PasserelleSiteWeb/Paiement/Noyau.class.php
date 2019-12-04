@@ -181,7 +181,7 @@
 			protected $ValeurParamResultat = "" ;
 			protected $ValeurParamTermine = "paiement_termine" ;
 			protected $ValeurParamAnnule = "paiement_annule" ;
-			protected $EnregistrerTransaction = 0 ;
+			protected $EnregistrerTransaction = 1 ;
 			public $UtiliserBdTransactionSoumise = 0 ;
 			protected $NomTableTransactSoumise = "transaction_soumise" ;
 			protected $NomTableTransaction = "transaction_paiement" ;
@@ -238,9 +238,10 @@
 				{
 					$bd = $this->CreeBdTransaction() ;
 					$lgn = $bd->FetchSqlRow('select * from '.$bd->EscapeTableName($this->NomTableTransaction).' where id_transaction='.$bd->ParamPrefix.'id', array('id' => $this->_Transaction->IdTransaction)) ;
-					if(is_array($lgn) && count($lgn) > 0 && $lgn["cfg"] != '')
+					if(is_array($lgn) && count($lgn) > 0 && $lgn["contenu_brut"] != '')
 					{
-						$this->_Transaction->Cfg = unserialize($lgn["cfg"]) ;
+						$transactTemp = unserialize($lgn["contenu_brut"]) ;
+						$this->_Transaction->Cfg = $transactTemp->Cfg ;
 					}
 					return ;
 				}
@@ -295,6 +296,10 @@
 			protected function SauveTransaction()
 			{
 				$bd = $this->CreeBdTransaction() ;
+				if($this->_Transaction->Montant == '')
+				{
+					$this->_Transaction->Montant = 0 ;
+				}
 				if($this->_Transaction->IdDonnees == "")
 				{
 					$lgnTransact = $bd->FetchSqlRow("select * from ".$bd->EscapeTableName($this->NomTableTransaction)." where id_transaction=:idTransact", array("idTransact" => $this->_Transaction->IdTransaction)) ;
@@ -305,17 +310,19 @@
 				}
 				if($this->_Transaction->IdDonnees == "")
 				{
+					// print_r($this->_Transaction) ;
 					$ok = $bd->InsertRow(
 						$this->NomTableTransaction,
 						$this->LgnDonneesTransact()
 					) ;
+					// print_r($bd) ;
 				}
 				else
 				{
 					$ok = $bd->UpdateRow(
 						$this->NomTableTransaction,
 						$this->LgnDonneesTransact(),
-						"id = :id",
+						"id = ".$bd->ParamPrefix."id",
 						array("id" => $this->_Transaction->IdDonnees)
 					) ;
 				}
@@ -417,11 +424,13 @@
 				if($this->ValeurParamResultat == $this->ValeurParamTermine)
 				{
 					$this->RestaureTransactionSession() ;
+					$this->ImporteFichCfgTransition() ;
 					$this->DefinitEtatExecution("termine") ;
 				}
 				elseif($this->ValeurParamResultat == $this->ValeurParamAnnule)
 				{
 					$this->RestaureTransactionSession() ;
+					$this->ImporteFichCfgTransition() ;
 					$this->DefinitEtatExecution("annule") ;
 					$this->ConfirmeTransactionAnnuleeAuto() ;
 					$this->ConfirmeTransactionAnnulee() ;
@@ -432,7 +441,9 @@
 				$envoyerErr = 0 ;
 				if(isset($_SESSION[$this->IDInstanceCalc."_Transaction"]))
 				{
+					$idDonnees = $this->_Transaction->IdDonnees ;
 					$this->_Transaction = @unserialize($_SESSION[$this->IDInstanceCalc."_Transaction"]) ;
+					$this->_Transaction->IdDonnees = $idDonnees ;
 					unset($_SESSION[$this->IDInstanceCalc."_Transaction"]) ;
 				}
 				else
@@ -455,7 +466,9 @@
 				{
 					return 1 ;
 				}
+				$idDonnees = $this->_Transaction->IdDonnees ;
 				$this->_Transaction->ImporteParLgn($lgn) ;
+				$this->_Transaction->IdDonnees = $idDonnees ;
 				$bd->RunSql("delete from ".$bd->EscapeTableName($this->NomTableTransactSoumise)." where id_transaction=:id", array("id" => $idTransact)) ;
 				return 0 ;
 			}
@@ -487,7 +500,7 @@
 				{
 					if($this->AfficherErreurs404 == 1)
 					{
-						Header("HTTP/1.0 401 Unauthorized Transaction invalide\r\n") ;
+						Header("HTTP/1.0 401 Unauthorized\r\n") ;
 					}
 					else
 					{
@@ -498,6 +511,7 @@
 				}
 				else
 				{
+					// print_r($this->_Transaction) ;
 					$this->ExporteFichCfgTransition() ;
 				}
 			}
@@ -577,8 +591,6 @@
 			}
 			protected function ConfirmeTransactionAnnuleeAuto()
 			{
-				$this->ImporteFichCfgTransition() ;
-				// print_r($this->_Transaction->Cfg) ;
 				if($this->_Transaction->Cfg->NomSvcAprPaiement != '' && isset($this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement]))
 				{
 					$svcAprPaiement = & $this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement] ;

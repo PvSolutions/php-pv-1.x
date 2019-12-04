@@ -239,6 +239,34 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 		class PvZoneDateHtml extends PvZoneEntreeHtml
 		{
 			public $TypeElementFormulaire = "date" ;
+			public $DateMin ;
+			public $DateMax ;
+			protected function RenduDispositifBrut()
+			{
+				$this->CorrigeIDsElementHtml() ;
+				$ctn = '' ;
+				$styleCSS = '' ;
+				$ctn .= '<input name="'.htmlspecialchars($this->NomElementHtml).'"' ;
+				$ctn .= ' id="'.$this->IDInstanceCalc.'"' ;
+				$ctn .= ' type="'.$this->TypeElementFormulaire.'"' ;
+				$ctn .= $this->RenduAttrStyleCSS() ;
+				$ctn .= $this->RenduAttrsSupplHtml() ;
+				if($this->DateMin != '')
+				{
+					$ctn .= ' min="'.htmlspecialchars($this->DateMin).'"' ;
+				}
+				if($this->DateMax != '')
+				{
+					$ctn .= ' max="'.htmlspecialchars($this->DateMax).'"' ;
+				}
+				$ctn .= ' value="'.htmlspecialchars($this->Valeur).'"' ;
+				$ctn .= ' />' ;
+				return $ctn ;
+			}
+		}
+		class PvZoneDateTimeHtml extends PvZoneEntreeHtml
+		{
+			public $TypeElementFormulaire = "datetime-local" ;
 		}
 		class PvZoneMultiligneHtml extends PvElementFormulaireHtml
 		{
@@ -251,7 +279,6 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 				$styleCSS = '' ;
 				$ctn .= '<textarea name="'.$this->NomElementHtml.'"' ;
 				$ctn .= ' id="'.$this->IDInstanceCalc.'"' ;
-				$ctn .= $this->RenduAttrStyleCSS() ;
 				if($this->TotalColonnes > 0)
 					$ctn .= ' cols="'.$this->TotalColonnes.'"' ;
 				if($this->TotalLignes > 0)
@@ -279,7 +306,8 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 		{
 			public $InclureErreurTelecharg = 1 ;
 			public $InclureCheminCoteServeur = 1 ;
-			public $CheminCoteServeurEditable = 1 ;
+			public $AfficherCheminComplet = 0 ;
+			public $CheminCoteServeurEditable = 0 ;
 			public $InclureZoneSelectFichier = 1 ;
 			public $TailleEditeurCoteServeur = "40" ;
 			public $TypeElementFormulaire = "file" ;
@@ -300,24 +328,30 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 				if($this->InclureZoneSelectFichier)
 				{
 					$ctn .= $this->RenduZoneSelectFichier() ;
-					$ctn .= '<br />' ;
 				}
-				$ctn .= '<table>' ;
-				$ctn .= '<tr>' ;
-				$ctn .= '<td>'.PHP_EOL ;
-				$ctn .= $this->RenduCheminCoteServeur() ;
-				$ctn .= '</td>'.PHP_EOL ;
-				if($this->InclureErreurTelecharg)
+				if($this->Valeur != '' || (($this->InclureErreurTelecharg && $this->FiltreParent->CodeErreurTelechargement != '0')))
 				{
-					if($this->FiltreParent->CodeErreurTelechargement != '')
+					if($this->InclureZoneSelectFichier)
 					{
-						$ctn .= '<td>'.PHP_EOL ;
-						$ctn .= $this->FiltreParent->LibelleErreurTelecharg ;
-						$ctn .= '</td>'.PHP_EOL ;
+						$ctn .= '<br />' ;
 					}
+					$ctn .= '<table>' ;
+					$ctn .= '<tr>' ;
+					$ctn .= '<td>'.PHP_EOL ;
+					$ctn .= $this->RenduCheminCoteServeur() ;
+					$ctn .= '</td>'.PHP_EOL ;
+					if($this->InclureErreurTelecharg)
+					{
+						if($this->FiltreParent->CodeErreurTelechargement != '')
+						{
+							$ctn .= '<td>'.PHP_EOL ;
+							$ctn .= $this->FiltreParent->LibelleErreurTelecharg ;
+							$ctn .= '</td>'.PHP_EOL ;
+						}
+					}
+					$ctn .= '</tr>'.PHP_EOL ;
+					$ctn .= '</table>' ;
 				}
-				$ctn .= '</tr>'.PHP_EOL ;
-				$ctn .= '</table>' ;
 				return $ctn ;
 			}
 			protected function RenduZoneSelectFichier()
@@ -327,6 +361,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 				$ctn .= ' id="'.$this->IDInstanceCalc.'"' ;
 				$ctn .= ' type="'.$this->TypeElementFormulaire.'"' ;
 				$ctn .= $this->RenduAttrStyleCSS() ;
+				$ctn .= $this->RenduAttrsSupplHtml() ;
 				// $ctn .= ' value="'.htmlentities($this->Valeur).'"' ;
 				if($this->IncorporerApercu == 1)
 				{
@@ -347,7 +382,13 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 					}
 					else
 					{
-						$ctn .= htmlentities($this->Valeur) ;
+						$valeur = $this->Valeur ;
+						if($this->AfficherCheminComplet == 1 && $valeur != '')
+						{
+							$infosFich = pathinfo($valeur) ;
+							$valeur = $infosFich["basename"] ;
+						}
+						$ctn .= htmlentities($valeur) ;
 					}
 				}
 				else

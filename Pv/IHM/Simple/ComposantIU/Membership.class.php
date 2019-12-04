@@ -583,7 +583,14 @@
 					}
 					if(! $this->ValideFormatLogin($this->FormulaireDonneesParent->FiltreLoginMembre->ValeurParametre))
 					{
-						return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->LoginMemberFormatErrorLabel) ;
+						if($this->FormulaireDonneesParent->ZoneParent->Membership->LoginWithEmail == 0)
+						{
+							return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->LoginMemberFormatErrorLabel) ;
+						}
+						else
+						{
+							return $this->RenseigneErreurFiltresMembre($this->FormulaireDonneesParent->ZoneParent->Membership->EmailMemberFormatErrorLabel) ;
+						}
 					}
 				}
 				if($this->Mode == 1)
@@ -1193,7 +1200,7 @@
 				parent::ChargeConfig() ;
 				$membership = & $this->ZoneParent->Membership ;
 				$this->FiltreLoginMembre = $this->ScriptParent->CreeFiltreHttpPost("filtreLoginMembre") ;
-				$this->FiltreLoginMembre->Libelle = $membership->LoginMemberLabel ;
+				$this->FiltreLoginMembre->Libelle = ($membership->LoginWithEmail == 0) ? $membership->LoginMemberLabel : $membership->EmailMemberLabel ;
 				$this->FiltreLoginMembre->DeclareComposant("PvZoneTexteHtml") ;
 				$this->FiltresEdition[] = & $this->FiltreLoginMembre ;
 				$nomFltsRecr = array("filtreLoginMembre") ;
@@ -1365,7 +1372,6 @@
 		
 		class PvRemplisseurConfigMembershipSimple
 		{
-			public $ConfirmMotPasseMembre = 0 ;
 			public $IdProfilImporteMembreMS = 0 ;
 			public $CheminDossierImporteMembreMS = "files" ;
 			public $MessageImporteMembreMSSucces = '${TotalSucces}/${totalMembres} membres importés avec succès.' ;
@@ -1574,7 +1580,7 @@
 					if($membership->PasswordMemberExpr != "")
 					{
 						$form->FiltresEdition[$i]->ExpressionColonneLiee = $membership->PasswordMemberExpr.'('.$membership->Database->ExprParamPattern.')' ;
-					}
+					} ;
 					$form->FiltreMotPasseMembre = & $form->FiltresEdition[$i] ;
 					if($membership->ConfirmSetPasswordEnabled == 1)
 					{
@@ -1804,7 +1810,7 @@
 				$form->FiltresLigneSelection[$i]->ExpressionDonnees = $membership->Database->EscapeVariableName($membership->IdMemberColumn).' = <self>' ;
 				$form->FiltreIdMembreEnCours = & $form->FiltresLigneSelection[$i] ;
 				$this->RemplitFiltresEditionFormMembre($form) ;
-				$form->FiltreActiverMembre->EstEtiquette = 1 ;
+				$form->FiltreActiverMembre->Invisible = 1 ;
 				$form->FiltreProfilMembre->EstEtiquette = 1 ;
 			}
 			public function RemplitFormulaireChangeMPMembre(& $form)

@@ -401,9 +401,10 @@
 		{
 			public $TypeComposant = "LienFichierCSS" ;
 			public $Href = "" ;
+			public $Media = "" ;
 			protected function RenduDispositifBrut()
 			{
-				$ctn = '<link rel="stylesheet" type="text/css" href="'.$this->Href.'" />' ;
+				$ctn = '<link rel="stylesheet" type="text/css" href="'.$this->Href.'"'.(($this->Media != '') ? ' media="'.$this->Media.'"' : '').' />' ;
 				return $ctn ;
 			}
 		}
@@ -411,10 +412,11 @@
 		{
 			public $TypeComposant = "BaliseCSS" ;
 			public $Definitions = "" ;
+			public $Media = "" ;
 			protected function RenduDispositifBrut()
 			{
 				$ctn = '' ;
-				$ctn .= '<style type="text/css">'.PHP_EOL ;
+				$ctn .= '<style type="text/css"'.(($this->Media != '') ? ' media="'.$this->Media.'"' : '').'>'.PHP_EOL ;
 				$ctn .= $this->Definitions. PHP_EOL ;
 				$ctn .= '</style>' ;
 				return $ctn ;
@@ -424,9 +426,10 @@
 		{
 			public $TypeComposant = "FichierJs" ;
 			public $Src = "" ;
+			public $Type = "text/javascript" ;
 			protected function RenduDispositifBrut()
 			{
-				$ctn = '<script type="text/javascript" src="'.$this->Src.'"></script>' ;
+				$ctn = '<script type="'.$this->Type.'" src="'.$this->Src.'"></script>' ;
 				return $ctn ;
 			}
 		}

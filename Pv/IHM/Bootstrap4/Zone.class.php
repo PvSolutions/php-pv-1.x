@@ -13,7 +13,7 @@
 			public $InclureCtnJsEntete = 1 ;
 			public $InclureJQuery = 1 ;
 			public $InclureBootstrap = 1 ;
-			public $InclureNavbarFlottant = 1 ;
+			public $InclureNavbarFlottant = 0 ;
 			public $RenduExtraHead = '<meta http-equiv="X-UA-Compatible" content="IE=edge">' ;
 			public $ViewportMeta = 'width=device-width, initial-scale=1' ;
 			public $NomClasseScriptRecouvreMP = "PvScriptRecouvreMPBootstrap4" ;
@@ -38,6 +38,9 @@
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesBootstrap4" ;
 			public $NomClasseRemplisseurConfigMembership = "PvRemplisseurConfigMembershipBootstrap4" ;
 			public $InclureHelpers = 1 ;
+			public $InclureTableauFixe = 0 ;
+			public $HauteurTableauFixe = '600px' ;
+			public $BackgroundEnteteTableauFixe = 'white' ;
 			public $ClasseCSSMsgExecSucces = "alert alert-success" ;
 			public $ClasseCSSMsgExecErreur = "alert alert-danger" ;
 			public $AbcisseXNavbarFlottant = "0px" ;
@@ -73,6 +76,27 @@
 		width : 100%;
 	}' : '').(($this->ContenuCSSPetitsEcrans != '') ? '
 '.$this->ContenuCSSPetitsEcrans : '').'
+}') ;
+				}
+				if($this->InclureTableauFixe == 1)
+				{
+					$this->InscritContenuCSS('@media not print {
+.TableauDonneesHTML {
+  overflow-y: auto;
+  height:'.$this->HauteurTableauFixe.';
+}
+.TableauDonneesHTML table.RangeeDonnees {
+  border-collapse: collapse;
+}
+.TableauDonneesHTML table.RangeeDonnees th,
+.TableauDonneesHTML table.RangeeDonnees td {
+  padding: 8px 16px;
+}
+.TableauDonneesHTML table.RangeeDonnees th {
+  position: sticky;
+  top: 0;
+  background: '.$this->BackgroundEnteteTableauFixe.' ;
+}
 }') ;
 				}
 				if($this->InclureHelpers == 1)
