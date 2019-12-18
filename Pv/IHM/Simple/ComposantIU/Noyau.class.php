@@ -738,15 +738,31 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 					echo '<title><![CDATA['.$this->EncodeTexteRss($titre).']]></title>'.PHP_EOL ;
 				}
 				$description = '' ;
-				if($this->ZoneParent->ScriptAppele->MotsCleMeta != '')
+				if($this->EstPasNul($this->ZoneParent->ScriptAppele))
 				{
-					$description .= $this->ZoneParent->ScriptAppele->MotsCleMeta ;
+					if($this->ZoneParent->ScriptPourRendu->MotsCleMeta != '')
+					{
+						$description .= $this->ZoneParent->ScriptAppele->MotsCleMeta ;
+					}
+					if($this->ZoneParent->ScriptAppele->DescriptionMeta != '')
+					{
+						if($description != '')
+							$description .= ' : ' ;
+						$description .= $this->ZoneParent->ScriptAppele->DescriptionMeta ;
+					}
 				}
-				if($this->ZoneParent->ScriptAppele->DescriptionMeta != '')
+				else
 				{
-					if($description != '')
-						$description .= ' : ' ;
-					$description .= $this->ZoneParent->ScriptAppele->DescriptionMeta ;
+					if($this->ZoneParent->MotsCleMeta != '')
+					{
+						$description .= $this->ZoneParent->MotsCleMeta ;
+					}
+					if($this->ZoneParent->DescriptionMeta != '')
+					{
+						if($description != '')
+							$description .= ' : ' ;
+						$description .= $this->ZoneParent->DescriptionMeta ;
+					}
 				}
 				if($description != "")
 				{

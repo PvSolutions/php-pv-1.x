@@ -10,7 +10,7 @@ Il possède des classes pour :
 
 ## Documentation
 
-[Guide](docs/Guide/Guide.adoc)
+[Guide](docs/index.md)
 
 ## Exemple d'usage
 * lib/Application.class.php

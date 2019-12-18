@@ -284,15 +284,14 @@
 					return '' ;
 				}
 				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;" role="form">'.PHP_EOL ;
-				$ctn .= '<div class="panel panel-default">'.PHP_EOL ;
+				$ctn .= '<div class="card card-primary">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
 				{
-					$ctn .= '<div class="panel-heading" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
+					$ctn .= '<div class="card-header" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
 					$ctn .= $this->TitreFormulaireFiltres ;
 					$ctn .= '</div>'.PHP_EOL ;
 				}
-				$ctn .= '<div class="panel-body">'.PHP_EOL ;
-				$ctn .= '<div class="container-fluid">'.PHP_EOL ;
+				$ctn .= '<div class="card-body">'.PHP_EOL ;
 				$ctn .= '<div class="row">'.PHP_EOL ;
 				$ctn .= '<div class="'.$this->ClsBstFormFiltresSelect.'">'.PHP_EOL ;
 				$ctn .= $this->DessinateurFiltresSelection->Execute($this->ScriptParent, $this, $this->FiltresSelection) ;
@@ -300,8 +299,7 @@
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '<div class="panel-footer">'.PHP_EOL ;
+				$ctn .= '<div class="card-footer">'.PHP_EOL ;
 				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
@@ -493,15 +491,14 @@
 					return '' ;
 				}
 				$ctn .= '<form class="FormulaireFiltres" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this) ;" role="form">'.PHP_EOL ;
-				$ctn .= '<div class="panel panel-default">'.PHP_EOL ;
+				$ctn .= '<div class="card card-primary">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
 				{
-					$ctn .= '<div class="panel-heading" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
+					$ctn .= '<div class="card-header" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
 					$ctn .= $this->TitreFormulaireFiltres ;
 					$ctn .= '</div>'.PHP_EOL ;
 				}
-				$ctn .= '<div class="panel-body">'.PHP_EOL ;
-				$ctn .= '<div class="container-fluid">'.PHP_EOL ;
+				$ctn .= '<div class="card-body">'.PHP_EOL ;
 				$ctn .= '<div class="row">'.PHP_EOL ;
 				$ctn .= '<div class="'.$this->ClsBstFormFiltresSelect.'">'.PHP_EOL ;
 				$ctn .= $this->DessinateurFiltresSelection->Execute($this->ScriptParent, $this, $this->FiltresSelection) ;
@@ -509,8 +506,7 @@
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '<div class="panel-footer">'.PHP_EOL ;
+				$ctn .= '<div class="card-footer">'.PHP_EOL ;
 				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;

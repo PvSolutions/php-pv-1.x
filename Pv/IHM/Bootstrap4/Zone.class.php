@@ -37,7 +37,6 @@
 			public $NomClasseScriptSupprRole = "PvScriptSupprRoleBootstrap4" ;
 			public $NomClasseScriptListeRoles = "PvScriptListeRolesBootstrap4" ;
 			public $NomClasseRemplisseurConfigMembership = "PvRemplisseurConfigMembershipBootstrap4" ;
-			public $InclureHelpers = 1 ;
 			public $InclureTableauFixe = 0 ;
 			public $HauteurTableauFixe = '600px' ;
 			public $BackgroundEnteteTableauFixe = 'white' ;
@@ -49,7 +48,8 @@
 			public $BackgroundNavbarFlottant = "white" ;
 			public $CouleurBordureNavbarFlottant = "" ;
 			public $CouleurTexteNavbarFlottant = "black" ;
-			public $ContenuCSSPetitsEcrans = "" ;
+			public $CheminCSSBootstrap = 'css/bootstrap.min.css' ;
+			public $CheminFontAwesome = 'vendor/fontawesome/css/all.min.css' ;
 			public function InclutLibrairiesExternes()
 			{
 				parent::InclutLibrairiesExternes() ;
@@ -99,21 +99,6 @@
 }
 }') ;
 				}
-				if($this->InclureHelpers == 1)
-				{
-					$this->InscritContenuJS($this->ContenuJsHelper()) ;
-				}
-			}
-			protected function ContenuJsHelper()
-			{
-				$ctn = '' ;
-				$ctn .= 'jQuery(function() {
-jQuery(\'.pull-down\').each(function() {
-  var $this = jQuery(this);
-  $this.css(\'margin-top\', $this.parent().height() - $this.height()) ;
-});
-}) ;' ;
-				return $ctn ;
 			}
 		}
 	}
