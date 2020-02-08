@@ -166,9 +166,9 @@
 		class PvInterfacePaiementBase extends PvPasserelleSiteWebBase
 		{
 			protected $_SvcsAprPaiement = array() ;
-			protected $_EtatExecution = null ;
-			protected $_Transaction = null ;
-			protected $_CompteMarchand = null ;
+			protected $_EtatExecution ;
+			protected $_Transaction ;
+			protected $_CompteMarchand ;
 			public $CheminImage = "images/paiement-base.png" ;
 			public $CheminIcone = "" ;
 			public $Titre = "Ne rien faire" ;

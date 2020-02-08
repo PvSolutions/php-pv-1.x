@@ -427,9 +427,10 @@
 			public $TypeComposant = "FichierJs" ;
 			public $Src = "" ;
 			public $Type = "text/javascript" ;
+			public $Async = 0 ;
 			protected function RenduDispositifBrut()
 			{
-				$ctn = '<script type="'.$this->Type.'" src="'.$this->Src.'"></script>' ;
+				$ctn = '<script type="'.$this->Type.'" src="'.$this->Src.'"'.(($this->Async == 1) ? ' async' : '').'></script>' ;
 				return $ctn ;
 			}
 		}
@@ -448,10 +449,11 @@
 		{
 			public $TypeComposant = "BaliseJs" ;
 			public $Definitions = "" ;
+			public $Async = 0 ;
 			protected function RenduDispositifBrut()
 			{
 				$ctn = '' ;
-				$ctn .= '<script language="javascript">'.PHP_EOL ;
+				$ctn .= '<script language="javascript"'.(($this->Async == 1) ? ' async' : '').'>'.PHP_EOL ;
 				$ctn .= $this->Definitions. PHP_EOL ;
 				$ctn .= '</script>' ;
 				return $ctn ;

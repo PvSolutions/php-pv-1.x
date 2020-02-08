@@ -39,6 +39,7 @@ Dans le script ou la zone, utilisez la propriété **TypeErreur** et méthode **
 
 ### Utilisation PvActionTelechargFichier
 
-Vous devez réécrire la méthode **Execute()**. A l’intérieur :
-- Renseignez la propriété **NomFichierAttache** pour définir le nom du fichier téléchargé. Utilisez la fonction echo pour envoyer le contenu du fichier
+- Renseignez la propriété **NomFichierAttache** dans la fonction **DetermineFichierAttache** pour définir le nom du fichier téléchargé.
+- Réécrivez la méthode **AfficheContenu** pour envoyez le contenu du fichier. A l'intérieur, utilisez les fonctions PHP **echo**.
 - Si le fichier existe déjà, utilisez **CheminFichierSource** pour le charger.
+- Si vous voulez renseigner des entêtes spécifiques, réécrivez la méthode **AfficheEntetes**

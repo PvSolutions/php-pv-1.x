@@ -21,14 +21,13 @@
 ## Fonctionnement
 
 - [L'Application](application.md)
-- [Les Zones]
+- [Les Zones](ihm/zone.md)
 	- [La Zone Bootstrap 4](ihm/zonebootstrap4.md)
 	- [La Zone Web Simple](ihm/zonewebsimple.md)
 	- [La Zone Bootstrap 3](ihm/zonebootstrap3.md)
 	- [La Zone SbAdmin](ihm/zonesbadmin.md)
 	- [La Zone Bs SbAdmin](ihm/zonebssbadmin.md)
 - [Les passerelles de paiement](ihm/passerellepaie.md)
-	- [Fonctionnement](ihm/processuspaie.md)
 	- [La passerelle de Test](ihm/paiementtest.md)
 	- [La passerelle Cinetpay](ihm/paiementcinetpay.md)
 	- [La passerelle Paypal](ihm/paiementpaypal.md)
