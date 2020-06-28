@@ -45,7 +45,7 @@
 				$sql .= ' and '.$this->Database->EscapeVariableName($this->SessionIdConnectionColumn).' <> '.$this->Database->ParamPrefix.'sessionId' ;
 				return $sql ;
 			}
-			protected function ClearInactiveSessions()
+			public function ClearInactiveSessions()
 			{
 				if($this->TimeoutInactiveMembers == 0)
 				{
@@ -53,16 +53,17 @@
 				}
 				$colDateEnreg = $this->Database->EscapeVariableName($this->DateRegConnectionColumn) ;
 				$sql = 'delete from '.$this->Database->EscapeTableName($this->ConnectionTable).' where '.$this->Database->SqlDateDiff($this->Database->SqlNow(), $colDateEnreg).' >= '.intval($this->TimeoutInactiveMembers) ;
-				$this->Database->RunSql($sql) ;
+				return $this->Database->RunSql($sql) ;
+				// print_r($this->Database) ;
 			}
 			public function ClearSession()
 			{
-				$this->DeleteCurrentSession() ;
+				return $this->DeleteCurrentSession() ;
 			}
 			protected function DeleteCurrentSession()
 			{
 				$sql = 'delete from '.$this->Database->EscapeTableName($this->ConnectionTable).' where '.$this->Database->EscapeVariableName($this->SessionIdConnectionColumn).'='.$this->Database->ParamPrefix.'sessionId' ;
-				$this->Database->RunSql($sql, array('sessionId' => session_id())) ;
+				return $this->Database->RunSql($sql, array('sessionId' => session_id())) ;
 			}
 			public function Register($memberId)
 			{

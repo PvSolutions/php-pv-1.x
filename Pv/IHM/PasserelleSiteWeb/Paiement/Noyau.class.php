@@ -143,9 +143,17 @@
 				$this->Designation = $lgn["designation"] ;
 				$this->Montant = $lgn["montant"] ;
 				$this->Monnaie = $lgn["monnaie"] ;
-				$this->InfosSuppl = $lgn["infos_suppl"] ;
+				// $this->InfosSuppl = $lgn["infos_suppl"] ;
 				$this->ContenuRetourBrut = null ;
-				$this->Cfg = ($lgn["cfg"] != '') ? unserialize($lgn["cfg"]) : new PvCfgTransactPaiement() ;
+				$this->Cfg = new PvCfgTransactPaiement() ;
+				if($lgn["contenu_brut"] != '')
+				{
+					$transactTemp = @unserialize($lgn["contenu_brut"]) ;
+					if($transactTemp != null)
+					{
+						$this->Cfg = $transactTemp->Cfg ;
+					}
+				}
 			}
 			public function ExporteVersLgn()
 			{
@@ -232,16 +240,15 @@
 					fclose($resFich) ;
 				}
 			}
-			protected function ImporteFichCfgTransition()
+			protected function ImporteFichCfgTransaction()
 			{
 				if($this->EnregistrerTransaction == 1)
 				{
 					$bd = $this->CreeBdTransaction() ;
 					$lgn = $bd->FetchSqlRow('select * from '.$bd->EscapeTableName($this->NomTableTransaction).' where id_transaction='.$bd->ParamPrefix.'id', array('id' => $this->_Transaction->IdTransaction)) ;
-					if(is_array($lgn) && count($lgn) > 0 && $lgn["contenu_brut"] != '')
+					if(is_array($lgn) && count($lgn) > 0)
 					{
-						$transactTemp = unserialize($lgn["contenu_brut"]) ;
-						$this->_Transaction->Cfg = $transactTemp->Cfg ;
+						$this->_Transaction->ImporteParLgn($lgn) ;
 					}
 					return ;
 				}
@@ -296,6 +303,7 @@
 			protected function SauveTransaction()
 			{
 				$bd = $this->CreeBdTransaction() ;
+				$ok = false ;
 				if($this->_Transaction->Montant == '')
 				{
 					$this->_Transaction->Montant = 0 ;
@@ -311,11 +319,12 @@
 				if($this->_Transaction->IdDonnees == "")
 				{
 					// print_r($this->_Transaction) ;
+					$lgnTransact = $this->LgnDonneesTransact() ;
+					$lgnTransact["nom_fournisseur"] = $this->NomFournisseur() ;
 					$ok = $bd->InsertRow(
 						$this->NomTableTransaction,
-						$this->LgnDonneesTransact()
+						$lgnTransact
 					) ;
-					// print_r($bd) ;
 				}
 				else
 				{
@@ -326,6 +335,7 @@
 						array("id" => $this->_Transaction->IdDonnees)
 					) ;
 				}
+				return $ok ;
 			}
 			public function NomFournisseur()
 			{
@@ -424,16 +434,14 @@
 				if($this->ValeurParamResultat == $this->ValeurParamTermine)
 				{
 					$this->RestaureTransactionSession() ;
-					$this->ImporteFichCfgTransition() ;
+					$this->ImporteFichCfgTransaction() ;
 					$this->DefinitEtatExecution("termine") ;
 				}
 				elseif($this->ValeurParamResultat == $this->ValeurParamAnnule)
 				{
 					$this->RestaureTransactionSession() ;
-					$this->ImporteFichCfgTransition() ;
+					$this->ImporteFichCfgTransaction() ;
 					$this->DefinitEtatExecution("annule") ;
-					$this->ConfirmeTransactionAnnuleeAuto() ;
-					$this->ConfirmeTransactionAnnulee() ;
 				}
 			}
 			protected function ImporteTransactSoumiseSession()
@@ -547,15 +555,15 @@
 			}
 			protected function TransactionEchouee()
 			{
-				return $this->_EtatExecution->Id == "paiement_echoue" || $this->_EtatExecution->Id == "exception_paiement" || $this->_EtatExecution->Id == "paiement_expire" ;
+				return $this->_EtatExecution->Id == "paiement_echoue" || $this->_EtatExecution->Id == "paiement_exception" || $this->_EtatExecution->Id == "paiement_expire" ;
 			}
 			protected function TransactionAnnulee()
 			{
-				return $this->_EtatExecution->Id != "annule" || $this->_EtatExecution->Id != "paiement_annule" ;
+				return $this->_EtatExecution->Id == "annule" || $this->_EtatExecution->Id == "paiement_annule" ;
 			}
 			protected function ConfirmeTransactionReussieAuto()
 			{
-				$this->ImporteFichCfgTransition() ;
+				$this->ImporteFichCfgTransaction() ;
 				if($this->_Transaction->Cfg->NomSvcAprPaiement != '' && isset($this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement]))
 				{
 					$svcAprPaiement = & $this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement] ;
@@ -579,7 +587,7 @@
 			}
 			protected function ConfirmeTransactionEchoueeAuto()
 			{
-				$this->ImporteFichCfgTransition() ;
+				$this->ImporteFichCfgTransaction() ;
 				if($this->_Transaction->Cfg->NomSvcAprPaiement != '' && isset($this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement]))
 				{
 					$svcAprPaiement = & $this->_SvcsAprPaiement[$this->_Transaction->Cfg->NomSvcAprPaiement] ;
@@ -774,7 +782,7 @@
 						$this->_EtatExecution->Id = $lgnTransact["id_etat"] ;
 						$this->_EtatExecution->TimestampCapt = $lgnTransact["timestamp_etat"] ;
 						$this->ControleTransactionEnAttente() ;
-						if(! in_array($this->_EtatExecution->Id, array('paiement_reussi', 'paiement_annule', 'paiement_echoue', 'paiement_expire')))
+						if(! in_array($this->_EtatExecution->Id, array('paiement_reussi', 'paiement_annule', 'paiement_echoue', 'paiement_expire', 'paiement_exception')))
 						{
 							$this->DefinitEtatExecution("verification_ok") ;
 						}

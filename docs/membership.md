@@ -7,11 +7,11 @@ Il se base sur les modèles relationnels suivants :
 
 - Sans Support LDAP :
 
-![Structure sans LDAP](../images/membership_struct1.png)
+![Structure sans LDAP](images/membership_struct1.png)
 
 - Avec Support LDAP :
 
-![Structure avec LDAP](../images/membership_struct2.png)
+![Structure avec LDAP](images/membership_struct2.png)
 
 Pour l’installer, vous devez créer une base de données et les tables nécessaires.
 Vous trouverez les scripts SQL dans le code source :

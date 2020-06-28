@@ -22,6 +22,10 @@
 		{
 			include dirname(__FILE__)."/Paiement/Paypal.class.php" ;
 		}
+		if(! defined("PV_PASSERELLE_PAIEMENT_SKRILL"))
+		{
+			include dirname(__FILE__)."/Paiement/Skrill.class.php" ;
+		}
 		define('PV_BASE_INTERFACE_PAIEMENT', 1) ;
 	}
 

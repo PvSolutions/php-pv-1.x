@@ -2,9 +2,17 @@
 	
 	if(! defined('PV_API_RESTFUL'))
 	{
+		if(! defined('PV_AUTH_RESTFUL'))
+		{
+			include dirname(__FILE__)."/Auth.class.php" ;
+		}
 		if(! defined('PV_FILTRE_RESTFUL'))
 		{
 			include dirname(__FILE__)."/Filtre.class.php" ;
+		}
+		if(! defined('PV_DEF_COL_RESTFUL'))
+		{
+			include dirname(__FILE__)."/DefCol.class.php" ;
 		}
 		if(! defined('PV_COMMANDE_RESTFUL'))
 		{
@@ -28,6 +36,7 @@
 		{
 			public $Entetes = array() ;
 		}
+		
 		class PvRequeteRestful extends PvMessageHttpRestful
 		{
 			public $Methode ;
@@ -199,7 +208,15 @@
 			{
 				$this->DefinitEnteteStatusCode(403) ;
 			}
+			public function ConfirmeErreurInterne()
+			{
+				$this->DefinitEnteteStatusCode(500) ;
+			}
 			public function ConfirmeNonAutoris()
+			{
+				$this->DefinitEnteteStatusCode(401) ;
+			}
+			public function ConfirmeNonAutorise()
 			{
 				$this->DefinitEnteteStatusCode(401) ;
 			}
@@ -234,6 +251,8 @@
 		{
 			public $TypeIHM = "API" ;
 			public $CheminRacineApi = "/" ;
+			public $NomClasseAuth = "PvAuthDistRestful" ;
+			public $Auth ;
 			public $Routes = array() ;
 			public $VersionMin = 1 ;
 			public $VersionMax = 1 ;
@@ -250,33 +269,39 @@
 			public $PrivilegesEditMembership = array() ;
 			public $PrivilegesEditMembres = array() ;
 			protected $NomRoutesEditMembership = array() ;
-			public $NomRouteConnexion = "connexion" ;
-			public $NomRouteInscription = "inscription" ;
 			public $AutoriserInscription = 0 ;
 			public $AutoriserModifPrefs = 0 ;
-			public $NomRouteRecouvreMP = "recouvreMP" ;
+			public $NomClasseRouteRecouvreMP = "PvRouteRecouvreMPRestful" ;
+			public $NomClasseRouteConnexion = "PvRouteConnexionRestful" ;
+			public $NomClasseRouteInscription = "PvRouteInscriptionRestful" ;
+			public $NomClasseRouteDeconnexion = "PvRouteDeconnexionRestful" ;
+			public $NomClasseRouteModifPrefs = "PvRouteModifPrefsRestful" ;
+			public $NomClasseRouteChangeMotPasse = "PvRouteChangeMotPasseRestful" ;
+			public $NomClasseRouteAjoutMembre = "PvRouteAjoutMembreRestful" ;
+			public $NomClasseRouteModifMembre = "PvRouteModifMembreRestful" ;
+			public $NomClasseRouteChangeMPMembre = "PvRouteChangeMPMembreRestful" ;
+			public $NomClasseRouteSupprMembre = "PvRouteSupprMembreRestful" ;
+			public $NomClasseRouteListeMembres = "PvRouteListeMembresRestful" ;
+			public $NomClasseRouteAjoutProfil = "PvRouteAjoutProfilRestful" ;
+			public $NomClasseRouteModifProfil = "PvRouteModifProfilRestful" ;
+			public $NomClasseRouteSupprProfil = "PvRouteSupprProfilRestful" ;
+			public $NomClasseRouteListeProfils = "PvRouteListeProfilsRestful" ;
+			public $NomClasseRouteAjoutRole = "PvRouteAjoutRoleRestful" ;
+			public $NomClasseRouteModifRole = "PvRouteModifRoleRestful" ;
+			public $NomClasseRouteSupprRole = "PvRouteSupprRoleRestful" ;
+			public $NomClasseRouteListeRoles = "PvRouteListeRolesRestful" ;
+			public $NomRouteRecouvreMP = "reinitialise_password" ;
+			public $NomRouteConnexion = "connexion" ;
+			public $NomRouteInscription = "inscription" ;
 			public $NomRouteDeconnexion = "deconnexion" ;
-			public $NomRouteChangeMPMembre = "changeMPMembre" ;
-			public $NomRouteChangeMotPasse = "changeMotPasse" ;
-			public $NomRouteDoitChangerMotPasse = "doitChangerMotPasse" ;
-			public $NomRouteAjoutMembre = "ajoutMembre" ;
-			public $NomRouteImportMembre = "importMembre" ;
-			public $NomRouteModifMembre = "modifMembre" ;
-			public $NomRouteModifPrefs = "modifPrefs" ;
-			public $NomRouteSupprMembre = "supprMembre" ;
-			public $NomRouteListeMembres = "listeMembres" ;
-			public $NomRouteAjoutProfil = "ajoutProfil" ;
-			public $NomRouteModifProfil = "modifProfil" ;
-			public $NomRouteSupprProfil = "supprProfil" ;
-			public $NomRouteListeProfils = "listeProfils" ;
-			public $NomRouteAjoutRole = "ajoutRole" ;
-			public $NomRouteModifRole = "modifRole" ;
-			public $NomRouteSupprRole = "supprRole" ;
-			public $NomRouteListeRoles = "listeRoles" ;
-			public $NomRouteAjoutServeurAD = "ajoutServeurAD" ;
-			public $NomRouteModifServeurAD = "modifServeurAD" ;
-			public $NomRouteSupprServeurAD = "supprServeurAD" ;
-			public $NomRouteListeServeursAD = "listeServeursAD" ;
+			public $NomRouteImporteMembre = "importe" ;
+			public $NomRouteChangeMPMembre = "change_password" ;
+			public $NomRouteChangeMotPasse = "change_password" ;
+			public $NomRoutesAcces = "acces" ;
+			public $NomRoutesMonEspace = "mon_espace" ;
+			public $NomRoutesProfils = "profils" ;
+			public $NomRoutesRoles = "roles" ;
+			public $NomRoutesServeursAD = "serveurs_ad" ;
 			public function & InscritRoute($nom, $cheminRoute, & $route)
 			{
 				$this->Routes[$nom] = & $route ;
@@ -321,7 +346,7 @@
 			{
 				return $this->NomRouteAppelee != '' ;
 			}
-			public function BDMembership()
+			public function & BDMembership()
 			{
 				return $this->Membership->Database ;
 			}
@@ -339,35 +364,29 @@
 						die('La classe Membership '.$nomClasseMembership.' n\'est pas declaree') ;
 					}
 				}
+				else
+				{
+					return ;
+				}
 				$this->DetecteMembreConnecte() ;
 				$this->DetermineRoutesMembership() ;
 			}
 			protected function DetecteMembreConnecte()
 			{
-				if($this->Requete->EnteteAuthType == 'bearer')
-				{
-					$token = $this->Requete->EnteteAuthCredentials ;
-					$bd = $this->BDMembership() ;
-					$idMembre = $bd->FetchSqlValue(
-						'select member_id from '.$bd->EscapeVariableName($this->NomTableSession).' where token='.$bd->ParamPrefix.'token',
-						array("token" => $token),
-						'member_id',
-						0
-					) ;
-					if($idMembre !== null)
-					{
-						if($idMembre > 0)
-						{
-							$this->Membership->LoadMember($idMembre) ;
-						}
-					}
-				}
+				$this->Auth->ChargeSession($this) ;
 			}
 			protected function ChargeRoutesMSConnecte()
 			{
+				return ;
+				$this->InscritRoute($this->NomRoutesMonEspace."/".$this->NomRouteModifPrefs, $this->NomClasseRouteModifPrefs) ;
+				$this->InscritRoute($this->NomRoutesMonEspace."/".$this->NomRouteDeconnexion, $this->NomClasseRouteDeconnexion) ;
 			}
 			protected function ChargeRoutesMSNonConnecte()
 			{
+				return ;
+				$this->InscritRoute($this->NomRoutesAcces."/".$this->NomRouteRecouvreMP, $this->NomClasseRouteRecouvreMP) ;
+				$this->InscritRoute($this->NomRoutesAcces."/".$this->NomRouteInscription, $this->NomClasseRouteInscription) ;
+				$this->InscritRoute($this->NomRoutesAcces."/".$this->NomRouteConnexion, $this->NomClasseRouteConnexion) ;
 			}
 			protected function DetermineRoutesMembership()
 			{
@@ -521,6 +540,11 @@
 			}
 			protected function PrepareExecution()
 			{
+				if($this->NomClasseAuth != '')
+				{
+					$nomClasse = $this->NomClasseAuth ;
+					$this->Auth = new $nomClasse() ;
+				}
 				$this->Requete = new PvRequeteRestful() ;
 				$this->Reponse = new PvReponseRestful() ;
 				$this->ValeurParamRoute = $this->Requete->CheminRelatifRoute ;
@@ -561,22 +585,24 @@
 					{
 						$this->Reponse->ConfirmeNonAutoris() ;
 					}
-					$this->Reponse->EnvoieRendu($this) ;
 				}
 				else
 				{
 					if($this->EstPasNul($this->RouteParDefaut))
 					{
 						$this->RouteParDefaut->Execute() ;
-						$this->Reponse->EnvoieRendu($this) ;
 					}
 					else
 					{
 						$this->Reponse->ConfirmeNonTrouve() ;
-						$this->Reponse->EnvoieRendu($this) ;
 					}
 				}
+				$this->Reponse->EnvoieRendu($this) ;
 				$this->TermineExecution() ;
+			}
+			public function ArgRouteAppelee($nom, $valeurDefaut=null)
+			{
+				return (isset($this->ArgsRouteAppelee[$nom])) ? $this->ArgsRouteAppelee[$nom] : $valeurDefaut ;
 			}
 		}
 	}

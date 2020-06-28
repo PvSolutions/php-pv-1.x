@@ -364,7 +364,7 @@
 									}
 								}
 							}
-							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
 						$ctn .= '<div class="panel panel-default"><div class="panel-body table-responsive">'.PHP_EOL ;

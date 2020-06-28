@@ -35,6 +35,7 @@
 			var $RequestPostDataType = "array" ;
 			var $RequestHost = "" ;
 			var $RequestPort = "" ;
+			var $RequestHttpVersion = "" ;
 			var $RequestFilesData = array() ;
 			var $RequestQueryRawEncoding = "1" ;
 			var $RequestHeaders = array() ;
@@ -397,6 +398,12 @@
 				$this->ResponseHeadersData = "" ;
 				$this->ResponseData = "" ;
 				$ClrfLength = strlen("\r\n\r\n") ;
+				$firstLine = fgets($this->RequestOutput) ;
+				if($firstLine !== false)
+				{
+					$this->ResponseHeadersData .= $firstLine ;
+					list($this->ResponseHttpVersion, $this->ResponseHttpStatusCode, $this->ResponseHttpStatusDesc) = explode(" ", $firstLine, 3) ;
+				}
 				while(($line = fgets($this->RequestOutput)) !== false)
 				{
 					if(! $this->ResponseHeadersSet)
@@ -454,9 +461,12 @@
 				{
 					$this->RequestMethod = "POST" ;
 				}
-				// Detect the file upload active
-				$this->RequestFileUploadActivated = ($this->RequestContentType == "multipart/form-data") ;// Calculate the content length
-				$this->CalculateRequestContentLength() ;
+				if($this->RequestMethod == "POST")
+				{
+					// Detect the file upload active
+					$this->RequestFileUploadActivated = ($this->RequestContentType == "multipart/form-data") ;// Calculate the content length
+					$this->CalculateRequestContentLength() ;
+				}
 				// Setting the host
 				$this->RequestHost = $this->RequestUrlParts['host'];
 				// Setting the cookies
@@ -465,26 +475,29 @@
 					$this->RequestCookies[$this->CookieHost()] = array() ;
 				}
 				// Update the others Headers
-				$this->RequestHeaders["Content-Length"] = $this->RequestContentLength;
-				if(! $this->RequestHeaders["Content-Length"])
+				if($this->RequestMethod == "POST")
 				{
-					unset($this->RequestHeaders["Content-Length"]) ;
+					$this->RequestHeaders["Content-Length"] = $this->RequestContentLength;
+					if(! $this->RequestHeaders["Content-Length"])
+					{
+						unset($this->RequestHeaders["Content-Length"]) ;
+					}
+					// Adding the clause
+					if($this->RequestContentType != "")
+					{
+						$this->RequestHeaders["Content-Type"] = $this->RequestContentType ;
+						if($this->RequestHeaders["Content-Type"] == "multipart/form-data")
+						{
+							$this->RequestHeaders["Content-Type"] .= ", boundary=".$this->RequestBoundary ;
+						}
+						if($this->RequestCharset != "")
+						{
+							$this->RequestHeaders["Content-Type"] .= "; charset=".$this->RequestCharset ;
+						}
+					}
 				}
 				$this->RequestHeaders["Connection"] = "close";
 				$this->RequestHeaders["Host"] = $this->RequestHost;
-				// Adding the clause
-				if($this->RequestContentType != "")
-				{
-					$this->RequestHeaders["Content-Type"] = $this->RequestContentType ;
-					if($this->RequestHeaders["Content-Type"] == "multipart/form-data")
-					{
-						$this->RequestHeaders["Content-Type"] .= ", boundary=".$this->RequestBoundary ;
-					}
-					if($this->RequestCharset != "")
-					{
-						$this->RequestHeaders["Content-Type"] .= "; charset=".$this->RequestCharset ;
-					}
-				}
 			}
 			function BuildHeadersRequest($headers)
 			{
@@ -496,14 +509,21 @@
 				if($this->RequestUrlParts['query'] != "")
 					$page .= '?' . $this->RequestUrlParts['query'] ;
 				if($this->RequestMethod == "POST") {
-					$this->RequestHeadersData .= "POST $page HTTP/1.1\r\n";
+					$this->RequestHeadersData .= "POST $page ".(($this->RequestHttpVersion == "") ? "HTTP/1.1" : $this->RequestHttpVersion)."\r\n";
 				}
 				else {
-					$this->RequestHeadersData .= "GET $page HTTP/1.0\r\n"; //HTTP/1.0 is much easier to handle than HTTP/1.1 than GET
+					$this->RequestHeadersData .= "GET $page ".(($this->RequestHttpVersion == "") ? "HTTP/1.0" : $this->RequestHttpVersion)."\r\n"; //HTTP/1.0 is much easier to handle than HTTP/1.1 than GET
 				}
 				$headers = array_merge($this->RequestHeaders, $headers) ;
 				foreach($headers as $name => $value)
 				{
+					if($this->RequestMethod == "GET")
+					{
+						if($name == "Content-Type" || $name == "Content-Length")
+						{
+							continue ;
+						}
+					}
 					$this->RequestHeadersData .= $name.": ".$value."\r\n" ;
 				}
 				if(count($this->RequestCookies[$this->CookieHost()]))
@@ -769,7 +789,7 @@
 				$oldContentType = $this->AutoSetContentType ;
 				$this->AutoSetContentType = false ;
 				$this->RequestMethod = "GET" ;
-				$this->RequestContentType = "text/html" ;
+				$this->RequestContentType = "" ;
 				$result = $this->GetUrl($url, $headers, $getData, array()) ;
 				$this->AutoSetContentType = $oldContentType ;
 				return $result ;

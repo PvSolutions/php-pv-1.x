@@ -15,7 +15,6 @@
 			public $TypeLiaisonParametre = "" ;
 			public $Role = "base" ;
 			public $Liaison ;
-			public $Composant ;
 			public $Libelle = "" ;
 			public $CheminIcone = "" ;
 			public $NomClasseCSS = "" ;
@@ -44,10 +43,6 @@
 			public $AppliquerCorrecteurValeur = 1 ;
 			public $CorrecteurValeur ;
 			public $FormatteurEtiquette ;
-			public function ImpressionEnCours()
-			{
-				return $this->EstPasNul($this->ApiParent) && $this->ApiParent->ImpressionEnCours() ;
-			}
 			public function InserePrefxErr($contenu)
 			{
 				$this->InserePrefixeLib(new PvMarqErrFiltre($contenu)) ;
@@ -99,20 +94,12 @@
 				$this->ApplicationParent = & $script->ApplicationParent ;
 				$this->NomElementRoute = $nom ;
 			}
-			public function ChargeConfig()
-			{
-				parent::ChargeConfig() ;
-				$this->ChargeComposant() ;
-			}
 			protected function CorrigeConfig()
 			{
 				if($this->NomParametreDonnees == '' && $this->NomElementRoute != '')
 					$this->NomParametreDonnees = $this->NomElementRoute ;
 				if($this->NomParametreLie == '' && $this->NomElementRoute != '')
 					$this->NomParametreLie = $this->NomElementRoute ;
-			}
-			protected function ChargeComposant()
-			{
 			}
 			public function NePasInclure()
 			{
@@ -178,27 +165,6 @@
 			{
 				$this->NomColonneLiee = $nomCol ;
 				$this->NomParametreDonnees = $nomCol ;
-			}
-			public function ObtientNomComposant()
-			{
-				$this->CorrigeNomParametreLie() ;
-				$nomComposant = $this->NomParametreLie ;
-				return $nomComposant ;
-			}
-			public function ObtientIDElementHtmlComposant()
-			{
-				if($this->EstNul($this->Composant))
-				{
-					$this->DeclareComposant($this->NomClasseComposant) ;
-				}
-				if($this->EstNul($this->Composant))
-					return "" ;
-				$iDInstanceCalc = $this->Composant->IDInstanceCalc ;
-				return $iDInstanceCalc ;
-			}
-			public function ObtientIDComposant()
-			{
-				return $this->ObtientIDElementHtmlComposant() ;
 			}
 			public function FormatTexte()
 			{

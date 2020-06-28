@@ -199,7 +199,7 @@
 									}
 								}
 							}
-							$ctn .= '<form action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= '<form action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
 						$ctn .= '<table' ;
@@ -401,7 +401,7 @@
 									}
 								}
 							}
-							$ctn .= '<form action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= '<form action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
 						$ctn .= '<table' ;
@@ -603,7 +603,7 @@
 									}
 								}
 							}
-							$ctn .= '<form action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= '<form action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
 						$ctn .= '<table' ;

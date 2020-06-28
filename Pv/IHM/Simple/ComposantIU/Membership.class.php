@@ -1953,7 +1953,14 @@
 					$lienModif->FormatIdOnglet = 'modif_membre_${MEMBER_ID}' ;
 					$lienModif->FormatTitreOnglet = 'Modifier le membre ${MEMBER_LOGIN}' ;
 					$lienModif->FormatLibelle = "Modifier" ;
-					$lienModif->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptModifMembre).'&idMembre=${MEMBER_ID}' ;
+					if($table->ZoneParent->ActiverRoutes == 0)
+					{
+						$lienModif->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptModifMembre).'&idMembre=${MEMBER_ID}' ;
+					}
+					else
+					{
+						$lienModif->FormatURL = '?idMembre=${MEMBER_ID}' ;
+					}
 					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienModif ;
 				}
 				
@@ -1969,7 +1976,14 @@
 						$lienModif->NomDonneesValid = "MEMBER_AD_ACTIVATED" ;
 						$lienModif->ValeurVraiValid = 0 ;
 					}
-					$lienModif->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptChangeMPMembre).'&idMembre=${MEMBER_ID}' ;
+					if($table->ZoneParent->ActiverRoutes == 0)
+					{
+						$lienModif->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptChangeMPMembre).'&idMembre=${MEMBER_ID}' ;
+					}
+					else
+					{
+						$lienModif->FormatURL = '?idMembre=${MEMBER_ID}' ;
+					}
 					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienModif ;
 				}
 				
@@ -1980,7 +1994,14 @@
 					$lienSuppr->FormatIdOnglet = 'suppr_membre_${MEMBER_ID}' ;
 					$lienSuppr->FormatTitreOnglet = 'Supprimer le membre ${MEMBER_LOGIN}' ;
 					$lienSuppr->FormatLibelle = "Supprimer" ;
-					$lienSuppr->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptSupprMembre).'&idMembre=${MEMBER_ID}' ;
+					if($table->ZoneParent->ActiverRoutes == 0)
+					{
+						$lienSuppr->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptSupprMembre).'&idMembre=${MEMBER_ID}' ;
+					}
+					else
+					{
+						$lienSuppr->FormatURL = '?idMembre=${MEMBER_ID}' ;
+					}
 					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienSuppr ;
 				}
 			}
@@ -2039,7 +2060,14 @@
 					$lienModif->FormatIdOnglet = 'modif_role_${ROLE_ID}' ;
 					$lienModif->FormatTitreOnglet = 'Modifier le role ${ROLE_NAME}' ;
 					$lienModif->FormatLibelle = "Modifier" ;
-					$lienModif->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptModifRole).'&idRole=${ROLE_ID}' ;
+					if($table->ZoneParent->ActiverRoutes == 0)
+					{
+						$lienModif->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptModifRole).'&idRole=${ROLE_ID}' ;
+					}
+					else
+					{
+						$lienModif->FormatURL = '?idRole=${ROLE_ID}' ;
+					}
 					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienModif ;
 				}
 				
@@ -2050,7 +2078,14 @@
 					$lienSuppr->FormatIdOnglet = 'suppr_role_${ROLE_ID}' ;
 					$lienSuppr->FormatTitreOnglet = 'Supprimer le role ${ROLE_NAME}' ;
 					$lienSuppr->FormatLibelle = "Supprimer" ;
-					$lienSuppr->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptSupprRole).'&idRole=${ROLE_ID}' ;
+					if($table->ZoneParent->ActiverRoutes == 0)
+					{
+						$lienSuppr->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptSupprRole).'&idRole=${ROLE_ID}' ;
+					}
+					else
+					{
+						$lienSuppr->FormatURL = '?idRole=${ROLE_ID}' ;
+					}
 					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienSuppr ;
 				}
 			}
@@ -2097,7 +2132,14 @@
 					$lienModif->FormatIdOnglet = 'modif_profil_${PROFILE_ID}' ;
 					$lienModif->FormatTitreOnglet = 'Modifier le profil ${PROFILE_TITLE}' ;
 					$lienModif->FormatLibelle = "Modifier" ;
-					$lienModif->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptModifProfil).'&idProfil=${PROFILE_ID}' ;
+					if($table->ZoneParent->ActiverRoutes == 0)
+					{
+						$lienModif->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptModifProfil).'&idProfil=${PROFILE_ID}' ;
+					}
+					else
+					{
+						$lienModif->FormatURL = '?idProfil=${PROFILE_ID}' ;
+					}
 					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienModif ;
 				}
 				
@@ -2108,7 +2150,14 @@
 					$lienSuppr->FormatIdOnglet = 'suppr_profil_${PROFILE_ID}' ;
 					$lienSuppr->FormatTitreOnglet = 'Supprimer le profil ${PROFILE_TITLE}' ;
 					$lienSuppr->FormatLibelle = "Supprimer" ;
-					$lienSuppr->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptSupprProfil).'&idProfil=${PROFILE_ID}' ;
+					if($table->ZoneParent->ActiverRoutes == 0)
+					{
+						$lienSuppr->FormatURL = "?".urlencode($table->ZoneParent->NomParamScriptAppele)."=".urlencode($table->ZoneParent->NomScriptSupprProfil).'&idProfil=${PROFILE_ID}' ;
+					}
+					else
+					{
+						$lienSuppr->FormatURL = '?idProfil=${PROFILE_ID}' ;
+					}
 					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienSuppr ;
 				}
 			}

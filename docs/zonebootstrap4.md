@@ -6,7 +6,6 @@ Librairie | Lien | Requis
 ------------ | ------------- | -------------
 JQuery | https://www.jquery.com | Oui
 Bootstrap4 | https://www.getbootstrap.com | Oui
-Font Awesome | https://www.fontawesome.com | Non. Utilisé pour les flêches du tableau de données.
 
 ## Installation
 
@@ -76,25 +75,20 @@ $app->Execute() ;
 
 Résultat dans un navigateur :
 
-![Resultat zone bootstrap 4](../images/zonebootstrap4_apercu1.png)
+![Resultat zone bootstrap 4](images/zonebootstrap4_apercu1.png)
 
 Voici le code source de cette page dans le navigateur :
 
-![Code source zone bootstrap 4](../images/zonebootstrap4_codesource1.png)
+![Code source zone bootstrap 4](images/zonebootstrap4_codesource1.png)
 
 ## Caractéristiques
 
-- [Entêtes de document](zone/entetesdoc.md)
-- [CSS et Javascript](zone/css_javascript.md)
-- [Membership (Service d'authentification)](zone/membership.md)
-- [Scripts](zone/scriptsweb.md)
-- [Documents Web](zone/documentsweb.md)
-- [Actions Web](zone/actionsweb.md)
-- [Filtres de données](zone/filtresdonneesweb.md)
-- [Tâches web](zone/tachesweb.md)
 
-## Composants IU
 
-- [Composants IU](zone/composantsui.md)
-- [Tableau de données](zone/tableaudonnees.md)
-- [Formulaire de données](zone/formulairedonnees.md)
+## Tableau de données
+
+La classe tableau de données est PvTableauDonneesBootstrap4.
+
+## Formulaire de données
+
+La classe formulaire de données est PvFormulaireDonneesBootstrap4.

@@ -2,7 +2,7 @@
 	
 	if(! defined('PV_PASSERELLE_PAIEMENT_ASSISTANCE'))
 	{
-		if(! defined('PV_NOYAU_PASSERELLE_ASSISTANCE'))
+		if(! defined('PV_NOYAU_PASSERELLE_PAIEMENT'))
 		{
 			include dirname(__FILE__)."/Noyau.class.php" ;
 		}
@@ -17,7 +17,7 @@
 		
 		class PvInterfacePaiementAssistance extends PvInterfacePaiementBase
 		{
-			public $NomTableAssistance = "assistance_paiement" ;
+			public $NomTableAssistance = "transaction_assistance" ;
 			public $Titre = "Assistance" ;
 			public $CheminImage = "images/paiement-assistance.png" ;
 			public $TitreDocument = "Paiement assist&eacute;" ;
@@ -30,7 +30,7 @@
 			public $MessagePrinc = "Veuillez entrer vos coordonn&eacute;es de contact. Nous vous assisterons dans la proc&eacute;dure de paiement." ;
 			protected function CreeBdAssistance()
 			{
-				return new AbstractSqlDB() ;
+				return $this->CreeBdTransaction() ;
 			}
 			public function NomFournisseur()
 			{

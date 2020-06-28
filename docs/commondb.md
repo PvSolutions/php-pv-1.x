@@ -8,6 +8,39 @@ Ces bases de données offrent les avantages suivants :
 -	Elles possèdent des méthodes pour sélectionner, insérer, modifier et supprimer des lignes à partir de tableau
 -	Elles possèdent des méthodes pour invoquer les fonctions SQL Natives (fonction pour obtenir la date du jour, …)
 
+## Paramètres de connexion
+
+Vous pouvez déclarer les paramètres de connexions dans le tableau **$ConnectionParams**. Les clés sont :
+- server : Hote du serveur de base de données
+- schema : Nom de la base de données
+- user : Login de l’utilisateur
+- password : Mot de passe de l’utilisateur.
+Ces informations sont interprétées différemment du type de base de données.
+
+```php
+$bd = new MysqliDB() ;
+$bd->ConnectionParams['server'] = "localhost" ;
+$bd->ConnectionParams['schema'] = "gestion_produits" ;
+$bd->ConnectionParams['user'] = "root" ;
+$bd->ConnectionParams['password'] = "mysql" ;
+```
+Vous pouvez déclarer ces paramètres dans une classe spécialisée. Réécrivez la méthode **InitConnectionParams()**. C'est idéal car vous ne définissez pas les paramètres pour chaque usage.
+
+```php
+class MaBD extends MysqliDB
+{
+protected function InitConnectionParams()
+{
+$this->ConnectionParams['server'] = "localhost" ;
+$this->ConnectionParams['schema'] = "gestion_produits" ;
+$this->ConnectionParams['user'] = "root" ;
+$this->ConnectionParams['password'] = "mysql" ;
+}
+}
+
+$bd = new MaBD() ;
+```
+
 ## Propriétés et Méthodes principales
 
 Propriété/Méthode | Rôle
@@ -27,16 +60,85 @@ DeleteRow($tableName, $where, $params=array()) | Supprime les lignes dans la $ta
 RunStoredProc($procName, $params=array()) | Exécute la procédure stockée $procName avec les paramètres $params.
 FetchStoredProcRows($procName, $params=array()) | Exécute et renvoie les résultats de la procédure $procName avec les paramètres $params.
 FetchStoredProcRow($procName, $params=array()) | Exécute et renvoie la 1ère ligne résultat de la procédure $procName avec les paramètres $params.
+OpenQuery($sql, $params=array()) | Ouvre un curseur sur la base de données, pour une lecture progressive
+ReadQuery($query) | Retourne l'enregistrement disponible sur le curseur ouvert avec **OpenQuery**. Renvoie NULL s'il n'y a aucun. L'enregistrement est un tableau dont les champs sont les clés.
+CloseQuery($query) | Ferme le curseur ouvert avec **OpenQuery**
 
-
-## Paramètres de connexion
-
-Les clés du tableau **$ConnectionParams** sont :
-- server : Hote du serveur de base de données
-- schema : Nom de la base de données
-- user : Login de l’utilisateur
-- password : Mot de passe de l’utilisateur.
-Ces informations sont interprétées différemment du type de base de données.
+```php
+$bd = new MaBD() ;
+// Ajout d'une ligne
+$ok = $bd->InsertRow("ma_table", array("champ1" => $val1, "champ2" => "val2")) ;
+if(! $ok)
+{
+die("Exception SQL : ".$bd->ConnectionException) ;
+}
+// Mise à jour de ligne
+$ok = $bd->UpdateRow(
+	"ma_table",
+	array("champ1" => $val1, "champ2" => "val2"),
+	"id = :id",
+	array("id" => 2),
+) ;
+if(! $ok)
+{
+die("Exception SQL : ".$bd->ConnectionException) ;
+}
+// Suppression de ligne
+$ok = $bd->DeleteRow(
+	"ma_table",
+	"id = :id",
+	array("id" => 2),
+) ;
+if(! $ok)
+{
+die("Exception SQL : ".$bd->ConnectionException) ;
+}
+// Exécution d'une requete SQL
+$ok = $bd->RunSql(
+	"update ma_table set mon_champ1 = :val1 where id = :id",
+	array("val1" => "ma valeur N.1", "id" => 2),
+) ;
+if(! $ok)
+{
+die("Exception SQL : ".$bd->ConnectionException) ;
+}
+// Sélection de la 1ere ligne uniquement
+$lgn = $bd->FetchSqlRow(
+	"select * from ma_table where id = :id",
+	array("id" => 2),
+) ;
+if(! is_array($lgn))
+{
+die("Exception SQL : ".$bd->ConnectionException) ;
+}
+echo $lgn["id"] ;
+// Sélection de toutes les lignes
+$lgns = $bd->FetchSqlRows(
+	"select * from ma_table where id = :id",
+	array("id" => 2),
+) ;
+if(! is_array($lgns))
+{
+die("Exception SQL : ".$bd->ConnectionException) ;
+}
+foreach($lgns as $i => $lgn)
+{
+echo $lgn["id"]."<br>" ;
+}
+// Parcours des lignes, 1 par 1
+$query = $bd->OpenQuery(
+	"select * from ma_table where id = :id",
+	array("id" => 2),
+) ;
+if($query !== null)
+{
+while(($lgn = $bd->ReadQuery($query)) !== null)
+{
+echo "ID : ".$lgn["id"]."<br>" ;
+}
+$bd->CloseQuery($query) ;
+}
+```
 
 ## Méthodes Natives SQL
 
@@ -65,10 +167,40 @@ SqlToInt | $expression | Convertit l’expression $expression au type INTEGER de
 SqlToDouble | $expression | Convertit l’expression $expression au type DOUBLE de la base de données
 SqlToString | $expression | Convertit l’expression $expression au type Chaine de Caractères de la base de données
 
+```php
+$ok = $bd->RunSql(
+	"update ma_table set mon_champ1 = ".$bd->SqlToInt(":val1").", date_modif=".$bd->SqlNow()." where id = :id",
+	array("val1" => "ma valeur N.1", "id" => 2),
+) ;
+if(! $ok)
+{
+die("Exception SQL : ".$bd->ConnectionException) ;
+}
+```
 
-## Les fournisseurs de base de données
+## MySQL
 
-### MySQL
+### MysqlPdoDB
+
+La classe est **MysqlPdoDB** utilise les classes PDO pour accéder aux bases de données MySQL.
+
+```php
+class MaBD extends MysqlPdoDB
+{
+protected function InitConnectionParams()
+{
+$this->ConnectionParams['server'] = "localhost" ;
+$this->ConnectionParams['schema'] = "gestion_produits" ;
+$this->ConnectionParams['user'] = "root" ;
+$this->ConnectionParams['password'] = "mysql" ;
+}
+}
+
+$bd = new MaBD() ;
+// 
+```
+
+### MysqliDB
 
 La classe est **MysqliDB**. Elle utilise l’extension PHP Mysqli.
 Pour recevoir les données encodés en iso-8859-1, modifiez la classe ainsi :

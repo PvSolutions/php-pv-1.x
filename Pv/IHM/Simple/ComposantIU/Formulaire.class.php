@@ -475,7 +475,7 @@
 					// echo "Err : ".$this->FournisseurDonnees->BaseDonnees->ConnectionException ;
 					// print_r($this->FournisseurDonnees->BaseDonnees) ;
 					// print_r($this->ElementsEnCours) ;
-					if(count($this->ElementsEnCours) > 0)
+					if(is_array($this->ElementsEnCours) && count($this->ElementsEnCours) > 0)
 					{
 						$this->ElementEnCours = $this->ElementsEnCours[0] ;
 						$this->AssigneValeursFiltresEdition() ;
@@ -854,7 +854,11 @@
 					array_splice($filtresSelect, count($filtresSelect), 0, $this->FiltresLigneSelection) ;
 				}
 				$nomFiltres = array_keys($filtresSelect) ;
-				$filtresGets = array($this->ZoneParent->NomParamScriptAppele) ;
+				$filtresGets = array() ;
+				if($this->ZoneParent->ActiverRoutes == 0)
+				{
+					$filtresGets[] = $this->ZoneParent->NomParamScriptAppele ;
+				}
 				$nomFiltresGets = array() ;
 				foreach($nomFiltres as $i => $nomFiltre)
 				{

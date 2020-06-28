@@ -119,6 +119,7 @@
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
+				$this->ActiverRoutes = 0 ;
 				$this->BarreMenuSuperfish = new PvBarreMenuBsAdminDirecte() ;
 			}
 			protected function AfficheRenduInacessible()

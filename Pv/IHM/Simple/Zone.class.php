@@ -450,7 +450,10 @@
 			public $DocumentsWeb = array() ;
 			public $GestTachesWeb ;
 			public $UtiliserDocumentWeb = 0 ;
-			public $DocumentWebSelect = null ;
+			public $DocumentWebSelect ;
+			public $ActiverRoutes = 0 ;
+			public $CorrigerCheminsRoute = 1 ;
+			public $ArgsRouteAppelee = array() ;
 			public $DefinitionTypeDocument ;
 			public $CheminFavicon ;
 			public $LangueDocument = "fr" ;
@@ -550,6 +553,7 @@
 			public $NomDossierModelesEval ;
 			public $UtiliserModelesEval = 0 ;
 			public $UtiliserModelesEvalAuto = 1 ;
+			public $CheminRacineRoute ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -567,6 +571,80 @@
 				$this->DetecteScriptAppele() ;
 				$this->ExecuteScriptAppele() ;
 				$this->TermineExecution() ;
+			}
+			protected function DetecteScriptAppele()
+			{
+				if($this->ActiverRoutes == 1)
+				{
+					$attrs = explode("?", $_SERVER["REQUEST_URI"], 2) ;
+					$this->ValeurParamRoute = $attrs[0] ;
+					$nomScripts = array_keys($this->Scripts) ;
+					$this->ScriptAppele = & $this->ScriptParDefaut ;
+					foreach($nomScripts as $i => $nom)
+					{
+						$script = & $this->Scripts[$nom] ;
+						$cheminRouteScript = $script->CheminRoute ;
+						if($cheminRouteScript == '')
+						{
+							$cheminRouteScript = $script->NomElementZone ;
+						}
+						$cheminRegexRoute = preg_quote($this->CheminRacineRoute, '/')
+							.preg_replace("/\\\\{[a-zA-Z0-9\_]+\\\\}/", '([^\/]+)', preg_quote($cheminRouteScript, '/')) ;
+						if($this->CorrigerCheminsRoute == 1 && ($this->ValeurParamRoute[strlen($this->ValeurParamRoute) - 1] == '/' && $cheminRegexRoute[strlen($cheminRegexRoute) - 1] != '/'))
+						{
+							$cheminRegexRoute .= '\/' ;
+						}
+						if(preg_match('/^'.$cheminRegexRoute.'$/', $this->ValeurParamRoute, $valeursArgsRoute))
+						{
+							$this->ValeurParamScriptAppele = $nom ;
+							foreach($valeursArgsRoute as $i => $valeur)
+							{
+								$this->ArgsRouteAppelee[$nomsArgsRoute[1][0]] = $valeur ;
+							}
+							$this->ScriptAppele = & $script ;
+							break ;
+						}
+					}
+				}
+				else
+				{
+					parent::DetecteScriptAppele() ;
+				}
+			}
+			public function ObtientUrlScript($nomScript, $params=array(), $strict=1)
+			{
+				if(! isset($this->Scripts[$nomScript]) && $strict == 1)
+					return false ;
+				$url = '' ;
+				if($this->ActiverRoutes == 1)
+				{
+					$script = & $this->Scripts[$nomScript] ;
+					$cheminRouteScript = ($script->CheminRoute != '') ? $script->CheminRoute : $script->NomElementZone ;
+					$url = $this->CheminRacineRoute.$cheminRouteScript ;
+					if(isset($params["_route"]))
+					{
+						foreach($params["_route"] as $nom => $val)
+						{
+							$cheminRouteScript = str_ireplace('{'.$nom.'}', $val, $cheminRouteScript) ;
+						}
+						unset($params["_route"]) ;
+					}
+					$chaineParams = http_build_query_string($params) ;
+					if($chaineParams != '')
+					{
+						$url .= '?'.$chaineParams ;
+					}
+				}
+				else
+				{
+					$chaineParams = http_build_query_string($params) ;
+					$url = $this->ObtientUrl()."?".urlencode($this->NomParamScriptAppele).'='.urlencode($nomScript) ;
+					if($chaineParams != '')
+					{
+						$url .= '&'.$chaineParams ;
+					}
+				}
+				return $url ;
 			}
 			protected function CreeTacheWebCtrlTransacts()
 			{
@@ -637,6 +715,16 @@
 			public function PossedeTacheAppelee()
 			{
 				return ($this->ValeurParamTacheAppelee != "") ? 1 : 0 ;
+			}
+			public function & InscritRoute($nomScript, $cheminRoute, & $script)
+			{
+				$script->CheminRoute = $cheminRoute ;
+				return $this->InscritScript($nomScript, $script) ;
+			}
+			public function & InsereRoute($nomScript, $cheminRoute, $script)
+			{
+				$script->CheminRoute = $cheminRoute ;
+				return $this->InsereScript($nomScript, $script) ;
 			}
 			public function & InsereTacheWeb($nom, $tache)
 			{
@@ -902,8 +990,8 @@
 				$ctn = '' ;
 				if($this->RenduDocumentWebActive())
 				{
-					$this->DetecteDocumentWebSelect() ;
 					$this->InclutLibrairiesExternes() ;
+					$this->DetecteDocumentWebSelect() ;
 					$this->DocumentWebSelect->PrepareRendu($this) ;
 					$ctn .= $this->DocumentWebSelect->RenduEntete($this) ;
 					$ctn .= $this->RenduContenuCorpsDocument() ;

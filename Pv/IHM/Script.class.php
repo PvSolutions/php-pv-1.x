@@ -20,9 +20,10 @@
              * 
              * @var PvZoneIHMDeBase
              */
-			public $ZoneParent = null ;
-			public $ApplicationParent = null ;
+			public $ZoneParent ;
+			public $ApplicationParent ;
 			public $NomElementZone = "" ;
+			public $CheminRoute = "" ;
 			public $NomIntegrationParent = "" ;
 			public $NomZoneAppelDistant = "" ;
 			public $ValeurAppel = "" ;

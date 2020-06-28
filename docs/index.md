@@ -21,16 +21,9 @@
 ## Fonctionnement
 
 - [L'Application](application.md)
-- [Les Zones](ihm/zone.md)
-	- [La Zone Bootstrap 4](ihm/zonebootstrap4.md)
-	- [La Zone Web Simple](ihm/zonewebsimple.md)
-	- [La Zone Bootstrap 3](ihm/zonebootstrap3.md)
-	- [La Zone SbAdmin](ihm/zonesbadmin.md)
-	- [La Zone Bs SbAdmin](ihm/zonebssbadmin.md)
-- [Les passerelles de paiement](ihm/passerellepaie.md)
-	- [La passerelle de Test](ihm/paiementtest.md)
-	- [La passerelle Cinetpay](ihm/paiementcinetpay.md)
-	- [La passerelle Paypal](ihm/paiementpaypal.md)
-	- [La passerelle Skrill](ihm/paiementskrill.md)
-	- [La passerelle CoinsPayment](ihm/paiementcoinspay.md)
-	- [L'Application](ihm/application.md)
+- [Les bases de données](commondb.md)
+- [Le service d'authentification](commondb.md)
+- Les Zones web
+	- [La Zone Web Simple](zonewebsimple.md)
+	- [La Zone Bootstrap 4](zonebootstrap4.md)
+- [Les passerelles de paiement](passerellepaiement.md)

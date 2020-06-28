@@ -835,7 +835,7 @@
 	var formulaire = document.getElementById(idFormulaire) ;
 	if(formulaire != null)
 	{
-		var url = "?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ScriptParent->NomElementZone).'" ;
+		var url = "?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ScriptParent->NomElementZone) : '').'" ;
 		for(var nom in parametresGet)
 		{
 			if(url != "")
@@ -1124,7 +1124,7 @@ window.location.href = window.location.href ;
 									}
 								}
 							}
-							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele) : '').'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
 						$ctn .= '<table' ;
@@ -1600,7 +1600,7 @@ window.location.href = window.location.href ;
 									}
 								}
 							}
-							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele) : '').'&'.http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
 						$ctn .= '<div class="panel panel-default"><div class="panel-body">'.PHP_EOL ;

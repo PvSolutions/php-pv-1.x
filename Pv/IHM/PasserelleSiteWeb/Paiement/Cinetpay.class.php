@@ -49,7 +49,7 @@
 			public $NomTableTransactCinetpay = "transaction_cinetpay" ;
 			public function CreeBdCinetpay()
 			{
-				return new AbstractSqlDB() ;
+				return $this->CreeBdTransaction() ;
 			}
 			public function NomFournisseur()
 			{
@@ -194,7 +194,7 @@
 								"urlVerif" => $this->UrlVerif(),
 								"ctnReqVerif" => $httpSess->GetRequestContents(),
 								"ctnResVerif" => $httpSess->GetResponseContents(),
-								"estRegle" => ($codeErrVerif == 0) ? 0 : 1,
+								"estRegle" => ($codeErrVerif == 0) ? 1 : 0,
 								"codeErrVerif" => $codeErrVerif,
 								"msgErrVerif" => $msgErrVerif,
 							)
