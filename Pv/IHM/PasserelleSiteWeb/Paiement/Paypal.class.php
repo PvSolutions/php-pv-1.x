@@ -36,8 +36,8 @@
 		
 		class PvInterfacePaiementPaypal extends PvInterfacePaiementBase
 		{
-			public $ClientIdCompteMarchand = "AYSzkDT4NDlGDvFPBoU37epeHgfsQkB7plaVIrq6vAjHTqbEfo2jjTCXllGhIyYZlPKPHqLvQtWV5wQB" ;
-			public $SecretCompteMarchand = "EK-ktX9LriAUM1fOxncoAxP5fya-whNQde9_u8bkoYYDIrBsEzjsLf8-JjKDSU0xPrHqx28Dj133QSNT" ;
+			public $ClientIdCompteMarchand = "" ;
+			public $SecretCompteMarchand = "" ;
 			public $Test = 0 ;
 			public $Titre = "Paypal" ;
 			public $CheminImage = "https://www.paypalobjects.com/webstatic/en_US/i/buttons/PP_logo_h_200x51.png" ;

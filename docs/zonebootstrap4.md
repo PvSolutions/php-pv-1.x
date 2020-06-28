@@ -81,7 +81,7 @@ Voici le code source de cette page dans le navigateur :
 
 ![Code source zone bootstrap 4](images/zonebootstrap4_codesource1.png)
 
-## Caractéristiques
+## Scripts Membership
 
 
 
