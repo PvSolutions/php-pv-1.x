@@ -10,17 +10,9 @@
 		{
 			include dirname(__FILE__)."/route/Collection.class.php" ;
 		}
-		if(! defined('PV_ROUTE_CREATION_RESTFUL'))
+		if(! defined('PV_ROUTE_INDIVIDUEL_RESTFUL'))
 		{
-			include dirname(__FILE__)."/route/Creation.class.php" ;
-		}
-		if(! defined('PV_ROUTE_MAJ_RESTFUL'))
-		{
-			include dirname(__FILE__)."/route/Maj.class.php" ;
-		}
-		if(! defined('PV_ROUTE_SUPPRESSION_RESTFUL'))
-		{
-			include dirname(__FILE__)."/route/Suppression.class.php" ;
+			include dirname(__FILE__)."/route/Individuel.class.php" ;
 		}
 		if(! defined('PV_ROUTE_ACCES_RESTFUL'))
 		{

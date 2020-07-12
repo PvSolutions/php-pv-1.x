@@ -272,6 +272,7 @@
 			{
 				$this->CtrlServsPersists = new PvCtrlServsPersistsApp() ;
 				$this->InscritTacheProg($nomElem, $this->CtrlServsPersists) ;
+				return $this->CtrlServsPersists ;
 			}
 			public function & InscritStopServsPersists($nomElem='stopTachesProgs')
 			{
@@ -607,6 +608,7 @@
 			}
 			public static function ObtientCheminPHP()
 			{
+				$os = PvApplication::ObtientOS() ;
 				$phpbin = preg_replace("@/lib(64)?/.*$@", "/bin/php", ini_get("extension_dir"));
 				$execPath = dirname($phpbin)."/php" ;
 				if($os == 'Windows')
@@ -978,7 +980,7 @@
 				}
 				else
 				{
-					$cmd = 'start /b ('.$cmd.(($prog->SortieDansFichier == 1) ? ' >'.$chemJournal.' 2>&1' : '').')' ;
+					$cmd = 'start /b '.$cmd.(($prog->SortieDansFichier == 1) ? ' >'.$chemJournal.' 2>&1' : '').'' ;
 				}
 				return $cmd ;
 			}

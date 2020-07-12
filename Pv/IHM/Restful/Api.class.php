@@ -46,9 +46,9 @@
 			public $EnteteAuthType ;
 			public $EnteteAuthCredentials ;
 			public $AttrsContentType = array() ;
-			public $ParamsGet = array() ;
-			public $ParamsPost = array() ;
 			public $CheminRelatifRoute ;
+			public $CorpsBrut ;
+			public $Corps ;
 			public function __construct()
 			{
 				$this->Entetes = array() ;
@@ -60,9 +60,19 @@
 				$this->DetecteEntetesSpec() ;
 				$attrs = explode("?", $_SERVER["REQUEST_URI"], 2) ;
 				$this->CheminRelatifRoute = $attrs[0] ;
-				if(count($attrs) == 2)
+				$this->CorpsBrut = file_get_contents("php://input") ;
+				$this->Corps = new StdClass ;
+				if($this->EnteteContentType == "application/x-www-form-urlencoded")
 				{
-					parse_str($this->ParamsGet, $attrs[1]) ;
+					parse_str($this->CorpsBrut, $vals) ;
+					foreach($vals as $nom => $val)
+					{
+						$this->Corps->$nom = $val ;
+					}
+				}
+				elseif($this->EnteteContentType == "application/json")
+				{
+					$this->Corps = json_decode($this->CorpsBrut) ;
 				}
 			}
 			protected function DetecteEntetesSpec()
@@ -74,7 +84,7 @@
 				}
 				if(isset($this->Entetes["content-type"]))
 				{
-					$attrsContentType = explode(";", $this->Entetes["content-type"]) ;
+					$attrsContentType = explode(";", strtolower($this->Entetes["content-type"])) ;
 					$this->Entetes["content-type"] = $attrsContentType[0] ;
 					array_splice($attrsContentType, 0, 1) ;
 					$this->AttrsContentType = array() ;
@@ -117,6 +127,7 @@
 			public $NomFichierAttache ;
 			public $EnteteContentType = "application/json" ;
 			public $Contenu ;
+			public $Metadatas = array() ;
 			public $EnteteStatusCode ;
 			public $MessageStatusCode ;
 			public function __construct()
@@ -190,7 +201,10 @@
 			protected function DefinitEnteteStatusCode($code, $message='')
 			{
 				$this->EnteteStatusCode = $code ;
-				$this->InsereErreur($code, (($message != '') ? $message : 'Le service a renvoye le code HTTP '.$code)) ;
+				if($code != 200)
+				{
+					$this->InsereErreur($code, (($message != '') ? $message : 'Le service a renvoye le code HTTP '.$code)) ;
+				}
 			}
 			public function EstSucces()
 			{
@@ -204,13 +218,17 @@
 			{
 				$this->DefinitEnteteStatusCode(200) ;
 			}
+			public function ConfirmeInvalide($message='')
+			{
+				$this->DefinitEnteteStatusCode(400, $message) ;
+			}
 			public function ConfirmeEchecAuth()
 			{
 				$this->DefinitEnteteStatusCode(403) ;
 			}
-			public function ConfirmeErreurInterne()
+			public function ConfirmeErreurInterne($message='')
 			{
-				$this->DefinitEnteteStatusCode(500) ;
+				$this->DefinitEnteteStatusCode(500, $message) ;
 			}
 			public function ConfirmeNonAutoris()
 			{
@@ -243,7 +261,9 @@
 			{
 				$this->EnvoieCode($this->EnteteStatusCode) ;
 				$this->EnvoieEntetes($api) ;
-				echo svc_json_encode($this->Contenu) ;
+				$contenu = $this->Contenu ;
+				$contenu->_metadatas = $api->Metadatas ;
+				echo svc_json_encode($contenu) ;
 			}
 		}
 		
@@ -302,6 +322,11 @@
 			public $NomRoutesProfils = "profils" ;
 			public $NomRoutesRoles = "roles" ;
 			public $NomRoutesServeursAD = "serveurs_ad" ;
+			public $NomParamMaxElementsCollection = "size" ;
+			public $NomParamIndiceDebutCollection = "start" ;
+			public $NomParamSensTriCollection = "sort" ;
+			public $NomParamColonnesCollection = "fields" ;
+			public $InclureMetadatasEntete = true ;
 			public function & InscritRoute($nom, $cheminRoute, & $route)
 			{
 				$this->Routes[$nom] = & $route ;
@@ -320,6 +345,7 @@
 			}
 			protected function DetecteRouteAppelee()
 			{
+				$this->MethodeHttp = $this->Requete->Methode ;
 				$this->NomRouteAppelee = '' ;
 				foreach($this->Routes as $nom => $route)
 				{
@@ -328,7 +354,7 @@
 						.preg_replace("/\\\\{[a-zA-Z0-9\_]+\\\\}/", '([^\/]+)', preg_quote($route->CheminRouteApi, '/')) ;
 					// echo $cheminRegexRoute ;
 					// exit ;
-					if(preg_match('/^'.$cheminRegexRoute.'$/', $this->ValeurParamRoute, $valeursArgsRoute) && ($route->MethodeHttp == '' || $route->MethodeHttp != $this->MethodeHttp))
+					if(preg_match('/^'.$cheminRegexRoute.'$/', $this->ValeurParamRoute, $valeursArgsRoute) && ($route->MethodeHttp == '' || $route->MethodeHttp != $this->MethodeHttp) && $route->ApprouveAppel($this))
 					{
 						$this->NomRouteAppelee = $nom ;
 						foreach($valeursArgsRoute as $i => $valeur)
@@ -540,22 +566,9 @@
 			}
 			protected function PrepareExecution()
 			{
-				if($this->NomClasseAuth != '')
-				{
-					$nomClasse = $this->NomClasseAuth ;
-					$this->Auth = new $nomClasse() ;
-				}
-				$this->Requete = new PvRequeteRestful() ;
-				$this->Reponse = new PvReponseRestful() ;
-				$this->ValeurParamRoute = $this->Requete->CheminRelatifRoute ;
-				$this->ChargeMembership() ;
-				$this->ChargeRoutes() ;
 			}
 			protected function TermineExecution()
 			{
-				$this->Requete = null ;
-				$this->Reponse = null ;
-				exit ;
 			}
 			public function ChargeConfig()
 			{
@@ -571,8 +584,26 @@
 			{
 				return $this->Reponse->EstEchec() ;
 			}
+			protected function DetermineEnvironnement()
+			{
+				if($this->NomClasseAuth != '')
+				{
+					$nomClasse = $this->NomClasseAuth ;
+					$this->Auth = new $nomClasse() ;
+				}
+				$this->Requete = new PvRequeteRestful() ;
+				$this->Reponse = new PvReponseRestful() ;
+				$this->ValeurParamRoute = $this->Requete->CheminRelatifRoute ;
+				if($this->ValeurParamRoute != '' && $this->ValeurParamRoute[strlen($this->ValeurParamRoute) - 1] == "/")
+				{
+					$this->ValeurParamRoute = substr($this->ValeurParamRoute, 0, strlen($this->ValeurParamRoute) - 1) ;
+				}
+			}
 			public function Execute()
 			{
+				$this->DetermineEnvironnement() ;
+				$this->ChargeMembership() ;
+				$this->ChargeRoutes() ;
 				$this->PrepareExecution() ;
 				$this->DetecteRouteAppelee() ;
 				if($this->PossedeRouteAppelee())
@@ -599,8 +630,15 @@
 				}
 				$this->Reponse->EnvoieRendu($this) ;
 				$this->TermineExecution() ;
+				$this->Requete = null ;
+				$this->Reponse = null ;
+				exit ;
 			}
 			public function ArgRouteAppelee($nom, $valeurDefaut=null)
+			{
+				return (isset($this->ArgsRouteAppelee[$nom])) ? $this->ArgsRouteAppelee[$nom] : $valeurDefaut ;
+			}
+			public function ArgRoute($nom, $valeurDefaut=null)
 			{
 				return (isset($this->ArgsRouteAppelee[$nom])) ? $this->ArgsRouteAppelee[$nom] : $valeurDefaut ;
 			}

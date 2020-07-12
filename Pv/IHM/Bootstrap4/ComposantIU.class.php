@@ -14,6 +14,10 @@
 			public $InclureRenduLibelle = 1 ;
 			public $EditeurSurligne = 0 ;
 			public $ColXsLibelle = 4 ;
+			public $ClsBstLibelle ;
+			public $AlignLibelle ;
+			public $CltBstEditeur ;
+			public $AlignEditeur ;
 			public $MaxFiltresParLigne = 1 ;
 			protected function ObtientColXs($maxFiltres)
 			{
@@ -86,9 +90,9 @@
 					{
 						if($this->EditeurSurligne == 0)
 						{
-							$ctn .= '<div class="container-fluid">'.PHP_EOL .'<div class="row">'.PHP_EOL .'<div class="col-12 col-sm-'.$this->ColXsLibelle.'">'.PHP_EOL ;
+							$ctn .= '<div class="container-fluid">'.PHP_EOL .'<div class="row">'.PHP_EOL .'<div class="col-12 col-sm-'.$this->ColXsLibelle.''.(($this->ClsBstLibelle == '') ? '' : ' '.$this->ClsBstLibelle).'"'.(($this->AlignLibelle == '') ? '' : ' align="'.$this->AlignLibelle.'"').'>'.PHP_EOL ;
 							$ctn .= $this->RenduLibelleFiltre($filtre).PHP_EOL ;
-							$ctn .= '</div>'.PHP_EOL .'<div class="col-12 col-sm-'.(12 - $this->ColXsLibelle).'">'.PHP_EOL ;
+							$ctn .= '</div>'.PHP_EOL .'<div class="col-12 col-sm-'.(12 - $this->ColXsLibelle).''.(($this->ClsBstEditeur == '') ? '' : ' '.$this->ClsBstEditeur).'"'.(($this->AlignEditeur == '') ? '' : ' align="'.$this->AlignEditeur.'"').'>'.PHP_EOL ;
 						}
 						else
 						{
@@ -257,6 +261,8 @@
 			public $ClasseCSSRangee = "table-striped table-hover" ;
 			public $ClasseCSSBtnNav = "btn-primary" ;
 			public $ClsBstBoutonSoumettre = "btn-success" ;
+			public $ClsBstEnteteFormFiltres ;
+			public $ClsBstPiedFormFiltres ;
 			public $ClsBstFormFiltresSelect = "col-12 col-sm-8 col-md-6" ;
 			protected function InitConfig()
 			{
@@ -287,7 +293,7 @@
 				$ctn .= '<div class="card card-primary">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
 				{
-					$ctn .= '<div class="card-header" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
+					$ctn .= '<div class="card-header'.(($this->ClsBstEnteteFormFiltres == '') ? '' : ' '.$this->ClsBstEnteteFormFiltres).'" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
 					$ctn .= $this->TitreFormulaireFiltres ;
 					$ctn .= '</div>'.PHP_EOL ;
 				}
@@ -299,8 +305,8 @@
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '<div class="card-footer">'.PHP_EOL ;
-				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
+				$ctn .= '<div class="card-footer'.(($this->ClsBstPiedFormFiltres == '') ? '' : ' '.$this->ClsBstPiedFormFiltres).'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'">'.PHP_EOL ;
+				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
@@ -461,8 +467,10 @@
 			public $ClasseCSSRangee = "table-striped" ;
 			public $ClasseCSSCellule = "" ;
 			public $ClasseCSSBtnNav = "btn-primary" ;
+			public $ClsBstEnteteFormFiltres ;
+			public $ClsBstPiedFormFiltres ;
 			public $ClsBstBoutonSoumettre = "btn-success" ;
-			public $ClsBstFormFiltresSelect = "col-6" ;
+			public $ClsBstFormFiltresSelect = "col-12 col-sm-8 col-md-6" ;
 			public $SautLigneSansCommande = 0 ;
 			public $MaxColonnesXs = 0 ;
 			protected function InitConfig()
@@ -494,7 +502,7 @@
 				$ctn .= '<div class="card card-primary">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
 				{
-					$ctn .= '<div class="card-header" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
+					$ctn .= '<div class="card-header'.(($this->ClsBstEnteteFormFiltres == '') ? '' : ' '.$this->ClsBstEnteteFormFiltres).'" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
 					$ctn .= $this->TitreFormulaireFiltres ;
 					$ctn .= '</div>'.PHP_EOL ;
 				}
@@ -506,8 +514,8 @@
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '<div class="card-footer">'.PHP_EOL ;
-				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
+				$ctn .= '<div class="card-footer'.(($this->ClsBstPiedFormFiltres == '') ? '' : ' '.$this->ClsBstPiedFormFiltres).'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'">'.PHP_EOL ;
+				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;

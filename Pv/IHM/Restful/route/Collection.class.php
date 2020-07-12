@@ -6,6 +6,7 @@
 		
 		class PvRouteCollectionRestful extends PvRouteFiltrableRestful
 		{
+			public $MethodeHttp = "GET" ;
 			public $DefinitionsColonnes = array() ;
 			public $MaxElementsPossibles = array(20) ;
 			public $ToujoursAfficher = 0 ;
@@ -21,15 +22,52 @@
 			public $SensColonneTri ;
 			public $TriPossible = 1 ;
 			public $RangeeEnCours = -1 ;
+			public $MessageAucunElement ;
 			public $Commandes = array() ;
 			public $CommandeSelectionnee ;
 			public $ExtraireValeursElements = 1 ;
 			public $ElementsEnCours = array() ;
+			public $NomsColonne = array() ;
 			public $ElementsEnCoursBruts = array() ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
 				$this->SourceValeursSuppl = new PvSrcValsSupplRestful() ;
+			}
+			public function ObtientValeursExtraites($lignes)
+			{
+				$extracteurs = array() ;
+				foreach($this->DefinitionsColonnes as $i => $col)
+				{
+					if($col->NomDonnees != '' && $col->EstPasNul($col->ExtracteurValeur))
+					{
+						$extracteurs[$col->NomDonnees] = $col->ExtracteurValeur ;
+					}
+				}
+				if(count($extracteurs) == 0)
+				{
+					return $lignes ;
+				}
+				$lignesResultat = array() ;
+				foreach($lignes as $i => $ligne)
+				{
+					$lignesResultat[$i] = $ligne ;
+					foreach($extracteurs as $nomDonnees => $extracteur)
+					{
+						if(! isset($ligne[$nomDonnees]))
+						{
+							continue ;
+						}
+						$valeursSuppl = $extracteur->Execute($ligne[$nomDonnees], $this) ;
+						// print_r($valeursSuppl) ;
+						if(is_array($valeursSuppl))
+						{
+							$lignesResultat[$i] = array_merge($lignesResultat[$i], array_apply_prefix($valeursSuppl, $nomDonnees.'_')) ;
+						}
+						// print_r(array_keys($lignesResultat[$i])) ;
+					}
+				}
+				return $lignesResultat ;
 			}
 			public function InscritExtractValsIndex(& $extractVals, $indexCol)
 			{
@@ -211,16 +249,51 @@
 			}
 			protected function DetecteParametresLocalisation()
 			{
-				$nomParamMaxElements = "max" ;
-				$nomParamIndiceDebut = "start" ;
-				$nomParamSensColonneTri = "sort" ;
-				$this->MaxElements = (isset($_GET[$nomParamMaxElements])) ? $nomParamMaxElements : 0 ;
+				$nomParamMaxElements = $this->ApiParent->NomParamMaxElementsCollection ;
+				$nomParamIndiceDebut = $this->ApiParent->NomParamIndiceDebutCollection ;
+				$nomParamSensTri = $this->ApiParent->NomParamSensTriCollection ;
+				$nomParamCols = $this->ApiParent->NomParamColonnesCollection ;
+				$texteNomsColonne = (isset($_GET[$nomParamCols])) ? $_GET[$nomParamCols] : "" ;
+				if($texteNomsColonne != "")
+				{
+					$this->NomsColonne = explode(",", $texteNomsColonne) ;
+					foreach($this->DefinitionsColonnes as $j => $defCol)
+					{
+						if($defCol->Visible == false)
+						{
+							continue ;
+						}
+						for($k=0; $k<count($this->NomsColonnes); $k++)
+						{
+							if(strtolower($defCol->NomDonnees) == strtolower($this->NomsColonnes[$k]))
+							{
+								$this->DefinitionsColonnes[$j]->Visible = false ;
+								break ;
+							}
+						}
+					}
+				}
+				$this->MaxElements = (isset($_GET[$nomParamMaxElements])) ? $_GET[$nomParamMaxElements] : 0 ;
 				if(! in_array($this->MaxElements, $this->MaxElementsPossibles))
 					$this->MaxElements = $this->MaxElementsPossibles[0] ;
 				$this->IndiceDebut = (isset($_GET[$nomParamIndiceDebut])) ? intval($_GET[$nomParamIndiceDebut]) : 0 ;
 				if($this->NePasTrier == 0)
 				{
 					$this->IndiceColonneTri = 0 ;
+					$this->ValeurSensTri = (isset($_GET[$this->nomParamSensTri])) ? $_GET[$this->nomParamSensTri] : "" ;
+					if($this->ValeurSensTri != "" && strrpos($this->ValeurSensTri, "_") !== false)
+					{
+						$this->SensColonneTri = substr($this->ValeurSensTri, strrpos($this->ValeurSensTri, "_")) ;
+						$this->NomColonneTri = substr($this->ValeurSensTri, 0, strrpos($this->ValeurSensTri, "_")) ;
+					}
+					foreach($this->DefinitionsColonnes as $index => $defCol)
+					{
+						if(($this->AccepterTriColonneInvisible || $defCol->Visible == 1) && $defCol->NomDonnees != '' && $this->NomColonneTri == $defCol->NomDonnees)
+						{
+							$this->IndiceColonneTri = $index ;
+							break ;
+						}
+					}
 					if($this->IndiceColonneTri >= count($this->DefinitionsColonnes) || $this->IndiceColonneTri < 0)
 						$this->IndiceColonneTri = 0 ;
 					// Gerer les tri sur des colonnes invisibles...
@@ -238,17 +311,14 @@
 							}
 						}
 					}
-					$this->SensColonneTri = strtolower((isset($_GET[$nomParamSensColonneTri])) ? $_GET[$nomParamSensColonneTri] : $this->SensColonneTri) ;
+				}
 					if($this->SensColonneTri != "desc")
 						$this->SensColonneTri = "asc" ;
-				}
 			}
 			public function CalculeElementsRendu()
 			{
 				$defCols = $this->ObtientDefColsRendu() ;
 				$this->TotalElements = $this->FournisseurDonnees->CompteElements($defCols, $this->FiltresSelection) ;
-				// print_r($this->FournisseurDonnees->BaseDonnees) ;
-				// print_r($this->FournisseurDonnees) ;
 				if($this->FournisseurDonnees->ExceptionTrouvee())
 				{
 					$this->AlerteExceptionFournisseur() ;
@@ -305,6 +375,27 @@
 						$this->RangeeEnCours = -1 ;
 						$this->ElementsEnCours = array() ;
 					}
+				}
+			}
+			protected function TermineExecution()
+			{
+				if(! $this->Reponse->EstSucces())
+				{
+					return ;
+				}
+				$this->DetecteParametresLocalisation() ;
+				$this->CalculeElementsRendu() ;
+				if($this->MessageAucunElement != "")
+				{
+					$this->Reponse->ConfirmeInvalide($this->MessageAucunElement) ;
+				}
+				else
+				{
+					$this->ContenuReponse->data = $this->ElementsEnCours ;
+					$this->ApiParent->Metadatas["page"] = $this->RangeeEnCours + 1 ;
+					$this->ApiParent->Metadatas["per_page"] = $this->MaxElements ;
+					$this->ApiParent->Metadatas["page_count"] = $this->TotalRangees ;
+					$this->ApiParent->Metadatas["total_count"] = intval($this->TotalElements) ;
 				}
 			}
 		}

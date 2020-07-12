@@ -413,7 +413,11 @@
 				$this->Args = $this->ArgsParDefaut ;
 				foreach($this->Args as $nom => $arg)
 				{
-					if(isset($args[$nom]))
+					if(is_object($args) && isset($args->$nom))
+					{
+						$this->Args[$nom] = $args->$nom ;
+					}
+					elseif(is_array($args) && isset($args[$nom]))
 					{
 						$this->Args[$nom] = $args[$nom] ;
 					}
@@ -434,6 +438,18 @@
 				$this->ExecuteInstructions() ;
 				$this->TermineExecution() ;
 			}
+			protected function EstErreur()
+			{
+				return $this->RetourAppel->erreurTrouvee() ;
+			}
+			protected function ErreurTrouvee()
+			{
+				return $this->RetourAppel->erreurTrouvee() ;
+			}
+			protected function EstSucces()
+			{
+				return $this->RetourAppel->succes() ;
+			}
 			protected function ConfirmeSucces($msg, $resultat=null)
 			{
 				$this->RetourAppel->codeErreur = 0 ;
@@ -453,10 +469,11 @@
 		}
 		class PvMethodeSocketTest extends PvMethodeSocketBase
 		{
+			public $MessageTest = "Test reussi" ;
 			public $ValeurTest = "OK" ;
 			protected function ExecuteInstructions()
 			{
-				$this->Resultat = $this->ValeurTest ;
+				$this->ConfirmeSucces($this->MessageTest, $this->ValeurTest) ;
 			}
 		}
 		class PvMethodeSocketVerif extends PvMethodeSocketBase

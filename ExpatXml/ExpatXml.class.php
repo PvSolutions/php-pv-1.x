@@ -288,6 +288,7 @@
 			}
 			public function GetChildNodesByTagName($name)
 			{
+				$name = strtoupper($name) ;
 				$result = array() ;
 				for($i=0; $i<count($this->ChildNodes); $i++)
 				{
@@ -300,6 +301,7 @@
 			}
 			public function GetFirstNodeByTagName($name)
 			{
+				$name = strtoupper($name) ;
 				$result = null ;
 				for($i=0; $i<count($this->ChildNodes); $i++)
 				{

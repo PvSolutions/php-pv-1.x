@@ -21,8 +21,7 @@
 			public $NecessiteMembreConnecte = 0 ;
 			public $Privileges = array() ;
 			public $PrivilegesStricts = 0 ;
-			public $ComposantRacine ;
-			public function EstAppelee()
+			public function ApprouveAppel()
 			{
 				return 1 ;
 			}
@@ -60,18 +59,6 @@
 				$this->CheminRouteApi = $cheminRoute ;
 				$this->ApiParent = & $api ;
 			}
-			public function CreeComposantRacine()
-			{
-				return new PvComposantRacineRestful() ;
-			}
-			public function InsereComposant($nom, $composant)
-			{
-				return $this->ComposantRacine->InsereComposant($nom, $composant) ;
-			}
-			public function InscritComposant($nom, & $composant)
-			{
-				return $this->ComposantRacine->InscritComposant($nom, $composant) ;
-			}
 			public function SuccesReponse()
 			{
 				return $this->ApiParent->Reponse->EstSucces() ;
@@ -85,13 +72,10 @@
 				$this->Requete = & $this->ApiParent->Requete ;
 				$this->Reponse = & $this->ApiParent->Reponse ;
 				$this->ContenuReponse = & $this->ApiParent->Reponse->Contenu ;
+				$this->Reponse->ConfirmeSucces() ;
 				$this->PrepareExecution() ;
 				$this->ExecuteInstructions() ;
 				$this->TermineExecution() ;
-				if($this->SuccesReponse() && $this->ContenuReponse == '')
-				{
-					$this->ContenuReponse = $this->ComposantRacine->RenduDispositif() ;
-				}
 			}
 			protected function PrepareExecution()
 			{
@@ -101,6 +85,22 @@
 			}
 			protected function TermineExecution()
 			{
+			}
+			public function RenseigneErreur($message='')
+			{
+				return $this->ApiParent->Reponse->ConfirmeInvalide($message) ;
+			}
+			public function RenseigneException($message='')
+			{
+				return $this->ApiParent->Reponse->ConfirmeErreurInterne($message) ;
+			}
+			public function ConfirmeSucces($message='')
+			{
+				return $this->ApiParent->Reponse->ConfirmeSucces($message) ;
+			}
+			public function EstSucces()
+			{
+				return $this->ApiParent->Reponse->EstSucces() ;
 			}
 		}
 		
@@ -116,7 +116,7 @@
 			{
 				$filtre = new PvFiltreRefRestful() ;
 				$filtre->Source = & $filtreRef ;
-				$filtre->AdopteScript($nom, $this) ;
+				$filtre->AdopteRoute($nom, $this) ;
 				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
 			}
@@ -125,27 +125,27 @@
 				$filtre = new PvFiltreFixeRestful() ;
 				$filtre->NomParametreDonnees = $nom ;
 				$filtre->ValeurParDefaut = $valeur ;
-				$filtre->AdopteScript($nom, $this) ;
+				$filtre->AdopteRoute($nom, $this) ;
 				return $filtre ;
 			}
 			public function & CreeFiltreCookie($nom)
 			{
 				$filtre = new PvFiltreCookieRestful() ;
 				$filtre->NomParametreDonnees = $nom ;
-				$filtre->AdopteScript($nom, $this) ;
+				$filtre->AdopteRoute($nom, $this) ;
 				return $filtre ;
 			}
 			public function & CreeFiltreSession($nom)
 			{
 				$filtre = new PvFiltreSessionRestful() ;
 				$filtre->NomParametreDonnees = $nom ;
-				$filtre->AdopteScript($nom, $this) ;
+				$filtre->AdopteRoute($nom, $this) ;
 				return $filtre ;
 			}
 			public function & CreeFiltreMembreConnecte($nom, $nomParamLie='')
 			{
 				$filtre = new PvFiltreMembreConnecteRestful() ;
-				$filtre->AdopteScript($nom, $this) ;
+				$filtre->AdopteRoute($nom, $this) ;
 				$filtre->NomParametreDonnees = $nom ;
 				$filtre->NomParametreLie = $nomParamLie ;
 				return $filtre ;
@@ -153,7 +153,7 @@
 			public function & CreeFiltreHttpUpload($nom, $cheminDossierDest="")
 			{
 				$filtre = new PvFiltreHttpUploadRestful() ;
-				$filtre->AdopteScript($nom, $this) ;
+				$filtre->AdopteRoute($nom, $this) ;
 				$filtre->NomParametreDonnees = $nom ;
 				$filtre->CheminDossier = $cheminDossierDest ;
 				return $filtre ;
@@ -161,7 +161,7 @@
 			public function & CreeFiltreHttpGet($nom)
 			{
 				$filtre = new PvFiltreHttpGetRestful() ;
-				$filtre->AdopteScript($nom, $this) ;
+				$filtre->AdopteRoute($nom, $this) ;
 				$filtre->NomParametreLie = $nom ;
 				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
@@ -169,7 +169,15 @@
 			public function & CreeFiltreHttpPost($nom)
 			{
 				$filtre = new PvFiltreHttpPostRestful() ;
-				$filtre->AdopteScript($nom, $this) ;
+				$filtre->AdopteRoute($nom, $this) ;
+				$filtre->NomParametreLie = $nom ;
+				$filtre->NomParametreDonnees = $nom ;
+				return $filtre ;
+			}
+			public function & CreeFiltreHttpCorps($nom)
+			{
+				$filtre = new PvFiltreHttpCorpsRestful() ;
+				$filtre->AdopteRoute($nom, $this) ;
 				$filtre->NomParametreLie = $nom ;
 				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
@@ -177,7 +185,7 @@
 			public function & CreeFiltreHttpRequest($nom)
 			{
 				$filtre = new PvFiltreHttpRequestRestful() ;
-				$filtre->AdopteScript($nom, $this) ;
+				$filtre->AdopteRoute($nom, $this) ;
 				$filtre->NomParametreLie = $nom ;
 				$filtre->NomParametreDonnees = $nom ;
 				return $filtre ;
@@ -279,11 +287,174 @@
 				$this->FiltresSelection[] = & $flt ;
 				return $flt ;
 			}
+			public function & InsereFltSelectHttpCorps($nom, $exprDonnees='')
+			{
+				$flt = $this->CreeFiltreHttpCorps($nom) ;
+				$flt->ExpressionDonnees = $exprDonnees ;
+				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
 			public function & InsereFltSelectHttpRequest($nom, $exprDonnees='')
 			{
 				$flt = $this->CreeFiltreHttpRequest($nom) ;
 				$flt->ExpressionDonnees = $exprDonnees ;
 				$this->FiltresSelection[] = & $flt ;
+				return $flt ;
+			}
+		}
+		
+		class PvRouteEditableRestful extends PvRouteFiltrableRestful
+		{
+			public $FiltresEdition = array() ;
+			public function & InsereFltEditRef($nom, & $filtreRef, $colLiee='')
+			{
+				$flt = $this->CreeFiltreRef($nom, $filtreRef) ;
+				$flt->DefinitColLiee($colLiee) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltEditFixe($nom, $valeur, $colLiee='')
+			{
+				$flt = $this->CreeFiltreFixe($nom, $valeur) ;
+				$flt->DefinitColLiee($colLiee) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltEditCookie($nom, $colLiee='')
+			{
+				$flt = $this->CreeFiltreCookie($nom) ;
+				$flt->DefinitColLiee($colLiee) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltEditSession($nom, $colLiee='')
+			{
+				$flt = $this->CreeFiltreSession($nom) ;
+				$flt->DefinitColLiee($colLiee) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltEditMembreConnecte($nom, $nomParamLie='', $colLiee='')
+			{
+				$flt = $this->CreeFiltreMembreConnecte($nom, $nomParamLie) ;
+				$flt->DefinitColLiee($colLiee) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltEditHttpUpload($nom, $cheminDossierDest="", $colLiee='')
+			{
+				$flt = $this->CreeFiltreHttpUpload($nom, $cheminDossierDest) ;
+				$flt->DefinitColLiee($colLiee) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltEditHttpGet($nom, $colLiee='')
+			{
+				$flt = $this->CreeFiltreHttpGet($nom) ;
+				$flt->DefinitColLiee($colLiee) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltEditHttpPost($nom, $colLiee='')
+			{
+				$flt = $this->CreeFiltreHttpPost($nom) ;
+				$flt->DefinitColLiee($colLiee) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltEditHttpCorps($nom, $colLiee='')
+			{
+				$flt = $this->CreeFiltreHttpCorps($nom) ;
+				$flt->DefinitColLiee($colLiee) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFltEditHttpRequest($nom, $colLiee='')
+			{
+				$flt = $this->CreeFiltreHttpRequest($nom) ;
+				$flt->DefinitColLiee($colLiee) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFiltreEditRef($nom, & $filtreRef, $colLiee='', $nomComp='')
+			{
+				$flt = $this->CreeFiltreRef($nom, $filtreRef) ;
+				$flt->DefinitColLiee($colLiee) ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFiltreEditFixe($nom, $valeur, $colLiee='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreFixe($nom, $valeur) ;
+				$flt->DefinitColLiee($colLiee) ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFiltreEditCookie($nom, $colLiee='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreCookie($nom) ;
+				$flt->DefinitColLiee($colLiee) ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFiltreEditSession($nom, $colLiee='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreSession($nom) ;
+				$flt->DefinitColLiee($colLiee) ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFiltreEditMembreConnecte($nom, $nomParamLie='', $colLiee='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreMembreConnecte($nom, $nomParamLie) ;
+				$flt->DefinitColLiee($colLiee) ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFiltreEditHttpUpload($nom, $cheminDossierDest="", $colLiee='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreHttpUpload($nom, $cheminDossierDest) ;
+				$flt->DefinitColLiee($colLiee) ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFiltreEditHttpGet($nom, $colLiee='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreHttpGet($nom) ;
+				$flt->DefinitColLiee($colLiee) ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFiltreEditHttpPost($nom, $colLiee='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreHttpPost($nom) ;
+				$flt->DefinitColLiee($colLiee) ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresEdition[] = & $flt ;
+				return $flt ;
+			}
+			public function & InsereFiltreEditHttpRequest($nom, $colLiee='', $nomClsComp='')
+			{
+				$flt = $this->CreeFiltreHttpRequest($nom) ;
+				$flt->DefinitColLiee($colLiee) ;
+				if($nomClsComp != '')
+					$flt->DeclareComposant($nomClsComp) ;
+				$this->FiltresEdition[] = & $flt ;
 				return $flt ;
 			}
 		}

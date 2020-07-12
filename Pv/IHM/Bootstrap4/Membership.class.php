@@ -148,11 +148,12 @@
 		class PvTableauMembresBootstrap4 extends PvTableauMembresMSHtml
 		{
 			public $SautLigneSansCommande = 0 ;
-			public $MaxFiltresEditionParLigne = 2 ;
-			public $ClasseCSSRangee = "table-striped" ;
+			public $ClasseCSSRangee = "table-striped table-hover" ;
 			public $ClasseCSSBtnNav = "btn-primary" ;
-			public $ClsBstBoutonSoumettre = "btn-primary" ;
-			public $ClsBstFormFiltresSelect = "col-sm-8" ;
+			public $ClsBstBoutonSoumettre = "btn-success" ;
+			public $ClsBstEnteteFormFiltres ;
+			public $ClsBstPiedFormFiltres ;
+			public $ClsBstFormFiltresSelect = "col-12 col-sm-8 col-md-6" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -182,7 +183,7 @@
 				$ctn .= '<div class="card card-primary">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
 				{
-					$ctn .= '<div class="card-header" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
+					$ctn .= '<div class="card-header'.(($this->ClsBstEnteteFormFiltres == '') ? '' : ' '.$this->ClsBstEnteteFormFiltres).'" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
 					$ctn .= $this->TitreFormulaireFiltres ;
 					$ctn .= '</div>'.PHP_EOL ;
 				}
@@ -194,11 +195,22 @@
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '<div class="card-footer">'.PHP_EOL ;
-				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
+				$ctn .= '<div class="card-footer'.(($this->ClsBstPiedFormFiltres == '') ? '' : ' '.$this->ClsBstPiedFormFiltres).'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'">'.PHP_EOL ;
+				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
+				return $ctn ;
+			}
+			protected function RenduBlocCommandes()
+			{
+				$ctn = trim(parent::RenduBlocCommandes()) ;
+				if(count($this->Commandes) > 0)
+				{
+					$ctn = '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL
+						.$ctn.PHP_EOL
+						.'</div></div>' ;
+				}
 				return $ctn ;
 			}
 			protected function RenduRangeeDonnees()
@@ -248,10 +260,10 @@
 									}
 								}
 							}
-							$ctn .= '<form action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
-						$ctn .= '<div class="panel panel-default"><div class="panel-body">'.PHP_EOL ;
+						$ctn .= '<div class="panel panel-default"><div class="panel-body table-responsive">'.PHP_EOL ;
 						$ctn .= '<table' ;
 						$ctn .= ' class="RangeeDonnees table '.$this->ClasseCSSRangee.'"' ;
 						$ctn .= '>'.PHP_EOL ;
@@ -343,11 +355,12 @@
 		class PvTableauRolesBootstrap4 extends PvTableauRolesMSHtml
 		{
 			public $SautLigneSansCommande = 0 ;
-			public $MaxFiltresEditionParLigne = 2 ;
-			public $ClasseCSSRangee = "table-striped" ;
+			public $ClasseCSSRangee = "table-striped table-hover" ;
 			public $ClasseCSSBtnNav = "btn-primary" ;
-			public $ClsBstBoutonSoumettre = "btn-primary" ;
-			public $ClsBstFormFiltresSelect = "col-sm-6" ;
+			public $ClsBstBoutonSoumettre = "btn-success" ;
+			public $ClsBstEnteteFormFiltres ;
+			public $ClsBstPiedFormFiltres ;
+			public $ClsBstFormFiltresSelect = "col-12 col-sm-8 col-md-6" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -377,7 +390,7 @@
 				$ctn .= '<div class="card card-primary">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
 				{
-					$ctn .= '<div class="card-header" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
+					$ctn .= '<div class="card-header'.(($this->ClsBstEnteteFormFiltres == '') ? '' : ' '.$this->ClsBstEnteteFormFiltres).'" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
 					$ctn .= $this->TitreFormulaireFiltres ;
 					$ctn .= '</div>'.PHP_EOL ;
 				}
@@ -389,11 +402,22 @@
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '<div class="card-footer">'.PHP_EOL ;
-				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
+				$ctn .= '<div class="card-footer'.(($this->ClsBstPiedFormFiltres == '') ? '' : ' '.$this->ClsBstPiedFormFiltres).'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'">'.PHP_EOL ;
+				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
+				return $ctn ;
+			}
+			protected function RenduBlocCommandes()
+			{
+				$ctn = trim(parent::RenduBlocCommandes()) ;
+				if(count($this->Commandes) > 0)
+				{
+					$ctn = '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL
+						.$ctn.PHP_EOL
+						.'</div></div>' ;
+				}
 				return $ctn ;
 			}
 			protected function RenduRangeeDonnees()
@@ -443,10 +467,10 @@
 									}
 								}
 							}
-							$ctn .= '<form action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
-						$ctn .= '<div class="panel panel-default"><div class="panel-body">'.PHP_EOL ;
+						$ctn .= '<div class="panel panel-default"><div class="panel-body table-responsive">'.PHP_EOL ;
 						$ctn .= '<table' ;
 						$ctn .= ' class="RangeeDonnees table '.$this->ClasseCSSRangee.'"' ;
 						$ctn .= '>'.PHP_EOL ;
@@ -538,11 +562,12 @@
 		class PvTableauProfilsBootstrap4 extends PvTableauProfilsMSHtml
 		{
 			public $SautLigneSansCommande = 0 ;
-			public $MaxFiltresEditionParLigne = 2 ;
-			public $ClasseCSSRangee = "table-striped" ;
+			public $ClasseCSSRangee = "table-striped table-hover" ;
 			public $ClasseCSSBtnNav = "btn-primary" ;
-			public $ClsBstBoutonSoumettre = "btn-primary" ;
-			public $ClsBstFormFiltresSelect = "col-sm-6" ;
+			public $ClsBstBoutonSoumettre = "btn-success" ;
+			public $ClsBstEnteteFormFiltres ;
+			public $ClsBstPiedFormFiltres ;
+			public $ClsBstFormFiltresSelect = "col-12 col-sm-8 col-md-6" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -572,7 +597,7 @@
 				$ctn .= '<div class="card card-primary">'.PHP_EOL ;
 				if($this->TitreFormulaireFiltres != '')
 				{
-					$ctn .= '<div class="card-header" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
+					$ctn .= '<div class="card-header'.(($this->ClsBstEnteteFormFiltres == '') ? '' : ' '.$this->ClsBstEnteteFormFiltres).'" align="'.$this->AlignTitreFormulaireFiltres.'">'.PHP_EOL ;
 					$ctn .= $this->TitreFormulaireFiltres ;
 					$ctn .= '</div>'.PHP_EOL ;
 				}
@@ -584,11 +609,22 @@
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '<div class="card-footer">'.PHP_EOL ;
-				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
+				$ctn .= '<div class="card-footer'.(($this->ClsBstPiedFormFiltres == '') ? '' : ' '.$this->ClsBstPiedFormFiltres).'" align="'.$this->AlignBoutonSoumettreFormulaireFiltres.'">'.PHP_EOL ;
+				$ctn .= '<button class="btn '.$this->ClsBstBoutonSoumettre.'" type="submit">'.$this->TitreBoutonSoumettreFormulaireFiltres.'</button>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
+				return $ctn ;
+			}
+			protected function RenduBlocCommandes()
+			{
+				$ctn = trim(parent::RenduBlocCommandes()) ;
+				if(count($this->Commandes) > 0)
+				{
+					$ctn = '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL
+						.$ctn.PHP_EOL
+						.'</div></div>' ;
+				}
 				return $ctn ;
 			}
 			protected function RenduRangeeDonnees()
@@ -638,10 +674,10 @@
 									}
 								}
 							}
-							$ctn .= '<form action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
+							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
-						$ctn .= '<div class="panel panel-default"><div class="panel-body">'.PHP_EOL ;
+						$ctn .= '<div class="panel panel-default"><div class="panel-body table-responsive">'.PHP_EOL ;
 						$ctn .= '<table' ;
 						$ctn .= ' class="RangeeDonnees table '.$this->ClasseCSSRangee.'"' ;
 						$ctn .= '>'.PHP_EOL ;

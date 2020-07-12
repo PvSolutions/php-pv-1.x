@@ -166,18 +166,53 @@ Protected function InclutLibrairiesExternes()
 Parent::InclutLibrairiesExternes() ;
 // Inscrire les autres librairies JS & CSS…
 $this->InscritContenuCSS("body { text-align:center ; }") ;
+$this->InscritLienJs("js/main.js") ;
 } 
 }
 ```
 
 ## Service d'authentification
 
+### Filtrage des scripts
+
+La méthode **ChargeScripts()** s'exécute avant que la zone web charge le membre connecté. Par conséquent, vous ne pouvez pas filtrer les scripts à ce stade.
+
+```php
+public function ChargeScripts()
+{
+$this->InsereScriptParDefaut(new MonScript1()) ;
+$this->InsereScript("presentation", new MonScript2()) ;
+if($this->PossedeMembreConnecte()) // Ramènera false même s'il y a un membre connecté
+{
+$this->InsereScript("contact", new MonScript2()) ;
+}
+}
+```
+
+Pour y parvenir, déclarez les scripts dans la méthode **ChargeScriptsMembership()**.
+
+```php
+public function ChargeScriptsMembership()
+{
+$this->InsereScriptParDefaut(new MonScript1()) ;
+$this->InsereScript("presentation", new MonScript2()) ;
+if($this->PossedeMembreConnecte())
+{
+$this->InsereScript("chat", new MonScript2()) ; // Script créé si un membre est connecté
+}
+else
+{
+$this->InsereScript("contact", new MonScript3()) ; // Script créé si un membre n'est pas connecté
+}
+}
+```
+
 ### Scripts web Membership
 
 Lorsque vous déclarez un membership dans la zone web, la zone crée automatiquement des scripts.
 
-Nom du script | Classe script web | Pré-requis
-------------- | ------------- | -------------
+Nom du script | Classe script web | Pré-requis | Description
+------------- | ------------- | ------------- | -------------
 connexion | PvScriptConnexionWeb | Aucun | Page de connexion
 deconnexion | PvScriptDeconnexionWeb | Aucun | Page de déconnexion
 recouvreMP | PvScriptRecouvreMPWeb | Aucun | Page pour récupérer son mot de passe, à partir du login et du mot de passe
@@ -216,6 +251,45 @@ public $NomClasseScriptConnexion = "MonScriptConnexion" ;
 
 class MonScriptConnexion extends PvScriptConnexionWeb
 {
+}
+```
+### Composants web Membership
+
+Plusieurs scripts de membership utilisent un tableau de données ou un formulaire de données spécifique.
+
+Nom du script | Classe script web | Classe composant | Propriété composant
+------------- | ------------- | ------------- | -------------
+recouvreMP | PvScriptRecouvreMPWeb | PvFormulaireRecouvreMPMS | $NomClasseFormulaireDonnees
+inscription | PvScriptInscriptionWeb | PvFormulaireInscriptionMembreMS | $NomClasseFormulaireDonnees
+modifPrefs | PvScriptModifPrefsWeb | PvFormulaireModifInfosMS | $NomClasseFormulaireDonnees
+doitChangerMotPasse | PvScriptDoitChangerMotPasseWeb | PvFormulaireDoitChangerMotPasseMS | $NomClasseFormulaireDonnees
+changeMotPasse | PvScriptChangeMotPasseWeb | PvFormulaireChangeMotPasseMS | $NomClasseFormulaireDonnees
+ajoutMembre | PvScriptAjoutMembreMSWeb | PvFormulaireAjoutMembreMS | $NomClasseFormulaireDonnees
+modifMembre | PvScriptModifMembreMSWeb | PvFormulaireModifMembreMS | $NomClasseFormulaireDonnees
+supprMembre | PvScriptSupprMembreMSWeb | PvFormulaireSupprMembreMS | $NomClasseFormulaireDonnees
+listeMembres | PvScriptListeMembresMSWeb | PvTableauMembresMSHtml | $NomClasseTableauDonnees
+ajoutProfil | PvScriptAjoutProfilMSWeb | PvFormulaireAjoutProfilMS | $NomClasseFormulaireDonnees
+modifProfil | PvScriptModifProfilMSWeb | PvFormulaireModifProfilMS | $NomClasseFormulaireDonnees
+supprProfil | PvScriptSupprProfilMSWeb | PvFormulaireSupprProfilMS | $NomClasseFormulaireDonnees
+listeProfils | PvScriptListeProfilsMSWeb | PvTableauProfilsMSHtml | $NomClasseTableauDonnees
+ajoutRole | PvScriptAjoutRoleMSWeb | PvFormulaireAjoutRoleMS | $NomClasseFormulaireDonnees
+modifRole | PvScriptModifRoleMSWeb | PvFormulaireModifRoleMS | $NomClasseFormulaireDonnees
+supprRole | PvScriptSupprRoleMSWeb | PvFormulaireSupprRoleMS | $NomClasseFormulaireDonnees
+listeRoles | PvScriptListeRolesMSWeb | PvTableauAjoutRoleMS | $NomClasseTableauDonnees
+
+```php
+class MaZoneWeb1 extends PvZoneWebSimple
+{
+public $AutoriserModifPrefs = 1 ; 
+public $NomClasseScriptConnexion = "MonScriptModifPrefs" ;
+// ...
+}
+class FormModifPrefs1 extends PvFormulaireModifInfosMS
+{
+}
+class MonScriptModifPrefs extends PvScriptModifPrefsWeb
+{
+public $NomClasseFormulaireDonnees = "FormModifPrefs1" ;
 }
 ```
 
@@ -1102,6 +1176,8 @@ Propriété / Méthode | Description
 $Largeur | Largeur du formulaire de filtres
 $LargeurFormulaireFiltres | Largeur du formulaire de filtres
 $AlignFormulaireFiltres | Alignement du formulaire de filtres
+$AlignBoutonSoumettreFormulaireFiltres | Alignement du bouton Soumettre du formulaire de filtres
+$TitreBoutonSoumettreFormulaireFiltres | Libellé du bouton Soumettre du formulaire de filtres
 $MessageAucunElement | Message lorsqu'il n'y a aucun élément trouvé
 $ElementsEnCours | Tableau contenant toutes les lignes trouvées
 $AlerterAucunElement | Affichera le message s'il n'y a aucun élément

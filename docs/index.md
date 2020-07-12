@@ -25,5 +25,8 @@
 - [Le service d'authentification](commondb.md)
 - Les Zones web
 	- [La Zone Web Simple](zonewebsimple.md)
+	- [Personnalisation scripts membership](scriptsmembership.md)
 	- [La Zone Bootstrap 4](zonebootstrap4.md)
 - [Les passerelles de paiement](passerellepaiement.md)
+- [Les services persistants](servicespersistants.md)
+- [Les tâches programmées](tachesprogs.md)

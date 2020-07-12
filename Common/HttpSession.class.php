@@ -66,8 +66,8 @@
 			var $ResponseCookies = array() ;
 			var $ResponseHeadersSet = false;
 			var $ResponseHttpVersion = false;
-			var $ResponseHttpStatusCode = false;
-			var $ResponseHttpStatusDesc = false;
+			var $ResponseHttpStatusCode ;
+			var $ResponseHttpStatusDesc ;
 			
 			var $ResponseTransferChunked = false ;
 			var $ResponseChunkSize = -1 ;
@@ -800,6 +800,14 @@
 				$this->AutoSetContentType = false ;
 				$this->RequestMethod = "POST" ;
 				$this->RequestContentType = "application/x-www-form-urlencoded" ;
+				$result = $this->GetUrl($url, $headers, "", $postData) ;
+				$this->AutoSetContentType = $oldContentType ;
+				return $result ;
+			}
+			function SubmitData($url, $postData=array(), $headers=array())
+			{
+				$oldContentType = $this->AutoSetContentType ;
+				$this->AutoSetContentType = false ;
 				$result = $this->GetUrl($url, $headers, "", $postData) ;
 				$this->AutoSetContentType = $oldContentType ;
 				return $result ;

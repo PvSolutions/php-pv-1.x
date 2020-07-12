@@ -81,17 +81,17 @@
 				$this->CorrecteurValeur = new PvCorrecteurValeurFiltreBase() ;
 				$this->FormatteurEtiquette = new PvFormatteurEtiquetteFiltre() ;
 			}
-			public function AdopteApi($nom, & $script)
+			public function AdopteApi($nom, & $Route)
 			{
-				$this->ApiParent = & $script->ApiParent ;
-				$this->ApplicationParent = & $script->ApplicationParent ;
+				$this->ApiParent = & $Route->ApiParent ;
+				$this->ApplicationParent = & $Route->ApplicationParent ;
 				$this->NomElementApi = $nom ;
 			}
-			public function AdopteRoute($nom, & $script)
+			public function AdopteRoute($nom, & $Route)
 			{
-				$this->RouteParent = & $script ;
-				$this->ApiParent = & $script->ApiParent ;
-				$this->ApplicationParent = & $script->ApplicationParent ;
+				$this->RouteParent = & $Route ;
+				$this->ApiParent = & $Route->ApiParent ;
+				$this->ApplicationParent = & $Route->ApplicationParent ;
 				$this->NomElementRoute = $nom ;
 			}
 			protected function CorrigeConfig()
@@ -229,6 +229,23 @@
 			}
 		
 		}
+		class PvFiltreHttpCorpsRestful extends PvFiltreBaseRestful
+		{
+			public $Role = "corps_http" ;
+			public $TypeLiaisonParametre = "hidden" ;
+			public $Source = null ;
+			public function ObtientValeurParametre()
+			{
+				$valeur = $this->ValeurVide ;
+				$nomParam = $this->NomParametreLie ;
+				if(is_object($this->ApiParent->Requete->Corps) && isset($this->ApiParent->Requete->Corps->$nomParam))
+				{
+					$valeur = $this->ApiParent->Requete->Corps->$nomParam ;
+				}
+				return $valeur ;
+			}
+		
+		}
 		class PvFiltreCookieRestful extends PvFiltreBaseRestful
 		{
 			public $Role = "cookie" ;
@@ -245,6 +262,19 @@
 			public function ObtientValeurParametre()
 			{
 				return (isset($_SESSION[$this->NomParametreLie])) ? $_SESSION[$this->NomParametreLie] : $this->ValeurVide ;
+			}
+		}
+		class PvFiltreArgRouteRestful extends PvFiltreBaseRestful
+		{
+			public $Role = "arg_route" ;
+			public $TypeLiaisonParametre = "arg_route" ;
+			public function ObtientValeurParametre()
+			{
+				if($this->EstNul($this->ApiParent))
+				{
+					return $this->ValeurVide ;
+				}
+				return $this->ApiParent->ArgRoute($this->NomParametreLie, $this->ValeurParDefaut) ;
 			}
 		}
 		class PvFiltreMembreConnecteRestful extends PvFiltreBaseRestful
@@ -392,7 +422,7 @@
 			public $DejaTelecharge = 0 ;
 			public $NettoyerCaractsFichier = 1 ;
 			public $ExtensionsAcceptees = array() ;
-			public $ExtensionsRejetees = array('pl', 'cgi', 'html', 'xhtml', 'html5', 'html4', 'xml', 'xss', 'rss', 'xlt', 'php', 'phtml', 'inc', 'js', 'vbs', 'py', 'bat', 'sh', 'cmd', 'exe', 'msi', 'bin', 'apk', 'com', 'command', 'cpl', 'action', 'csh', 'gadget', 'inf1', 'ins', 'inx', 'ipa', 'isu', 'job', 'jse', 'ksh', 'lnk', 'msc', 'msp', 'mst', 'osx', 'out', 'paf', 'pif', 'prg', 'ps1', 'reg', 'rgs', 'run', 'scr', 'sct', 'shb', 'shs', 'u3p', 'vb', 'vbe', 'vbs', 'vbscript', 'workflow', 'ws', 'wsf', 'wsh') ;
+			public $ExtensionsRejetees = array('pl', 'cgi', 'html', 'xhtml', 'html5', 'html4', 'xml', 'xss', 'rss', 'xlt', 'php', 'phtml', 'inc', 'js', 'vbs', 'py', 'bat', 'sh', 'cmd', 'exe', 'msi', 'bin', 'apk', 'com', 'command', 'cpl', 'action', 'csh', 'gadget', 'inf1', 'ins', 'inx', 'ipa', 'isu', 'job', 'jse', 'ksh', 'lnk', 'msc', 'msp', 'mst', 'osx', 'out', 'paf', 'pif', 'prg', 'ps1', 'reg', 'rgs', 'run', 'scr', 'sct', 'shb', 'shs', 'u3p', 'vb', 'vbe', 'vbs', 'vbRoute', 'workflow', 'ws', 'wsf', 'wsh') ;
 			public $CheminFichierClient = "" ;
 			public $CodeErreurTelechargement = "0" ;
 			public $CheminFichierSoumis = "" ;
@@ -492,8 +522,8 @@
 					}
 					if($this->CheminFichierSoumis != "")
 					{
-						$cheminFichierSoumis = realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/".$this->CheminFichierSoumis) ;
-						$cheminDossier = realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/".$this->CheminDossier) ;
+						$cheminFichierSoumis = realpath(dirname($_SERVER["Route_FILENAME"])."/".$this->CheminFichierSoumis) ;
+						$cheminDossier = realpath(dirname($_SERVER["Route_FILENAME"])."/".$this->CheminDossier) ;
 						if($this->CheminFichierSoumis != '' && file_exists($cheminFichierSoumis))
 						{
 							$infosFichier = pathinfo($cheminFichierSoumis) ;

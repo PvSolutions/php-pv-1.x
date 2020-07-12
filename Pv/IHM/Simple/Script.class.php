@@ -542,7 +542,7 @@
 				}
 				if($this->TentativeConnexionValidee == 1)
 				{
-					$this->ZoneParent->Membership->LogonMember($this->IdMembre) ;
+					$this->SauveSessionMembre() ;
 					$this->RedirigeConnexionReussie() ;
 				}
 				else
@@ -620,6 +620,10 @@
 						$this->MessageConnexionEchouee = $this->MessageErreurValidation ;
 					}
 				}
+			}
+			protected function SauveSessionMembre()
+			{
+				$this->ZoneParent->Membership->LogonMember($this->IdMembre) ;
 			}
 			protected function RedirigeConnexionReussie()
 			{
