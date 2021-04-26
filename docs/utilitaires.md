@@ -94,6 +94,7 @@ Vous pouvez manipuler la requête HTTP avec la classe **HttpSession**.
 
 Propriété/Méthode | Description
 ------------ | -------------
+$UserAgent | User Agent. Par défaut "PHP Http Session v1.0"
 $RequestHeaders | Tableau des entêtes de la requête à soumettre
 $RequestMethod | Méthode HTTP à soumettre
 $RequestVersion | Version HTTP de la requête.

@@ -1495,6 +1495,50 @@ window.location.href = window.location.href ;
 			public $SuffixeUrl = "_query_string" ;
 		}
 		
+		class PvRepeteurDonneesHtml extends PvGrilleDonneesHtml
+		{
+			protected function RenduRangeeDonnees()
+			{
+				$ctn = '' ;
+				if($this->FiltresSoumis() || ! $this->PossedeFiltresRendus())
+				{
+					$this->DetecteContenuLigneModeleUse() ;
+					$parametresRendu = $this->ParametresCommandeSelectionnee() ;
+					if(count($this->ElementsEnCours) > 0)
+					{
+						foreach($this->ElementsEnCours as $j => $ligne)
+						{
+							$ligneDonnees = $ligne ;
+							$ligneDonnees["POSITION"] = $j ;
+							$ligneDonnees["ID_PARITE"] = ($j % 2 == 0) ? "pair" : "impair" ; ;
+							$ligneDonnees["NO"] = $j + 1 ;
+							foreach($this->DefinitionsColonnes as $i => $colonne)
+							{
+								if($colonne->Visible == 0)
+									continue ;
+								$ligneDonnees["VALEUR_COL_".$i] = $colonne->FormatteValeur($this, $ligne) ;
+								if($colonne->NomDonnees != "")
+								{
+									$ligneDonnees["VALEUR_COL_".$colonne->NomDonnees] = $ligneDonnees["VALEUR_COL_".$i] ;
+								}
+							}
+							$ligneDonnees = $this->SourceValeursSuppl->Applique($this, $ligneDonnees) ;
+							$ctn .= _parse_pattern($this->ContenuLigneModeleUse, $ligneDonnees) ;
+						}
+					}
+					elseif($this->AlerterAucunElement == 1)
+					{
+						$ctn .= '<p class="AucunElement">'.$this->MessageAucunElement.'</p>' ;
+					}
+				}
+				else
+				{
+					$ctn .= $this->RenduFiltresNonRenseignes() ;
+				}
+				return $ctn ;
+			}
+		}
+		
 		class PvTableauDonneesBootstrap extends PvTableauDonneesHtml
 		{
 			public $SautLigneSansCommande = 0 ;
@@ -1964,7 +2008,7 @@ window.location.href = window.location.href ;
 			public function AdopteTableauDonnees($nom, & $tableauDonnees)
 			{
 				parent::AdopteTableauDonnees($nom, $tableauDonnees) ;
-				$this->InsereNouvCritere(new PvCritereValideRegexpTabl()) ;
+				//$this->InsereNouvCritere(new PvCritereValideRegexpTabl()) ;
 			}
 		}
 		

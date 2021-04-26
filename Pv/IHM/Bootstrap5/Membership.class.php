@@ -1,48 +1,47 @@
 <?php
 	
-	if(! defined('PV_MEMBERSHIP_BOOTSTRAP4'))
+	if(! defined('PV_MEMBERSHIP_BOOTSTRAP5'))
 	{
-		define('PV_MEMBERSHIP_BOOTSTRAP4', 1) ;
+		define('PV_MEMBERSHIP_BOOTSTRAP5', 1) ;
 		
-		class PvRemplisseurConfigMembershipBootstrap4 extends PvRemplisseurConfigMembershipSimple
+		class PvRemplisseurConfigMembershipBootstrap5 extends PvRemplisseurConfigMembershipSimple
 		{
 			public function CreeFormulaireDonnees()
 			{
-				return new PvFormulaireDonneesBootstrap4() ;
+				return new PvFormulaireDonneesBootstrap5() ;
 			}
 		}
 		
-		class PvScriptConnexionBootstrap4 extends PvScriptConnexionWeb
+		class PvScriptConnexionBootstrap5 extends PvScriptConnexionWeb
 		{
 			public $MessageRecouvreMP = '<br><p>Mot de passe oubli&eacute; ? <a href="${url}">Cliquez ici</a> pour le r&eacute;cup&eacute;rer</p>' ;
 			public $MessageInscription = '<br><p>Si vous n\'avez pas de compte, <a href="${url}">Inscrivez-vous</a>.</p>' ;
 			public $ColXsLibelle = 5 ;
-			public $PleineLargBtnSoumettre = 1 ;
+			public $ClsBstBoutonSoumettre = "" ;
+			public $AlignBtnSoumettre = "right" ;
 			public $TagTitre = 'h3' ;
 			public $InclureIcones = 0 ;
-			public $ClasseCSSCadre = "col-12 col-sm-12 col-md-4" ;
+			public $ClasseCSSCadre = "col-12 col-sm-12 col-md-6 col-lg-4" ;
 			public $ClasseCSSErreur = 'alert alert-danger alert-dismissable' ;
 			public function RenduSpecifique()
 			{
 				$ctn = '' ;
-				$ctn .= '<div class="container-fluid">'.PHP_EOL ;
 				$ctn .= '<div class="row">'.PHP_EOL ;
-				$ctn .= '<div class="'.$this->ClasseCSSCadre.' center-block">'.PHP_EOL ;
+				$ctn .= '<div class="'.$this->ClasseCSSCadre.'">'.PHP_EOL ;
 				$ctn .= '<form class="user_login_box '.$this->NomClsCSSFormulaireDonnees.'" action="'.$this->UrlSoumetTentativeConnexion().'" role="form" method="post">'.PHP_EOL ;
-				$ctn .= '<div class="panel panel-default">'.PHP_EOL ;
-				$ctn .= '<div class="panel-body">'.PHP_EOL ;
+				$ctn .= '<div class="card bg-light">'.PHP_EOL ;
+				$ctn .= '<div class="card-body">'.PHP_EOL ;
 				$ctn .= $this->RenduMessageErreur() ;
-				$ctn .= '<fieldset>'.PHP_EOL ;
 				$ctn .= $this->RenduTableauParametres().PHP_EOL ;
-				$ctn .= '</fieldset>'.PHP_EOL ;
+				$ctn .= '</div>'.PHP_EOL ;
 				if($this->AfficherBoutonSoumettre)
 				{
-					$ctn .= '<input type="submit" value="'.$this->LibelleBoutonSoumettre.'" class="btn btn-lg btn-success'.(($this->PleineLargBtnSoumettre) ? ' btn-block' : '').'" />'.PHP_EOL ;
+					$ctn .= '<div class="card-footer" align="'.$this->AlignBtnSoumettre.'">'.PHP_EOL ;
+					$ctn .= '<input type="submit" value="'.$this->LibelleBoutonSoumettre.'" class="btn btn-lg btn-success'.(($this->ClsBstBoutonSoumettre) ? ' '.$this->ClsBstBoutonSoumettre : '').'" />'.PHP_EOL ;
+					$ctn .= '</div>'.PHP_EOL ;
 				}
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</form>'.PHP_EOL ;
-				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>' ;
 				if($this->ZoneParent->AutoriserInscription == 1 && $this->ZoneParent->EstPasNul($this->ZoneParent->ScriptInscription))
@@ -62,10 +61,8 @@
 			public function RenduTableauParametres()
 			{
 				$ctn = '' ;
-				$ctn .= '<div class="form-group">
-<div class="container-fluid">
-<div class="row">
-<div class="col-'.$this->ColXsLibelle.'" align="center">'.$this->LibellePseudo.'</div>
+				$ctn .= '<div class="row mb-2">
+<div class="col-'.$this->ColXsLibelle.'">'.$this->LibellePseudo.'</div>
 <div class="col-'.(12 - $this->ColXsLibelle).'">
 '.(($this->InclureIcones) ? '<div class="input-group">
 <span class="input-group-addon">
@@ -73,20 +70,14 @@
 </span>' : '').'<input class="form-control" name="'.$this->NomParamPseudo.'" type="text" value="'.htmlspecialchars($this->ValeurParamPseudo).'" autofocus />
 '.(($this->InclureIcones) ? '</div>' : '').'</div>
 </div>
-</div>
-</div>
-<div class="form-group">
-<div class="container-fluid">
-<div class="row">
-<div class="col-'.$this->ColXsLibelle.'" align="center">'.$this->LibelleMotPasse.'</div>
+<div class="row mb-2">
+<div class="col-'.$this->ColXsLibelle.'">'.$this->LibelleMotPasse.'</div>
 <div class="col-'.(12 - $this->ColXsLibelle).'">
 '.(($this->InclureIcones) ? '<div class="input-group">
 <span class="input-group-addon">
 <i class="glyphicon glyphicon-lock"></i>
 </span>' : '').'<input class="form-control" name="'.$this->NomParamMotPasse.'" type="password" value="" />
 '.(($this->InclureIcones) ? '</div>' : '').'</div>
-</div>
-</div>
 </div>' ;
 				$ctn .= '<input type="hidden" name="'.$this->NomParamSoumetTentative.'" value="'.htmlentities($this->ValeurParamSoumetTentative).'" />' ;
 				if($this->InclureIcones)
@@ -126,19 +117,19 @@
 				return $ctn ;
 			}
 		}
-		class PvScriptRecouvreMPBootstrap4 extends PvScriptRecouvreMPWeb
+		class PvScriptRecouvreMPBootstrap5 extends PvScriptRecouvreMPWeb
 		{
 			public $TagTitre = "h3" ;
-			public $NomClasseFormulaireDonnees = "PvFormulaireRecouvreMPBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireRecouvreMPBootstrap5" ;
 		}
-		class PvScriptDeconnexionBootstrap4 extends PvScriptDeconnexionWeb
+		class PvScriptDeconnexionBootstrap5 extends PvScriptDeconnexionWeb
 		{
 			public $TagTitre = "h3" ;
 			public function RenduSpecifique()
 			{
 				$ctnForm = parent::RenduSpecifique() ;
-				$ctn = '<div class="panel panel-default">
-<div class="panel-body">
+				$ctn = '<div class="card bg-light">
+<div class="card-body">
 '.$ctnForm.'
 </div>
 </div>' ;
@@ -146,7 +137,7 @@
 			}
 		}
 		
-		class PvTableauMembresBootstrap4 extends PvTableauMembresMSHtml
+		class PvTableauMembresBootstrap5 extends PvTableauMembresMSHtml
 		{
 			public $SautLigneSansCommande = 0 ;
 			public $ClasseCSSRangee = "table-striped table-hover" ;
@@ -155,12 +146,13 @@
 			public $ClsBstEnteteFormFiltres ;
 			public $ClsBstPiedFormFiltres ;
 			public $ClsBstFormFiltresSelect = "col-12 col-sm-8 col-md-6" ;
+			public $ClsBstBlocCommandes = "text-dark bg-light" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap4() ;
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
-				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap4() ;
+				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap5() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
+				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap5() ;
 			}
 			protected function RenduFormulaireFiltres()
 			{
@@ -208,9 +200,11 @@
 				$ctn = trim(parent::RenduBlocCommandes()) ;
 				if(count($this->Commandes) > 0)
 				{
-					$ctn = '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL
-						.$ctn.PHP_EOL
-						.'</div></div>' ;
+					$ctn = '<div class="card '.$this->ClsBstBlocCommandes.'">
+<div class="card-footer">'.PHP_EOL
+.$ctn.PHP_EOL
+.'</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
@@ -264,7 +258,8 @@
 							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
-						$ctn .= '<div class="panel panel-default"><div class="panel-body table-responsive">'.PHP_EOL ;
+						$ctn .= '<div class="card">
+<div class="card-body table-responsive">'.PHP_EOL ;
 						$ctn .= '<table' ;
 						$ctn .= ' class="RangeeDonnees table '.$this->ClasseCSSRangee.'"' ;
 						$ctn .= '>'.PHP_EOL ;
@@ -334,7 +329,8 @@
 						}
 						$ctn .= '</tbody>'.PHP_EOL ;
 						$ctn .= '</table>'.PHP_EOL ;
-						$ctn .= '</div></div>' ;
+						$ctn .= '</div>
+</div>' ;
 						if($this->PossedeColonneEditable())
 						{
 							$ctn .= PHP_EOL .'<div style="display:none"><input type="submit" /></div>
@@ -353,7 +349,7 @@
 				return $ctn ;
 			}
 		}
-		class PvTableauRolesBootstrap4 extends PvTableauRolesMSHtml
+		class PvTableauRolesBootstrap5 extends PvTableauRolesMSHtml
 		{
 			public $SautLigneSansCommande = 0 ;
 			public $ClasseCSSRangee = "table-striped table-hover" ;
@@ -362,12 +358,13 @@
 			public $ClsBstEnteteFormFiltres ;
 			public $ClsBstPiedFormFiltres ;
 			public $ClsBstFormFiltresSelect = "col-12 col-sm-8 col-md-6" ;
+			public $ClsBstBlocCommandes = "text-dark bg-light" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap4() ;
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
-				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap4() ;
+				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap5() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
+				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap5() ;
 			}
 			protected function RenduFormulaireFiltres()
 			{
@@ -415,9 +412,11 @@
 				$ctn = trim(parent::RenduBlocCommandes()) ;
 				if(count($this->Commandes) > 0)
 				{
-					$ctn = '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL
-						.$ctn.PHP_EOL
-						.'</div></div>' ;
+					$ctn = '<div class="card '.$this->ClsBstBlocCommandes.'">
+<div class="card-footer">'.PHP_EOL
+.$ctn.PHP_EOL
+.'</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
@@ -471,7 +470,8 @@
 							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
-						$ctn .= '<div class="panel panel-default"><div class="panel-body table-responsive">'.PHP_EOL ;
+						$ctn .= '<div class="card">
+<div class="card-body table-responsive">'.PHP_EOL ;
 						$ctn .= '<table' ;
 						$ctn .= ' class="RangeeDonnees table '.$this->ClasseCSSRangee.'"' ;
 						$ctn .= '>'.PHP_EOL ;
@@ -541,7 +541,8 @@
 						}
 						$ctn .= '</tbody>'.PHP_EOL ;
 						$ctn .= '</table>'.PHP_EOL ;
-						$ctn .= '</div></div>' ;
+						$ctn .= '</div>
+</div>' ;
 						if($this->PossedeColonneEditable())
 						{
 							$ctn .= PHP_EOL .'<div style="display:none"><input type="submit" /></div>
@@ -560,7 +561,7 @@
 				return $ctn ;
 			}
 		}
-		class PvTableauProfilsBootstrap4 extends PvTableauProfilsMSHtml
+		class PvTableauProfilsBootstrap5 extends PvTableauProfilsMSHtml
 		{
 			public $SautLigneSansCommande = 0 ;
 			public $ClasseCSSRangee = "table-striped table-hover" ;
@@ -569,12 +570,13 @@
 			public $ClsBstEnteteFormFiltres ;
 			public $ClsBstPiedFormFiltres ;
 			public $ClsBstFormFiltresSelect = "col-12 col-sm-8 col-md-6" ;
+			public $ClsBstBlocCommandes = "text-dark bg-light" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap4() ;
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
-				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap4() ;
+				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap5() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
+				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap5() ;
 			}
 			protected function RenduFormulaireFiltres()
 			{
@@ -622,9 +624,11 @@
 				$ctn = trim(parent::RenduBlocCommandes()) ;
 				if(count($this->Commandes) > 0)
 				{
-					$ctn = '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL
-						.$ctn.PHP_EOL
-						.'</div></div>' ;
+					$ctn = '<div class="card '.$this->ClsBstBlocCommandes.'">
+<div class="card-footer">'.PHP_EOL
+.$ctn.PHP_EOL
+.'</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
@@ -678,7 +682,8 @@
 							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
-						$ctn .= '<div class="panel panel-default"><div class="panel-body table-responsive">'.PHP_EOL ;
+						$ctn .= '<div class="card">
+<div class="card-body table-responsive">'.PHP_EOL ;
 						$ctn .= '<table' ;
 						$ctn .= ' class="RangeeDonnees table '.$this->ClasseCSSRangee.'"' ;
 						$ctn .= '>'.PHP_EOL ;
@@ -748,7 +753,8 @@
 						}
 						$ctn .= '</tbody>'.PHP_EOL ;
 						$ctn .= '</table>'.PHP_EOL ;
-						$ctn .= '</div></div>' ;
+						$ctn .= '</div>
+</div>' ;
 						if($this->PossedeColonneEditable())
 						{
 							$ctn .= PHP_EOL .'<div style="display:none"><input type="submit" /></div>
@@ -768,7 +774,7 @@
 			}
 		}
 			
-		class PvFormulaireAjoutMembreBootstrap4 extends PvFormulaireAjoutMembreMS
+		class PvFormulaireAjoutMembreBootstrap5 extends PvFormulaireAjoutMembreMS
 		{
 			public $ClasseCSSSucces = "alert alert-primary" ;
 			public $ClasseCSSErreur = "alert alert-danger" ;
@@ -776,132 +782,14 @@
 			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 		}
-		class PvFormulaireInscriptionMembreBootstrap4 extends PvFormulaireInscriptionMembreMS
-		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			public $ClasseCSSCommandeExecuter = "btn-primary" ;
-			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
-			protected function RenduComposants()
-			{
-				$ctn = '' ;
-				if(count($this->DispositionComposants))
-				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
-					foreach($this->DispositionComposants as $i => $id)
-					{
-						if($i > 0)
-						{
-							$ctn .= PHP_EOL ;
-						}
-						switch($id)
-						{
-							case PvDispositionFormulaireDonnees::BlocEntete :
-							{
-								$ctn .= $this->RenduBlocEntete() ;
-							}
-							break ;
-							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
-							{
-								$ctn .= $this->RenduFormulaireFiltres() ;
-							}
-							break ;
-							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
-							{
-								$ctn .= $this->RenduResultatCommandeExecutee() ;
-							}
-							break ;
-							case PvDispositionFormulaireDonnees::BlocCommandes :
-							{
-								$ctn .= $this->RenduBlocCommandes() ;
-							}
-							break ;
-							default :
-							{
-								$ctn .= $this->RenduAutreComposantSupport($id) ;
-							}
-							break ;
-						}
-					}
-					$ctn .= '</form>' ;
-				}
-				return $ctn ;
-			}
-			protected function InitDessinateurFiltresEdition()
-			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
-			}
-			protected function InitDessinateurBlocCommandes()
-			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
-			}
-		}
-		class PvFormulaireModifMembreBootstrap4 extends PvFormulaireModifMembreMS
-		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			protected function RenduComposants()
-			{
-				$ctn = '' ;
-				if(count($this->DispositionComposants))
-				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
-					foreach($this->DispositionComposants as $i => $id)
-					{
-						if($i > 0)
-						{
-							$ctn .= PHP_EOL ;
-						}
-						switch($id)
-						{
-							case PvDispositionFormulaireDonnees::BlocEntete :
-							{
-								$ctn .= $this->RenduBlocEntete() ;
-							}
-							break ;
-							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
-							{
-								$ctn .= $this->RenduFormulaireFiltres() ;
-							}
-							break ;
-							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
-							{
-								$ctn .= $this->RenduResultatCommandeExecutee() ;
-							}
-							break ;
-							case PvDispositionFormulaireDonnees::BlocCommandes :
-							{
-								$ctn .= $this->RenduBlocCommandes() ;
-							}
-							break ;
-							default :
-							{
-								$ctn .= $this->RenduAutreComposantSupport($id) ;
-							}
-							break ;
-						}
-					}
-					$ctn .= '</form>' ;
-				}
-				return $ctn ;
-			}
-			protected function InitDessinateurFiltresEdition()
-			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
-			}
-			protected function InitDessinateurBlocCommandes()
-			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
-			}
-		}
-		class PvFormulaireModifInfosBootstrap4 extends PvFormulaireModifInfosMS
+		class PvFormulaireInscriptionMembreBootstrap5 extends PvFormulaireInscriptionMembreMS
 		{
 			public $ClasseCSSSucces = "alert alert-primary" ;
 			public $ClasseCSSErreur = "alert alert-danger" ;
@@ -954,14 +842,72 @@
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 		}
-		class PvFormulaireSupprMembreBootstrap4 extends PvFormulaireSupprMembreMS
+		class PvFormulaireModifMembreBootstrap5 extends PvFormulaireModifMembreMS
+		{
+			public $ClasseCSSSucces = "alert alert-primary" ;
+			public $ClasseCSSErreur = "alert alert-danger" ;
+			protected function RenduComposants()
+			{
+				$ctn = '' ;
+				if(count($this->DispositionComposants))
+				{
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					foreach($this->DispositionComposants as $i => $id)
+					{
+						if($i > 0)
+						{
+							$ctn .= PHP_EOL ;
+						}
+						switch($id)
+						{
+							case PvDispositionFormulaireDonnees::BlocEntete :
+							{
+								$ctn .= $this->RenduBlocEntete() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
+							{
+								$ctn .= $this->RenduFormulaireFiltres() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
+							{
+								$ctn .= $this->RenduResultatCommandeExecutee() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::BlocCommandes :
+							{
+								$ctn .= $this->RenduBlocCommandes() ;
+							}
+							break ;
+							default :
+							{
+								$ctn .= $this->RenduAutreComposantSupport($id) ;
+							}
+							break ;
+						}
+					}
+					$ctn .= '</form>' ;
+				}
+				return $ctn ;
+			}
+			protected function InitDessinateurFiltresEdition()
+			{
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
+			}
+			protected function InitDessinateurBlocCommandes()
+			{
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
+			}
+		}
+		class PvFormulaireModifInfosBootstrap5 extends PvFormulaireModifInfosMS
 		{
 			public $ClasseCSSSucces = "alert alert-primary" ;
 			public $ClasseCSSErreur = "alert alert-danger" ;
@@ -1014,20 +960,19 @@
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 		}
-		class PvFormulaireChangeMPMembreBootstrap4 extends PvFormulaireChangeMPMembreMS
+		class PvFormulaireSupprMembreBootstrap5 extends PvFormulaireSupprMembreMS
 		{
 			public $ClasseCSSSucces = "alert alert-primary" ;
 			public $ClasseCSSErreur = "alert alert-danger" ;
 			public $ClasseCSSCommandeExecuter = "btn-primary" ;
 			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
-			public $MaxFiltresEditionParLigne = 1 ;
 			protected function RenduComposants()
 			{
 				$ctn = '' ;
@@ -1075,73 +1020,14 @@
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
-				$this->DessinateurFiltresEdition->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 		}
-		class PvFormulaireDoitChangerMotPasseBootstrap4 extends PvFormulaireDoitChangerMotPasseMS
-		{
-			public $ClasseCSSSucces = "alert alert-primary" ;
-			public $ClasseCSSErreur = "alert alert-danger" ;
-			protected function RenduComposants()
-			{
-				$ctn = '' ;
-				if(count($this->DispositionComposants))
-				{
-					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
-					foreach($this->DispositionComposants as $i => $id)
-					{
-						if($i > 0)
-						{
-							$ctn .= PHP_EOL ;
-						}
-						switch($id)
-						{
-							case PvDispositionFormulaireDonnees::BlocEntete :
-							{
-								$ctn .= $this->RenduBlocEntete() ;
-							}
-							break ;
-							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
-							{
-								$ctn .= $this->RenduFormulaireFiltres() ;
-							}
-							break ;
-							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
-							{
-								$ctn .= $this->RenduResultatCommandeExecutee() ;
-							}
-							break ;
-							case PvDispositionFormulaireDonnees::BlocCommandes :
-							{
-								$ctn .= $this->RenduBlocCommandes() ;
-							}
-							break ;
-							default :
-							{
-								$ctn .= $this->RenduAutreComposantSupport($id) ;
-							}
-							break ;
-						}
-					}
-					$ctn .= '</form>' ;
-				}
-				return $ctn ;
-			}
-			protected function InitDessinateurFiltresEdition()
-			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
-			}
-			protected function InitDessinateurBlocCommandes()
-			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
-			}
-		}
-		class PvFormulaireChangeMotPasseBootstrap4 extends PvFormulaireChangeMotPasseMS
+		class PvFormulaireChangeMPMembreBootstrap5 extends PvFormulaireChangeMPMembreMS
 		{
 			public $ClasseCSSSucces = "alert alert-primary" ;
 			public $ClasseCSSErreur = "alert alert-danger" ;
@@ -1195,16 +1081,136 @@
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
 				$this->DessinateurFiltresEdition->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
+			}
+		}
+		class PvFormulaireDoitChangerMotPasseBootstrap5 extends PvFormulaireDoitChangerMotPasseMS
+		{
+			public $ClasseCSSSucces = "alert alert-primary" ;
+			public $ClasseCSSErreur = "alert alert-danger" ;
+			protected function RenduComposants()
+			{
+				$ctn = '' ;
+				if(count($this->DispositionComposants))
+				{
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					foreach($this->DispositionComposants as $i => $id)
+					{
+						if($i > 0)
+						{
+							$ctn .= PHP_EOL ;
+						}
+						switch($id)
+						{
+							case PvDispositionFormulaireDonnees::BlocEntete :
+							{
+								$ctn .= $this->RenduBlocEntete() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
+							{
+								$ctn .= $this->RenduFormulaireFiltres() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
+							{
+								$ctn .= $this->RenduResultatCommandeExecutee() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::BlocCommandes :
+							{
+								$ctn .= $this->RenduBlocCommandes() ;
+							}
+							break ;
+							default :
+							{
+								$ctn .= $this->RenduAutreComposantSupport($id) ;
+							}
+							break ;
+						}
+					}
+					$ctn .= '</form>' ;
+				}
+				return $ctn ;
+			}
+			protected function InitDessinateurFiltresEdition()
+			{
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
+			}
+			protected function InitDessinateurBlocCommandes()
+			{
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
+			}
+		}
+		class PvFormulaireChangeMotPasseBootstrap5 extends PvFormulaireChangeMotPasseMS
+		{
+			public $ClasseCSSSucces = "alert alert-primary" ;
+			public $ClasseCSSErreur = "alert alert-danger" ;
+			public $ClasseCSSCommandeExecuter = "btn-primary" ;
+			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
+			public $MaxFiltresEditionParLigne = 1 ;
+			protected function RenduComposants()
+			{
+				$ctn = '' ;
+				if(count($this->DispositionComposants))
+				{
+					$ctn .= '<form class="FormulaireDonnees'.(($this->NomClasseCSS != '') ? ' '.$this->NomClasseCSS : '').'" method="post" enctype="multipart/form-data" onsubmit="return SoumetFormulaire'.$this->IDInstanceCalc.'(this)" role="form">'.PHP_EOL ;
+					foreach($this->DispositionComposants as $i => $id)
+					{
+						if($i > 0)
+						{
+							$ctn .= PHP_EOL ;
+						}
+						switch($id)
+						{
+							case PvDispositionFormulaireDonnees::BlocEntete :
+							{
+								$ctn .= $this->RenduBlocEntete() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::FormulaireFiltresEdition :
+							{
+								$ctn .= $this->RenduFormulaireFiltres() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::ResultatCommandeExecutee :
+							{
+								$ctn .= $this->RenduResultatCommandeExecutee() ;
+							}
+							break ;
+							case PvDispositionFormulaireDonnees::BlocCommandes :
+							{
+								$ctn .= $this->RenduBlocCommandes() ;
+							}
+							break ;
+							default :
+							{
+								$ctn .= $this->RenduAutreComposantSupport($id) ;
+							}
+							break ;
+						}
+					}
+					$ctn .= '</form>' ;
+				}
+				return $ctn ;
+			}
+			protected function InitDessinateurFiltresEdition()
+			{
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
+				$this->DessinateurFiltresEdition->MaxFiltresParLigne = $this->MaxFiltresEditionParLigne ;
+			}
+			protected function InitDessinateurBlocCommandes()
+			{
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 		}
 		
-		class PvFormulaireAjoutRoleBootstrap4 extends PvFormulaireAjoutRoleMS
+		class PvFormulaireAjoutRoleBootstrap5 extends PvFormulaireAjoutRoleMS
 		{
 			public $ClasseCSSSucces = "alert alert-primary" ;
 			public $ClasseCSSErreur = "alert alert-danger" ;
@@ -1212,11 +1218,11 @@
 			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 			protected function DeclareCompListeProfils()
 			{
@@ -1247,7 +1253,7 @@
 				$this->DeclareCompListeProfils() ;
 			}
 		}
-		class PvFormulaireModifRoleBootstrap4 extends PvFormulaireModifRoleMS
+		class PvFormulaireModifRoleBootstrap5 extends PvFormulaireModifRoleMS
 		{
 			public $ClasseCSSSucces = "alert alert-primary" ;
 			public $ClasseCSSErreur = "alert alert-danger" ;
@@ -1255,11 +1261,11 @@
 			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 			protected function DeclareCompListeProfils()
 			{
@@ -1283,7 +1289,7 @@
 				$this->DeclareCompListeProfils() ;
 			}
 		}
-		class PvFormulaireSupprRoleBootstrap4 extends PvFormulaireSupprRoleMS
+		class PvFormulaireSupprRoleBootstrap5 extends PvFormulaireSupprRoleMS
 		{
 			public $ClasseCSSSucces = "alert alert-primary" ;
 			public $ClasseCSSErreur = "alert alert-danger" ;
@@ -1291,15 +1297,15 @@
 			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 		}
 		
-		class PvFormulaireAjoutProfilBootstrap4 extends PvFormulaireAjoutProfilMS
+		class PvFormulaireAjoutProfilBootstrap5 extends PvFormulaireAjoutProfilMS
 		{
 			public $ClasseCSSSucces = "alert alert-primary" ;
 			public $ClasseCSSErreur = "alert alert-danger" ;
@@ -1307,11 +1313,11 @@
 			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 			protected function DeclareCompListeRoles()
 			{
@@ -1342,7 +1348,7 @@
 				$this->DeclareCompListeRoles() ;
 			}
 		}
-		class PvFormulaireModifProfilBootstrap4 extends PvFormulaireModifProfilMS
+		class PvFormulaireModifProfilBootstrap5 extends PvFormulaireModifProfilMS
 		{
 			public $ClasseCSSSucces = "alert alert-primary" ;
 			public $ClasseCSSErreur = "alert alert-danger" ;
@@ -1350,11 +1356,11 @@
 			public $ClasseCSSCommandeAnnuler = "btn-danger" ;
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 			protected function DeclareCompListeRoles()
 			{
@@ -1378,7 +1384,7 @@
 				$this->DeclareCompListeRoles() ;
 			}
 		}
-		class PvFormulaireSupprProfilBootstrap4 extends PvFormulaireSupprProfilMS
+		class PvFormulaireSupprProfilBootstrap5 extends PvFormulaireSupprProfilMS
 		{
 			public $ClasseCSSSucces = "alert alert-primary" ;
 			public $ClasseCSSErreur = "alert alert-danger" ;
@@ -1431,15 +1437,15 @@
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 		}
 
-		class PvFormulaireRecouvreMPBootstrap4 extends PvFormulaireRecouvreMPMS
+		class PvFormulaireRecouvreMPBootstrap5 extends PvFormulaireRecouvreMPMS
 		{
 			public $ClasseCSSSucces = "alert alert-primary" ;
 			public $ClasseCSSErreur = "alert alert-danger" ;
@@ -1492,97 +1498,97 @@
 			}
 			protected function InitDessinateurFiltresEdition()
 			{
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
 			}
 			protected function InitDessinateurBlocCommandes()
 			{
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 		}
 		
-		class PvScriptAjoutMembreBootstrap4 extends PvScriptAjoutMembreMSWeb
+		class PvScriptAjoutMembreBootstrap5 extends PvScriptAjoutMembreMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutMembreBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutMembreBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptInscriptionBootstrap4 extends PvScriptInscriptionWeb
+		class PvScriptInscriptionBootstrap5 extends PvScriptInscriptionWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireInscriptionMembreBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireInscriptionMembreBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptModifMembreBootstrap4 extends PvScriptModifMembreMSWeb
+		class PvScriptModifMembreBootstrap5 extends PvScriptModifMembreMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireModifMembreBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireModifMembreBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptSupprMembreBootstrap4 extends PvScriptSupprMembreMSWeb
+		class PvScriptSupprMembreBootstrap5 extends PvScriptSupprMembreMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireSupprMembreBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireSupprMembreBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptModifPrefsBootstrap4 extends PvScriptModifPrefsWeb
+		class PvScriptModifPrefsBootstrap5 extends PvScriptModifPrefsWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireModifInfosBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireModifInfosBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptChangeMotPasseBootstrap4 extends PvScriptChangeMotPasseWeb
+		class PvScriptChangeMotPasseBootstrap5 extends PvScriptChangeMotPasseWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireChangeMotPasseBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireChangeMotPasseBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptDoitChangerMotPasseBootstrap4 extends PvScriptDoitChangerMotPasseWeb
+		class PvScriptDoitChangerMotPasseBootstrap5 extends PvScriptDoitChangerMotPasseWeb
 		{
 			public $TagTitre = "h3" ;
-			public $NomClasseFormulaireDonnees = "PvFormulaireDoitChangerMotPasseBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireDoitChangerMotPasseBootstrap5" ;
 		}
-		class PvScriptChangeMPMembreBootstrap4 extends PvScriptChangeMPMembreWeb
+		class PvScriptChangeMPMembreBootstrap5 extends PvScriptChangeMPMembreWeb
 		{
 			public $TagTitre = "h3" ;
-			public $NomClasseFormulaireDonnees = "PvFormulaireChangeMPMembreBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireChangeMPMembreBootstrap5" ;
 		}
-		class PvScriptListeMembresBootstrap4 extends PvScriptListeMembresMSWeb
+		class PvScriptListeMembresBootstrap5 extends PvScriptListeMembresMSWeb
 		{
-			public $NomClasseTableauDonnees = "PvTableauMembresBootstrap4" ;
+			public $NomClasseTableauDonnees = "PvTableauMembresBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptAjoutProfilBootstrap4 extends PvScriptAjoutProfilMSWeb
+		class PvScriptAjoutProfilBootstrap5 extends PvScriptAjoutProfilMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutProfilBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutProfilBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptModifProfilBootstrap4 extends PvScriptModifProfilMSWeb
+		class PvScriptModifProfilBootstrap5 extends PvScriptModifProfilMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireModifProfilBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireModifProfilBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptSupprProfilBootstrap4 extends PvScriptSupprProfilMSWeb
+		class PvScriptSupprProfilBootstrap5 extends PvScriptSupprProfilMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireSupprProfilBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireSupprProfilBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptListeProfilsBootstrap4 extends PvScriptListeProfilsMSWeb
+		class PvScriptListeProfilsBootstrap5 extends PvScriptListeProfilsMSWeb
 		{
-			public $NomClasseTableauDonnees = "PvTableauProfilsBootstrap4" ;
+			public $NomClasseTableauDonnees = "PvTableauProfilsBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptAjoutRoleBootstrap4 extends PvScriptAjoutRoleMSWeb
+		class PvScriptAjoutRoleBootstrap5 extends PvScriptAjoutRoleMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutRoleBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireAjoutRoleBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptModifRoleBootstrap4 extends PvScriptModifRoleMSWeb
+		class PvScriptModifRoleBootstrap5 extends PvScriptModifRoleMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireModifRoleBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireModifRoleBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptSupprRoleBootstrap4 extends PvScriptSupprRoleMSWeb
+		class PvScriptSupprRoleBootstrap5 extends PvScriptSupprRoleMSWeb
 		{
-			public $NomClasseFormulaireDonnees = "PvFormulaireSupprRoleBootstrap4" ;
+			public $NomClasseFormulaireDonnees = "PvFormulaireSupprRoleBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
-		class PvScriptListeRolesBootstrap4 extends PvScriptListeRolesMSWeb
+		class PvScriptListeRolesBootstrap5 extends PvScriptListeRolesMSWeb
 		{
-			public $NomClasseTableauDonnees = "PvTableauRolesBootstrap4" ;
+			public $NomClasseTableauDonnees = "PvTableauRolesBootstrap5" ;
 			public $TagTitre = "h3" ;
 		}
 	}

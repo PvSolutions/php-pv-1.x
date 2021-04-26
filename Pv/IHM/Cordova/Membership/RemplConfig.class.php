@@ -60,6 +60,82 @@
 				parent::RemplitFormulaireGlobalMembre($form) ;
 				$form->CommandeAnnuler->ContenuJsSurClick = 'pvZoneCordova.afficheEcran(&quot;'.$form->ZoneParent->ScriptListeMembres->IDInstanceCalc.'&quot;)' ;
 			}
+			public function RemplitDefinitionColActionsTableauProfil(& $table)
+			{
+				$membership = $table->ZoneParent->Membership ;
+				$i = count($table->DefinitionsColonnes) ;
+				
+				$table->DefinitionsColonnes[$i] = new PvDefinitionColonneDonnees() ;
+				$table->DefinitionsColonnes[$i]->Libelle = "Actions" ;
+				$table->DefinitionsColonnes[$i]->AlignElement = "center" ;
+				$table->DefinitionsColonnes[$i]->TriPossible = 0 ;
+				$table->DefinitionsColonnes[$i]->Formatteur = new PvFormatteurColonneLiens() ;
+				
+				$nomClasse = $this->NomClasseLienModifTableauProfil ;
+				if(class_exists($nomClasse))
+				{
+					$lienModif = new $nomClasse() ;
+					$lienModif->FormatIdOnglet = 'modif_profil_${PROFILE_ID}' ;
+					$lienModif->FormatTitreOnglet = 'Modifier le profil ${PROFILE_TITLE}' ;
+					$lienModif->FormatLibelle = "Modifier" ;
+					$lienModif->FormatURL = 'javascript:pvZoneCordova.afficheEcran("'.$table->ZoneParent->ScriptModifProfil->IDInstanceCalc.'", { idProfil : ${PROFILE_ID}})' ;
+					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienModif ;
+				}
+				
+				$nomClasse = $this->NomClasseLienSupprTableauProfil ;
+				if(class_exists($nomClasse))
+				{
+					$lienSuppr = new $nomClasse() ;
+					$lienSuppr->FormatIdOnglet = 'suppr_profil_${PROFILE_ID}' ;
+					$lienSuppr->FormatTitreOnglet = 'Supprimer le profil ${PROFILE_TITLE}' ;
+					$lienSuppr->FormatLibelle = "Supprimer" ;
+					$lienSuppr->FormatURL = 'javascript:pvZoneCordova.afficheEcran("'.$table->ZoneParent->ScriptSupprProfil->IDInstanceCalc.'", { idProfil : ${PROFILE_ID}})' ;
+					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienSuppr ;
+				}
+			}
+			public function RemplitFormulaireGlobalProfil(& $form)
+			{
+				parent::RemplitFormulaireGlobalProfil($form) ;
+				$form->CommandeAnnuler->ContenuJsSurClick = 'pvZoneCordova.afficheEcran(&quot;'.$form->ZoneParent->ScriptListeProfils->IDInstanceCalc.'&quot;)' ;
+			}
+			public function RemplitDefinitionColActionsTableauRole(& $table)
+			{
+				$membership = $table->ZoneParent->Membership ;
+				$i = count($table->DefinitionsColonnes) ;
+				
+				$table->DefinitionsColonnes[$i] = new PvDefinitionColonneDonnees() ;
+				$table->DefinitionsColonnes[$i]->Libelle = "Actions" ;
+				$table->DefinitionsColonnes[$i]->AlignElement = "center" ;
+				$table->DefinitionsColonnes[$i]->TriPossible = 0 ;
+				$table->DefinitionsColonnes[$i]->Formatteur = new PvFormatteurColonneLiens() ;
+				
+				$nomClasse = $this->NomClasseLienModifTableauRole ;
+				if(class_exists($nomClasse))
+				{
+					$lienModif = new $nomClasse() ;
+					$lienModif->FormatIdOnglet = 'modif_role_${ROLE_ID}' ;
+					$lienModif->FormatTitreOnglet = 'Modifier le role ${ROLE_TITLE}' ;
+					$lienModif->FormatLibelle = "Modifier" ;
+					$lienModif->FormatURL = 'javascript:pvZoneCordova.afficheEcran("'.$table->ZoneParent->ScriptModifRole->IDInstanceCalc.'", { idRole : ${ROLE_ID}})' ;
+					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienModif ;
+				}
+				
+				$nomClasse = $this->NomClasseLienSupprTableauRole ;
+				if(class_exists($nomClasse))
+				{
+					$lienSuppr = new $nomClasse() ;
+					$lienSuppr->FormatIdOnglet = 'suppr_role_${ROLE_ID}' ;
+					$lienSuppr->FormatTitreOnglet = 'Supprimer le role ${ROLE_TITLE}' ;
+					$lienSuppr->FormatLibelle = "Supprimer" ;
+					$lienSuppr->FormatURL = 'javascript:pvZoneCordova.afficheEcran("'.$table->ZoneParent->ScriptSupprRole->IDInstanceCalc.'", { idRole : ${ROLE_ID}})' ;
+					$table->DefinitionsColonnes[$i]->Formatteur->Liens[] = $lienSuppr ;
+				}
+			}
+			public function RemplitFormulaireGlobalRole(& $form)
+			{
+				parent::RemplitFormulaireGlobalRole($form) ;
+				$form->CommandeAnnuler->ContenuJsSurClick = 'pvZoneCordova.afficheEcran(&quot;'.$form->ZoneParent->ScriptListeRoles->IDInstanceCalc.'&quot;)' ;
+			}
 		}
 	}
 	

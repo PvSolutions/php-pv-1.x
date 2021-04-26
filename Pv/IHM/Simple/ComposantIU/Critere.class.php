@@ -173,6 +173,10 @@
 			{
 				$this->MessageErreur = "" ;
 				$filtresCibles = $this->ObtientFiltresCibles() ;
+				if(! is_array($filtresCibles) || count($filtresCibles) == 0)
+				{
+					return 1 ;
+				}
 				$nomsFiltres = array_keys($filtresCibles) ;
 				foreach($nomsFiltres as $i => $nomFiltre)
 				{
@@ -229,6 +233,22 @@
 			public function EstRespecte()
 			{
 				$ok  = $this->FltCaptchaParent->Composant->VerifieValeurSoumise($this->FltCaptchaParent->Lie()) ;
+				return $ok ;
+			}
+		}
+		class PvCritereValideScript extends PvCritereBase
+		{
+			public function EstRespecte()
+			{
+				$ok = $this->ScriptParent->ValideCritere($this) ;
+				return $ok ;
+			}
+		}
+		class PvCritereValideZone extends PvCritereBase
+		{
+			public function EstRespecte()
+			{
+				$ok = $this->ZoneParent->ValideCritere($this, $this->ScriptParent) ;
 				return $ok ;
 			}
 		}

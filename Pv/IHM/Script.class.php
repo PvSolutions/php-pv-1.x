@@ -104,6 +104,78 @@
 				// print get_class($zone->ApplicationParent).' iii <br>' ;
 				$this->ApplicationParent = & $this->ZoneParent->ApplicationParent ;
 			}
+			public function PossedeMembreConnecte()
+			{
+				return $this->ZoneParent->PossedeMembreConnecte() ;
+			}
+			public function SurScriptParDefaut()
+			{
+				return $this->ZoneParent->SurScriptParDefaut() ;
+			}
+			public function SurScriptConnecte()
+			{
+				return $this->ZoneParent->SurScriptConnecte() ;
+			}
+			public function ObtientMembreConnecte()
+			{
+				return $this->ZoneParent->ObtientMembreConnecte() ;
+			}
+			public function EstSuperAdminConnecte()
+			{
+				return $this->ZoneParent->EstSuperAdminConnecte() ;
+			}
+			public function MembreSuperAdminConnecte()
+			{
+				return $this->ZoneParent->MembreSuperAdminConnecte() ;
+			}
+			public function EditMembresPossible()
+			{
+				return $this->ZoneParent->EditMembresPossible() ;
+			}
+			public function EditMembershipPossible()
+			{
+				return $this->ZoneParent->EditMembershipPossible() ;
+			}
+			public function IdMembreConnecte()
+			{
+				return $this->ZoneParent->IdMembreConnecte() ;
+			}
+			public function LoginMembreConnecte()
+			{
+				return $this->ZoneParent->LoginMembreConnecte() ;
+			}
+			public function NomCompletMembreConnecte($inverse=0)
+			{
+				return $this->ZoneParent->NomCompletMembreConnecte($inverse) ;
+			}
+			public function AttrMembreConnecte($nomAttr)
+			{
+				return $this->ZoneParent->AttrMembreConnecte($nomAttr) ;
+			}
+			public function TitreProfilConnecte()
+			{
+				return $this->ZoneParent->TitreProfilConnecte() ;
+			}
+			public function PossedeTousPrivileges()
+			{
+				return $this->ZoneParent->PossedeTousPrivileges() ;
+			}
+			public function PossedePrivilege($nomRole, $strict=0)
+			{
+				return $this->ZoneParent->PossedePrivilege($nomRole, $strict) ;
+			}
+			public function PossedePrivileges($privileges=array(), $strict=0)
+			{
+				return $this->ZoneParent->PossedePrivileges($privileges, $strict) ;
+			}
+			public function DoitChangerMotPasse()
+			{
+				return $this->ZoneParent->DoitChangerMotPasse($this) ;
+			}
+			public function PeutChangerMotPasse()
+			{
+				return $this->ZoneParent->PeutChangerMotPasse() ;
+			}
 			public function InserePrivilege($nomPriv)
 			{
 				$this->InserePrivilege(array($nomPriv)) ;

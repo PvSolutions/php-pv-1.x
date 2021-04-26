@@ -551,6 +551,19 @@
 				}
 				return $parametres ;
 			}
+			public function NomCommandeSoumise()
+			{
+				if($this->CacherBlocCommandes)
+				{
+					return '' ;
+				}
+				$nomParam = $this->IDInstanceCalc."_".$this->NomParamIdCommande ;
+				if(isset($_POST[$nomParam]))
+				{
+					return $_POST[$nomParam] ;
+				}
+				return '' ;
+			}
 			public function PossedeCommandeSelectionnee()
 			{
 				return ($this->ValeurParamIdCommande != '') ? 1 : 0 ;

@@ -41,7 +41,7 @@
 				$libelleTriAscSelectionne = '<span class="fa fa-angle-up" title="'.htmlspecialchars($tabl->LibelleTriAsc).'"></span>' ;
 				$libelleTriDescSelectionne = '<span class="fa fa-angle-down" title="'.htmlspecialchars($tabl->LibelleTriDesc).'"></span>' ;
 				$parametresRendu = $tabl->ParametresCommandeSelectionnee() ;
-				$ctn .= '<div class="panel panel-default"><div class="panel-body ConteneurRangeeDonnees">'.PHP_EOL ;
+				$ctn .= '<div class="card"><div class="card-body ConteneurRangeeDonnees">'.PHP_EOL ;
 				$ctn .= '<div class="MessageErreur"></div>'.PHP_EOL ;
 				$ctn .= '<div class="AucunElement"></div>'.PHP_EOL ;
 				$ctn .= '<table' ;

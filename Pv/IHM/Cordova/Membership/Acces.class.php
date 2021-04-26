@@ -101,7 +101,7 @@ pvZoneCordova.soumetForm(
 	function(resultat, xhr) {
 		resultCnx = JSON.parse(resultat) ;
 		if(resultCnx.messageErreur !== "") {
-			alert(pvZoneCordova.htmlEntityDecode(resultCnx.messageErreur)) ;
+			pvZoneCordova.alerteErreur(pvZoneCordova.htmlEntityDecode(resultCnx.messageErreur)) ;
 		}
 		else {
 			pvZoneCordova.definitMembreConnecte(resultCnx.lgnMembre) ;
@@ -295,8 +295,8 @@ pvZoneCordova.soumetForm(
 			public function RenduSpecifique()
 			{
 				$ctnForm = parent::RenduSpecifique() ;
-				$ctn = '<div class="panel panel-default">
-<div class="panel-body">
+				$ctn = '<div class="card">
+<div class="card-body">
 '.$ctnForm.'
 </div>
 </div>' ;

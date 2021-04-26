@@ -128,7 +128,8 @@
 		{
 			public $NomDossierTaches = "taches" ;
 			protected $Taches = array() ;
-			public $ZoneParent = null ;
+			public $ZoneParent ;
+			public $ApplicationParent ;
 			public $NomElementZone = "" ;
 			public $Activer = 1 ;
 			public function EstPret()
@@ -139,6 +140,7 @@
 			{
 				$this->ZoneParent = & $zone ;
 				$this->NomElementZone = $nom ;
+				$this->ApplicationParent = & $zone->ApplicationParent ;
 			}
 			public function ObtientCheminDossierTaches()
 			{
@@ -358,10 +360,11 @@
 			public $Message = "Verification des taches programmees terminee" ;
 			protected function ExecuteInstructions()
 			{
-				$nomTaches = array_keys($this->ApplicationParent->TachesProgs) ;
+				$zone = $this->ZoneParent() ;
+				$nomTaches = array_keys($zone->ApplicationParent->TachesProgs) ;
 				foreach($nomTaches as $i => $nomTache)
 				{
-					$tacheProg = & $this->ApplicationParent->TachesProgs[$nomTache] ;
+					$tacheProg = & $zone->ApplicationParent->TachesProgs[$nomTache] ;
 					$tacheProg->LanceProcessus() ;
 					if($this->DelaiTransition > 0)
 					{
@@ -381,7 +384,7 @@
 				$nomServsPersists = array_keys($zone->ApplicationParent->ServsPersists) ;
 				foreach($nomServsPersists as $i => $nomServPersist)
 				{
-					$servPersist = & $this->ApplicationParent->ServsPersists[$nomServPersist] ;
+					$servPersist = & $zone->ApplicationParent->ServsPersists[$nomServPersist] ;
 					if(! $servPersist->EstServiceDemarre() || ! $servPersist->Verifie())
 					{
 						$servPersist->DemarreService() ;
@@ -1583,6 +1586,14 @@
 				include $cheminModele ;
 				$ctn = ob_get_clean() ;
 				return $ctn ;
+			}
+			public function AppliqueCommande(& $cmd, & $script)
+			{
+				$cmd->ConfirmeSucces() ;
+			}
+			public function ValideCritere(& $critere, & $script)
+			{
+				return true ;
 			}
 		}
 		

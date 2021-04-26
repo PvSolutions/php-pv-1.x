@@ -821,7 +821,7 @@
 				}
 				if($this->RequestHeadersData != '')
 				{
-					$ctn .= $this->RequestHeadersData."\r\n\r\n" ;
+					$ctn .= $this->RequestHeadersData."\r\n" ;
 				}
 				if($this->RequestMethod == "POST")
 				{

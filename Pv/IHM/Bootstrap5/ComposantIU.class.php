@@ -1,22 +1,27 @@
 <?php
 
-	if(! defined('PV_COMPOSANT_IU_BOOTSTRAP4'))
+	if(! defined('PV_COMPOSANT_IU_BOOTSTRAP5'))
 	{
-		define('PV_COMPOSANT_IU_BOOTSTRAP4', 1) ;
+		define('PV_COMPOSANT_IU_BOOTSTRAP5', 1) ;
 		
-		class PvDessinFiltresDonneesBootstrap4 extends PvDessinateurRenduHtmlFiltresDonnees
+		class PvDessinFiltresDonneesBootstrap5 extends PvDessinateurRenduHtmlFiltresDonnees
 		{
+			public $ClassesBsEditeur = array(
+			"form-control" => array(
+					"input_text_html", "input_password_html", "input_file_html"
+				),
+			"form-select" => array(
+					"select_html"
+				),
+			) ;
 			public $ColXs = "" ;
 			public $ColSm = "" ;
 			public $ColMd = "" ;
 			public $ColLd = "" ;
-			public $UtiliserContainerFluid = 1 ;
-			public $UtiliserContainer = 0 ;
-			public $UtiliserContainerFiltre = 0 ;
-			public $InclureRenduLibelle = 1 ;
 			public $EditeurSurligne = 0 ;
 			public $ColXsLibelle = 4 ;
 			public $ClsBstLibelle ;
+			public $ClsBstLigne = "mb-2" ;
 			public $AlignLibelle ;
 			public $CltBstEditeur ;
 			public $AlignEditeur ;
@@ -57,9 +62,12 @@
 					}
 					if($filtre->EstPasNul($filtre->Composant))
 					{
-						if(! in_array("form-control", $filtre->Composant->ClassesCSS))
+						foreach($this->ClassesBsEditeur as $nomCls => $typesEditeur)
 						{
-							$filtre->Composant->ClassesCSS[] = "form-control" ;
+							if(in_array($filtre->Composant->TypeEditeur, $typesEditeur) && ! in_array($name, $filtre->Composant->ClassesCSS))
+							{
+								$filtre->Composant->ClassesCSS[] = $nomCls ;
+							}
 						}
 					}
 					$ctn .= $filtre->Rendu() ;
@@ -78,22 +86,15 @@
 				}
 				$filtres = $composant->ExtraitFiltresDeRendu($parametres, $this->FiltresCaches) ;
 				$ctn = '' ;
-				$ctn .= '<fieldset>'.PHP_EOL ;
-				if($this->UtiliserContainer == 1)
-				{
-					$ctn .= '<div' ;
-					$ctn .= ' class="'.(($this->UtiliserContainerFluid) ? 'container-fluid' : 'container').'"' ;
-					$ctn .= '>'.PHP_EOL ;
-				}
 				if($this->MaxFiltresParLigne <= 0)
 				{
 					$this->MaxFiltresParLigne = 1 ;
 				}
 				$colXs = $this->ObtientColXs($this->MaxFiltresParLigne) ;
-				$maxColonnes = 12 / $colXs ;
 				$nomFiltres = array_keys($filtres) ;
 				$filtreRendus = 0 ;
 				$ctn .= '<div class="row">'.PHP_EOL ;
+				$ctn .= '<div class="col-'.$colXs.(($this->ColSm != '') ? ' col-sm-'.$this->ColSm : '').''.(($this->ColMd != '') ? ' col-md-'.$this->ColMd : '').(($this->ColLd != '') ? ' col-ld-'.$this->ColLd : '').' ">'.PHP_EOL ;
 				foreach($nomFiltres as $i => $nomFiltre)
 				{
 					$filtre = $filtres[$nomFiltre] ;
@@ -102,59 +103,40 @@
 						$ctn .= '<input type="hidden" id="'.htmlspecialchars($filtre->ObtientIDComposant()).'" name="'.htmlspecialchars($filtre->ObtientNomComposant()).'" value="'.htmlspecialchars($filtre->Lie()).'" />'.PHP_EOL ;
 						continue ;
 					}
-					$ctn .= '<div class=" '.'col-'.$colXs.(($this->ColSm != '') ? ' col-sm-'.$this->ColSm : '').''.(($this->ColMd != '') ? ' col-md-'.$this->ColMd : '').(($this->ColLd != '') ? ' col-ld-'.$this->ColLd : '').'">'.PHP_EOL ;
-					$ctn .= '<div class="form-group">'.PHP_EOL ;
+					$ctn .= '<div class="row form-group'.(($this->ClsBstLigne != '') ? ' '.$this->ClsBstLigne : '').'">'.PHP_EOL ;
 					if($this->InclureRenduLibelle)
 					{
 						if($this->EditeurSurligne == 0)
 						{
-							if($this->UtiliserContainerFiltre == 1)
-							{
-								$ctn .= '<div class="container-fluid">'.PHP_EOL ;
-							}
-							$ctn .= '<div class="row">'.PHP_EOL ;
-							$ctn .= '<div class="col-12 col-sm-'.$this->ColXsLibelle.''.(($this->ClsBstLibelle == '') ? '' : ' '.$this->ClsBstLibelle).'"'.(($this->AlignLibelle == '') ? '' : ' align="'.$this->AlignLibelle.'"').'>'.PHP_EOL ;
+							$ctn .= '<div class="col-12 col-sm-'.$this->ColXsLibelle.''.(($this->ClsBstLibelle == '') ? '' : ' '.$this->ClsBstLibelle).(($this->AlignLibelle == '') ? '' : ' text-'.$this->AlignLibelle).'">'.PHP_EOL ;
 							$ctn .= $this->RenduLibelleFiltre($filtre).PHP_EOL ;
-							$ctn .= '</div>'.PHP_EOL .'<div class="col-12 col-sm-'.(12 - $this->ColXsLibelle).''.(($this->ClsBstEditeur == '') ? '' : ' '.$this->ClsBstEditeur).'"'.(($this->AlignEditeur == '') ? '' : ' align="'.$this->AlignEditeur.'"').'>'.PHP_EOL ;
+							$ctn .= '</div>'.PHP_EOL .'<div class="col-12 col-sm-'.(12 - $this->ColXsLibelle).''.(($this->ClsBstEditeur == '') ? '' : ' '.$this->ClsBstEditeur).(($this->AlignEditeur == '') ? '' : 'text-'.$this->AlignEditeur).'">'.PHP_EOL ;
 						}
 						else
 						{
-							$ctn .= '<div>'.PHP_EOL .$this->RenduLibelleFiltre($filtre).PHP_EOL .'</div>'.PHP_EOL ;
+							$ctn .= $this->RenduLibelleFiltre($filtre).PHP_EOL ;
 						}
 					}
 					if($this->EditeurSurligne == 0)
 					{
 						$ctn .= $this->RenduFiltre($filtre, $composant).PHP_EOL ;
-						$ctn .= '</div>'.PHP_EOL .'</div>'.PHP_EOL ;
-						if($this->UtiliserContainerFiltre == 1)
-						{
-							$ctn .= '</div>'.PHP_EOL ;
-						}
+						$ctn .= '</div>'.PHP_EOL ;
 					}
 					else
 					{
-						$ctn .= '<div>'.PHP_EOL 
-							.$this->RenduFiltre($filtre, $composant).PHP_EOL
-							.'</div>'.PHP_EOL ;
+						$ctn .= $this->RenduFiltre($filtre, $composant).PHP_EOL ;
 					}
-					$ctn .= '</div>'.PHP_EOL ;
 					$ctn .= '</div>'.PHP_EOL ;
 					$filtreRendus++ ;
 				}
 				$ctn .= '</div>'.PHP_EOL ;
-				if($this->UtiliserContainer == 1)
-				{
-					$ctn .= '</div>'.PHP_EOL ;
-				}
-				$ctn .= '</fieldset>' ;
+				$ctn .= '</div>'.PHP_EOL ;
 				return $ctn ;
 			}
 		}
-		class PvDessinCommandesBootstrap4 extends PvDessinateurRenduHtmlCommandes
+		class PvDessinCommandesBootstrap5 extends PvDessinateurRenduHtmlCommandes
 		{
-			public $InclureGlyphicons = 0 ;
-			public $GlyphiconParDefaut = "glyphicon-flash" ;
-			public $ClasseCSSPanel = "panel-default" ;
+			public $ClasseCSSPanel = "card-primary" ;
 			public function Execute(& $script, & $composant, $parametres)
 			{
 				$ctn = '' ;
@@ -191,15 +173,6 @@
 							$ctn .= ' title="'.htmlspecialchars($commande->Libelle).'"' ;
 						}
 						$ctn .= '>'.PHP_EOL ;
-						if($this->InclureGlyphicons == 1)
-						{
-							$glyphicon = $this->GlyphiconParDefaut ;
-							if($commande->ObtientValSuppl("glyphicon") != '')
-							{
-								$glyphicon = $commande->ObtientValSuppl("glyphicon") ;
-							}
-							$ctn .= '<i class="glyphicon '.$glyphicon.'"></i>'.PHP_EOL ;
-						}
 						if($this->InclureLibelle)
 						{
 							$ctn .= $commande->Libelle ;
@@ -216,7 +189,7 @@
 			}
 		}
 		
-		class PvFormulaireDonneesBootstrap4 extends PvFormulaireDonneesHtml
+		class PvFormulaireDonneesBootstrap5 extends PvFormulaireDonneesHtml
 		{
 			public $UtiliserLargeur = 0 ;
 			public $ClasseCSSSucces = "alert alert-primary" ;
@@ -226,8 +199,8 @@
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap4() ;
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
+				$this->DessinateurFiltresEdition = new PvDessinFiltresDonneesBootstrap5() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
 			}
 			protected function RenduComposants()
 			{
@@ -276,7 +249,7 @@
 			}
 		}
 		
-		class PvTableauDonneesBootstrap4 extends PvTableauDonneesHtml
+		class PvTableauDonneesBootstrap5 extends PvTableauDonneesHtml
 		{
 			public $SautLigneSansCommande = 0 ;
 			public $ClasseCSSRangee = "table-striped table-hover" ;
@@ -285,12 +258,13 @@
 			public $ClsBstEnteteFormFiltres ;
 			public $ClsBstPiedFormFiltres ;
 			public $ClsBstFormFiltresSelect = "col-12 col-sm-8 col-md-6" ;
+			public $ClsBstBlocCommandes = "text-dark bg-light" ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap4() ;
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
-				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap4() ;
+				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap5() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
+				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap5() ;
 			}
 			protected function RenduFormulaireFiltres()
 			{
@@ -338,9 +312,11 @@
 				$ctn = trim(parent::RenduBlocCommandes()) ;
 				if(count($this->Commandes) > 0)
 				{
-					$ctn = '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL
-						.$ctn.PHP_EOL
-						.'</div></div>' ;
+					$ctn = '<div class="card '.$this->ClsBstBlocCommandes.'">
+<div class="card-footer">'.PHP_EOL
+.$ctn.PHP_EOL
+.'</div>
+</div>' ;
 				}
 				return $ctn ;
 			}
@@ -394,7 +370,8 @@
 							$ctn .= '<form id="FormRangee'.$this->IDInstanceCalc.'" action="?'.(($this->ZoneParent->ActiverRoutes == 0) ? urlencode($this->ZoneParent->NomParamScriptAppele).'='.urlencode($this->ZoneParent->ValeurParamScriptAppele).'&' : '').http_build_query_string($parametresRenduEdit).'" method="post">'.PHP_EOL ;
 							$ctn .= $ctnChampsPost ;
 						}
-						$ctn .= '<div class="panel panel-default"><div class="panel-body table-responsive">'.PHP_EOL ;
+						$ctn .= '<div class="card">
+<div class="card-body table-responsive">'.PHP_EOL ;
 						$ctn .= '<table' ;
 						$ctn .= ' class="RangeeDonnees table '.$this->ClasseCSSRangee.'"' ;
 						$ctn .= '>'.PHP_EOL ;
@@ -464,7 +441,8 @@
 						}
 						$ctn .= '</tbody>'.PHP_EOL ;
 						$ctn .= '</table>'.PHP_EOL ;
-						$ctn .= '</div></div>' ;
+						$ctn .= '</div>
+</div>' ;
 						if($this->PossedeColonneEditable())
 						{
 							$ctn .= PHP_EOL .'<div style="display:none"><input type="submit" /></div>
@@ -483,7 +461,7 @@
 				return $ctn ;
 			}
 		}
-		class PvGrilleDonneesBootstrap4 extends PvGrilleDonneesHtml
+		class PvGrilleDonneesBootstrap5 extends PvGrilleDonneesHtml
 		{
 			public $ClasseCSSRangee = "table-striped" ;
 			public $ClasseCSSCellule = "" ;
@@ -498,9 +476,9 @@
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
-				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap4() ;
-				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap4() ;
-				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap4() ;
+				$this->DessinateurFiltresSelection = new PvDessinFiltresDonneesBootstrap5() ;
+				$this->DessinateurBlocCommandes = new PvDessinCommandesBootstrap5() ;
+				$this->NavigateurRangees = new PvNav2TableauDonneesBootstrap5() ;
 			}
 			protected function RenduFormulaireFiltres()
 			{
@@ -625,7 +603,7 @@
 
 		}
 		
-		class PvNavTableauDonneesBootstrap4 extends PvNavigateurRangeesDonneesBase
+		class PvNavTableauDonneesBootstrap5 extends PvNavigateurRangeesDonneesBase
 		{
 			public function Execute(& $script, & $composant)
 			{
@@ -636,8 +614,7 @@
 				$ctn = '' ;
 				$classeCSSBtn = $composant->ClasseCSSBtnNav ;
 				$parametresRendu = $composant->ParametresRendu() ;
-				$ctn .= '<div class="panel panel-default"><div class="panel-footer">'.PHP_EOL ;
-				$ctn .= '<div class="NavigateurRangees container-fluid">'.PHP_EOL ;
+				$ctn .= '<div class="card bg-light"><div class="card-footer">'.PHP_EOL ;
 				$ctn .= '<div class="row">'.PHP_EOL ;
 				$ctn .= '<div class="col-12 col-sm-6 LiensRangee">'.PHP_EOL ;
 				$paramPremiereRangee = array_merge($parametresRendu, array($composant->NomParamIndiceDebut() => 0)) ;
@@ -681,12 +658,12 @@
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
 				$ctn .= '</div>'.PHP_EOL ;
-				$ctn .= '</div></div>' ;
+				$ctn .= '</div>' ;
 				return $ctn ;
 			}
 		}
 		
-		class PvNav2TableauDonneesBootstrap4 extends PvNavigateurRangeesDonneesBase
+		class PvNav2TableauDonneesBootstrap5 extends PvNavigateurRangeesDonneesBase
 		{
 			public $MaxRangeesPrec = 3 ;
 			public $MaxRangeesSuiv = 3 ;
@@ -698,7 +675,7 @@
 			{
 				$ctn = '' ;
 				$parametresRendu = $composant->ParametresRendu() ;
-				$ctn .= '<nav aria-label="Page navigation example" class="NavigateurRangees">'.PHP_EOL ;
+				$ctn .= '<nav aria-label="" class="NavigateurRangees">'.PHP_EOL ;
 				$ctn .= '<ul class="pagination justify-content-center">'.PHP_EOL ;
 				$paramPremiereRangee = array_merge($parametresRendu, array($composant->NomParamIndiceDebut() => 0)) ;
 				$ctn .= '<li class="page-item"><a class="page-link" href="javascript:'.$composant->AppelJsEnvoiFiltres($paramPremiereRangee).'" title="'.$composant->TitrePremiereRangee.'">'.$composant->LibellePremiereRangee.'</a></li>'.PHP_EOL ;
@@ -747,7 +724,7 @@
 			}
 		}
 		
-		class PvZoneSelectBootstrap4 extends PvZoneSelectHtml
+		class PvZoneSelectBootstrap5 extends PvZoneSelectHtml
 		{
 		}
 	}

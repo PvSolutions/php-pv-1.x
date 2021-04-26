@@ -124,7 +124,7 @@ class MaZone1 extends PvZoneWebSimple
 {
 public $InclureBootstrap = 1 ;
 public $CheminJsBootstrap = "vendor/bootstrap/bootstrap.min.js" ;
-public $CheminCSSJQueryUi = "vendor/bootstrap/bootstrap.min.css" ;
+public $CheminCSSBootstrap = "vendor/bootstrap/bootstrap.min.css" ;
 }
 ```
 
@@ -194,6 +194,7 @@ Pour y parvenir, déclarez les scripts dans la méthode **ChargeScriptsMembershi
 ```php
 public function ChargeScriptsMembership()
 {
+parent::ChargeScriptsMembership() ;
 $this->InsereScriptParDefaut(new MonScript1()) ;
 $this->InsereScript("presentation", new MonScript2()) ;
 if($this->PossedeMembreConnecte())
@@ -347,7 +348,7 @@ Les scripts varient le contenu d'une zone, tout en gardant les mêmes entêtes e
 
 Vous devez déclarer chaque script, et réécrire sa méthode de rendu.
 
-Insérez les dans la zone, à partir de la méthode **ChargeScripts**.
+Insérez les dans la zone, à partir des méthodes **ChargeScripts** ou **ChargeScriptsMembership**.
 
 ```php
 // 
@@ -684,7 +685,7 @@ public $NomDocumentWeb = "impression" ;
 
 ### Définition
 
-Une Action Web est un ensemble d'instructions s'exécute dans la Zone Web. Elle ne se limite pas d'afficher un contenu HTML, comme les scripts web.
+Une Action Web est un ensemble d'instructions qui s'exécute dans la Zone Web. Elle ne se limite pas à afficher un contenu HTML, comme les scripts web.
 Elle peut également :
 - déclencher le téléchargement d'un fichier
 - renvoyer un fichier RSS, JS ou CSS
@@ -692,8 +693,6 @@ Elle peut également :
 - exécuter un code précis, avant d'afficher le script web
 
 ### Déclaration
-
-La zone web exécute une action web à partir du paramètre GET **appelleAction**.
 
 Vous pouvez déclarer les actions dans plusieurs méthodes :
 
@@ -703,11 +702,30 @@ Zone web | InsereActionPrinc($nom, $action) | Utiliser dans la méthode **Charge
 Zone web | InsereActionAvantRendu($nom, $action) | Utiliser dans la méthode **ChargeConfig()**. | S'exécutent avant d'afficher le script en cours
 Script web | InsereActionAvantRendu($nom, $action) | Utiliser dans la méthode **DetermineEnvironnement()** | Déclare l'action uniquement lorsque le script doit être affiché. Le nom de l'action sera basé sur l'ID Instance du script et le nom de l'action.
 
+```php
+class MonScript1 extends PvScriptWebSimple
+{
+	public function DetermineEnvironnement()
+	{
+		$this->InsereActionAvantRendu("action1", new MonAction1()) ;
+	}
+}
+class MonAction1 extends PvActionWeb
+{
+}
+```
+
+La zone web exécute une action web à partir du paramètre GET **appelleAction**.
+
+```
+?appelleScript=script1&appelleAction=action1
+```
+
 ### Types d'action
 
 Classe | Description | Utilisation
 ------------- | ------------- | -------------
-PvActionBaseZoneWebSimple | Classe de base | Réécrire la méthode **Execute()**
+PvActionBaseZoneWebSimple / PvActionWeb | Classe de base | Réécrire la méthode **Execute()**
 PvActionNotificationWeb | Exécute des instructions et garde le résultat (succès/echec et message d'exécution) | Réécrire la méthode **Execute()**
 PvActionResultatJSONZoneWeb / PvActionEnvoiJSON | Affiche un contenu JSON dans le navigateur | Réécrire la méthode **Execute()**. A l'intérieur, définissez la propriété Resultat. Cette propriété sera le retour JSON.
 PvActionTelechargFichier | Démarre le téléchargement du fichier | Réécrire la méthode **Execute()**
@@ -721,10 +739,70 @@ Dans le script ou la zone, utilisez la propriété **TypeErreur** et méthode **
 
 #### Utilisation PvActionTelechargFichier
 
-- Renseignez la propriété **NomFichierAttache** dans la fonction **DetermineFichierAttache** pour définir le nom du fichier téléchargé.
-- Réécrivez la méthode **AfficheContenu** pour envoyez le contenu du fichier. A l'intérieur, utilisez les fonctions PHP **echo**.
+Renseignez la propriété **NomFichierAttache** dans la fonction **DetermineFichierAttache** pour définir le nom du fichier téléchargé.
+
+```php
+class MonAction1 extends PvActionTelechargFichier
+{
+protected function DetermineFichierAttache()
+{
+$this->NomFichierAttache = "resultats.txt" ;
+}
+}
+```
+
+Réécrivez la méthode **AfficheContenu** pour envoyez le contenu du fichier. A l'intérieur, utilisez les fonctions PHP **echo**.
+
+```php
+class MonAction1 extends PvActionTelechargFichier
+{
+protected function AfficheContenu()
+{
+echo "texte à afficher..." ;
+}
+}
+```
 - Si le fichier existe déjà, utilisez **CheminFichierSource** pour le charger.
+
+```php
+class MonAction1 extends PvActionTelechargFichier
+{
+protected function DetermineFichierAttache()
+{
+$this->NomFichierAttache = "resultats.txt" ;
+$this->CheminFichierSource = dirname(__FILE__)."/mondossier/resultats.txt" ;
+}
+}
+```
+
 - Si vous voulez renseigner des entêtes spécifiques, réécrivez la méthode **AfficheEntetes**
+
+```php
+class MonAction1 extends PvActionTelechargFichier
+{
+protected function AfficheEntetes()
+{
+Header("HTTP/1.1 404 Not found") ;
+Header("MonEntete1", 1) ;
+}
+}
+```
+
+### Utilisation PvActionRedirigeFichier
+
+Cette action redirige vers un fichier. Si vous avez des problèmes d'encodage avec l'action **PvActionTelechargFichier**, utilisez cette classe.
+
+Renseignez la propriété **CheminFichierSource** dans la fonction **DetermineFichierSource** pour le chemin du fichier à atteindre.
+
+```php
+class MonAction1 extends PvActionTelechargFichier
+{
+protected function DetermineFichierSource()
+{
+$this->CheminFichierSource = "files/resultats.txt" ;
+}
+}
+```
 
 ## Les filtres de données http
 
@@ -743,11 +821,11 @@ $ValeurVide | Valeur NULLE du filtre.
 $ValeurParDefaut | Valeur par défaut
 $NePasLierParametre | Renvoie toujours la valeur par défaut du filtre.
 $NomParametreLie | Nom du paramètre soumis par http
-$NePasLireColonne | Ne change pas la valeur de la colonne liée au filtre. Utilisée dans les formulaires de données.
-$AliasParametreDonnees | Expression de la colonne de données. Ex. TO_CHAR(&lt;self&gt;)
+$NePasLireColonne | N'utilise pas la valeur de la colonne liée sur le paramètre. Utilisée dans les formulaires de données.
+$AliasParametreDonnees | Expression pour decoder la valeur de la colonne liée. Ex. UNHEX(&lt;self&gt;)
 $ExpressionDonnees | Condition SQL lorsque le filtre est utilisé dans une recherche. Ex : MON_CHAMP = &lt;self&gt;
 $NomColonneLiee | Nom de la colonne dans la table, pour un filtre d'édition
-$ExpressionColonneLiee | Expression de la colonne dans la table, pour un filtre d'édition. Ex. PASSWORD(&lt;self&gt;)
+$ExpressionColonneLiee | Expression de la colonne dans la table, pour un filtre d'édition. Ex. HEX(&lt;self&gt;)
 $LectureSeule | Passer la valeur par défaut du filtre de données, et la soumettre dans le formulaire.
 $Invisible | Le filtre ne sera pas affiché sur la page. Il renvoie toujours sa valeur par défaut
 $NePasIntegrerParametre | Empêche le formulaire de données d'utiliser ce filtre pour la recherche.
@@ -756,6 +834,12 @@ $DejaLie | Signale si le filtre a été lié auparavant.
 $ValeurParametre | Valeur liée. Utilisez plutôt la méthode Lie().
 $Role | Type du filtre de données.
 $TypeLiaisonParametre | Contient la valeur "get", valeur issue de $_GET ou "post", valeur issue de $_POST
+
+```php
+$flt = $form->InsereFltEditHttpPost("champ1", "champ1") ;
+$flt->AliasParametreDonnees = "BASE64_DECODE(UNHEX(<self>))" ;
+$flt->ExpressionColonneLiee = "HEX(BASE64_ENCODE(<self>))" ;
+```
 
 ### Correcteur de valeur
 
@@ -925,7 +1009,7 @@ Valeurs possibles :
 - 1 : Affiche un lien pour afficher dans le navigateur
 - 2 : Afficher le fichier dans un cadre, si c'est possible
 
-## Tâches Web - PHP-PV
+## Tâches Web
 
 ### Définition
 
@@ -967,7 +1051,6 @@ Propriété/Méthode | Description
 NomDossierTaches | Chemin du répertoire contenant l'état de chaque tâche web. Le chemin est relatif au chemin du fichier PHP de la zone web.
 InsereTacheWeb($nom, $tache) | Inscrit la tâche programmée dans la zone web
 
-Exemple :
 ```php
 class MaZoneWeb1 extends PvZoneWebSimple
 {
@@ -978,6 +1061,12 @@ $this->GestTachesWeb->NomDossierTaches = "taches/data" ;
 $this->InsereTacheWeb('tache1', new MaTacheWeb1()) ;
 }
 }
+```
+
+Vous pouvez tester la tâche web avec le lien de la zone et le paramètre GET **appelleTache**.
+
+```
+?appelleTache=tache1
 ```
 
 ### Le fichier Etat de la tâche web
@@ -1040,6 +1129,27 @@ Zone Web | RenduContenuCorpsDocument () | Aucun
 Script Web | protected RenduDispositifBrut() | Aucun
 Script Web | RenduSpecifique() | Aucun
 
+```php
+// Cas d'un script
+class MonScript1 extends PvScriptWebSimple
+{
+public function DetermineEnvironnement()
+{
+// Déclaration
+$this->Tabl1 = new PvTableauDonneesHtml() ;
+// Chargement de la config
+$this->Tabl1->AdopteScript("tabl1", $this) ;
+$this->Tabl1->ChargeConfig() ;
+}
+public function RenduSpecifique()
+{
+$ctn = '' ;
+$ctn .= $this->Tabl1->RenduDispositif() ;
+return $ctn ;
+}
+}
+```
+
 ### Types de composant
 
 #### Données
@@ -1048,6 +1158,7 @@ Nom | Classe | Rôle
 ------------- | ------------- | -------------
 Tableau de données Html | PvTableauDonneesHtml | Affiche sous forme de tableau des données
 Grille de données Html | PvGrilleDonneesHtml | Affiche sous forme de grille des données
+Répéteur de données Html | PvRepeteurDonneesHtml | Similaire à la grille de données, sans organiser par ligne / colonne
 Formulaire de données Html | PvFormulaireDonneesHtml | Affiche sous forme de formulaire de données
 
 #### Graphiques et statistiques
@@ -1062,7 +1173,7 @@ Nom | Classe | Rôle
 ------------- | ------------- | -------------
 Slider JQuery Camera | PvJQueryCamera | Slider réalisé à partir de la librairie Javascript jQuery Camera
 
-## Le Tableau de Données - PHP-PV
+## Le Tableau de Données
 
 ### Présentation
 
@@ -1074,7 +1185,7 @@ La classe de ce composant est **PvTableauDonnesHtml**.
  
 ![Apercu tableau données](images/tabldonneeshtml.png)
  
-### Utilisation basique
+### Utilisation
 
 Il utilise toujours un fournisseur de données pour le rendu.
 
@@ -1120,6 +1231,19 @@ InsereFltSelectSession($nom, $exprDonnees='', $nomClsComp='') | Ajoute un filtre
 InsereFltSelectFixe($nom, $valeur, $exprDonnees='', $nomClsComp='') | Ajoute un filtre basé sur une valeur fixe
 InsereFltSelectCookie($nom, $exprDonnees='', $nomClsComp='') | Ajoute un filtre contenant la valeur d'un cookie
 
+```php
+// Déclaration
+$this->Tabl1 = new PvTableauDonneesHtml() ;
+// Chargement de la config
+$this->Tabl1->AdopteScript("tabl1", $this) ;
+$this->Tabl1->ChargeConfig() ;
+// Définition des filtres de sélection
+$this->Flt1 = $this->Tabl1->InsereFltSelectHttpGet("expression", "champ1 like concat(<self>, '%')") ;
+$this->Flt1->Libelle = "Expression" ;
+$this->Flt2 = $this->Tabl1->InsereFltSelectFixe("est_actif", 1, "active = <self>") ;
+// ...
+```
+
 ### Définitions de colonne
 
 Propriété / Méthode | Description
@@ -1138,6 +1262,21 @@ InsereDefColDetail($nomDonnees, $libelle="", $aliasDonnees="") | Inscrit une dé
 InsereDefColHtml($modeleHtml="", $libelle="") | Inscrit une définition de colonne qui affichera un contenu HTML.
 InsereDefColTimestamp($nomDonnees, $libelle="", $formatDate="d/m/Y H:i:s") | Inscrit une définition de colonne qui affichera une date à partir d'un timestamp
 InsereDefColActions($libelle, $actions=array()) | Inscrit une définition de colonne affichera des liens.
+
+```php
+// Déclaration
+$this->Tabl1 = new PvTableauDonneesHtml() ;
+// Chargement de la config
+$this->Tabl1->AdopteScript("tabl1", $this) ;
+$this->Tabl1->ChargeConfig() ;
+// ...
+// Définition des colonnes
+$this->Tabl1->InsereDefColCachee("id") ;
+$this->Tabl1->InsereDefCol("champ1", "Champ 1") ;
+$this->Tabl1->InsereDefColMoney("total", "Total TTC") ;
+$this->Tabl1->InsereDefColHtml('<p><b>#${id}. ${champ1}</b></p>') ;
+// ...
+```
 
 ### Source de valeurs supplémentaires
 
@@ -1188,6 +1327,16 @@ $CacherFormulaireFiltres | Cacher le formulaire de filtres
 $CacherBlocCommandes | Cacher le bloc de commandes
 $MaxElementsPossibles = array(20) | Nombres maximum de lignes par rangée
 
+```php
+$this->Tabl1 = new PvTableauDonneesHtml() ;
+$this->Tabl1->AdopteScript("tabl1", $this) ;
+$this->Tabl1->ChargeConfig() ;
+// ...
+$this->Tabl1->CacherNavigateurRangees = 1 ;
+$this->Tabl1->TriPossible = true ;
+$this->Tabl1->MessageAucunElement = "Aucune facture trouv&eacute;e" ;
+```
+
 ### Liens d'action
 
 Méthode | Description
@@ -1196,6 +1345,16 @@ InsereLienAction(& $col, $formatUrl='', $formatLib='') | Inscrit un lien dans la
 InsereLienActionAvant(& $col, $index, $formatUrl='', $formatLib='') | Inscrit un lien dans la colonne Action $col à la position $index
 InsereIconeAction(& $col, $formatUrl='', $formatCheminIcone='', $formatLib='') | Inscrit une icône dans la colonne Action $col.
 InsereIconeActionAvant(& $col, $index, $formatUrl='', $formatCheminIcone='', $formatLib='') | Inscrit une icône dans la colonne Action $col à la position $index
+
+```php
+$this->Tabl1 = new PvTableauDonneesHtml() ;
+$this->Tabl1->AdopteScript("tabl1", $this) ;
+$this->Tabl1->ChargeConfig() ;
+// ...
+$defColActs = $this->Tabl1->InsereDefColActions("Actions") ;
+// Définition des liens
+$lien1 = $this->Tabl1->InsereLienAction($defColActs, '?appelleScript=${id}', 'Modifier ${titre}') ;
+```
 
 ### Commandes
 
@@ -1210,10 +1369,126 @@ InsereCmdScriptSession($nomCmd, $libelle='', $urlDefaut=array()) | Inscrit une c
 InsereCmdExportTexte($nomCmd, $libelle='') | Inscrit une commande qui exporte les résultats au format texte (CSV)
 InsereCmdExportExcel($nomCmd, $libelle='') | Inscrit une commande qui exporte les résultats au format HTML pour Excel
 
+```php
+$this->Tabl1 = new PvTableauDonneesHtml() ;
+$this->Tabl1->AdopteScript("tabl1", $this) ;
+$this->Tabl1->ChargeConfig() ;
+// ...
+$cmd1 = $this->Tabl1->InsereCmdExportTexte("cmdTxt", "CSV") ;
+```
+
 ### Rendu du tableau de données
 
 Vous pouvez personnaliser le rendu du tableau de données avec sa propriété **$DessinateurFiltresSelection**.
 Référez-vous au rendu des filtres d'édition du formulaire de données pour l'utilisation.
+
+### Caractéristiques après rendu
+
+Après le rendu du tableau de données, plusieurs informations sont disponibles comme propriétés.
+
+## La Grille de Données
+
+### Utilisation
+
+La grille de données se base sur le tableau de données. Ce composant affiche les cellules dans une grille.
+
+Pour définir la grille, utilisez ces propriétés :
+
+- **MaxColonnes** : Nombre de colonnes
+- **ContenuLigneModele** : Contenu de chaque cellule. Vous pouvez ajouter chaque colonne de données à partir de la syntaxe ${nom_colonne}.
+
+```php
+class MonScript1 extends PvScriptWebSimple
+{
+public function DetermineEnvironnement()
+{
+// Déclaration
+$this->Grille1 = new PvGrilleDonneesHtml() ;
+// Chargement de la config
+$this->Grille1->AdopteScript("Grille1", $this) ;
+$this->Grille1->ChargeConfig() ;
+// Définition des filtres de sélection
+$this->Flt1 = $this->Grille1->InsereFltSelectHttpGet("expression", "champ1 like concat(<self>, '%')") ;
+$this->Flt1->Libelle = "Expression" ;
+// Définition des colonnes
+$this->Grille1->InsereDefColCachee("id") ;
+$this->Grille1->InsereDefCol("champ1", "Champ 1") ;
+$this->Grille1->InsereDefCol("champ2", "Champ 2") ;
+$this->Grille1->ContenuLigneModele = '<h3>${id}. ${champ1}</h3>
+<p>${champ2}</p>' ;
+// Définition du fournisseur de données
+$this->Grille1->FournisseurDonnees = new PvFournisseurDonneesSql() ;
+$this->Grille1->FournisseurDonnees->BaseDonnees = new MaBD1() ;
+$this->Grille1->FournisseurDonnees->RequeteSelection = "matable1" ;
+}
+public function RenduSpecifique()
+{
+$ctn = '' ;
+$ctn .= $this->Grille1->RenduDispositif() ;
+return $ctn ;
+}
+}
+```
+
+### Propriétés spécifiques
+
+Propriété / Méthode | Description
+------------- | -------------
+AlignVCellule | Alignement vertical de la cellule. Correspond à l'attribut HTML **valign**.
+AlignCellule | Alignement horizontal de la cellule. Correspond à l'attribut HTML **align**.
+EmpilerValeursSiModLigVide | Empile les valeurs des définitions de colonnes si l'attribut **ContenuLigneModele** est vide. Possède la valeur 1 par défaut.
+OrientationValeursEmpilees | Orientation des valeurs empilées si **ContenuLigneModele** est vide. Possède la valeur "vertical" par défaut.
+
+```php
+// Déclaration
+$this->Grille1 = new PvGrilleDonneesHtml() ;
+// Chargement de la config
+$this->Grille1->AdopteScript("Grille1", $this) ;
+$this->Grille1->ChargeConfig() ;
+// Définition des propriétés
+$this->Grille1->AlignVCellule = "top" ;
+$this->Grille1->EmpilerValeursSiModLigVide = 0 ;
+// ...
+```
+
+## Le Répéteur de données
+
+### Utilisation
+
+Le répéteur de données se base sur la grille de données. Il affiche les cellules successivement, sans les placer dans une grille ou insérer des marges entre elles.
+
+```php
+class MonScript1 extends PvScriptWebSimple
+{
+public function DetermineEnvironnement()
+{
+// Déclaration
+$this->Repet1 = new PvGrilleDonneesHtml() ;
+// Chargement de la config
+$this->Repet1->AdopteScript("Repet1", $this) ;
+$this->Repet1->ChargeConfig() ;
+// Définition des filtres de sélection
+$this->Flt1 = $this->Repet1->InsereFltSelectHttpGet("expression", "champ1 like concat(<self>, '%')") ;
+$this->Flt1->Libelle = "Expression" ;
+// Définition des colonnes
+$this->Repet1->InsereDefColCachee("id") ;
+$this->Repet1->InsereDefCol("champ1", "Champ 1") ;
+$this->Repet1->InsereDefCol("champ2", "Champ 2") ;
+$this->Repet1->ContenuLigneModele = '<h3>${id}. ${champ1}</h3>
+<p>${champ2}</p>' ;
+// Définition du fournisseur de données
+$this->Repet1->FournisseurDonnees = new PvFournisseurDonneesSql() ;
+$this->Repet1->FournisseurDonnees->BaseDonnees = new MaBD1() ;
+$this->Repet1->FournisseurDonnees->RequeteSelection = "matable1" ;
+}
+public function RenduSpecifique()
+{
+$ctn = '' ;
+$ctn .= $this->Repet1->RenduDispositif() ;
+return $ctn ;
+}
+}
+```
 
 ## Le Formulaire de Données
 
@@ -1229,7 +1504,7 @@ Il affiche :
 
 La classe du formulaire de données est **PvFormulaireDonneesHtml**.
 
-### Utilisation basique
+### Utilisation
 
 Voici un exemple d'utilisation.
 

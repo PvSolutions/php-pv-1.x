@@ -10,7 +10,6 @@
 - Ecrit en Francais
 - Convention de Nommage : PascalCase
 - Inspiré de la VCL de Microsoft .NET 4.0
-- Pas besoin de autoloader
 
 ## Installation
 
@@ -22,7 +21,7 @@
 
 - [L'Application](application.md)
 - [Les bases de données](commondb.md)
-- [Le service d'authentification](commondb.md)
+- [Le service d'authentification](membership.md)
 - Les Zones web
 	- [La Zone Web Simple](zonewebsimple.md)
 	- [Personnalisation scripts membership](scriptsmembership.md)
@@ -30,3 +29,7 @@
 - [Les passerelles de paiement](passerellepaiement.md)
 - [Les services persistants](servicespersistants.md)
 - [Les tâches programmées](tachesprogs.md)
+
+## Autres librairies
+
+- [Utilitaires](utilitaires.md)

@@ -3539,6 +3539,7 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 		class MysqlPdoDB extends MysqlDB
 		{
 			public $CharacterEncoding = "utf8" ;
+			public $OpenOptions = array() ;
 			function ExecFixCharacterEncoding()
 			{
 			}
@@ -3577,7 +3578,7 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 					$user = (isset($this->ConnectionParams["user"])) ? $this->ConnectionParams["user"] : "root" ;
 					$password = (isset($this->ConnectionParams["password"])) ? $this->ConnectionParams["password"] : "" ;
 					$connectionStr = $this->ExtractConnectionString() ;
-					$this->Connection = new PDO($connectionStr, $user, $password) ;
+					$this->Connection = new PDO($connectionStr, $user, $password, $this->OpenOptions) ;
 					if($this->Connection)
 					{
 						$this->Connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -3684,6 +3685,13 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 					return false ;
 				}
 				$this->ClearConnectionException() ;
+				foreach($params as $name => $val)
+				{
+					if(is_int($name))
+					{
+						$sql = str_replace(":".$name, ":param_".$name, $sql) ;
+					}
+				}
 				$this->CaptureQuery($sql, $params) ;
 				$this->FixCharacterEncoding() ;
 				$res = false ;
@@ -3696,7 +3704,8 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 						$res = false ;
 						return $res ;
 					}
-					foreach($params as $nom => $val)
+					$paramsBound = array() ;
+					foreach($params as $name => $val)
 					{
 						$paramType = PDO::PARAM_STR ;
 						if(is_int($val))
@@ -3705,11 +3714,20 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 						}
 						elseif(is_null($val))
 						{
-							$params[$nom] = '' ;
+							$params[$name] = '' ;
 						}
-						$res->bindParam($nom, $params[$nom], $paramType) ;
+						if(is_int($name))
+						{
+							$res->bindParam("param_".$name, $params[$name], $paramType) ;
+							$paramsBound["param_".$name] = $val ;
+						}
+						else
+						{
+							$res->bindParam($name, $params[$name], $paramType) ;
+							$paramsBound[$name] = $val ;
+						}
 					}
-					$ok = $res->execute($params) ;
+					$ok = $res->execute($paramsBound) ;
 					if($res->errorCode() !== null && $res->errorCode() !== "00000")
 					{
 						$this->SetConnectionExceptionFromStmt($res) ;

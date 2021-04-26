@@ -11,6 +11,8 @@
 			public $AutoriserAjout = 1 ;
 			public $AutoriserModif = 1 ;
 			public $AutoriserSuppr = 1 ;
+			public $AutoriserDesact = 0 ;
+			public $ValeursDesact = array() ;
 			protected $ModeEdition = 0 ;
 			public function ApprouveAppel()
 			{
@@ -31,7 +33,7 @@
 					$ok = true ;
 					$this->ModeEdition = 2 ;
 				}
-				elseif($methodeHttp == "DELETE" && $this->AutoriserModif == 1)
+				elseif($methodeHttp == "DELETE" && ($this->AutoriserDesact == 1 || $this->AutoriserSuppr == 1))
 				{
 					$ok = true ;
 					$this->ModeEdition = 3 ;
@@ -58,22 +60,31 @@
 			{
 				return $this->ModeEdition == 3 ;
 			}
+			public function DesactEnCours()
+			{
+				return $this->ModeEdition == 3 ;
+			}
 			protected function AppliqueEdition()
 			{
-				if(count($this->FiltresSelection) == 0)
-				{
-					$this->RenseigneException("Au moins un filtre de selection doit etre defini") ;
-					return false ;
-				}
 				if($this->ModeEdition == 0)
 				{
 					$this->ConfirmeSucces() ;
 					return true ;
 				}
-				if(count($this->FiltresEdition) == 0)
+				if(($this->AutoriserSuppr == 1 || $this->AutoriserDesact == 1) && count($this->FiltresSelection) == 0)
+				{
+					$this->RenseigneException("Au moins un filtre de selection doit etre defini") ;
+					return false ;
+				}
+				if(($this->AutoriserAjout == 1 || $this->AutoriserModif == 1) && count($this->FiltresEdition) == 0)
 				{
 					$this->RenseigneErreur("Au moins un filtre d'edition doit etre defini") ;
 					return ;
+				}
+				elseif($this->ModeEdition == 3 && $this->AutoriserDesact && count($this->ValeursDesact) == 0)
+				{
+					$this->RenseigneException("Au moins une valeur de desactivation doit etre definie") ;
+					return false ;
 				}
 				switch($this->ModeEdition)
 				{
@@ -89,7 +100,21 @@
 					break ;
 					case 3 :
 					{
-						$succes = $this->FournisseurDonnees->SupprElement($this->FiltresSelection) ;
+						if($this->AutoriserDesact)
+						{
+							$filtres = array() ;
+							foreach($this->ValeursDesact as $nomCol => $val)
+							{
+								$flt = $this->CreeFltFixe("flt_".$i, $val) ;
+								$flt->DefinitColLiee($nomCol) ;
+								$filtres[$nomCol] = $flt ;
+							}
+							$succes = $this->FournisseurDonnees->ModifElement($this->FiltresSelection, $filtres) ;
+						}
+						else
+						{
+							$succes = $this->FournisseurDonnees->SupprElement($this->FiltresSelection) ;
+						}
 					}
 					break ;
 					default :
@@ -198,6 +223,17 @@
 		}
 		class PvRouteSingleRestful extends PvRouteElementRestful
 		{
+		}
+		
+		class PvRouteUniqueRestful extends PvRouteElementRestful
+		{
+			public $AutoriserSelect = 1 ;
+			public $AutoriserAjout = 0 ;
+			public $AutoriserModif = 0 ;
+			public $AutoriserSuppr = 0 ;
+			public $AutoriserDesact = 0 ;
+			public $ValeursDesact = array() ;
+			protected $ModeEdition = 0 ;
 		}
 	
 	}

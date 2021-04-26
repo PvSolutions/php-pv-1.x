@@ -758,6 +758,12 @@ pv.cordova.ui.Zone = function() {
 			}
 		}) ;
 	} ;
+	_self.alerteSucces = function(msg) {
+		alert(msg) ;
+	} ;
+	_self.alerteErreur = function(msg) {
+		alert(msg) ;
+	} ;
 	_self.soumetForm = function(urlService, form, fonctSucces, fonctException) {
 		_self.afficheDlgAttente() ;
 		var formData = new FormData(form.get(0)) ;
@@ -1041,7 +1047,7 @@ pvEcran'.$script->IDInstanceCalc.'.titre = '.svc_json_encode(html_entity_decode(
 </nav>' ;
 				$ctn .= '<div class="container-fluid">
 <div class="row">
-<div class="col-xs-12">
+<div class="col-12">
 <div id="'.$this->IDInstanceCalc.'_corps">' ;
 				return $ctn ;
 			}
@@ -1073,7 +1079,7 @@ pvEcran'.$script->IDInstanceCalc.'.titre = '.svc_json_encode(html_entity_decode(
 <div id="'.$this->IDInstanceCalc.'_dialogs">
 </div>
 
-<div id="'.$this->IDInstanceCalc.'_attente" class="bg-primary">
+<div id="'.$this->IDInstanceCalc.'_attente" class="bg-primary text-white">
 Veuillez patienter...
 </div>
 

@@ -86,6 +86,10 @@
 			protected function TermineExecution()
 			{
 			}
+			public function ConfirmeData($data)
+			{
+				$this->ApiParent->Reponse->Contenu->data = $data ;
+			}
 			public function RenseigneErreur($message='')
 			{
 				return $this->ApiParent->Reponse->ConfirmeInvalide($message) ;
@@ -225,6 +229,10 @@
 			public function CreeFltHttpRequest($nom)
 			{
 				return $this->CreeFiltreHttpRequest($nom) ;
+			}
+			public function AlerteExceptionFournisseur()
+			{
+				$this->RenseigneException($this->FournisseurDonnees->MessageException()) ;
 			}
 		}
 	

@@ -314,6 +314,79 @@
 			{
 				return $this->EstPasNul($this->ZoneParent) && $this->ZoneParent->ImpressionEnCours() ;
 			}
+			// Incrire un fichier CSS
+			public function InscritContenuCSS($contenu, $media="")
+			{
+				return $this->ZoneParent->InscritContenuCSS($contenu, $media) ;
+			}
+			public function InscritLienCSS($href, $media="")
+			{
+				return $this->ZoneParent->InscritLienCSS($href, $media) ;
+			}
+			public function InscritContenuJs($contenu)
+			{
+				return $this->ZoneParent->InscritContenuJs($contenu) ;
+			}
+			public function InscritContenuJsCmpIE($contenu, $versionMin=9)
+			{
+				return $this->ZoneParent->InscritContenuJsCmpIE($contenu, $versionMin) ;
+			}
+			public function InscritLienJs($src)
+			{
+				return $this->ZoneParent->InscritLienJs($src) ;
+			}
+			public function InscritLienJsCmpIE($src, $versionMin=9)
+			{
+				return $this->ZoneParent->InscritLienJsCmpIE($src, $versionMin) ;
+			}
+			public function InscritContenuJsPied($contenu)
+			{
+				return $this->ZoneParent->InscritContenuJsPied($contenu) ;
+			}
+			public function InscritContenuJsPiedCmpIE($contenu, $versionMin=9)
+			{
+				return $this->ZoneParent->InscritContenuJsPiedCmpIE($contenu, $versionMin) ;
+			}
+			public function InscritLienJsPied($src)
+			{
+				return $this->ZoneParent->InscritLienJsPied($src) ;
+			}
+			public function InscritLienJsPiedCmpIE($src, $versionMin=9)
+			{
+				return $this->ZoneParent->InscritLienJsPiedCmpIE($src, $versionMin) ;
+			}
+			public function RenduLienCSS($href)
+			{
+				return $this->ZoneParent->RenduLienCSS($href) ;
+			}
+			public function RenduContenuCSS($contenu)
+			{
+				return $this->ZoneParent->RenduContenuCSS($contenu) ;
+			}
+			public function RenduContenuJsInclus($contenu)
+			{
+				return $this->ZoneParent->RenduContenuJsInclus($contenu) ;
+			}
+			public function RenduContenuJsCmpIEInclus($contenu, $versionMin=9)
+			{
+				return $this->ZoneParent->RenduContenuJsCmpIEInclus($contenu, $versionMin) ;
+			}
+			public function RenduLienJsInclus($src)
+			{
+				return $this->ZoneParent->RenduLienJsInclus($src) ;
+			}
+			public function RenduLienJsCmpIEInclus($src, $versionMin=9)
+			{
+				return $this->ZoneParent->RenduLienJsCmpIEInclus($src, $versionMin) ;
+			}
+			public function AppliqueCommande(& $cmd)
+			{
+				$cmd->ConfirmeSucces() ;
+			}
+			public function ValideCritere(& $critere)
+			{
+				return true ;
+			}
 		}
 		
 		class PvScriptWebDonneesBase extends PvScriptWebSimple

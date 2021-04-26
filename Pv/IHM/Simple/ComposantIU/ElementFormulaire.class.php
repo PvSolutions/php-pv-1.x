@@ -56,6 +56,7 @@
 		
 		class PvElementFormulaireHtml extends PvBaliseHtmlBase
 		{
+			public $TypeEditeur = "base" ;
 			public $Largeur = "" ;
 			public $Hauteur = "" ;
 			public $Valeur = "" ;
@@ -216,6 +217,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 		}
 		class PvZoneEntreeHtml extends PvElementFormulaireHtml
 		{
+			public $TypeEditeur = "input_text_html" ;
 			public $TypeElementFormulaire = "" ;
 			protected function RenduDispositifBrut()
 			{
@@ -238,6 +240,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 		}
 		class PvZoneDateHtml extends PvZoneEntreeHtml
 		{
+			public $TypeEditeur = "input_date_html" ;
 			public $TypeElementFormulaire = "date" ;
 			public $DateMin ;
 			public $DateMax ;
@@ -266,10 +269,12 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 		}
 		class PvZoneDateTimeHtml extends PvZoneEntreeHtml
 		{
+			public $TypeEditeur = "input_datetime_html" ;
 			public $TypeElementFormulaire = "datetime-local" ;
 		}
 		class PvZoneMultiligneHtml extends PvElementFormulaireHtml
 		{
+			public $TypeEditeur = "textarea_html" ;
 			public $TotalLignes = 0 ;
 			public $TotalColonnes = 0 ;
 			protected function RenduDispositifBrut()
@@ -300,10 +305,12 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 		}
 		class PvZoneMotPasseHtml extends PvZoneEntreeHtml
 		{
+			public $TypeEditeur = "input_password_html" ;
 			public $TypeElementFormulaire = "password" ;
 		}
 		class PvZoneUploadHtml extends PvElementFormulaireHtml
 		{
+			public $TypeEditeur = "input_file_html" ;
 			public $InclureErreurTelecharg = 1 ;
 			public $InclureCheminCoteServeur = 1 ;
 			public $AfficherCheminComplet = 0 ;
@@ -314,6 +321,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 			public $NomEltCoteSrv = "CoteSrv_" ;
 			public $LibelleCoteSrv = "Chemin sur le serveur" ;
 			public $InclureApercu = 1 ;
+			public $LibelleViderFichier = "Vider" ;
 			protected $IncorporerApercu = 0 ;
 			public $LibelleApercu = "Aper&ccedil;u" ;
 			public $LargeurCadreApercu = "100%" ;
@@ -382,6 +390,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 					}
 					else
 					{
+						$ctn .= '<input type="hidden" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlspecialchars(trim($this->Valeur)).'" />' ;
 						$valeur = $this->Valeur ;
 						if($this->AfficherCheminComplet == 1 && $valeur != '')
 						{
@@ -395,6 +404,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 				{
 					$ctn .= '<input type="hidden" name="'.$nomEltCoteSrv.$this->NomElementHtml.'" value="'.htmlspecialchars(trim($this->Valeur)).'" />' ;
 				}
+				$ctn .= '<a href="javascript:;" onclick="document.getElementsByName(\''.$nomEltCoteSrv.$this->NomElementHtml.'\')[0].value = \'\';">'.$this->LibelleViderFichier.'<a>&nbsp;' ;
 				if($this->InclureApercu > 0 && $this->IncorporerApercu == 0 && trim($this->Valeur) != '')
 				{
 					if($this->InclureCheminCoteServeur)
@@ -904,6 +914,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 		}
 		class PvZoneBoiteSelectHtml extends PvZoneBoiteChoixBaseHtml
 		{
+			public $TypeEditeur = "select_html" ;
 			public function RenduJsDefinitValeur()
 			{
 				return 'if(document.getElementById("'.$this->IDInstanceCalc.'") != null) {

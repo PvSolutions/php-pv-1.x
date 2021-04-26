@@ -201,7 +201,10 @@
 			protected $Adresse = "" ;
 			public $Port = 4401 ;
 			public $DelaiOuvrFlux = 30 ;
-			public $DelaiLectFlux = 30 ;
+			public $SauveEtatChaqueDemande = 1 ;
+			public $DelaiLectFlux = 0 ;
+			public $DelaiOuvrEnvoi = 30 ;
+			public $DelaiLectEnvoi = 0 ;
 			public $LimiterDelaiBoucle = 0 ;
 			public $DelaiInactivite = 30 ;
 			public $EcartInactiviteBoucle = 5 ;
@@ -227,7 +230,7 @@
 				if($this->ErreurOuvr->Trouve())
 				{
 					echo $this->ErreurOuvr->No."# ".$this->ErreurOuvr->Contenu."\n" ;
-					return ;
+					exit ;
 				}
 				$this->PrepareReception() ;
 				$this->RecoitDemandes() ;
@@ -282,9 +285,12 @@
 					}
 					if($ok)
 					{
+						if($this->DelaiLectEnvoi > 0)
+						{
+							stream_set_timeout($this->FluxEnvoi, $this->DelaiLectEnvoi) ;
+						}
 						do
 						{
-							stream_set_timeout($this->FluxEnvoi, $this->DelaiLectFlux) ;
 							$partieResult = fread($this->FluxEnvoi, $longueurMax) ;
 							if($partieResult !== false)
 							{
@@ -328,9 +334,12 @@
 				while($this->FluxClient = @stream_socket_accept($this->Flux, $delaiInactivite))
 				{
 					$paquet = new PvPaquetSocket() ;
-					do
+					if($this->DelaiLectFlux > 0)
 					{
 						stream_set_timeout($this->FluxClient, $this->DelaiLectFlux) ;
+					}
+					do
+					{
 						$partiePaquet = fread($this->FluxClient, $this->TaillePaquetFlux) ;
 						$paquet->Contenu .= $partiePaquet ;
 					}
@@ -338,6 +347,10 @@
 					$resultat = $this->TraitePaquet($paquet) ;
 					fputs($this->FluxClient, $resultat) ;
 					$this->FermeFluxClient() ;
+					if($this->SauveEtatChaqueDemande == 1)
+					{
+						$this->SauveEtat() ;
+					}
 				}
 			}
 			protected function FermeFluxEnvoi()

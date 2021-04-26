@@ -2,6 +2,10 @@
 	
 	if(! defined('PV_API_RESTFUL'))
 	{
+		if(! defined('OPENSSL_CRYPTER'))
+		{
+			include dirname(__FILE__)."/../../../misc/OpensslCrypter.class.php" ;
+		}
 		if(! defined('PV_AUTH_RESTFUL'))
 		{
 			include dirname(__FILE__)."/Auth.class.php" ;
@@ -270,6 +274,7 @@
 		class PvApiRestful extends PvIHM
 		{
 			public $TypeIHM = "API" ;
+			public $CrypteurToken ;
 			public $CheminRacineApi = "/" ;
 			public $NomClasseAuth = "PvAuthDistRestful" ;
 			public $Auth ;
@@ -277,6 +282,9 @@
 			public $VersionMin = 1 ;
 			public $VersionMax = 1 ;
 			public $NomTableSession = "membership_session" ;
+			public $DelaiExpirSession = 900 ;
+			public $TotalJoursExpirDevice = 90 ;
+			public $MaxSessionsMembre = 0 ;
 			public $EncodageDocument = "utf-8" ;
 			public $OriginesAutorisees = "*" ;
 			public $RouteParDefaut ;
@@ -327,6 +335,11 @@
 			public $NomParamSensTriCollection = "sort" ;
 			public $NomParamColonnesCollection = "fields" ;
 			public $InclureMetadatasEntete = true ;
+			protected function InitConfig()
+			{
+				parent::InitConfig() ;
+				$this->CrypteurToken = new OpensslCrypter() ;
+			}
 			public function & InscritRoute($nom, $cheminRoute, & $route)
 			{
 				$this->Routes[$nom] = & $route ;
@@ -335,6 +348,15 @@
 			}
 			public function & InsereRoute($nom, $cheminRoute, $route)
 			{
+				return $this->InscritRoute($nom, $cheminRoute, $route) ;
+			}
+			public function & InsereRouteClasse($nom, $cheminRoute, $nomClasse)
+			{
+				if(! class_exists($nomClasse))
+				{
+					die("[InsereRoute] : la classe $nomClasse n'existe pas. Veuillez corriger") ;
+				}
+				$route = new $nomClasse() ;
 				return $this->InscritRoute($nom, $cheminRoute, $route) ;
 			}
 			public function & InsereRouteParDefaut($route)
@@ -352,14 +374,17 @@
 					preg_match_all("/\{([a-zA-Z0-9\_]+)\}/", $route->CheminRouteApi, $nomsArgsRoute) ;
 					$cheminRegexRoute = preg_quote($this->CheminRacineApi, '/')
 						.preg_replace("/\\\\{[a-zA-Z0-9\_]+\\\\}/", '([^\/]+)', preg_quote($route->CheminRouteApi, '/')) ;
-					// echo $cheminRegexRoute ;
+					// echo $nom." : ".$cheminRegexRoute." !== ".$this->ValeurParamRoute."<br>" ;
 					// exit ;
-					if(preg_match('/^'.$cheminRegexRoute.'$/', $this->ValeurParamRoute, $valeursArgsRoute) && ($route->MethodeHttp == '' || $route->MethodeHttp != $this->MethodeHttp) && $route->ApprouveAppel($this))
+					if(preg_match('/^'.$cheminRegexRoute.'$/', $this->ValeurParamRoute, $valeursArgsRoute) && ($route->MethodeHttp == '' || $route->MethodeHttp == $this->Requete->Methode) && $route->ApprouveAppel($this))
 					{
 						$this->NomRouteAppelee = $nom ;
-						foreach($valeursArgsRoute as $i => $valeur)
+						if(count($nomsArgsRoute[1]) > 0)
 						{
-							$this->ArgsRouteAppelee[$nomsArgsRoute[1][0]] = $valeur ;
+							foreach($valeursArgsRoute as $i => $valeur)
+							{
+								$this->ArgsRouteAppelee[$nomsArgsRoute[1][$i]] = $valeur ;
+							}
 						}
 					}
 				}
@@ -395,7 +420,10 @@
 					return ;
 				}
 				$this->DetecteMembreConnecte() ;
-				$this->DetermineRoutesMembership() ;
+				if($this->InclureRoutesMembership == true)
+				{
+					$this->DetermineRoutesMembership() ;
+				}
 			}
 			protected function DetecteMembreConnecte()
 			{
@@ -403,16 +431,14 @@
 			}
 			protected function ChargeRoutesMSConnecte()
 			{
-				return ;
-				$this->InscritRoute($this->NomRoutesMonEspace."/".$this->NomRouteModifPrefs, $this->NomClasseRouteModifPrefs) ;
-				$this->InscritRoute($this->NomRoutesMonEspace."/".$this->NomRouteDeconnexion, $this->NomClasseRouteDeconnexion) ;
+				$this->InsereRouteClasse($this->NomRoutesMonEspace."_".$this->NomRouteModifPrefs, $this->NomRoutesMonEspace."/".$this->NomRouteModifPrefs, $this->NomClasseRouteModifPrefs) ;
+				$this->InsereRouteClasse($this->NomRoutesMonEspace."_".$this->NomRouteDeconnexion, $this->NomRoutesMonEspace."/".$this->NomRouteDeconnexion, $this->NomClasseRouteDeconnexion) ;
 			}
 			protected function ChargeRoutesMSNonConnecte()
 			{
-				return ;
-				$this->InscritRoute($this->NomRoutesAcces."/".$this->NomRouteRecouvreMP, $this->NomClasseRouteRecouvreMP) ;
-				$this->InscritRoute($this->NomRoutesAcces."/".$this->NomRouteInscription, $this->NomClasseRouteInscription) ;
-				$this->InscritRoute($this->NomRoutesAcces."/".$this->NomRouteConnexion, $this->NomClasseRouteConnexion) ;
+				$this->RouteRecouvreMP = $this->InsereRouteClasse($this->NomRoutesAcces."_".$this->NomRouteRecouvreMP, $this->NomRoutesAcces."/".$this->NomRouteRecouvreMP, $this->NomClasseRouteRecouvreMP) ;
+				$this->RouteInscription = $this->InsereRouteClasse($this->NomRoutesAcces."_".$this->NomRouteInscription, $this->NomRoutesAcces."/".$this->NomRouteInscription, $this->NomClasseRouteInscription) ;
+				$this->RouteConnexion = $this->InsereRouteClasse($this->NomRoutesAcces."_".$this->NomRouteConnexion, $this->NomRoutesAcces."/".$this->NomRouteConnexion, $this->NomClasseRouteConnexion) ;
 			}
 			protected function DetermineRoutesMembership()
 			{

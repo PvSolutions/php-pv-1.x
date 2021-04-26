@@ -1483,7 +1483,7 @@ formatVal = formatVal.split(tagsSelf[i]).join(val) ;
 			public $LibelleErreurDeplFicTelecharg = 'Le deplacement du fichier sur le serveur a &eacute;chou&eacute;. V&eacute;rifiez que vous avez les droits en ecriture.' ;
 			public $CodeErreurFicSoumisInexist = '503' ;
 			public $ToujoursRenseignerFichier = 0 ;
-			public $NePasInclureSiVide = 0 ;
+			public $NePasInclureSiVide = 1 ;
 			public $LibelleErreurFicSoumisInexist = 'Le fichier soumis n\'existe pas.' ;
 			public function AccepteVidsSeulem()
 			{
@@ -1607,7 +1607,7 @@ formatVal = formatVal.split(tagsSelf[i]).join(val) ;
 				}
 				if($this->SourceTelechargement == 'files')
 				{
-					// echo $this->CheminFichierSrc.' '.$this->CheminFichierDest.'<br>' ;
+					// echo $this->CheminFichierSrc.' to '.$this->CheminFichierDest.'<br>' ;
 					$ok = move_uploaded_file($this->CheminFichierSrc, $this->CheminFichierDest) ;
 					if(! $ok)
 					{

@@ -10,6 +10,10 @@
 		{
 			include dirname(__FILE__)."/../misc/utils.php" ;
 		}
+		if(! defined('OPENSSL_CRYPTER'))
+		{
+			include dirname(__FILE__)."/../misc/OpensslCrypter.class.php" ;
+		}
 		if(! defined('FORCE_ENCODING'))
 		{
 			include dirname(__FILE__)."/../misc/ForceEncoding.class.php" ;
@@ -958,6 +962,20 @@
 			{
 				return PvApplication::ObtientOS() ;
 			}
+			public function ObtientChemProcProg(& $prog, $inclureArgs=1)
+			{
+				$cmd = realpath(dirname(__FILE__).'/../../'.$prog->CheminFichierRelatif) ;
+				if($cmd === false)
+				{
+					return "" ;
+				}
+				if($inclureArgs == 1)
+				{
+					$cmd .= PvApplication::EncodeArgsShell($prog->ArgsParDefaut) ;
+				}
+				$cmd = $execPath.' '.$cmd ;
+				return $cmd ;
+			}
 			public function ObtientCmdExecProg(& $prog)
 			{
 				$os = $this->ObtientOS() ;
@@ -1256,6 +1274,7 @@
 			const ETAT_STOPPE = 2 ;
 			public $PID = 0 ;
 			public $Statut = 0 ;
+			public $CompteSysteme ;
 			public $TimestmpCapt = 0 ;
 			public $TimestmpDebutSession = 0 ;
 			public $TimestmpFinSession = 0 ;
@@ -1273,8 +1292,10 @@
 			public $DelaiBoucle = 30 ;
 			public $DelaiEtatInactif = 120 ;
 			public $LimiterDelaiBoucle = 0 ;
+			public $VerifFichEtat = 1 ;
 			public $Etat ;
 			public $EnregEtat = 1 ;
+			public $ForcerArret = 1 ;
 			public $VerifSurPresenceProc = 0 ;
 			protected $NaturePlateforme = "console" ;
 			public function NatureElementApplication()
@@ -1287,7 +1308,7 @@
 				$this->Etat = new PvEtatServPersist() ;
 				register_shutdown_function(array(& $this, "ConfirmEtatArrete")) ;
 			}
-			protected function ObtientChemFicEtat()
+			public function ObtientChemFicEtat()
 			{
 				// print $this->NomElementApplication.' : '.get_class($this)."\n" ;
 				return $this->ApplicationParent->ObtientChemRelRegServsPersists()."/".$this->NomElementApplication.".dat" ;
@@ -1300,15 +1321,20 @@
 			public function ArreteService()
 			{
 				$this->DetecteEtat() ;
-				if($this->Etat->PID != 0)
+				if($this->Etat->PID != 0 && $this->Etat->PID != getmypid())
 				{
+					$this->ConfirmEtatArrete(true) ;
 					$processMgr = OsProcessManager::Current() ;
-					$processMgr->KillProcessIDs($processMgr->KillProcessList(array($this->Etat->PID))) ;
+					$processMgr->KillProcessIDs($processMgr->KillProcessList(array($this->Etat->PID)), $this->ForcerArret) ;
 				}
 			}
 			public function EstDemarre()
 			{
-				// echo get_class($this).' : '.(date("U") - $this->Etat->TimestmpCapt)."\n" ;
+				// echo get_class($this).' : '.$this->Etat->Statut." - ".(date("U") - $this->Etat->TimestmpCapt)." et ".$this->DelaiEtatInactif."\n" ;
+				if(! $this->VerifFichEtat)
+				{
+					return true ;
+				}
 				return $this->Etat->Statut == PvEtatServPersist::ETAT_DEMARRE && date("U") - $this->Etat->TimestmpCapt <= $this->DelaiEtatInactif + $this->DelaiAttente ;
 			}
 			public function DetecteEtat()
@@ -1365,13 +1391,13 @@
 					$this->Etat->TimestmpCapt = date("U") ;
 					if(! fputs($fh, serialize($this->Etat)))
 					{
-						$erreur = "Impossible d'enregistrer l'etat du service ".$this->NomElementApplication." dans ".$cheminFichier ;
+						$erreur = "Impossible d'enregistrer l'etat du service ".$this->NomElementApplication." dans ".$chemFicEtat ;
 					}
 					fclose($fh) ;
 				}
 				else
 				{
-					$erreur = "Impossible d'ouvrir le fichier ".$cheminFichier ;
+					$erreur = "Impossible d'ouvrir le fichier ".$chemFicEtat ;
 				}
 				if($erreur != '')
 				{
@@ -1459,14 +1485,19 @@
 			protected function ConfirmEtatDemarre()
 			{
 				$this->Etat->PID = getmypid() ;
+				$this->Etat->CompteSysteme = exec("whoami") ;
 				$this->Etat->TimestmpCapt = date("U") ;
 				$this->Etat->Statut = PvEtatServPersist::ETAT_DEMARRE ;
 				$this->SauveEtat() ;
 			}
-			public function ConfirmEtatArrete()
+			public function ConfirmEtatArrete($forcer=false)
 			{
 				$this->DetecteEtat() ;
-				if($this->Etat->PID != getmypid())
+				/*
+				echo $this->Etat->PID." : ".getmypid()."\n" ;
+				exit ;
+				*/
+				if($forcer == false && $this->Etat->PID != getmypid())
 					return ;
 				$this->Etat->PID = 0 ;
 				$this->Etat->TimestmpCapt = date("U") ;

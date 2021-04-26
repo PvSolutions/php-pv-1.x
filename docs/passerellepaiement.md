@@ -69,7 +69,7 @@ $this->ConnectionParams["schema"] = "mabd1" ;
 }
 ```
 
-1. Déclarez le service après paiement, pour une transaction réussie
+3. Déclarez le service après paiement, pour une transaction réussie
 
 ```php
 class ServicePaye1 extends PvSvcAprPaiementBase
@@ -88,13 +88,13 @@ echo "Désolé, vous avez annulé votre transaction !!!" ;
 }
 }
 ```
-2. Incluez le fichier de la passerelle.
+4. Incluez le fichier de la passerelle.
 
 ```php
 include <chemin_php_pv>/Pv/IHM/PasserelleSiteWeb/Paiement/Assistance.class.php
 ```
 
-3. Déclarez la passerelle de paiement et assignez le service après paiement.
+5. Déclarez la passerelle de paiement et assignez le service après paiement.
 
 ```php
 class MaPasserellePaie1 extends PvPasserelleAssistance
@@ -112,7 +112,7 @@ $this->InsereSvcAprPaiement("service1", new ServicePaye1()) ;
 }
 ```
 
-3. Insérez cette passerelle dans l'application
+6. Insérez cette passerelle dans l'application
 
 ```php
 class Application1 extends PvApplication
@@ -125,7 +125,7 @@ $this->PasserellePaie1 = $this->InsereIHM("passerelle1", new MaPasserellePaie1()
 }
 ```
 
-4. Dans une zone, demandez le paiement
+7. Dans une zone, demandez le paiement.
 
 ```php
 class MaZone1 extends PvZoneWebSimple
@@ -152,6 +152,78 @@ $passerellePaie->DemarreProcessus() ;
 // ...
 }
 ```
+
+## Références dans l'Application
+
+Les passerelles de paiement sont des IHMs dans l'application. Intégrez les avec la méthode **InsereInterfPaiement()** au lieu de **InsereIHM()**.
+
+```php
+class MonApp extends PvApplication
+{
+protected function ChargeIHMs()
+{
+$this->Zone1 = $this->InsereIHM("zone1", new MaZone1) ;
+$this->PassPaie1 = $this->InsereInterfPaiement("passPaie1", new MaPassPaie1) ;
+}
+}
+```
+
+Propriété / Méthode | Description
+------------ | -------------
+$NomsInterfsPaiement | Contient les noms des passerelles de paiement
+InterfsPaiement() | Renvoie les passerelles de paiement
+InterfPaiement($nom) | Retourne la passerelle de paiement nommée **$nom**.
+ExisteInterfPaiement($nom) | Vérifie s'il existe une passerelle de paiement **$nom**.
+
+```php
+class MonScript extends PvScriptWebSimple
+{
+public function DetermineEnvironnement()
+{
+if(isset($_GET["payerPar"]))
+{
+$nomPassPaie = $_GET["payerPar"] ;
+if($this->ApplicationParent->ExisteInterfPaiement($nomPassPaie))
+{
+$passPaie = $this->ApplicationParent->InterfPaiement($nomPassPaie) ;
+//...
+}
+}
+}
+public function RenduSpecifique()
+{
+$ctn = '' ;
+$ctn '<p>Veuillez choisir votre moyen de paiement :</p>' ;
+$interfsPaie = $this->ApplicationParent->InterfsPaiement() ;
+foreach($interfsPaie as $i => $passPaie)
+{
+	echo '<p>- <a href="?payerPar='.$passPaie->NomElementApplication.'">'.$passPaie->Titre.'</a></p>'."\n" ;
+}
+return $ctn ;
+}
+}
+```
+
+## Caractéristiques service après paiement
+
+Vous accédez à l'arborescence de la passerelle avec ces propriétés :
+
+- **InterfPaiemtParent** : Passerelle de paiement contenant ce service
+- **ApplicationParent()** : Application racine
+
+```php
+class ServicePaye1 extends PvSvcAprPaiementBase
+{
+public function ConfirmeSucces(& $transaction) // Si la transaction aboutit
+{
+	$interfParent = & $this->InterfPaiemtParent ;
+	$app = $this->ApplicationParent() ;
+	echo "<p>BRAVO ! Paiement reussi sur ".htmlentities($app->Titre)." !!!</p>" ;
+}
+}
+```
+
+Vous avez aussi la propriété **NomElementInterfPaiemt**, retournant le nom du service dans la passerelle.
 
 ## Passerelle de paiement PAYPAL
 

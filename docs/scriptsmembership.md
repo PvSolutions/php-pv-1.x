@@ -314,7 +314,7 @@ return 0 ;
 
 ### Redirection
 
-Pour activer la redirection après connexion, mettez la propriété **$AutoriserUrlsRetour**.
+Pour activer la redirection après connexion, mettez la propriété **$AutoriserUrlsRetour** à 1.
 
 Le paramètre GET est **urlRetour**.
 

@@ -841,7 +841,7 @@ jQuery("#'.$this->IDInstanceCalc.'_libelle").on("typeahead:selected typeahead:au
 					$valeurSelect = $this->Valeur ;
 					$lignes = $this->FournisseurDonnees->RechExacteElements($this->FiltresSelection, $this->NomColonneValeur, $valeurSelect) ;
 					// print_r($this->FournisseurDonnees) ;
-					if(count($lignes))
+					if(is_array($lignes) && count($lignes))
 					{
 						$ctn .= PHP_EOL .'var noeudSelect2 = jQuery("#'.$this->IDInstanceCalc.'") ;
 var dataDefaut = { id : '.svc_json_encode($lignes[0][$this->NomColonneValeur]).', text : '.svc_json_encode($lignes[0][$this->NomColonneLibelle]) ;

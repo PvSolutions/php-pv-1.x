@@ -2752,6 +2752,20 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 				}
 			}
 		}
+		class PvCommandeAppliqueScript extends PvCommandeComposantIUBase
+		{
+			protected function ExecuteInstructions()
+			{
+				$this->ScriptParent->AppliqueCommande($this) ;
+			}
+		}
+		class PvCommandeAppliqueZone extends PvCommandeComposantIUBase
+		{
+			protected function ExecuteInstructions()
+			{
+				$this->ZoneParent->AppliqueCommande($this, $this->ScriptParent) ;
+			}
+		}
 		
 		class PvFilArianeDonneesHtml extends PvComposantIUDonneesSimple
 		{
@@ -2945,10 +2959,20 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			{
 				$this->IndiceCommande = $indice ;
 				$this->CommandeParent = & $commande ;
-				$this->FormulaireDonneesParent = & $commande->FormulaireDonneesParent ;
-				$this->ScriptParent = & $commande->FormulaireDonneesParent->ScriptParent ;
-				$this->ZoneParent = & $commande->FormulaireDonneesParent->ZoneParent ;
-				$this->ApplicationParent = & $commande->FormulaireDonneesParent->ApplicationParent ;
+				if($this->EstPasNul($commande->FormulaireDonneesParent))
+				{
+					$this->FormulaireDonneesParent = & $commande->FormulaireDonneesParent ;
+					$this->ScriptParent = & $commande->FormulaireDonneesParent->ScriptParent ;
+					$this->ZoneParent = & $commande->FormulaireDonneesParent->ZoneParent ;
+					$this->ApplicationParent = & $commande->FormulaireDonneesParent->ApplicationParent ;
+				}
+				elseif($this->EstPasNul($commande->TableauDonneesParent))
+				{
+					$this->TableauDonneesParent = & $commande->TableauDonneesParent ;
+					$this->ScriptParent = & $commande->TableauDonneesParent->ScriptParent ;
+					$this->ZoneParent = & $commande->TableauDonneesParent->ZoneParent ;
+					$this->ApplicationParent = & $commande->TableauDonneesParent->ApplicationParent ;
+				}
 			}
 			protected function LieFiltresCibles()
 			{

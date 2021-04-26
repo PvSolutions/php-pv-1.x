@@ -183,7 +183,7 @@ if(donnees !== undefined && donnees.elementEnCours !== undefined) {'.PHP_EOL ;
 						jqForm.find(".FormulaireFiltres").hide() ;
 					}
 					if(resultExec.cacherMessageExecution == 1) {
-						jqForm.find(".FormulaireFiltres").hide() ;
+						jqResultCmd.hide() ;
 					}
 					else {
 						jqResultCmd.show() ;

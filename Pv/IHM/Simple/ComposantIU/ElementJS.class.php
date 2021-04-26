@@ -585,6 +585,11 @@ document.getElementById("'.$this->IDInstanceCalc.'").value = response ;
 				$partsCtn = explode("\r\n\r\n", $this->ContenuReponseVerif, 2) ;
 				if(count($partsCtn) == 2)
 				{
+					if(stripos($partsCtn[0], "Transfer-Encoding: chunked") !== false)
+					{
+						$partsCtn[1] = preg_replace('/[^\{]+\{/', '{', $partsCtn[1]) ;
+						$partsCtn[1] = preg_replace('/\}[^\}]+/', '}', $partsCtn[1]) ;
+					}
 					$resultObj = svc_json_decode($partsCtn[1]) ;
 					if($resultObj !== null && $resultObj->success)
 					{
@@ -679,6 +684,11 @@ document.getElementById("'.$this->IDInstanceCalc.'").value = token ;
 				$partsCtn = explode("\r\n\r\n", $this->ContenuReponseVerif, 2) ;
 				if(count($partsCtn) == 2)
 				{
+					if(stripos($partsCtn[0], "Transfer-Encoding: chunked") !== false)
+					{
+						$partsCtn[1] = preg_replace('/[^\{]+\{/', '{', $partsCtn[1]) ;
+						$partsCtn[1] = preg_replace('/\}[^\}]+/', '}', $partsCtn[1]) ;
+					}
 					$resultObj = svc_json_decode($partsCtn[1]) ;
 					if($resultObj !== null && $resultObj->success)
 					{
