@@ -33,6 +33,7 @@
 			public $TitreDocument = "" ;
 			public $Privileges = array() ;
 			public $PrivilegesStricts = 0 ;
+			public $MessageIndisponible = "" ;
 			public $NecessiteMembreConnecte = 0 ;
 			public $AnnulDetectMemberCnx = 0 ;
 			public function ChargeConfig()
@@ -73,6 +74,15 @@
 			}
 			public function PrepareRendu()
 			{
+			}
+			public function EstDisponible()
+			{
+				$this->VerifieDisponibilite() ;
+				return $this->MessageIndisponible == '' ;
+			}
+			protected function VerifieDisponibilite()
+			{
+				
 			}
 			public function EstAccessible()
 			{

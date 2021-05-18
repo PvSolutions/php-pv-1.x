@@ -381,9 +381,9 @@
 						$this->NomRouteAppelee = $nom ;
 						if(count($nomsArgsRoute[1]) > 0)
 						{
-							foreach($valeursArgsRoute as $i => $valeur)
+							for($i=1; $i<count($valeursArgsRoute); $i++)
 							{
-								$this->ArgsRouteAppelee[$nomsArgsRoute[1][$i]] = $valeur ;
+								$this->ArgsRouteAppelee[$nomsArgsRoute[1][$i - 1]] = $valeursArgsRoute[$i] ;
 							}
 						}
 					}

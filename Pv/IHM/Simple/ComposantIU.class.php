@@ -34,6 +34,10 @@
 		{
 			include dirname(__FILE__)."/ComposantIU/Formulaire.class.php" ;
 		}
+		if(! defined('PV_CHART_JS'))
+		{
+			include dirname(__FILE__)."/ComposantIU/ChartJs.class.php" ;
+		}
 		if(! defined('PV_COMPOSANT_SIMPLE_IU_CHART'))
 		{
 			include dirname(__FILE__)."/ComposantIU/Chart.class.php" ;

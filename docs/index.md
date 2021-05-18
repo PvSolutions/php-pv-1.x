@@ -23,9 +23,12 @@
 - [Les bases de données](commondb.md)
 - [Le service d'authentification](membership.md)
 - Les Zones web
-	- [La Zone Web Simple](zonewebsimple.md)
-	- [Personnalisation scripts membership](scriptsmembership.md)
+	- La Zone Web Simple
+		- [Caractéristiques](zonewebsimple.md)
+		- [Personnalisation scripts membership](zoneweb/scriptsmembership.md)
+		- [Le composant ChartJS](zoneweb/chartjs.md)
 	- [La Zone Bootstrap 4](zonebootstrap4.md)
+	- [La Zone Bootstrap 5](zonebootstrap5.md)
 - [Les passerelles de paiement](passerellepaiement.md)
 - [Les services persistants](servicespersistants.md)
 - [Les tâches programmées](tachesprogs.md)

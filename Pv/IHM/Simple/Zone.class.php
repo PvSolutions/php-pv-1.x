@@ -1322,6 +1322,11 @@
 					return ;
 				}
 				$this->VerifieValiditeMotPasse($script) ;
+				if($script->EstDisponible() == 0)
+				{
+					$this->ExecuteScriptIndisponible($script) ;
+					return ;
+				}
 				if($script->EstAccessible() == 0)
 				{
 					// print_r(get_class($this->Membership->MemberLogged)) ;

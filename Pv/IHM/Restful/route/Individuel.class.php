@@ -197,6 +197,10 @@
 							$this->ContenuReponse->data = $lgn ;
 							$this->ElementEnCoursTrouve = 1 ;
 						}
+						else
+						{
+							$this->ContenuReponse->data = array() ;
+						}
 						$this->ConfirmeSucces() ;
 					}
 					else
@@ -211,6 +215,20 @@
 			}
 			protected function TermineExecution()
 			{
+				if($this->SelectionEnCours() || $this->ModifEnCours() || $this->SupprEnCours())
+				{
+					$this->LieFiltres($this->FiltresSelection) ;
+				}
+				if($this->AjoutEnCours() || $this->ModifEnCours())
+				{
+					$this->LieFiltres($this->FiltresEdition) ;
+				}
+				$this->ValideFiltresExecution() ;
+				if($this->MessageErreurExecution != '')
+				{
+					$this->RenseigneErreur($this->MessageErreurExecution) ;
+					return ;
+				}
 				if($this->AppliqueEdition())
 				{
 					$this->CalculeElementsRendu() ;

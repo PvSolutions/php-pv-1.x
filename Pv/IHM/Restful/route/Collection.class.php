@@ -9,7 +9,6 @@
 			public $MethodeHttp = "GET" ;
 			public $DefinitionsColonnes = array() ;
 			public $MaxElementsPossibles = array(20) ;
-			public $ToujoursAfficher = 0 ;
 			public $IndiceDebut = 0 ;
 			public $AccepterTriColonneInvisible = 0 ;
 			public $IndiceFin = 0 ;
@@ -28,6 +27,7 @@
 			public $ExtraireValeursElements = 1 ;
 			public $ElementsEnCours = array() ;
 			public $NomsColonne = array() ;
+			public $MessageErreurExecution ;
 			public $ElementsEnCoursBruts = array() ;
 			protected function InitConfig()
 			{
@@ -137,16 +137,6 @@
 				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
 				$defCol->Formatteur = new PvFormatteurColonneChoix() ;
 				$defCol->Formatteur->ValeursChoix = $valsChoix ;
-				return $defCol ;
-			}
-			public function & InsereDefColEditable($nomDonnees, $libelle="", $aliasDonnees="", $nomClsComp="PvZoneTexteHtml")
-			{
-				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
-				$defCol->Formatteur = new PvFormatteurColonneEditable() ;
-				if($nomClsComp != '')
-				{
-					$defCol->Formatteur->DeclareComposant($nomClsComp) ;
-				}
 				return $defCol ;
 			}
 			public function & InsereDefColMonnaie($nomDonnees, $libelle="", $aliasDonnees="")
@@ -280,7 +270,7 @@
 				if($this->NePasTrier == 0)
 				{
 					$this->IndiceColonneTri = 0 ;
-					$this->ValeurSensTri = (isset($_GET[$this->nomParamSensTri])) ? $_GET[$this->nomParamSensTri] : "" ;
+					$this->ValeurSensTri = (isset($_GET[$nomParamSensTri])) ? $_GET[$nomParamSensTri] : "" ;
 					if($this->ValeurSensTri != "" && strrpos($this->ValeurSensTri, "_") !== false)
 					{
 						$this->SensColonneTri = substr($this->ValeurSensTri, strrpos($this->ValeurSensTri, "_")) ;
@@ -379,6 +369,13 @@
 			}
 			protected function TermineExecution()
 			{
+				$this->LieFiltres($this->FiltresSelection) ;
+				$this->ValideFiltresExecution() ;
+				if($this->MessageErreurExecution != '')
+				{
+					$this->RenseigneErreur($this->MessageErreurExecution) ;
+					return ;
+				}
 				if(! $this->Reponse->EstSucces())
 				{
 					return ;
@@ -391,7 +388,19 @@
 				}
 				else
 				{
-					$this->ContenuReponse->data = $this->ElementsEnCours ;
+					$this->ContenuReponse->data = array() ;
+					foreach($this->ElementsEnCours as $i => $ligne)
+					{
+						$this->ContenuReponse->data[$i] = array() ;
+						foreach($this->DefinitionsColonnes as $j => $defCol)
+						{
+							if($defCol->Visible == 0 || $defCol->NomDonnees == "")
+							{
+								continue ;
+							}
+							$this->ContenuReponse->data[$i][$defCol->NomDonnees] = $ligne[$defCol->NomDonnees] ;
+						}
+					}
 					$this->ApiParent->Metadatas["page"] = $this->RangeeEnCours + 1 ;
 					$this->ApiParent->Metadatas["per_page"] = $this->MaxElements ;
 					$this->ApiParent->Metadatas["page_count"] = $this->TotalRangees ;

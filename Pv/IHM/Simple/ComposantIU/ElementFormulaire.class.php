@@ -1100,6 +1100,10 @@ break ;
 		{
 			public $ChoixMultiple = 1 ;
 			protected $CalculerValeurParJs = 0 ;
+			protected function CalculeValeursSelectionnees()
+			{
+				$this->ValeursSelectionnees = explode(";", $this->Valeur) ;
+			}
 			protected function InstrsJsSelectElement()
 			{
 				$ctn = '' ;

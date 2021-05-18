@@ -220,6 +220,7 @@
 			public $NomClasseRemplisseurConfigMembership = "PvRemplisseurConfigMembershipSimple" ;
 			public $RemplisseurConfigMembership ;
 			public $MessageScriptMalRefere = "<p>Ce script n'est pas bien refere. Il ne peut etre affiche.</p>" ;
+			public $MessageScriptIndisponible = "<p>Ce script n'est pas disponible. Veuillez contacter les administrateurs.</p>" ;
 			public $AnnulDetectMemberCnx = 0 ;
 			public function NatureZone()
 			{
@@ -676,11 +677,26 @@
 				Header("HTTP/1.0 404 Not Found") ;
 				exit ;
 			}
+			protected function AfficheRenduIndisponible(& $script, $msg)
+			{
+				$ctn = '' ;
+				$this->ScriptPourRendu = & $script ;
+				$ctn .= $this->RenduEnteteDocument() ;
+				$ctn .= '<div style="text-color:red">'.$msg.'</div>' ;
+				$ctn .= $this->RenduPiedDocument() ;
+				echo $ctn ;
+				exit ;
+			}
 			protected function AfficheRenduInacessible()
 			{
 				header('HTTP/1.1 401 Unauthorized');
 				echo "Vous n'avez pas le droit d'acc&eacute;der &agrave; ce script !!!" ;
 				exit ;
+			}
+			protected function ExecuteScriptIndisponible(& $script)
+			{
+				$msgIndisponible = ($script->MessageIndisponible != '') ? $script->MessageIndisponible : $this->MessageScriptIndisponible ;
+				$this->AfficheRenduIndisponible($script, $msgIndisponible) ;
 			}
 			protected function ExecuteScriptInaccessible(& $script)
 			{

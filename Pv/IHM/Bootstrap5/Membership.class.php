@@ -18,6 +18,7 @@
 			public $MessageInscription = '<br><p>Si vous n\'avez pas de compte, <a href="${url}">Inscrivez-vous</a>.</p>' ;
 			public $ColXsLibelle = 5 ;
 			public $ClsBstBoutonSoumettre = "" ;
+			public $ClsBstFormulaire = "bg-light" ;
 			public $AlignBtnSoumettre = "right" ;
 			public $TagTitre = 'h3' ;
 			public $InclureIcones = 0 ;
@@ -29,7 +30,7 @@
 				$ctn .= '<div class="row">'.PHP_EOL ;
 				$ctn .= '<div class="'.$this->ClasseCSSCadre.'">'.PHP_EOL ;
 				$ctn .= '<form class="user_login_box '.$this->NomClsCSSFormulaireDonnees.'" action="'.$this->UrlSoumetTentativeConnexion().'" role="form" method="post">'.PHP_EOL ;
-				$ctn .= '<div class="card bg-light">'.PHP_EOL ;
+				$ctn .= '<div class="card '.$this->ClsBstFormulaire.'">'.PHP_EOL ;
 				$ctn .= '<div class="card-body">'.PHP_EOL ;
 				$ctn .= $this->RenduMessageErreur() ;
 				$ctn .= $this->RenduTableauParametres().PHP_EOL ;

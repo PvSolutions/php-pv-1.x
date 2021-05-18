@@ -21,6 +21,7 @@
 			public $NecessiteMembreConnecte = 0 ;
 			public $Privileges = array() ;
 			public $PrivilegesStricts = 0 ;
+			public $ArreterExecution = false ;
 			public function ApprouveAppel()
 			{
 				return 1 ;
@@ -47,7 +48,7 @@
 			}
 			public function EstAccessible()
 			{
-				return ($this->NecessiteMembreConnecte == 0 || count($this->Privileges) == 0 || $this->ApiParent->PossedePrivileges($this->Privileges, $this->PrivilegesStricts)) ;
+				return (($this->NecessiteMembreConnecte == 0 || $this->PossedeMembreConnecte()) && (count($this->Privileges) == 0 || $this->ApiParent->PossedePrivileges($this->Privileges, $this->PrivilegesStricts))) ;
 			}
 			public function AdopteApi($nom, $cheminRoute, & $api)
 			{
@@ -72,9 +73,18 @@
 				$this->Requete = & $this->ApiParent->Requete ;
 				$this->Reponse = & $this->ApiParent->Reponse ;
 				$this->ContenuReponse = & $this->ApiParent->Reponse->Contenu ;
+				$this->ArreterExecution = false ;
 				$this->Reponse->ConfirmeSucces() ;
 				$this->PrepareExecution() ;
+				if($this->ArreterExecution)
+				{
+					return ;
+				}
 				$this->ExecuteInstructions() ;
+				if($this->ArreterExecution)
+				{
+					return ;
+				}
 				$this->TermineExecution() ;
 			}
 			protected function PrepareExecution()
@@ -98,19 +108,24 @@
 			{
 				return $this->ApiParent->Reponse->ConfirmeErreurInterne($message) ;
 			}
-			public function ConfirmeSucces($message='')
+			public function ConfirmeSucces()
 			{
-				return $this->ApiParent->Reponse->ConfirmeSucces($message) ;
+				return $this->ApiParent->Reponse->ConfirmeSucces() ;
 			}
 			public function EstSucces()
 			{
 				return $this->ApiParent->Reponse->EstSucces() ;
+			}
+			public function EstEchec()
+			{
+				return ! $this->EstSucces() ;
 			}
 		}
 		
 		class PvRouteDonneesRestful extends PvRouteNoyauRestful
 		{
 			public $FournisseurDonnees ;
+			public $MessageErreurExecution ;
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
@@ -233,6 +248,16 @@
 			public function AlerteExceptionFournisseur()
 			{
 				$this->RenseigneException($this->FournisseurDonnees->MessageException()) ;
+			}
+			protected function ValideFiltresExecution()
+			{
+			}
+			public function LieFiltres(& $filtres)
+			{
+				foreach($filtres as $i => $filtre)
+				{
+					$filtre->Lie() ;
+				}
 			}
 		}
 	

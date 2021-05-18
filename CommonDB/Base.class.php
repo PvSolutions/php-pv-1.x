@@ -3538,10 +3538,16 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 	
 		class MysqlPdoDB extends MysqlDB
 		{
+			public $SetCharacterEncodingOnFetch = 1 ;
+			public $AutoSetCharacterEncoding = 1 ;
 			public $CharacterEncoding = "utf8" ;
 			public $OpenOptions = array() ;
 			function ExecFixCharacterEncoding()
 			{
+				if($this->CharacterEncoding != '')
+				{
+					$this->Connection->exec('SET NAMES '.$this->CharacterEncoding) ;
+				}
 			}
 			function EscapeRowValue($rowValue)
 			{

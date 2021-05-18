@@ -15,6 +15,8 @@
 			protected $MsgSiErreurTrouvee = "Le composant ne peut s'afficher car une erreur est survenue lors de l'affichage." ;
 			public $FiltresSelection = array() ;
 			public $ColonneLabel ;
+			public $IndexColonneTri = 0 ;
+			public $SensColonneTri = "asc" ;
 			public $ColonnesDataset = array() ;
 			public $CfgInit ;
 			public static $SourceIncluse = false ;
@@ -23,6 +25,7 @@
 			protected function InitConfig()
 			{
 				parent::InitConfig() ;
+				$this->CfgInit = new PvCfgInitChartJs() ;
 				$this->ColonneLabel = new PvColonneDataChartJs() ;
 			}
 			public function & InsereFltSelectRef($nom, & $filtreRef, $exprDonnees='', $nomClsComp='')
@@ -144,21 +147,32 @@
 			public function CalculeElementsRendu()
 			{
 				$this->PrepareCalcul() ;
-				$this->Elements = $this->FournisseurDonnees->SelectElements($this->ExtraitDefCols(), $this->FiltresSelection) ;
-				$this->CfgInit = new PvCfgInitChartJs() ;
+				$this->Elements = $this->FournisseurDonnees->SelectElements($this->ExtraitDefCols(), $this->FiltresSelection, $this->IndexColonneTri, $this->SensColonneTri) ;
+				$this->CfgInit->data = new PvDataChartJs() ;
 				foreach($this->ColonnesDataset as $i => $col)
 				{
+					if($col->Visible == false)
+					{
+						continue ;
+					}
 					$ds = new PvDatasetChartJs() ;
 					$ds->label = $col->Libelle ;
 					$ds->backgroundColor = $col->CouleursBackground ;
+					$ds->borderColor = $col->CouleursBordure ;
 					$this->CfgInit->data->datasets[] = $ds ;
 				}
 				foreach($this->Elements as $i => $lgn)
 				{
 					$this->CfgInit->data->labels[] = $lgn[$this->ColonneLabel->NomColonne] ;
+					$j = 0 ;
 					foreach($this->ColonnesDataset as $i => $col)
 					{
-						$this->CfgInit->data->datasets[$i]->data[] = $lgn[$col->NomColonne] ;
+						if($col->Visible == false)
+						{
+							continue ;
+						}
+						$this->CfgInit->data->datasets[$j]->data[] = $lgn[$col->NomColonne] ;
+						$j++ ;
 					}
 				}
 			}
@@ -181,6 +195,16 @@
 				$this->ColonnesDataset[] = & $col ;
 				return $col ;
 			}
+			public function & InsereColDataCachee($nom, $alias='')
+			{
+				$col = new PvColonneDataChartJs() ;
+				$col->NomColonne = $nom ;
+				$col->Libelle = $nom ;
+				$col->AliasColonne = $alias ;
+				$col->Visible = false ;
+				$this->ColonnesDataset[] = & $col ;
+				return $col ;
+			}
 			public function & InsereColonne($nom, $libelle='', $alias='')
 			{
 				return $this->InsereColData($nom, $libelle, $alias) ;
@@ -190,7 +214,7 @@
 				$this->CalculeElementsRendu() ;
 				$ctn = '' ;
 				$ctn .= $this->RenduSource() ;
-				$ctn .= '<canvas id="'.$this->IDInstanceCalc.'" width="'.$this->Largeur.'" height="'.$this->hauteur.'"></canvas>'.PHP_EOL ;
+				$ctn .= '<canvas id="'.$this->IDInstanceCalc.'" width="'.$this->Largeur.'"'.(($this->Hauteur != '') ? ' height="'.$this->Hauteur : '').'"></canvas>'.PHP_EOL ;
 				$ctn .= $this->RenduDefsJs() ;
 				return $ctn ;
 			}
@@ -201,7 +225,10 @@
 				{
 					return $ctn ;
 				}
-				$ctn .= $this->RenduLienCSS($this->CheminCSSSource) ;
+				if($this->CheminCSSSource != '')
+				{
+					$ctn .= $this->RenduLienCSS($this->CheminCSSSource) ;
+				}
 				$ctn .= $this->RenduLienJs($this->CheminJsSource) ;
 				PvChartJs::$SourceIncluse = true ;
 				return $ctn ;
@@ -221,6 +248,7 @@ var chart'.$this->IDInstanceCalc.' = new Chart(ctx, '.svc_json_encode($this->Cfg
 		class PvColonneDataChartJs
 		{
 			public $Libelle ;
+			public $Visible = true ;
 			public $NomColonne ;
 			public $AliasColonne ;
 			public $CouleursBackground = array() ;
@@ -246,6 +274,9 @@ var chart'.$this->IDInstanceCalc.' = new Chart(ctx, '.svc_json_encode($this->Cfg
 		class PvDatasetChartJs
 		{
 			public $label ;
+			public $type ;
+			public $axis ;
+			public $fill = false ;
 			public $data = array() ;
 			public $backgroundColor = array() ;
 			public $borderColor = array() ;

@@ -10,6 +10,8 @@
 		
 		class PvZoneBaseBootstrap5 extends PvZoneWebSimple
 		{
+			public $LangueDocument = "en" ;
+			public $EncodageDocument = "utf-8" ;
 			public $InclureCtnJsEntete = 1 ;
 			public $InclureJQuery = 1 ;
 			public $InclureBootstrap = 1 ;
@@ -46,6 +48,18 @@
 			public $CouleurTexteNavbarFlottant = "black" ;
 			public $CheminCSSBootstrap = 'css/bootstrap.min.css' ;
 			public $CheminFontAwesome = 'vendor/fontawesome/css/all.min.css' ;
+			protected function AfficheRenduIndisponible(& $script, $msg)
+			{
+				$ctn = '' ;
+				$this->ScriptPourRendu = & $script ;
+				$ctn .= $this->RenduEnteteDocument() ;
+				$ctn .= '<div class="alert alert-danger" role="alert">'.$msg.'</div>' ;
+				$ctn .= $this->RenduPiedDocument() ;
+				$this->ScriptPourRendu = null ;
+				echo $ctn ;
+				exit ;
+			}
+
 		}
 	}
 	
