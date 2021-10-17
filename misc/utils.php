@@ -1082,13 +1082,15 @@
 							$default_value = (! $default_value) ? date('H:i:s') : $default_value ;
 							$var = (preg_match('/^(\d\d?:\d\d?:\d\d?)/', $var, $match)) ? $match[1] : $default_value ;
 							break ;
+/*
 						case 'datetime' :
 							$default_value = (! $default_value) ? date('Y-m-d H:i:s') : $default_value ;
-							$var = (preg_match('/^(\d\d\d\d-\d\d?-\d\d? \d\d?:\d\d?:\d\d?)/', $var, $match)) ? $match[1] : (preg_match('/^(\d\d\d\d-\d\d?-\d\d? \d\d?:\d\d?)/', $var, $match)) ? $match[1].':00' : (preg_match('/^(\d\d\d\d-\d\d?-\d\d? \d\d?)/', $var, $match)) ? $match[1].':00:00' : (preg_match('/^(\d\d\d\d-\d\d?-\d\d?/', $var, $match)) ? $match[1].' 00:00:00' : $default_value ;
+							$var = (preg_match('/^(\d\d\d\d-\d\d?-\d\d? \d\d?:\d\d?:\d\d?)/', $var, $match)) ? $match[1] : ((preg_match('/^(\d\d\d\d-\d\d?-\d\d? \d\d?:\d\d?)/', $var, $match)) ? $match[1].':00' : (preg_match('/^(\d\d\d\d-\d\d?-\d\d? \d\d?)/', $var, $match)) ? $match[1].':00:00' : (preg_match('/^(\d\d\d\d-\d\d?-\d\d?/', $var, $match)) ? $match[1].' 00:00:00' : $default_value) ;
 							if($var != $default_value) {
 								(strtotime($var) < strtotime('1970-01-01')) ? $var = $default_value : 1 ;
 							}
 							break ;
+*/
 						case 'person_name' :
 							$var = preg_replace('/[[:space:]][[:space:]]+/', ' ', $var) ;
 							$var = (preg_match('/^([a-z][a-z0-9&;éèçàêîâûïüôöü \']+)$/i', $var, $match)) ? $match[1] : $default_value ;

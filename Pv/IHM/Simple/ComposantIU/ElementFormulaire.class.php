@@ -87,7 +87,7 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 			}
 			public function EncodeEtiquette($valeur)
 			{
-				return $this->FmtLbl->Rendu($valeur, $composant) ;
+				return $this->FmtLbl->Rendu($valeur, $this) ;
 			}
 			public function RenduEtiquette()
 			{
@@ -819,7 +819,14 @@ document.getElementById("'.$this->IDInstanceCalc.'").innerText = valeur ;
 				}
 				else
 				{
-					$this->ValeursSelectionnees = array($this->Valeur) ;
+					if($this->EstPasNul($this->FiltreParent) && is_array($this->FiltreParent->ValeurBrute))
+					{
+						$this->ValeursSelectionnees = $this->FiltreParent->ValeurBrute ;
+					}
+					else
+					{
+						$this->ValeursSelectionnees = array($this->Valeur) ;
+					}
 				}
 			}
 			protected function EstValeurSelectionnee($valeur)

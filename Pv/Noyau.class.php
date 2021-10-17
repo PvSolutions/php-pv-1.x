@@ -14,10 +14,6 @@
 		{
 			include dirname(__FILE__)."/../misc/OpensslCrypter.class.php" ;
 		}
-		if(! defined('FORCE_ENCODING'))
-		{
-			include dirname(__FILE__)."/../misc/ForceEncoding.class.php" ;
-		}
 		if(! defined('PERS_ZIP_SLICE'))
 		{
 			include dirname(__FILE__)."/../misc/PersZip.class.php" ;
@@ -942,7 +938,7 @@
 			public function RecupArgs()
 			{
 				$args = array() ;
-				if(! is_array($_SERVER["argv"]))
+				if(! isset($_SERVER["argv"]) || ! is_array($_SERVER["argv"]))
 				{
 					return $args ;
 				}
@@ -1636,7 +1632,7 @@
 			}
 		}
 		
-		if(php_sapi_name() != 'cli' && get_magic_quotes_gpc() == 1)
+		if(function_exists('get_magic_quotes_gpc') && php_sapi_name() != 'cli' && get_magic_quotes_gpc() == 1)
 		{
 			$_PHP_POST = $_POST ;
 			$_PHP_GET = $_GET ;

@@ -31,7 +31,7 @@
 			{
 				$bd = $api->BDMembership() ;
 				$membership = & $api->Membership ;
-				$ok = $bd->RunSql('delete from '.$bd->EscapeTableName($api->NomTableSession).' where (remember = 0 and '.$bd->SqlAddSeconds('date_action', $api->DelaiExpirSession).' <= '.$bd->SqlNow().') or (remember = 1 and '.$bd->SqlAddSeconds('date_action', $api->TotalJoursExpirDevice).' <= '.$bd->SqlNow().')') ;
+				$ok = $bd->RunSql('delete from '.$bd->EscapeTableName($api->NomTableSession).' where (remember = 0 and '.$bd->SqlAddSeconds('date_action', $api->DelaiExpirSession).' <= '.$bd->SqlNow().') or (remember = 1 and '.$bd->SqlAddDays('date_action', $api->TotalJoursExpirDevice).' <= '.$bd->SqlNow().')') ;
 				// echo $bd->LastSqlText ;
 				// print_r($bd) ;
 				$this->MessageErreur = $bd->ConnectionException ;

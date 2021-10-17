@@ -18,7 +18,7 @@
 			public $ColXsLibelle = 4 ;
 			public $ClsBstLibelle ;
 			public $AlignLibelle ;
-			public $CltBstEditeur ;
+			public $ClsBstEditeur ;
 			public $AlignEditeur ;
 			public $MaxFiltresParLigne = 1 ;
 			protected function ObtientColXs($maxFiltres)

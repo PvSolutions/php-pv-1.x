@@ -23,7 +23,7 @@
 			public $ClsBstLibelle ;
 			public $ClsBstLigne = "mb-2" ;
 			public $AlignLibelle ;
-			public $CltBstEditeur ;
+			public $ClsBstEditeur ;
 			public $AlignEditeur ;
 			public $MaxFiltresParLigne = 1 ;
 			protected function ObtientColXs($maxFiltres)
@@ -64,7 +64,7 @@
 					{
 						foreach($this->ClassesBsEditeur as $nomCls => $typesEditeur)
 						{
-							if(in_array($filtre->Composant->TypeEditeur, $typesEditeur) && ! in_array($name, $filtre->Composant->ClassesCSS))
+							if(in_array($filtre->Composant->TypeEditeur, $typesEditeur) && ! in_array($nomCls, $filtre->Composant->ClassesCSS))
 							{
 								$filtre->Composant->ClassesCSS[] = $nomCls ;
 							}
@@ -665,6 +665,8 @@
 		
 		class PvNav2TableauDonneesBootstrap5 extends PvNavigateurRangeesDonneesBase
 		{
+			public $InclureInfosRangees = false ;
+			public $ColMdInfosRangees = 8 ;
 			public $MaxRangeesPrec = 3 ;
 			public $MaxRangeesSuiv = 3 ;
 			public function Execute(& $script, & $composant)
@@ -675,8 +677,13 @@
 			{
 				$ctn = '' ;
 				$parametresRendu = $composant->ParametresRendu() ;
+				if($this->InclureInfosRangees == true)
+				{
+					$ctn .= '<div class="row">
+		<div class="col-sm-12 col-md-'.(12 - $this->ColMdInfosRangees).' d-flex justify-content-sm-center justify-content-md-start">' ;
+				}
 				$ctn .= '<nav aria-label="" class="NavigateurRangees">'.PHP_EOL ;
-				$ctn .= '<ul class="pagination justify-content-center">'.PHP_EOL ;
+				$ctn .= '<ul class="pagination'.(($this->InclureInfosRangees == false) ? ' justify-content-center' : '').'">'.PHP_EOL ;
 				$paramPremiereRangee = array_merge($parametresRendu, array($composant->NomParamIndiceDebut() => 0)) ;
 				$ctn .= '<li class="page-item"><a class="page-link" href="javascript:'.$composant->AppelJsEnvoiFiltres($paramPremiereRangee).'" title="'.$composant->TitrePremiereRangee.'">'.$composant->LibellePremiereRangee.'</a></li>'.PHP_EOL ;
 				if($composant->RangeeEnCours > 0)
@@ -719,7 +726,21 @@
 				$ctn .= '<li class="page-item"><a class="page-link" href="javascript:'.$composant->AppelJsEnvoiFiltres($paramDerniereRangee).'" title="'.$composant->TitreDerniereRangee.'">'.$composant->LibelleDerniereRangee.'</a></li>'.PHP_EOL ;
 				$ctn .= '</ul>'.PHP_EOL ;
 				$ctn .= '</nav>' ;
-				return $ctn ;
+				if($this->InclureInfosRangees == true)
+				{
+					$ctn .= '</div>
+		<div class="col-sm-12 col-md-'.($this->ColMdInfosRangees).'  d-flex justify-content-sm-center justify-content-md-end">' ;
+					$valeursRangee = array(
+						'IndiceDebut' => $composant->IndiceDebut,
+						'NoDebut' => $composant->IndiceDebut + 1,
+						'IndiceFin' => $composant->IndiceFin,
+						'NoFin' => $composant->IndiceFin,
+						'TotalElements' => $composant->TotalElements,
+					) ;
+					$ctn .= _parse_pattern($composant->FormatInfosRangee, $valeursRangee) ;
+					$ctn .= '</div>
+		</div>' ;
+				}
 				return $ctn ;
 			}
 		}

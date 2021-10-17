@@ -50,6 +50,7 @@
 			public $CouleurTexteNavbarFlottant = "black" ;
 			public $CheminCSSBootstrap = 'css/bootstrap.min.css' ;
 			public $CheminFontAwesome = 'vendor/fontawesome/css/all.min.css' ;
+			public $ContenuCSSPetitsEcrans = '' ;
 			public function InclutLibrairiesExternes()
 			{
 				parent::InclutLibrairiesExternes() ;

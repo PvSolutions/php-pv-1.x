@@ -419,7 +419,7 @@
 				$defCol->Formatteur = new PvFormatteurColonneMonnaie() ;
 				return $defCol ;
 			}
-			public function & InsereDefColDateFr($nomDonnees, $libelle="", $inclureHeure=0)
+			public function & InsereDefColDateFr($nomDonnees, $libelle="", $inclureHeure=0, $aliasDonnees="")
 			{
 				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
 				$defCol->Formatteur = new PvFormatteurColonneDateFr() ;

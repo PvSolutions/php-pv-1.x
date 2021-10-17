@@ -1098,12 +1098,16 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $MaxFiltresParLigne = 1 ;
 			protected function ObtientColXs($maxFiltres)
 			{
-				return ($this->ColXs != '') ? $this->ColXs :
-					(($this->ColLd != '') ? $this->ColLd : 
-						(($this->ColMd != '') ? $this->ColMd : 
-							($this->ColSm != '') ? $this->ColSm : intval(12 / $maxFiltres)
-						)
-					) ;
+				$val = intval(12 / $maxFiltres) ;
+				if($this->ColXs != '')
+					$val = $this->ColXs ;
+				elseif($this->ColLd != '')
+					$val = $this->ColLd ;
+				elseif($this->ColMd != '')
+					$val = $this->ColMd ;
+				elseif($this->ColSm != '')
+					$val = $this->ColSm ;
+				return $val ;
 			}
 			protected function RenduFiltre(& $filtre, & $composant)
 			{
@@ -2265,6 +2269,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 		class PvCommandeComposantIUBase extends PvElementAccessible
 		{
 			public $Visible = 1 ;
+			public $InclureLibelle = 1 ;
 			public $NecessiteFormulaireDonnees = 0 ;
 			public $NecessiteTableauDonnees = 0 ;
 			public $UtiliserRenduDispositif = 0 ;
