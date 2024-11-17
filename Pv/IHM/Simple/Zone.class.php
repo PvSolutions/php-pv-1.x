@@ -63,7 +63,6 @@
 			public function RenduEntete(& $zone)
 			{
 				$ctn = '' ;
-				$ctn .= $zone->RenduCtnJsEntete() ;
 				return ;
 			}
 			public function RenduPied(& $zone)
@@ -144,7 +143,7 @@
 			}
 			public function ObtientCheminDossierTaches()
 			{
-				return dirname($this->ZoneParent->ObtientCheminFichierRelatif()).DIRECTORY_SEPARATOR.$this->NomDossierTaches ;
+				return dirname($_SERVER['SCRIPT_FILENAME']).DIRECTORY_SEPARATOR.$this->NomDossierTaches ;
 			}
 			public function & ObtientTaches()
 			{
@@ -184,7 +183,7 @@
 				$tache = & $this->Taches[$nomTache] ;
 				$urlZone = $this->ZoneParent->ObtientUrl() ;
 				$parts = parse_url($urlZone) ;
-				$port = ($parts["port"] != '') ? $parts["port"] : 80 ;
+				$port = (isset($parts["port"]) && $parts["port"] != '') ? $parts["port"] : 80 ;
 				$chaineParams = http_build_query($params) ;
 				if($chaineParams != "")
 				{
@@ -431,7 +430,7 @@
 			}
 			public function ImporteRequeteHttp(& $zone)
 			{
-				$this->ChaineGet = $_SERVER["REQUEST_URI"].$_REQUEST["QUERY_STRING"] ;
+				$this->ChaineGet = $_SERVER["REQUEST_URI"].$_SERVER["QUERY_STRING"] ;
 				$this->DonneesPost = $_POST ;
 				$this->Sauvegarde($zone) ;
 				// print_r($_SESSION) ;

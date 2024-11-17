@@ -125,7 +125,22 @@ class XML_HTMLSax3_StateParser {
     * @var array
     * @access private
     */
-    var $parser_options = array();
+    var $parser_options = array(
+		'XML_OPTION_TRIM_DATA_NODES' => 0,
+		'XML_OPTION_CASE_FOLDING' => 0,
+		'XML_OPTION_LINEFEED_BREAK' => 0,
+		'XML_OPTION_TAB_BREAK' => 0,
+		'XML_OPTION_ENTITIES_PARSED'=> 0,
+		'XML_OPTION_ENTITIES_UNPARSED'=> 0,
+		'XML_OPTION_STRIP_ESCAPES'=> 0,
+		'XML_OPTION_TRIM_DATA_NODES'=> 0,
+		'XML_OPTION_CASE_FOLDING'=> 0,
+		'XML_OPTION_LINEFEED_BREAK'=> 0,
+		'XML_OPTION_TAB_BREAK'=> 0,
+		'XML_OPTION_ENTITIES_PARSED'=> 0,
+		'XML_OPTION_ENTITIES_UNPARSED'=> 0,
+		'XML_OPTION_STRIP_ESCAPES'=> 0,
+	);
     /**
     * XML document being parsed
     * @var string
@@ -150,7 +165,11 @@ class XML_HTMLSax3_StateParser {
     * @access private
     */
     var $State = array();
-
+	
+	function __construct($htmlsax) {
+		$this->XML_HTMLSax3_StateParser ($htmlsax) ;
+	}
+	
     /**
     * Constructs XML_HTMLSax3_StateParser setting up states
     * @var XML_HTMLSax3 instance of user front end class
@@ -194,7 +213,7 @@ class XML_HTMLSax3_StateParser {
     */
     function scanCharacter() {
         if ($this->position < $this->length) {
-            return $this->rawtext{$this->position++};
+            return $this->rawtext[$this->position++];
         }
     }
 
@@ -321,6 +340,10 @@ class XML_HTMLSax3_StateParser {
 * @see XML_HTMLSax3_StateParser_Gtet430
 */
 class XML_HTMLSax3_StateParser_Lt430 extends XML_HTMLSax3_StateParser {
+	
+	function __construct(& $htmlsax) {
+		$this->XML_HTMLSax3_StateParser_Lt430 ($htmlsax) ;
+	}
     /**
     * Constructs XML_HTMLSax3_StateParser_Lt430 defining available
     * parser options
@@ -347,7 +370,7 @@ class XML_HTMLSax3_StateParser_Lt430 extends XML_HTMLSax3_StateParser {
     */
     function scanUntilCharacters($string) {
         $startpos = $this->position;
-        while ($this->position < $this->length && strpos($string, $this->rawtext{$this->position}) === FALSE) {
+        while ($this->position < $this->length && strpos($string, $this->rawtext[$this->position]) === FALSE) {
             $this->position++;
         }
         return substr($this->rawtext, $startpos, $this->position - $startpos);
@@ -360,7 +383,7 @@ class XML_HTMLSax3_StateParser_Lt430 extends XML_HTMLSax3_StateParser {
     */
     function ignoreWhitespace() {
         while ($this->position < $this->length && 
-            strpos(" \n\r\t", $this->rawtext{$this->position}) !== FALSE) {
+            strpos(" \n\r\t", $this->rawtext[$this->position]) !== FALSE) {
             $this->position++;
         }
     }
@@ -391,6 +414,9 @@ class XML_HTMLSax3_StateParser_Gtet430 extends XML_HTMLSax3_StateParser {
     * @var XML_HTMLSax3 instance of user front end class
     * @access protected
     */
+	function __construct(& $htmlsax) {
+		$this->XML_HTMLSax3_StateParser_Gtet430 ($htmlsax) ;
+	}
     function XML_HTMLSax3_StateParser_Gtet430(& $htmlsax) {
         parent::XML_HTMLSax3_StateParser($htmlsax);
         $this->parser_options['XML_OPTION_TRIM_DATA_NODES'] = 0;
@@ -481,6 +507,20 @@ class XML_HTMLSax3 {
     * </pre>
     * @access public
     */
+    function __construct() {
+        if (version_compare(phpversion(), '4.3', 'ge')) {
+            $this->state_parser = new XML_HTMLSax3_StateParser_Gtet430($this);
+        } else {
+            $this->state_parser = new XML_HTMLSax3_StateParser_Lt430($this);
+        }
+        $nullhandler = new XML_HTMLSax3_NullHandler();
+        $this->set_object($nullhandler);
+        $this->set_element_handler('DoNothing', 'DoNothing');
+        $this->set_data_handler('DoNothing');
+        $this->set_pi_handler('DoNothing');
+        $this->set_jasp_handler('DoNothing');
+        $this->set_escape_handler('DoNothing');
+    }
     function XML_HTMLSax3() {
         if (version_compare(phpversion(), '4.3', 'ge')) {
             $this->state_parser = new XML_HTMLSax3_StateParser_Gtet430($this);

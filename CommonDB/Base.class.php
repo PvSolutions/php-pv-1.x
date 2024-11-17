@@ -3665,8 +3665,13 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 				catch(PDOException $ex)
 				{
 					$this->SetConnectionException($ex->getMessage()) ;
+					if(isset($res) && is_object($res))
+					{
+						$res->closeCursor() ;
+						$res = false ;
+					}
 				}
-				if($this->StoredProcQuery == false)
+				if($this->ConnectionException != '' && $this->StoredProcQuery == false)
 				{
 					$this->SetConnectionExceptionFromStmt($this->StoredProcConnection) ;
 				}
@@ -3745,6 +3750,11 @@ on t1.COLUMN_NAME = t2.COLUMN_NAME' ;
 				catch(PDOException $ex)
 				{
 					$this->SetConnectionException($ex->getMessage()) ;
+					if(isset($res) && is_object($res))
+					{
+						$res->closeCursor() ;
+						$res = false ;
+					}
 				}
 				return $res ;
 			}

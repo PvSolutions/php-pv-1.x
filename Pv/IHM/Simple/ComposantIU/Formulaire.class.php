@@ -1311,6 +1311,7 @@ form.submit() ;
 			public $UrlLienAnnuler = "" ;
 			public $NomScriptExecutionSucces = "" ;
 			public $ParamsScriptExecutionSucces = array() ;
+			public $InclureLibelle = 1 ;
 			protected function VerifiePreRequis()
 			{
 				$this->VerifieFichiersUpload($this->FormulaireDonneesParent->FiltresEdition) ;

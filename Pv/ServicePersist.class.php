@@ -187,7 +187,7 @@
 			public $Contenu ;
 			public function Trouve()
 			{
-				return $this->No != '' ;
+				return $this->No != '' && $this->No != '0' && $this->No != 0 ;
 			}
 		}
 		

@@ -942,7 +942,7 @@
 			public function RecupArgs()
 			{
 				$args = array() ;
-				if(! is_array($_SERVER["argv"]))
+				if(! isset($_SERVER["argv"]) || ! is_array($_SERVER["argv"]))
 				{
 					return $args ;
 				}
@@ -1597,54 +1597,57 @@
 			}
 		}
 		
-		if(! function_exists('RemoveMagicQuotes'))
+		if(function_exists('get_magic_quotes_gpc'))
 		{
-			function RemoveMagicQuotes ($postArray, $trim = false)
+			if(! function_exists('RemoveMagicQuotes'))
 			{
-				if (get_magic_quotes_gpc() == 1)
+				function RemoveMagicQuotes ($postArray, $trim = false)
 				{
-						if ( is_array($postArray) )
-						{
-								$newArray = array();   
-							 
-								foreach ($postArray as $key => $val)
-								{
-										if (is_array($val))
-										{
-												$newArray[$key] = removeMagicQuotes ($val, $trim);
-										}
-										else
-										{
-												if ($trim == true)
-												{
-														$val = trim($val);
-												}
-												$newArray[$key] = stripslashes($val);
-										}
-								}
-								return $newArray;
-						}
-						else
-						{
-								return stripcslashes($postArray);
-						}
-				}
-				else
-				{
-						return $postArray;   
+					if (get_magic_quotes_gpc() == 1)
+					{
+							if ( is_array($postArray) )
+							{
+									$newArray = array();   
+								 
+									foreach ($postArray as $key => $val)
+									{
+											if (is_array($val))
+											{
+													$newArray[$key] = removeMagicQuotes ($val, $trim);
+											}
+											else
+											{
+													if ($trim == true)
+													{
+															$val = trim($val);
+													}
+													$newArray[$key] = stripslashes($val);
+											}
+									}
+									return $newArray;
+							}
+							else
+							{
+									return stripcslashes($postArray);
+							}
+					}
+					else
+					{
+							return $postArray;   
+					}
 				}
 			}
-		}
-		
-		if(php_sapi_name() != 'cli' && get_magic_quotes_gpc() == 1)
-		{
-			$_PHP_POST = $_POST ;
-			$_PHP_GET = $_GET ;
-			$_PHP_COOKIE = $_COOKIE ;
 			
-			$_GET = RemoveMagicQuotes($_GET) ;
-			$_POST = RemoveMagicQuotes($_POST) ;
-			$_COOKIE = RemoveMagicQuotes($_COOKIE) ;
+			if(php_sapi_name() != 'cli' && get_magic_quotes_gpc() == 1)
+			{
+				$_PHP_POST = $_POST ;
+				$_PHP_GET = $_GET ;
+				$_PHP_COOKIE = $_COOKIE ;
+				
+				$_GET = RemoveMagicQuotes($_GET) ;
+				$_POST = RemoveMagicQuotes($_POST) ;
+				$_COOKIE = RemoveMagicQuotes($_COOKIE) ;
+			}
 		}
 	}
 	

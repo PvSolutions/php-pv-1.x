@@ -421,7 +421,7 @@
 			}
 			public function & InsereDefColDateFr($nomDonnees, $libelle="", $inclureHeure=0)
 			{
-				$defCol = $this->InsereDefCol($nomDonnees, $libelle, $aliasDonnees) ;
+				$defCol = $this->InsereDefCol($nomDonnees, $libelle, "") ;
 				$defCol->Formatteur = new PvFormatteurColonneDateFr() ;
 				$defCol->Formatteur->InclureHeure = $inclureHeure ;
 				return $defCol ;

@@ -803,6 +803,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $Largeur = "" ;
 			public $MaxFiltresParLigne = 2 ;
 			public $InclureRenduLibelle = 1 ;
+			public $InclureLibelle = 1 ;
 			public $LargeurLibelles = "" ;
 			public $LargeurEditeurs = "" ;
 			public $InclureSeparateurFiltres = 1 ;
@@ -1098,12 +1099,20 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			public $MaxFiltresParLigne = 1 ;
 			protected function ObtientColXs($maxFiltres)
 			{
-				return ($this->ColXs != '') ? $this->ColXs :
-					(($this->ColLd != '') ? $this->ColLd : 
-						(($this->ColMd != '') ? $this->ColMd : 
-							($this->ColSm != '') ? $this->ColSm : intval(12 / $maxFiltres)
-						)
-					) ;
+				$col = intval(12 / $maxFiltres) ;
+				if($this->ColXs != '') {
+					$col = $this->ColXs ;
+				}
+				elseif($this->ColLd != '') {
+					$col = $this->ColLd ;
+				}
+				elseif($this->ColMd != '') {
+					$col = $this->ColMd ;
+				}
+				elseif($this->ColSm != '') {
+					$col = $this->ColSm ;
+				}
+				return $col ;
 			}
 			protected function RenduFiltre(& $filtre, & $composant)
 			{
@@ -1131,7 +1140,7 @@ xhttp_'.$this->IDInstanceCalc.'.send() ;' ;
 			}
 			public function Execute(& $script, & $composant, $parametres)
 			{
-				if($this->EditeurSurligne == 1 && $this->InclureLibelle == 1)
+				if($this->EditeurSurligne == 1 && $this->InclureRenduLibelle == 1)
 				{
 					return $this->RenduEditeursSurligne($script, $composant, $parametres) ;
 				}

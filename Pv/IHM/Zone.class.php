@@ -681,9 +681,13 @@
 			{
 				$ctn = '' ;
 				$this->ScriptPourRendu = & $script ;
+				$ctn .= $this->RenduDefinitionTypeDocument().PHP_EOL ;
 				$ctn .= $this->RenduEnteteDocument() ;
-				$ctn .= '<div style="text-color:red">'.$msg.'</div>' ;
-				$ctn .= $this->RenduPiedDocument() ;
+				$ctn .= '<body>'.PHP_EOL ;
+				$ctn .= '<div style="color:red">'.$msg.'</div>'.PHP_EOL ;
+				$ctn .= $this->RenduPiedDocument().PHP_EOL ;
+				$ctn .= '</body>'.PHP_EOL ;
+				$ctn .= '</html>' ;
 				echo $ctn ;
 				exit ;
 			}
